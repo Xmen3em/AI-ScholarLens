@@ -1,0 +1,14 @@
+# Normalize line endings across platforms.
+# Shell scripts MUST stay LF or they break inside Linux containers
+# (a CRLF shebang -> "exec /entrypoint.sh: no such file or directory").
+* text=auto eol=lf
+*.sh text eol=lf
+entrypoint.sh text eol=lf
+
+# Binary assets: never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
