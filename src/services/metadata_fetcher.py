@@ -2,11 +2,11 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, NamedTuple, Optional
 
 from dateutil import parser as date_parser
 from sqlalchemy.orm import Session
-from src.exceptions import MetadataFetchingException, PipelineException
+from src.exceptions import PipelineException
 from src.repositories.paper import PaperRepository
 from src.schemas.arxiv.paper import ArxivPaper, PaperCreate
 from src.schemas.pdf_parser.models import ArxivMetadata, ParsedPaper, PdfContent
@@ -14,6 +14,19 @@ from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
 
 logger = logging.getLogger(__name__)
+
+
+class PdfOutcome(NamedTuple):
+    """Why a paper ended up without parsed content.
+
+    status is "skipped" when the parser declined the file on purpose (size or page
+    limits) and "download_error"/"parse_error" when something actually went wrong.
+    Carried through to the stored row so the database, not the task log, answers
+    "why is this paper unparsed?".
+    """
+
+    status: str
+    reason: str
 
 
 class MetadataFetcher:
@@ -79,6 +92,7 @@ class MetadataFetcher:
             "papers_fetched": 0,
             "pdfs_downloaded": 0,
             "pdfs_parsed": 0,
+            "pdfs_skipped": 0,
             "papers_stored": 0,
             "errors": [],
             "processing_time": 0,
@@ -104,12 +118,15 @@ class MetadataFetcher:
                 pdf_results = await self._process_pdfs_batch(papers)
                 results["pdfs_downloaded"] = pdf_results["downloaded"]
                 results["pdfs_parsed"] = pdf_results["parsed"]
+                results["pdfs_skipped"] = len(pdf_results["skipped"])
                 results["errors"].extend(pdf_results["errors"])
 
             # Step 3: Store to database if requested
             if store_to_db and db_session:
                 logger.info("Step 3: Storing papers to database...")
-                stored_count = self._store_papers_to_db(papers, pdf_results.get("parsed_papers", {}), db_session)
+                stored_count = self._store_papers_to_db(
+                    papers, pdf_results.get("parsed_papers", {}), db_session, pdf_results.get("failure_reasons", {})
+                )
                 results["papers_stored"] = stored_count
             elif store_to_db:
                 logger.warning("Database storage requested but no session provided")
@@ -121,7 +138,9 @@ class MetadataFetcher:
 
             # Simple logging summary
             logger.info(
-                f"Pipeline completed in {processing_time:.1f}s: {results['papers_fetched']} papers, {results['pdfs_downloaded']} PDFs, {len(results['errors'])} errors"
+                f"Pipeline completed in {processing_time:.1f}s: {results['papers_fetched']} papers, "
+                f"{results['pdfs_downloaded']} PDFs downloaded, {results['pdfs_parsed']} parsed, "
+                f"{results['pdfs_skipped']} skipped, {len(results['errors'])} errors"
             )
 
             if results["errors"]:
@@ -159,6 +178,8 @@ class MetadataFetcher:
             "downloaded": 0,
             "parsed": 0,
             "parsed_papers": {},
+            "skipped": [],
+            "failure_reasons": {},
             "errors": [],
             "download_failures": [],
             "parse_failures": [],
@@ -181,43 +202,51 @@ class MetadataFetcher:
         # Process results with detailed error tracking
         for paper, result in zip(papers, pipeline_results):
             if isinstance(result, Exception):
-                error_msg = f"Pipeline error for {paper.arxiv_id}: {str(result)}"
+                # Only genuinely unexpected failures reach here; the pipeline reports
+                # download and parse outcomes in its return value instead of raising.
+                error_msg = f"Pipeline error for {paper.arxiv_id}: {result}"
                 logger.error(error_msg)
                 results["errors"].append(error_msg)
-            elif result:
-                # Result is tuple: (download_success, parsed_paper)
-                download_success, parsed_paper = result
+                results["failure_reasons"][paper.arxiv_id] = PdfOutcome(status="parse_error", reason=str(result))
+                continue
 
-                if download_success:
-                    results["downloaded"] += 1
+            download_success, parsed_paper, outcome = result
 
-                    if parsed_paper:
-                        results["parsed"] += 1
-                        results["parsed_papers"][paper.arxiv_id] = parsed_paper
-                    else:
-                        # Download succeeded but parsing failed
-                        results["parse_failures"].append(paper.arxiv_id)
-                else:
-                    # Download failed
-                    results["download_failures"].append(paper.arxiv_id)
+            if download_success:
+                # Counted on download success regardless of what parsing did next.
+                results["downloaded"] += 1
             else:
-                # No result returned (shouldn't happen but handle gracefully)
                 results["download_failures"].append(paper.arxiv_id)
 
-        # Simple processing summary
-        logger.info(f"PDF processing: {results['downloaded']}/{len(papers)} downloaded, {results['parsed']} parsed")
+            if parsed_paper:
+                results["parsed"] += 1
+                results["parsed_papers"][paper.arxiv_id] = parsed_paper
+                continue
+
+            results["failure_reasons"][paper.arxiv_id] = outcome
+            if outcome.status == "skipped":
+                # A deliberate skip (size/page limits) is not an incident.
+                results["skipped"].append(paper.arxiv_id)
+                logger.info(f"Skipped PDF for {paper.arxiv_id}: {outcome.reason}")
+            else:
+                if outcome.status == "parse_error":
+                    results["parse_failures"].append(paper.arxiv_id)
+                error_msg = f"{paper.arxiv_id}: {outcome.reason}"
+                logger.error(f"PDF processing failed for {error_msg}")
+                results["errors"].append(error_msg)
+
+        # Simple processing summary. Each failure is already in results["errors"] with its
+        # reason attached, so it is not appended a second time as a bare arxiv_id.
+        logger.info(
+            f"PDF processing: {results['downloaded']}/{len(papers)} downloaded, "
+            f"{results['parsed']} parsed, {len(results['skipped'])} skipped"
+        )
 
         if results["download_failures"]:
             logger.warning(f"Download failures: {len(results['download_failures'])}")
 
         if results["parse_failures"]:
             logger.warning(f"Parse failures: {len(results['parse_failures'])}")
-
-        # Add specific failure info to general errors list for backward compatibility
-        if results["download_failures"]:
-            results["errors"].extend([f"Download failed: {arxiv_id}" for arxiv_id in results["download_failures"]])
-        if results["parse_failures"]:
-            results["errors"].extend([f"PDF parse failed: {arxiv_id}" for arxiv_id in results["parse_failures"]])
 
         return results
 
@@ -228,55 +257,55 @@ class MetadataFetcher:
         Complete download+parse pipeline for a single paper with true parallelism.
         Downloads PDF, then immediately starts parsing while other downloads continue.
 
-        Returns:
-            Tuple of (download_success: bool, parsed_paper: Optional[ParsedPaper])
-        """
-        download_success = False
-        parsed_paper = None
+        A parse failure does not discard the download that already succeeded, and it does
+        not raise: both facts are returned so the caller can count and report them.
 
+        Returns:
+            Tuple of (download_success: bool, parsed_paper: Optional[ParsedPaper], outcome: Optional[PdfOutcome])
+            outcome is None when parsing succeeded.
+        """
+        # Step 1: Download PDF with download concurrency control
         try:
-            # Step 1: Download PDF with download concurrency control
             async with download_semaphore:
                 logger.debug(f"Starting download: {paper.arxiv_id}")
                 pdf_path = await self.arxiv_client.download_pdf(paper, False)
+        except Exception as e:
+            logger.error(f"Download error for {paper.arxiv_id}: {e}")
+            return (False, None, PdfOutcome(status="download_error", reason=str(e)))
 
-                if pdf_path:
-                    download_success = True
-                    logger.debug(f"Download complete: {paper.arxiv_id}")
-                else:
-                    logger.error(f"Download failed: {paper.arxiv_id}")
-                    return (False, None)
+        if not pdf_path:
+            logger.error(f"Download failed: {paper.arxiv_id}")
+            return (False, None, PdfOutcome(status="download_error", reason="PDF download returned no file"))
 
-            # Step 2: Parse PDF with parse concurrency control (happens AFTER download completes)
-            # This allows other downloads to continue while this PDF is being parsed
+        logger.debug(f"Download complete: {paper.arxiv_id}")
+
+        # Step 2: Parse PDF with parse concurrency control (happens AFTER download completes)
+        # This allows other downloads to continue while this PDF is being parsed
+        try:
             async with parse_semaphore:
                 logger.debug(f"Starting parse: {paper.arxiv_id}")
                 pdf_content = await self.pdf_parser.parse_pdf(pdf_path)
-
-                if pdf_content:
-                    # Create ArxivMetadata from the paper
-                    arxiv_metadata = ArxivMetadata(
-                        title=paper.title,
-                        authors=paper.authors,
-                        abstract=paper.abstract,
-                        arxiv_id=paper.arxiv_id,
-                        categories=paper.categories,
-                        published_date=paper.published_date,
-                        pdf_url=paper.pdf_url,
-                    )
-
-                    # Combine into ParsedPaper
-                    parsed_paper = ParsedPaper(arxiv_metadata=arxiv_metadata, pdf_content=pdf_content)
-                    logger.debug(f"Parse complete: {paper.arxiv_id} - {len(pdf_content.raw_text)} chars extracted")
-                else:
-                    # PDF parsing failed, but this is not critical - we can continue with metadata only
-                    logger.warning(f"PDF parsing failed for {paper.arxiv_id}, continuing with metadata only")
-
         except Exception as e:
-            logger.error(f"Pipeline error for {paper.arxiv_id}: {e}")
-            raise MetadataFetchingException(f"Pipeline error for {paper.arxiv_id}: {e}") from e
+            logger.error(f"Parse error for {paper.arxiv_id}: {e}")
+            return (True, None, PdfOutcome(status="parse_error", reason=str(e)))
 
-        return (download_success, parsed_paper)
+        if not pdf_content:
+            # The parser declined the file on purpose (size or page limits).
+            return (True, None, PdfOutcome(status="skipped", reason="outside configured size or page limits"))
+
+        arxiv_metadata = ArxivMetadata(
+            title=paper.title,
+            authors=paper.authors,
+            abstract=paper.abstract,
+            arxiv_id=paper.arxiv_id,
+            categories=paper.categories,
+            published_date=paper.published_date,
+            pdf_url=paper.pdf_url,
+        )
+        parsed_paper = ParsedPaper(arxiv_metadata=arxiv_metadata, pdf_content=pdf_content)
+        logger.debug(f"Parse complete: {paper.arxiv_id} - {len(pdf_content.raw_text)} chars extracted")
+
+        return (True, parsed_paper, None)
 
     def _serialize_parsed_content(self, parsed_paper: ParsedPaper) -> Dict[str, Any]:
         """
@@ -315,6 +344,7 @@ class MetadataFetcher:
         papers: List[ArxivPaper],
         parsed_papers: Dict[str, ParsedPaper],
         db_session: Session,
+        failure_reasons: Optional[Dict[str, PdfOutcome]] = None,
     ) -> int:
         """
         Store papers and parsed content to database with comprehensive content storage.
@@ -323,11 +353,13 @@ class MetadataFetcher:
             papers: List of ArxivPaper metadata
             parsed_papers: Dictionary of parsed PDF content by arxiv_id
             db_session: Database session
+            failure_reasons: Why a paper has no parsed content, by arxiv_id
 
         Returns:
             Number of papers stored successfully
         """
         paper_repo = PaperRepository(db_session)
+        failure_reasons = failure_reasons or {}
         stored_count = 0
 
         for paper in papers:
@@ -357,9 +389,17 @@ class MetadataFetcher:
                         f"Storing paper {paper.arxiv_id} with parsed content ({len(parsed_content.get('raw_text', '')) if parsed_content.get('raw_text') else 0} chars)"
                     )
                 else:
-                    # No parsed content - just store metadata
+                    # No parsed content - store metadata plus why, so the row is diagnosable.
+                    outcome = failure_reasons.get(paper.arxiv_id)
                     paper_data.update(
-                        {"pdf_processed": False, "parser_metadata": {"note": "PDF processing not available or failed"}}
+                        {
+                            "pdf_processed": False,
+                            "parser_metadata": {
+                                "parser": "docling",
+                                "status": outcome.status if outcome else "not_processed",
+                                "reason": outcome.reason if outcome else "PDF processing was not run for this paper",
+                            },
+                        }
                     )
                     logger.debug(f"Storing paper {paper.arxiv_id} with metadata only")
 

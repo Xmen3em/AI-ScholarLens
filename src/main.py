@@ -8,7 +8,6 @@ from src.config import get_settings
 from src.db.factory import make_database
 from src.routers import papers, ping
 from src.services.arxiv.factory import make_arxiv_client
-from src.services.pdf_parser.factory import make_pdf_parser_service
 
 # Setup logging
 logging.basicConfig(
@@ -32,10 +31,9 @@ async def lifespan(app: FastAPI):
     app.state.database = database
     logger.info("Database connected")
 
-    # Initialize services (kept for future endpoints and notebook demos)
+    # Initialize API services (PDF parsing runs in the Airflow worker image)
     app.state.arxiv_client = make_arxiv_client()
-    app.state.pdf_parser = make_pdf_parser_service()
-    logger.info("Services initialized: arXiv API client, PDF parser")
+    logger.info("Services initialized: arXiv API client")
 
     logger.info("API ready")
     yield

@@ -3,23 +3,21 @@ from contextlib import contextmanager
 from typing import Generator, Optional
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
-from sqlalchemy import create_engine, inspect, text 
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from src.db.interfaces.base import BaseDatabase
 
 logger = logging.getLogger(__name__)
 
 class PostgreSQLSettings(BaseSettings):
-    database_url: str = Field(default="postgresql://rag_user:rag_password@localhost:5432/rag_db", description="PostgreSQL database URL", env="POSTGRES_DATABASE_URL")
-    echo_sql: bool = Field(default=False, description="Whether to echo SQL statements", env="POSTGRES_ECHO_SQL")
-    pool_size: int = Field(default=20, description="Size of the connection pool", env="POSTGRES_POOL_SIZE")
-    max_overflow: int = Field(default=0, description="Maximum number of connections to create beyond the pool size", env="POSTGRES_MAX_OVERFLOW")
-    
-    class Config:
-        env_perfix = "POSTGRES_"
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_", extra="ignore")
+
+    database_url: str = Field(default="postgresql://rag_user:rag_password@localhost:5432/rag_db", description="PostgreSQL database URL")
+    echo_sql: bool = Field(default=False, description="Whether to echo SQL statements")
+    pool_size: int = Field(default=20, description="Size of the connection pool")
+    max_overflow: int = Field(default=0, description="Maximum number of connections to create beyond the pool size")
         
 Base = declarative_base()
 

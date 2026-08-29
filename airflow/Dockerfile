@@ -5,6 +5,11 @@ ENV AIRFLOW_HOME=/opt/airflow
 ENV AIRFLOW_VERSION=2.10.3
 ENV PYTHON_VERSION=3.12
 ENV CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+# PyPI downloads for Docling's scientific dependencies can be large and slow.
+# Increase pip's timeout and retry count so transient download stalls do not
+# abort the image build.
+ENV PIP_DEFAULT_TIMEOUT=300 \
+    PIP_RETRIES=10
 
 # Install system dependencies
 RUN apt-get update && \
@@ -15,6 +20,8 @@ RUN apt-get update && \
         libpq-dev \
         poppler-utils \
         tesseract-ocr \
+        libgl1 \
+        libglib2.0-0 \
         && rm -rf /var/lib/apt/lists/*
 
 # Create airflow user with UID/GID 50000 for cross-platform compatibility
@@ -25,6 +32,8 @@ RUN mkdir -p ${AIRFLOW_HOME} && \
     mkdir -p ${AIRFLOW_HOME}/dags && \
     mkdir -p ${AIRFLOW_HOME}/logs && \
     mkdir -p ${AIRFLOW_HOME}/plugins && \
+    mkdir -p ${AIRFLOW_HOME}/data/arxiv_pdfs && \
+    mkdir -p ${AIRFLOW_HOME}/.cache && \
     chown -R 50000:50000 ${AIRFLOW_HOME} && \
     chmod -R 755 ${AIRFLOW_HOME}
 

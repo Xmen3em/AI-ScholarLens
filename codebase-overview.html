@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-ScholarLens — Living Codebase Overview (Phase 2)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2a3240;
+    --ink:#e6edf3; --muted:#9aa7b4; --dim:#6e7c8c;
+    --acc:#58a6ff; --acc2:#7ee787; --acc3:#f0a868; --acc4:#d2a8ff; --acc5:#ff7b72;
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Code","JetBrains Mono",Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px}
+  a{color:var(--acc);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  code,.mono{font-family:var(--mono);font-size:.86em}
+  /* ---------- hero ---------- */
+  header.hero{
+    background:
+      radial-gradient(1200px 400px at 80% -10%,rgba(88,166,255,.18),transparent),
+      radial-gradient(900px 400px at 0% 0%,rgba(126,231,135,.10),transparent),
+      var(--panel);
+    border-bottom:1px solid var(--line);
+    padding:64px 0 48px;
+  }
+  .eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--acc2);margin:0 0 14px}
+  h1{font-size:2.6rem;line-height:1.1;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--acc),var(--acc4));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{font-size:1.18rem;color:var(--muted);max-width:760px;margin:0 0 26px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{font-family:var(--mono);font-size:.74rem;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--muted)}
+  .pill b{color:var(--acc3);font-weight:600}
+  /* ---------- nav ---------- */
+  nav.toc{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav.toc .wrap{display:flex;flex-wrap:wrap;gap:4px;padding-top:10px;padding-bottom:10px}
+  nav.toc a{font-size:.82rem;color:var(--muted);padding:5px 11px;border-radius:7px}
+  nav.toc a:hover{background:var(--panel2);color:var(--ink);text-decoration:none}
+  /* ---------- sections ---------- */
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:1.7rem;margin:0 0 6px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+  h2 .n{font-family:var(--mono);font-size:.95rem;color:var(--acc);border:1px solid var(--line);border-radius:8px;padding:3px 9px;background:var(--panel2)}
+  .sub{color:var(--dim);margin:0 0 28px;font-size:1rem}
+  h3{font-size:1.06rem;margin:26px 0 8px;color:var(--ink)}
+  p{margin:0 0 14px}
+  .muted{color:var(--muted)}
+  /* ---------- cards / grid ---------- */
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px}
+  .card h4{margin:0 0 6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .card p{margin:0;color:var(--muted);font-size:.92rem}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+  .tag{font-family:var(--mono);font-size:.72rem;color:var(--dim)}
+  /* ---------- architecture diagram ---------- */
+  .diagram{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;margin-top:6px}
+  .layerrow{display:flex;align-items:stretch;gap:14px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+  .node{flex:1 1 150px;min-width:140px;max-width:210px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:center;position:relative}
+  .node .t{font-weight:600;font-size:.92rem;margin-bottom:2px}
+  .node .d{font-size:.74rem;color:var(--dim);font-family:var(--mono)}
+  .node.acc{border-color:rgba(88,166,255,.5)}
+  .node.acc2{border-color:rgba(126,231,135,.45)}
+  .node.acc3{border-color:rgba(240,168,104,.45)}
+  .node.acc4{border-color:rgba(210,168,255,.45)}
+  .node.acc5{border-color:rgba(255,123,114,.45)}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:1.4rem;line-height:1}
+  .flowlabel{text-align:center;font-family:var(--mono);font-size:.72rem;color:var(--acc2);letter-spacing:.1em;text-transform:uppercase;margin:18px 0 4px}
+  /* ---------- table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.06em}
+  tr:hover td{background:var(--panel)}
+  td .mono{color:var(--acc3)}
+  .method{font-family:var(--mono);font-size:.74rem;font-weight:700;padding:2px 7px;border-radius:5px}
+  .m-get{background:rgba(126,231,135,.15);color:var(--acc2)}
+  .m-post{background:rgba(240,168,104,.15);color:var(--acc3)}
+  .badge{font-family:var(--mono);font-size:.7rem;padding:2px 8px;border-radius:5px;white-space:nowrap}
+  .b-live{background:rgba(126,231,135,.14);color:var(--acc2);border:1px solid rgba(126,231,135,.3)}
+  .b-mock{background:rgba(240,168,104,.14);color:var(--acc3);border:1px solid rgba(240,168,104,.3)}
+  .b-progress{background:rgba(210,168,255,.14);color:var(--acc4);border:1px solid rgba(210,168,255,.3)}
+  .b-future{background:rgba(110,124,140,.14);color:var(--dim);border:1px solid var(--line)}
+  /* ---------- code block ---------- */
+  pre{background:#0a0e14;border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.55;color:#c9d6e3}
+  pre .c{color:var(--dim)}
+  pre .k{color:var(--acc4)}
+  pre .s{color:var(--acc2)}
+  pre .f{color:var(--acc)}
+  /* ---------- file tree ---------- */
+  .tree{font-family:var(--mono);font-size:.84rem;line-height:1.75;color:var(--muted)}
+  .tree .dir{color:var(--acc)}
+  .tree .cm{color:var(--dim)}
+  /* ---------- roadmap ---------- */
+  .road{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:18px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:0}
+  .step .wk{flex:none;width:84px;font-family:var(--mono);font-size:.8rem;color:var(--acc);padding-top:2px}
+  .step .body h4{margin:0 0 3px;font-size:1rem}
+  .step .body p{margin:0;color:var(--muted);font-size:.9rem}
+  .step.done .wk{color:var(--acc2)}
+  .chk{font-family:var(--mono)}
+  /* ---------- callout ---------- */
+  .note{background:linear-gradient(180deg,rgba(88,166,255,.07),transparent);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:14px 18px;margin:20px 0;color:var(--muted);font-size:.92rem}
+  .note b{color:var(--ink)}
+  footer{padding:40px 0 60px;color:var(--dim);font-size:.85rem}
+  .kvs{display:flex;flex-wrap:wrap;gap:8px 26px;font-size:.9rem;color:var(--muted)}
+  .kvs b{color:var(--ink);font-weight:600}
+  @media(max-width:760px){
+    .g2,.g3{grid-template-columns:1fr}
+    h1{font-size:2rem}
+    .layerrow{flex-direction:column;align-items:stretch}
+    .node{max-width:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Codebase Walkthrough · Phase 2 / Week 2</p>
+    <h1>AI-ScholarLens <span class="grad">— From Papers to RAG</span></h1>
+    <p class="lede">A production-style <b>Retrieval-Augmented Generation (RAG)</b> research assistant, built in replaceable phases. The infrastructure foundation is working, and the current phase adds arXiv metadata ingestion plus PDF processing while OpenSearch retrieval and grounded answers remain planned seams.</p>
+    <div class="pills">
+      <span class="pill"><b>Python</b> 3.12</span>
+      <span class="pill"><b>FastAPI</b> async API</span>
+      <span class="pill"><b>PostgreSQL</b> 16</span>
+      <span class="pill"><b>OpenSearch</b> 2.19</span>
+      <span class="pill"><b>Airflow</b> 2.10</span>
+      <span class="pill"><b>Ollama</b> 0.11</span>
+      <span class="pill"><b>Docker</b> Compose</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#big">The Big Idea</a>
+    <a href="#arch">Architecture</a>
+    <a href="#services">Runtime Services</a>
+    <a href="#layers">Code Layers</a>
+    <a href="#flow">Request Flow</a>
+    <a href="#api">API Endpoints</a>
+    <a href="#data">Data Model</a>
+    <a href="#tree">File Map</a>
+    <a href="#status">Current Status</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#deep">Deep Dives</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#verify">Run &amp; Verify</a>
+  </div>
+</nav>
+
+<!-- ====================== BIG IDEA ====================== -->
+<section id="big">
+  <div class="wrap">
+    <h2><span class="n">01</span> The Big Idea</h2>
+    <p class="sub">What this project will become — and where Phase 2 fits.</p>
+    <p>The end goal is a personal assistant that <b>automatically pulls academic papers from arXiv, understands them, and answers your research questions with citations.</b> That is a classic RAG pipeline: <i>retrieve</i> relevant documents, then let an LLM <i>generate</i> a grounded answer.</p>
+    <p>A real RAG system needs several moving parts running together — an API to talk to, a database to store papers, a search engine to retrieve them, a scheduler to fetch new ones, and an LLM to write answers. <b>Phase 2 completes the first part of that data path:</b> arXiv metadata is fetched, PDFs are downloaded and parsed in the Airflow image, and paper records are upserted idempotently into PostgreSQL. Papers outside the parser&rsquo;s page limit are recorded as skips, and any failure is stored with its reason.</p>
+    <div class="grid g3" style="margin-top:8px">
+      <div class="card"><h4><span class="dot" style="background:var(--acc2)"></span>Built &amp; working</h4><p>The API, PostgreSQL model/repository, arXiv client, health checks, Docker stack, Airflow ingestion DAG, PDF parser service and an offline pytest suite are in place.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--acc4)"></span>In progress</h4><p>Phase 2 is wiring fetched arXiv papers through metadata persistence and Docling-based PDF extraction. Airflow owns the heavy PDF dependency; the API stays lightweight.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--dim)"></span>Reserved for later</h4><p>OpenSearch indexing/search, embeddings, retrieval-augmented answers and evaluation are intentionally kept as replaceable Phase 3–5 boundaries.</p></div>
+    </div>
+    <div class="note"><b>Mental model:</b> each phase adds one dependable slice without forcing a rewrite. PostgreSQL is the source of truth, Airflow handles scheduled ingestion, and future retrieval/LLM services can be added behind the existing repository, service and API seams.</div>
+  </div>
+</section>
+
+<!-- ====================== ARCHITECTURE ====================== -->
+<section id="arch">
+  <div class="wrap">
+    <h2><span class="n">02</span> Architecture at a Glance</h2>
+    <p class="sub">Six containers on one Docker network, orchestrated by <code>compose.yml</code>; application responsibilities are deliberately separated from infrastructure.</p>
+    <div class="diagram">
+      <div class="flowlabel">Client / Browser</div>
+      <div class="layerrow">
+        <div class="node acc"><div class="t">FastAPI</div><div class="d">:8000 · rag-api</div></div>
+      </div>
+      <div class="arrow">↓ &nbsp; talks to &nbsp; ↓</div>
+      <div class="layerrow">
+        <div class="node acc2"><div class="t">PostgreSQL 16</div><div class="d">:5432 · metadata</div></div>
+        <div class="node acc3"><div class="t">OpenSearch 2.19</div><div class="d">:9200 · search</div></div>
+        <div class="node acc4"><div class="t">Ollama 0.11</div><div class="d">:11434 · local LLM</div></div>
+      </div>
+      <div class="arrow">↑ &nbsp; also orchestrated alongside &nbsp; ↑</div>
+      <div class="layerrow">
+        <div class="node acc5"><div class="t">Apache Airflow</div><div class="d">${AIRFLOW_PORT:-8080} · scheduler</div></div>
+        <div class="node"><div class="t">OpenSearch Dashboards</div><div class="d">:5601 · search UI</div></div>
+      </div>
+      <p class="muted" style="text-align:center;font-size:.82rem;margin:18px 0 0">All services share the <code>rag-network</code> bridge. API healthchecks cover PostgreSQL and Ollama; Airflow runs the ingestion workflow, while OpenSearch is available for the next phase.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SERVICES ====================== -->
+<section id="services">
+  <div class="wrap">
+    <h2><span class="n">03</span> Runtime Services</h2>
+    <p class="sub">Each runs in its own container. Together they support the current ingestion path and leave room for retrieval and generation later.</p>
+    <div class="grid g2">
+      <div class="card"><h4><span class="dot" style="background:var(--acc)"></span>FastAPI &nbsp;<span class="tag">:8000</span></h4><p>The front door. Serves the versioned REST API and Swagger docs at <code>/docs</code>. Its lifespan initializes the database and the arXiv client; the Ollama health client is constructed per request in the health handler. PDF parsing is kept out of this image.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--acc2)"></span>PostgreSQL 16 &nbsp;<span class="tag">:5432</span></h4><p>The system of record. Stores paper metadata plus processed text and parsing status through SQLAlchemy. The repository’s <code>upsert</code> keeps repeated ingestion idempotent.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--acc3)"></span>OpenSearch 2.19 &nbsp;<span class="tag">:9200</span></h4><p>The retrieval engine. In later weeks it powers <b>hybrid search</b> (keyword BM25 + semantic vectors) to find the right papers for a question. Running now, but not yet queried by code.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--acc4)"></span>Ollama 0.11 &nbsp;<span class="tag">:11434</span></h4><p>Local LLM server for a later generation phase. The API currently uses it for a version/health check; answer generation and embeddings are future work.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--acc5)"></span>Apache Airflow 2.10 &nbsp;<span class="tag">:${AIRFLOW_PORT:-8080}</span></h4><p>The scheduler and worker runtime. Its <code>arxiv_paper_ingestion</code> DAG fetches papers, processes failed PDFs, records placeholder indexing work and produces a daily report.</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--dim)"></span>OpenSearch Dashboards &nbsp;<span class="tag">:5601</span></h4><p>A web UI for inspecting the search index — useful for debugging retrieval once data starts flowing in.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== CODE LAYERS ====================== -->
+<section id="layers">
+  <div class="wrap">
+    <h2><span class="n">04</span> How the Code Is Organised</h2>
+    <p class="sub">The <code>src/</code> app follows a clean <b>layered architecture</b> — each layer has one job and only talks to its neighbours. This separation is the whole point of the “production-grade” framing.</p>
+    <div class="diagram">
+      <div class="layerrow">
+        <div class="node acc"><div class="t">Routers</div><div class="d">routers/</div></div>
+        <div class="arrow">→</div>
+        <div class="node acc4"><div class="t">Schemas</div><div class="d">schemas/</div></div>
+        <div class="arrow">→</div>
+        <div class="node acc3"><div class="t">Repositories</div><div class="d">repositories/</div></div>
+        <div class="arrow">→</div>
+        <div class="node acc2"><div class="t">Models</div><div class="d">models/</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Database</div><div class="d">db/</div></div>
+      </div>
+      <p class="muted" style="text-align:center;font-size:.82rem;margin:16px 0 0">HTTP request → validated → business query → ORM object → SQL. Each arrow is a hand-off between layers.</p>
+    </div>
+    <div class="grid g2" style="margin-top:20px">
+      <div class="card"><h4>Routers <span class="tag">· the &ldquo;what URL&rdquo;</span></h4><p>Define the live HTTP endpoints (<code>/health</code>, <code>/ping</code>, paper listing and paper lookup). They validate input and delegate to the repository.</p></div>
+      <div class="card"><h4>Schemas <span class="tag">· the contract</span></h4><p>Pydantic models that validate incoming JSON and shape outgoing responses. They guarantee the API’s data contract independently of the database.</p></div>
+      <div class="card"><h4>Repositories <span class="tag">· the data access</span></h4><p><code>PaperRepository</code> holds all query logic — <code>create</code>, <code>get_by_arxiv_id</code>, <code>upsert</code>. Routers never write raw SQL; they ask the repository.</p></div>
+      <div class="card"><h4>Models <span class="tag">· the table</span></h4><p>SQLAlchemy ORM classes. <code>Paper</code> maps metadata, PDF-processing output and lifecycle fields to the <code>papers</code> table.</p></div>
+      <div class="card"><h4>db/ <span class="tag">· the connection</span></h4><p>A <code>BaseDatabase</code> interface with a <code>PostgreSQLDatabase</code> implementation, built by a <code>factory</code>. The interface means you could swap databases without touching routers.</p></div>
+      <div class="card"><h4>Services <span class="tag">· integrations</span></h4><p><code>services/arxiv</code> talks to arXiv, <code>services/metadata_fetcher.py</code> maps entries to papers, <code>services/pdf_parser</code> handles Docling, and <code>services/ollama</code> provides the current health check.</p></div>
+      <div class="card"><h4>config &amp; dependencies <span class="tag">· the glue</span></h4><p><code>config.py</code> centralises settings from environment variables. <code>dependencies.py</code> uses FastAPI injection so handlers receive a DB session automatically.</p></div>
+    </div>
+    <div class="note"><b>Why bother with layers?</b> Phase 3 can add an OpenSearch client and retrieval repository beside the existing arXiv/PDF services. The routers and schemas can evolve at the API boundary without mixing infrastructure concerns into ingestion code.</div>
+  </div>
+</section>
+
+<!-- ====================== REQUEST FLOW ====================== -->
+<section id="flow">
+  <div class="wrap">
+    <h2><span class="n">05</span> A Request, Start to Finish</h2>
+    <p class="sub">Tracing <code>GET /health</code> — the one endpoint that exercises real infrastructure.</p>
+    <pre><span class="c"># 1. App boots — lifespan() in main.py wires up shared state</span>
+settings = get_settings()              <span class="c"># load config from env</span>
+database = make_database()             <span class="c"># factory → PostgreSQLDatabase.startup()</span>
+app.state.database = database          <span class="c"># test "SELECT 1", create tables if missing</span>
+
+<span class="c"># 2. Request hits the router — routers/ping.py</span>
+<span class="k">async def</span> <span class="f">health_check</span>(settings, database):     <span class="c"># deps injected by FastAPI</span>
+    <span class="k">with</span> database.get_session() <span class="k">as</span> session:
+        session.execute(text(<span class="s">"SELECT 1"</span>))   <span class="c"># ✅ Postgres reachable?</span>
+    ollama = OllamaClient(settings)
+    <span class="k">await</span> ollama.health_check()                <span class="c"># ✅ Ollama reachable? (GET /api/version)</span>
+
+<span class="c"># 3. Response — validated against HealthResponse schema</span>
+{ <span class="s">"status"</span>: <span class="s">"ok"</span>, <span class="s">"version"</span>: <span class="s">"0.1.0"</span>,
+  <span class="s">"services"</span>: { <span class="s">"database"</span>: {...}, <span class="s">"ollama"</span>: {...} } }</pre>
+    <p class="muted">If Postgres or Ollama can’t be reached, the status degrades to <code>"degraded"</code> instead of crashing — exactly how a load-balancer health probe expects to behave.</p>
+  </div>
+</section>
+
+<!-- ====================== API ====================== -->
+<section id="api">
+  <div class="wrap">
+    <h2><span class="n">06</span> API Endpoints</h2>
+    <p class="sub">Mounted under <code>/api/v1</code>. Explore them live at <a href="http://localhost:8000/docs">localhost:8000/docs</a> once running.</p>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Does</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method m-get">GET</span></td><td class="mono">/ping</td><td>Liveness check — returns <code>pong</code>.</td><td><span class="badge b-live">live</span></td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="mono">/health</td><td>Deep health — verifies Postgres + Ollama connectivity.</td><td><span class="badge b-live">live</span></td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="mono">/papers/</td><td>List stored papers with pagination.</td><td><span class="badge b-live">live</span></td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="mono">/papers/{arxiv_id}</td><td>Fetch a stored paper by arXiv ID (validated by regex).</td><td><span class="badge b-live">live</span></td></tr>
+        <tr><td>—</td><td class="mono">/ask</td><td>Question answering endpoint is not implemented yet; it belongs to the future RAG phase.</td><td><span class="badge b-future">planned</span></td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin-top:14px">The current contract is intentionally small: health checks plus paper listing and lookup. Search and <code>/ask</code> will be added only when retrieval and generation are implemented behind tested services.</p>
+  </div>
+</section>
+
+<!-- ====================== DATA MODEL ====================== -->
+<section id="data">
+  <div class="wrap">
+    <h2><span class="n">07</span> The Data Model</h2>
+    <p class="sub">One table so far — <code>papers</code> — defined in <code>models/paper.py</code>.</p>
+    <div class="grid g2">
+      <div>
+        <table>
+          <thead><tr><th>Column</th><th>Type</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">id</td><td>UUID</td><td>primary key</td></tr>
+            <tr><td class="mono">arxiv_id</td><td>String</td><td>unique, indexed</td></tr>
+            <tr><td class="mono">title</td><td>String</td><td>—</td></tr>
+            <tr><td class="mono">authors</td><td>JSON</td><td>list of names</td></tr>
+            <tr><td class="mono">abstract</td><td>Text</td><td>arXiv abstract</td></tr>
+            <tr><td class="mono">categories</td><td>JSON</td><td>arXiv tags</td></tr>
+            <tr><td class="mono">published_date</td><td>DateTime</td><td>—</td></tr>
+            <tr><td class="mono">pdf_url</td><td>String</td><td>—</td></tr>
+            <tr><td class="mono">raw_text</td><td>Text</td><td>extracted PDF text</td></tr>
+            <tr><td class="mono">sections / references</td><td>JSON</td><td>parser output</td></tr>
+            <tr><td class="mono">parser_used / parser_metadata</td><td>String / JSON</td><td>processing provenance</td></tr>
+            <tr><td class="mono">pdf_processed</td><td>Boolean</td><td>processing status</td></tr>
+            <tr><td class="mono">pdf_processing_date</td><td>DateTime</td><td>last parse time</td></tr>
+            <tr><td class="mono">created_at / updated_at</td><td>DateTime</td><td>auto timestamps</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 style="margin-top:0">The two faces of a Paper</h3>
+        <p class="muted">A subtle but important pattern: the <b>ORM model</b> (<code>Paper</code>, how it’s stored) is kept separate from the <b>Pydantic schemas</b> (<code>PaperCreate</code>, <code>PaperResponse</code>, how it crosses the API boundary).</p>
+        <p class="muted">The repository’s <code>upsert()</code> ties them together: given a validated <code>PaperCreate</code>, it updates the row if the <code>arxiv_id</code> already exists, otherwise inserts a new one — the standard idempotent write you want for a data pipeline that may see the same paper twice.</p>
+        <div class="card" style="margin-top:8px"><h4>Why JSON columns?</h4><p>Authors, categories, sections and references are naturally structured lists. JSON keeps ingestion flexible while the schema is still evolving; OpenSearch can later receive a search-optimised projection.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FILE TREE ====================== -->
+<section id="tree">
+  <div class="wrap">
+    <h2><span class="n">08</span> File Map</h2>
+    <p class="sub">Where everything lives. Start reading at <code>src/main.py</code> and follow the ingestion path through Airflow.</p>
+    <pre class="tree">AI-ScholarLens/
+├── <span class="dir">src/</span>                      <span class="cm"># the FastAPI application</span>
+│   ├── main.py              <span class="cm"># ⭐ entry point — app, lifespan, router wiring</span>
+│   ├── config.py            <span class="cm"># centralised settings (env-driven)</span>
+│   ├── dependencies.py      <span class="cm"># FastAPI dependency injection</span>
+│   ├── <span class="dir">routers/</span>             <span class="cm"># HTTP endpoints: ping, health, papers</span>
+│   ├── <span class="dir">schemas/</span>             <span class="cm"># Pydantic request/response contracts</span>
+│   ├── <span class="dir">repositories/</span>        <span class="cm"># data-access logic (PaperRepository)</span>
+│   ├── <span class="dir">models/</span>              <span class="cm"># SQLAlchemy ORM tables (Paper)</span>
+│   ├── <span class="dir">db/</span>                  <span class="cm"># DB interface + PostgreSQL implementation + factory</span>
+│   └── <span class="dir">services/</span>             <span class="cm"># arXiv, metadata, PDF parser, Ollama integrations</span>
+├── <span class="dir">airflow/dags/</span>            <span class="cm"># arxiv_paper_ingestion.py + task modules</span>
+├── <span class="dir">tests/</span>                   <span class="cm"># pytest suite (api/ + unit/)</span>
+├── README.md                 <span class="cm"># living architecture and phase roadmap</span>
+├── TESTING.md                <span class="cm"># offline, Docker and pipeline test guide</span>
+├── compose.yml              <span class="cm"># ⭐ orchestrates all 6 services</span>
+└── pyproject.toml           <span class="cm"># deps + tooling (uv, ruff, mypy, pytest)</span></pre>
+  </div>
+</section>
+
+<!-- ====================== STATUS ====================== -->
+<section id="status">
+  <div class="wrap">
+    <h2><span class="n">09</span> Current Status</h2>
+    <p class="sub">Use this matrix as the living boundary between implemented behavior and future phases.</p>
+    <div class="grid g3">
+      <div class="card"><h4><span class="dot" style="background:var(--acc2)"></span>Implemented</h4>
+        <p>• FastAPI app, docs and versioned routes<br>• PostgreSQL model/repository + idempotent upsert<br>• arXiv client and metadata mapping<br>• Airflow ingestion DAG and task contracts<br>• Docling PDF parser in the Airflow image, verified end to end<br>• Parsed text, sections and references persisted<br>• Offline pytest suite, Docker-backed repository tests, ruff and mypy hooks</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--acc4)"></span>In progress</h4>
+        <p>• Tune parsing coverage for papers past the 30-page limit<br>• Broaden failure/retry handling beyond the current skip and error paths<br>• Keep API and Airflow dependency boundaries healthy</p></div>
+      <div class="card"><h4><span class="dot" style="background:var(--dim)"></span>Planned</h4>
+        <p>• OpenSearch indexing and hybrid retrieval<br>• Embeddings and chunk-level search<br>• Grounded <code>/ask</code> answers through Ollama<br>• Evaluation, observability and production hardening</p></div>
+    </div>
+    <div class="note"><b>How to keep this accurate:</b> after each phase, update the status cards, endpoint table, file map and roadmap together. If a feature is not backed by code and a test or smoke check, keep it marked as planned.</div>
+  </div>
+</section>
+
+<!-- ====================== ROADMAP ====================== -->
+<section id="roadmap">
+  <div class="wrap">
+    <h2><span class="n">10</span> Phase Roadmap</h2>
+    <p class="sub">The architecture is intentionally incremental: each phase can be tested and reviewed before the next boundary is added.</p>
+    <div class="road">
+      <div class="step done"><div class="wk">Phase 1 <span class="chk">●</span></div><div class="body"><h4>Infrastructure Foundation &nbsp;<span class="badge b-live">complete</span></h4><p>Docker Compose stack, FastAPI skeleton, PostgreSQL schema, health monitoring, and developer tooling.</p></div></div>
+      <div class="step done"><div class="wk">Phase 2 <span class="chk">●</span></div><div class="body"><h4>arXiv Ingestion &amp; PDF Processing &nbsp;<span class="badge b-live">complete</span></h4><p>Fetch arXiv metadata, download and parse PDFs with Docling, and persist paper content through repeatable Airflow tasks.</p></div></div>
+      <div class="step"><div class="wk">Phase 3</div><div class="body"><h4>OpenSearch Indexing &amp; Hybrid Retrieval &nbsp;<span class="badge b-progress">next</span></h4><p>Project paper content into OpenSearch and combine BM25 keyword search with semantic vectors.</p></div></div>
+      <div class="step"><div class="wk">Phase 4</div><div class="body"><h4>Chunking &amp; Evaluation</h4><p>Introduce context-aware chunks, retrieval metrics and regression cases for search quality.</p></div></div>
+      <div class="step"><div class="wk">Phase 5</div><div class="body"><h4>Grounded RAG Answers</h4><p>Connect retrieval to Ollama and add a tested question-answering route with citations.</p></div></div>
+      <div class="step"><div class="wk">Phase 6</div><div class="body"><h4>Production Hardening</h4><p>Add observability, failure recovery, security controls and deployment workflows.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== DEEP DIVE ====================== -->
+<section id="deep">
+  <div class="wrap">
+    <h2><span class="n">11</span> Deep Dives</h2>
+    <p class="sub">Three patterns worth understanding in detail — they’re the load-bearing ideas the rest of the course builds on.</p>
+
+    <h3 style="color:var(--acc)">A · How a database session reaches your handler (Dependency Injection)</h3>
+    <p class="muted">You never see a router open a database connection. Instead FastAPI <b>injects</b> one. The trick is a chain of small functions, each declaring what <i>it</i> needs, resolved lazily at request time.</p>
+    <pre><span class="c"># dependencies.py — the chain, from app state down to a live Session</span>
+
+<span class="k">def</span> <span class="f">get_database</span>(request: Request) -> BaseDatabase:
+    <span class="k">return</span> request.app.state.database        <span class="c"># set once in main.py lifespan()</span>
+
+<span class="k">def</span> <span class="f">get_db_session</span>(database = Depends(get_database)):
+    <span class="k">with</span> database.get_session() <span class="k">as</span> session:    <span class="c"># context-managed…</span>
+        <span class="k">yield</span> session                         <span class="c"># …yielded to the handler…</span>
+                                          <span class="c"># …then auto-closed/rolled-back after</span>
+
+SessionDep = Annotated[Session, Depends(get_db_session)]   <span class="c"># reusable alias</span>
+
+<span class="c"># routers/papers.py — the handler just asks for the type it wants</span>
+<span class="k">def</span> <span class="f">get_paper_details</span>(db: SessionDep, arxiv_id: str):
+    <span class="k">return</span> PaperRepository(db).get_by_arxiv_id(arxiv_id)</pre>
+    <div class="grid g3" style="margin-top:6px">
+      <div class="card"><h4>Why <code>yield</code>, not <code>return</code>?</h4><p>It makes the dependency a context manager. Code after <code>yield</code> runs <i>after</i> the response is sent — guaranteeing the session is closed even if the handler throws.</p></div>
+      <div class="card"><h4>Why the <code>Annotated</code> alias?</h4><p><code>SessionDep</code> bundles the type + its provider once. Handlers stay readable (<code>db: SessionDep</code>) instead of repeating <code>Depends(...)</code> everywhere.</p></div>
+      <div class="card"><h4>Why route through <code>app.state</code>?</h4><p>The DB is built <b>once</b> at startup (<code>lifespan()</code>) and reused. Per-request you only borrow a <i>session</i> from the shared pool — cheap and connection-safe.</p></div>
+    </div>
+    <div class="note"><b>Payoff:</b> handlers are trivially testable. In <code>tests/</code> you override <code>get_db_session</code> with a stand-in session object — no handler code changes. That single seam is why the whole app is mockable.</div>
+
+    <h3 style="color:var(--acc3)">B · The Repository &amp; the idempotent <code>upsert</code></h3>
+    <p class="muted">All SQL lives behind <code>PaperRepository</code>. The interesting method is <code>upsert</code> — the workhorse a data pipeline needs, because Phase 2 will see the same arXiv paper more than once and must not create duplicates.</p>
+    <pre><span class="c"># repositories/paper.py</span>
+<span class="k">def</span> <span class="f">upsert</span>(self, paper_create: PaperCreate) -> Paper:
+    existing = self.get_by_arxiv_id(paper_create.arxiv_id)   <span class="c"># unique, indexed lookup</span>
+    <span class="k">if</span> existing:
+        <span class="k">for</span> key, value <span class="k">in</span> paper_create.model_dump(exclude_unset=<span class="k">True</span>).items():
+            setattr(existing, key, value)                    <span class="c"># patch only provided fields</span>
+        <span class="k">return</span> self.update(existing)                         <span class="c"># UPDATE</span>
+    <span class="k">return</span> self.create(paper_create)                        <span class="c"># INSERT</span></pre>
+    <div class="grid g2" style="margin-top:6px">
+      <div class="card"><h4>“Insert <i>or</i> update” = idempotent</h4><p>Run the same ingestion twice and the table looks identical. That property is what lets Airflow safely re-run a failed job without corrupting data.</p></div>
+      <div class="card"><h4><code>exclude_unset=True</code> matters</h4><p>Only fields actually supplied overwrite the row — a partial update won’t blank out columns you didn’t mention. The <code>arxiv_id</code> index makes the existence check fast.</p></div>
+    </div>
+    <p class="muted">The repository also enforces a boundary: routers speak in <b>schemas</b> (<code>PaperCreate</code>) and receive <b>schemas</b> back, never raw SQLAlchemy queries. Swap PostgreSQL for something else and only this file changes.</p>
+
+    <h3 style="color:var(--acc2)">C · Where Phase 3 search will plug in</h3>
+    <p class="muted">OpenSearch is part of the Docker stack, but the application does not index or query it yet. The current seams make the next phase additive: keep PostgreSQL as the source of truth, then build a search projection from processed paper content.</p>
+    <table>
+      <thead><tr><th>Seam (today)</th><th>Location</th><th>Week 3 fills it with…</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">processed Paper fields</td><td>models/paper.py</td><td>source content for a search document: metadata, raw text, sections and references.</td></tr>
+        <tr><td class="mono">Airflow ingestion DAG</td><td>airflow/dags/</td><td>add a tested indexing task after persistence, with retries and observable failure states.</td></tr>
+        <tr><td class="mono">services/ollama/</td><td>services/</td><td>add a sibling OpenSearch client with configuration, health handling and a narrow interface.</td></tr>
+        <tr><td class="mono">PaperRepository</td><td>repositories/paper.py</td><td>keep PostgreSQL writes independent from the search projection and retrieval queries.</td></tr>
+        <tr><td class="mono">future search route</td><td>routers/ + schemas/</td><td>define a versioned search contract only after BM25/vector behavior has tests.</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><b>The lesson:</b> “hybrid” means keyword search (<b>BM25</b>, strong for exact terms) blended with <b>semantic vectors</b> (strong for meaning). Phase 3 should introduce that capability behind a small service/repository boundary, then Phase 5 can use the retrieved evidence to implement grounded answers.</div>
+  </div>
+</section>
+
+<!-- ====================== AIRFLOW PIPELINE ====================== -->
+<section id="pipeline">
+  <div class="wrap">
+    <h2><span class="n">12</span> The Ingestion Pipeline (Airflow)</h2>
+    <p class="sub">The current DAG is the Phase 2 ingestion backbone: it is scheduled, retryable and split into tasks that can evolve independently.</p>
+
+    <h3 style="color:var(--acc5)">What ships today: <code>arxiv_paper_ingestion</code></h3>
+    <p class="muted">A <b>DAG</b> (Directed Acyclic Graph) is Airflow’s unit of work — tasks plus the order in which they run. The current workflow is scheduled for weekdays at 06:00 UTC, allows two retries, and keeps ingestion steps visible in Airflow.</p>
+    <pre><span class="c"># airflow/dags/arxiv_paper_ingestion.py</span>
+
+setup_environment &gt;&gt; fetch_daily_papers
+fetch_daily_papers &gt;&gt; [process_failed_pdfs,
+                         create_opensearch_placeholders]
+[process_failed_pdfs, create_opensearch_placeholders]
+    &gt;&gt; generate_daily_report &gt;&gt; cleanup_temp_files
+
+<span class="c"># schedule: 0 6 * * 1-5 · retries: 2 · max_active_runs: 1</span></pre>
+    <div class="grid g3" style="margin-top:6px">
+      <div class="card"><h4>Hostnames, not localhost</h4><p>Inside the Docker network services address each other by <i>service name</i> — <code>postgres</code>, <code>opensearch</code>, <code>ollama</code> — never <code>localhost</code>.</p></div>
+      <div class="card"><h4><code>0 6 * * 1-5</code></h4><p>Automatic weekday schedule in UTC. Set a manual run from the Airflow UI when testing a change.</p></div>
+      <div class="card"><h4><code>retries=2</code></h4><p>Transient failures can retry after 30 minutes. Combined with the idempotent <code>upsert</code>, rerunning ingestion is safe.</p></div>
+    </div>
+
+    <h3 style="color:var(--acc3)">The Phase 2 ETL path</h3>
+    <p class="muted">The pipeline follows a classic <b>ETL</b> (Extract → Transform → Load) flow, with indexing kept as an explicit future boundary:</p>
+    <div class="diagram">
+      <div class="layerrow">
+        <div class="node acc5"><div class="t">Extract</div><div class="d">arXiv API</div></div>
+        <div class="arrow">→</div>
+        <div class="node acc3"><div class="t">Transform</div><div class="d">Docling PDF parse</div></div>
+        <div class="arrow">→</div>
+        <div class="node acc2"><div class="t">Load</div><div class="d">repo.upsert() → Postgres</div></div>
+        <div class="arrow">→</div>
+        <div class="node acc"><div class="t">Index</div><div class="d">placeholder → Phase 3</div></div>
+      </div>
+      <p class="muted" style="text-align:center;font-size:.82rem;margin:14px 0 0">Airflow handles scheduling, retries, logging and run history. The DAG mounts <code>./src</code> into the Airflow image so task code can reuse the project’s models and services.</p>
+    </div>
+    <div class="note"><b>Why Airflow at all?</b> You <i>could</i> fetch papers with a cron and a script. Airflow adds visibility, retries, backfills and dependency ordering — the operational scaffolding for an unattended pipeline. PostgreSQL remains the source of truth, while OpenSearch indexing can be added as a later task without changing the extraction contract.</div>
+  </div>
+</section>
+
+<!-- ====================== RUN & VERIFY ====================== -->
+<section id="verify">
+  <div class="wrap">
+    <h2><span class="n">13</span> Run &amp; Verify — Hands-On</h2>
+    <p class="sub">Use this loop to bring the stack up, confirm the live API, and then trigger the Phase 2 ingestion workflow. For the complete test matrix, see <code>TESTING.md</code>.</p>
+
+    <h3>Step 1 — Boot everything</h3>
+    <pre><span class="c"># from AI-ScholarLens/</span>
+uv sync                              <span class="c"># resolve + install Python deps</span>
+<span class="c"># Optional: set this before Compose if host port 8080 is busy</span>
+$env:AIRFLOW_PORT = "8081"
+docker compose up --build -d         <span class="c"># build and start the stack</span>
+docker compose ps                    <span class="c"># inspect health/status</span>
+</pre>
+    <p class="muted">The first run may take a few minutes because OpenSearch and Ollama are large. The API image intentionally stays lightweight; Docling/PDF dependencies are installed in the Airflow image.</p>
+
+    <h3>Step 2 — Prove the live endpoints</h3>
+    <pre><span class="c"># Deep health check — exercises REAL Postgres + Ollama</span>
+curl.exe http://localhost:8000/api/v1/health
+<span class="s">→ {"status":"ok","version":"0.1.0","services":{
+     "database":{"status":"healthy"...}, "ollama":{"status":"healthy"...}}}</span>
+
+<span class="c"># Liveness</span>
+curl.exe http://localhost:8000/api/v1/ping    <span class="s">→ {"status":"ok","message":"pong"}</span></pre>
+
+    <h3>Step 3 — Exercise the current paper API</h3>
+    <pre><span class="c"># List stored papers (may be empty before ingestion)</span>
+curl.exe http://localhost:8000/api/v1/papers/
+
+<span class="c"># Fetch one stored paper by arXiv ID</span>
+curl.exe http://localhost:8000/api/v1/papers/2401.00001
+
+<span class="c"># Open interactive documentation</span>
+start http://localhost:8000/docs</pre>
+    <p class="muted">A 404 for an arXiv ID that has not been ingested is expected. The question-answering route is deliberately planned for the grounded RAG phase, not mocked into the current API.</p>
+
+    <div class="grid g2" style="margin-top:8px">
+      <div class="card"><h4>Step 4 — Tour the UIs</h4><p>• Swagger: <a href="http://localhost:8000/docs">:8000/docs</a> — try the live routes<br>• Airflow: <a href="http://localhost:8080">:8080</a> by default <span class="tag">admin/admin</span> — trigger <code>arxiv_paper_ingestion</code><br>• OpenSearch: <a href="http://localhost:5601">:5601</a> — indexing is planned</p></div>
+      <div class="card"><h4>Step 5 — Tests &amp; teardown</h4><p><code>.venv\Scripts\python.exe -m pytest -q</code> — runs the offline suite.<br><code>docker compose logs &lt;service&gt;</code> for diagnostics.<br><code>docker compose down</code> to stop; use <code>down -v</code> only when you intentionally want to delete volumes.</p></div>
+    </div>
+    <div class="note"><b>If something won’t start:</b> give healthchecks time to settle, inspect <code>docker compose logs &lt;service&gt;</code>, and confirm ports 8000 / <code>AIRFLOW_PORT</code> / 5432 / 9200 / 5601 / 11434 are free. Low memory is a common culprit — OpenSearch alone reserves a substantial heap.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b style="color:var(--ink)">AI-ScholarLens</b> — Phase 2 living codebase overview. Tech: FastAPI · PostgreSQL · OpenSearch · Airflow · Ollama · Docker Compose.</p>
+    <p>Updated 2026-08-29. Keep this page, <code>README.md</code> and <code>TESTING.md</code> synchronized as each phase is completed.</p>
+  </div>
+</footer>
+
+</body>
+</html>

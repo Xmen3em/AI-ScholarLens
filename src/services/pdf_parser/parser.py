@@ -5,8 +5,6 @@ from typing import Optional
 from src.exceptions import PDFParsingException, PDFValidationError
 from src.schemas.pdf_parser.models import PdfContent
 
-from .docling import DoclingParser
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +21,11 @@ class PDFParserService:
             do_ocr: Enable OCR for scanned PDFs (default: False, very slow)
             do_table_structure: Extract table structures (default: True)
         """
+        # Imported here rather than at module scope: docling and pypdfium2 exist only in
+        # the Airflow image, and importing them eagerly would make this module — and every
+        # module that imports it — unimportable in the API image and the test suite.
+        from .docling import DoclingParser
+
         self.docling_parser = DoclingParser(
             max_pages=max_pages, max_file_size_mb=max_file_size_mb, do_ocr=do_ocr, do_table_structure=do_table_structure
         )
@@ -35,7 +38,11 @@ class PDFParserService:
             pdf_path: Path to PDF file
 
         Returns:
-            PdfContent object or None if parsing failed
+            PdfContent, or None if the parser declined the file (size or page limits).
+
+        Raises:
+            PDFValidationError: the file is missing or not a readable PDF.
+            PDFParsingException: parsing was attempted and failed.
         """
         if not pdf_path.exists():
             logger.error(f"PDF file not found: {pdf_path}")
@@ -46,9 +53,11 @@ class PDFParserService:
             if result:
                 logger.info(f"Parsed {pdf_path.name}")
                 return result
-            else:
-                logger.error(f"Docling parsing returned no result for {pdf_path.name}")
-                raise PDFParsingException(f"Docling parsing returned no result for {pdf_path.name}")
+
+            # None means the parser declined the file on purpose (size or page limits).
+            # That is a skip, not a failure, so let it through instead of raising.
+            logger.info(f"Skipped {pdf_path.name}: outside configured size or page limits")
+            return None
 
         except (PDFValidationError, PDFParsingException):
             raise

@@ -89,13 +89,19 @@ services:
       - POSTGRES_DATABASE_URL=postgresql+psycopg2://rag_user:rag_password@postgres:5432/rag_db
       - OPENSEARCH_HOST=http://opensearch:9200
       - PYTHONPATH=/opt/airflow/src
+      # Absolute, so the cache does not follow a task's working directory
+      - ARXIV__PDF_CACHE_DIR=/opt/airflow/data/arxiv_pdfs
+      - HF_HOME=/opt/airflow/.cache/huggingface
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./src:/opt/airflow/src
+      # Survive `docker compose down`: downloaded PDFs and Docling's model weights
+      - airflow_pdf_cache:/opt/airflow/data/arxiv_pdfs
+      - airflow_model_cache:/opt/airflow/.cache
     ports:
-      - "8080:8080"
+      - "${AIRFLOW_PORT:-8080}:8080"
     # Command handled by entrypoint.sh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
@@ -151,7 +157,9 @@ volumes:
   opensearch_data:
   ollama_data:
   airflow_logs:
+  airflow_pdf_cache:
+  airflow_model_cache:
 
 networks:
   rag-network:
-    driver: bridge 
+    driver: bridge

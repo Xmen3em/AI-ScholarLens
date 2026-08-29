@@ -1,7 +1,9 @@
 import asyncio
 import logging
+import os
 import time
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from functools import cached_property
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -13,6 +15,17 @@ from src.exceptions import ArxivAPIException, ArxivAPITimeoutError, ArxivParseEr
 from src.schemas.arxiv.paper import ArxivPaper
 
 logger = logging.getLogger(__name__)
+
+ARXIV_DATE_FORMAT = "%Y%m%d"
+
+
+def _validated_date(name: str, value: str) -> str:
+    """Reject dates arXiv cannot parse, which would otherwise return zero results silently."""
+    try:
+        datetime.strptime(value, ARXIV_DATE_FORMAT)
+    except (TypeError, ValueError):
+        raise ArxivAPIException(f"{name} must be in YYYYMMDD format, got {value!r}")
+    return value
 
 
 class ArxivClient:
@@ -85,8 +98,8 @@ class ArxivClient:
         # Add date filtering if provided
         if from_date or to_date:
             # Convert dates to arXiv format (YYYYMMDDHHMM) - use 0000 for start of day, 2359 for end
-            date_from = f"{from_date}0000" if from_date else "*"
-            date_to = f"{to_date}2359" if to_date else "*"
+            date_from = f"{_validated_date('from_date', from_date)}0000" if from_date else "*"
+            date_to = f"{_validated_date('to_date', to_date)}2359" if to_date else "*"
             # Use correct arXiv API syntax with + symbols
             search_query += f" AND submittedDate:[{date_from}+TO+{date_to}]"
 
@@ -419,10 +432,13 @@ class ArxivClient:
 
         pdf_path = self._get_pdf_path(paper.arxiv_id)
 
-        # Return cached PDF if exists
+        # Return cached PDF if exists and is intact
         if pdf_path.exists() and not force_download:
-            logger.info(f"Using cached PDF: {pdf_path.name}")
-            return pdf_path
+            if self._is_readable_pdf(pdf_path):
+                logger.info(f"Using cached PDF: {pdf_path.name}")
+                return pdf_path
+            logger.warning(f"Cached PDF is truncated or corrupt, re-downloading: {pdf_path.name}")
+            pdf_path.unlink()
 
         # Download with retry
         if await self._download_with_retry(paper.pdf_url, pdf_path):
@@ -460,14 +476,22 @@ class ArxivClient:
         # Respect rate limits
         await asyncio.sleep(self.rate_limit_delay)
 
+        partial_path = path.with_name(path.name + ".part")
+
         for attempt in range(max_retries):
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     async with client.stream("GET", url) as response:
                         response.raise_for_status()
-                        with open(path, "wb") as f:
+                        with open(partial_path, "wb") as f:
                             async for chunk in response.aiter_bytes():
                                 f.write(chunk)
+
+                if not self._is_readable_pdf(partial_path):
+                    partial_path.unlink(missing_ok=True)
+                    raise PDFDownloadException(f"Downloaded file is not a readable PDF: {url}")
+
+                os.replace(partial_path, path)
                 logger.info(f"Successfully downloaded to {path.name}")
                 return True
 
@@ -479,6 +503,7 @@ class ArxivClient:
                     await asyncio.sleep(wait_time)
                 else:
                     logger.error(f"PDF download failed after {max_retries} attempts due to timeout: {e}")
+                    partial_path.unlink(missing_ok=True)
                     raise PDFDownloadTimeoutError(f"PDF download timed out after {max_retries} attempts: {e}")
             except httpx.HTTPError as e:
                 if attempt < max_retries - 1:
@@ -488,13 +513,27 @@ class ArxivClient:
                     await asyncio.sleep(wait_time)
                 else:
                     logger.error(f"Failed after {max_retries} attempts: {e}")
+                    partial_path.unlink(missing_ok=True)
                     raise PDFDownloadException(f"PDF download failed after {max_retries} attempts: {e}")
             except Exception as e:
+                partial_path.unlink(missing_ok=True)
                 logger.error(f"Unexpected download error: {e}")
                 raise PDFDownloadException(f"Unexpected error during PDF download: {e}")
 
-        # Clean up partial download
-        if path.exists():
-            path.unlink()
-
+        partial_path.unlink(missing_ok=True)
         return False
+
+    @staticmethod
+    def _is_readable_pdf(path: Path) -> bool:
+        """Cheap integrity check: non-empty and carrying a PDF header.
+
+        Guards the cache against truncated downloads, which PDFium rejects with an
+        opaque "Data format error" only much later, at parse time.
+        """
+        try:
+            if path.stat().st_size == 0:
+                return False
+            with open(path, "rb") as f:
+                return f.read(5) == b"%PDF-"
+        except OSError:
+            return False

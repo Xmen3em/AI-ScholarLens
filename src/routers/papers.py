@@ -27,7 +27,7 @@ def list_papers(
 def get_paper_details(
     db: SessionDep,
     arxiv_id: str = Path(
-        ..., description="arXiv paper ID (e.g., '2401.00001' or '2401.00001v1')", regex=r"^\d{4}\.\d{4,5}(v\d+)?$"
+        ..., description="arXiv paper ID (e.g., '2401.00001' or '2401.00001v1')", pattern=r"^\d{4}\.\d{4,5}(v\d+)?$"
     ),
 ) -> PaperResponse:
     """Get details of a specific paper by arXiv ID."""

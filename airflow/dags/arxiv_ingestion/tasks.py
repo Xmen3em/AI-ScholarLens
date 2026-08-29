@@ -43,7 +43,7 @@ async def run_paper_ingestion_pipeline(
     
     with database.get_session() as session:
         # Fetch papers from arXiv
-        return await metadata_fetcher.fetch_and_store_papers(
+        return await metadata_fetcher.fetch_and_process_papers(
             max_results=max_results,
             from_date=target_date,
             to_date=target_date,
@@ -92,7 +92,8 @@ def fetch_daily_papers(**context):
         execution_date = context['ds']
         execution_dt = datetime.strptime(execution_date, "%Y-%m-%d")
         target_dt = execution_dt - timedelta(days=1)
-        target_date = target_dt.strftime("%Y-%m-%d")
+        # arXiv's submittedDate filter needs YYYYMMDD; a dashed date silently matches nothing.
+        target_date = target_dt.strftime("%Y%m%d")
         logger.info(f"Fetching papers for date: {target_date}")
         
 
@@ -102,7 +103,13 @@ def fetch_daily_papers(**context):
             process_pdfs=True
             )
                             )
-        logger.info(f"Paper ingestion completed successfully. Results: {results}")
+        if results.get("errors"):
+            logger.warning(
+                f"Paper ingestion completed with {len(results['errors'])} errors "
+                f"({results.get('pdfs_parsed', 0)} parsed, {results.get('pdfs_skipped', 0)} skipped). Results: {results}"
+            )
+        else:
+            logger.info(f"Paper ingestion completed successfully. Results: {results}")
         
         context['task_instance'].xcom_push(key='fetch_results', value=results)
         
@@ -197,6 +204,7 @@ def generate_daily_report(**context):
                 "fetched": fetch_results.get('papers_fetched', 0) if fetch_results else 0,
                 "pdfs_downloaded": fetch_results.get('pdfs_downloaded', 0) if fetch_results else 0,
                 "pdfs_parsed": fetch_results.get('pdfs_parsed', 0) if fetch_results else 0,
+                "pdfs_skipped": fetch_results.get('pdfs_skipped', 0) if fetch_results else 0,
                 "stored": fetch_results.get('papers_stored', 0) if fetch_results else 0,
             },
             "processing": {
@@ -215,6 +223,7 @@ def generate_daily_report(**context):
         logger.info(f"Papers fetched: {report['papers']['fetched']}")
         logger.info(f"PDFs downloaded: {report['papers']['pdfs_downloaded']}")
         logger.info(f"PDFs parsed: {report['papers']['pdfs_parsed']}")
+        logger.info(f"PDFs skipped (size/page limits): {report['papers']['pdfs_skipped']}")
         logger.info(f"Papers stored: {report['papers']['stored']}")
         logger.info(f"Processing time: {report['processing']['processing_time_seconds']:.1f}s")
         logger.info(f"Errors encountered: {report['processing']['errors']}")
