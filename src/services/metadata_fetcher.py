@@ -115,7 +115,7 @@ class MetadataFetcher:
             # Step 2: Process PDFs if requested
             pdf_results = {}
             if process_pdfs:
-                pdf_results = await self._process_pdfs_batch(papers)
+                pdf_results = await self._process_pdfs_batch(papers, db_session if store_to_db else None)
                 results["pdfs_downloaded"] = pdf_results["downloaded"]
                 results["pdfs_parsed"] = pdf_results["parsed"]
                 results["pdfs_skipped"] = len(pdf_results["skipped"])
@@ -123,11 +123,12 @@ class MetadataFetcher:
 
             # Step 3: Store to database if requested
             if store_to_db and db_session:
-                logger.info("Step 3: Storing papers to database...")
-                stored_count = self._store_papers_to_db(
-                    papers, pdf_results.get("parsed_papers", {}), db_session, pdf_results.get("failure_reasons", {})
-                )
-                results["papers_stored"] = stored_count
+                if process_pdfs:
+                    # Already persisted one by one as each paper's pipeline finished.
+                    results["papers_stored"] = pdf_results["stored"]
+                else:
+                    logger.info("Step 3: Storing papers to database...")
+                    results["papers_stored"] = self._store_papers_to_db(papers, {}, db_session)
             elif store_to_db:
                 logger.warning("Database storage requested but no session provided")
                 results["errors"].append("Database session not provided for storage")
@@ -157,7 +158,7 @@ class MetadataFetcher:
             results["errors"].append(f"Pipeline error: {str(e)}")
             raise PipelineException(f"Pipeline execution failed: {e}") from e
 
-    async def _process_pdfs_batch(self, papers: List[ArxivPaper]) -> Dict[str, Any]:
+    async def _process_pdfs_batch(self, papers: List[ArxivPaper], db_session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Process PDFs for a batch of papers with async concurrency.
 
@@ -170,6 +171,7 @@ class MetadataFetcher:
 
         Args:
             papers: List of ArxivPaper objects
+            db_session: When given, each paper is stored as soon as its pipeline finishes
 
         Returns:
             Dictionary with processing results and statistics
@@ -179,6 +181,7 @@ class MetadataFetcher:
             "parsed": 0,
             "parsed_papers": {},
             "skipped": [],
+            "stored": 0,
             "failure_reasons": {},
             "errors": [],
             "download_failures": [],
@@ -193,24 +196,25 @@ class MetadataFetcher:
         download_semaphore = asyncio.Semaphore(self.max_concurrent_downloads)
         parse_semaphore = asyncio.Semaphore(self.max_concurrent_parsing)
 
-        # Start all download+parse pipelines concurrently
-        pipeline_tasks = [self._download_and_parse_pipeline(paper, download_semaphore, parse_semaphore) for paper in papers]
-
-        # Wait for all pipelines to complete
-        pipeline_results = await asyncio.gather(*pipeline_tasks, return_exceptions=True)
-
-        # Process results with detailed error tracking
-        for paper, result in zip(papers, pipeline_results):
-            if isinstance(result, Exception):
+        async def pipeline_for(paper: ArxivPaper) -> tuple:
+            """Run one paper's pipeline, keeping its identity with the result."""
+            try:
+                download_success, parsed_paper, outcome = await self._download_and_parse_pipeline(
+                    paper, download_semaphore, parse_semaphore
+                )
+            except Exception as e:
                 # Only genuinely unexpected failures reach here; the pipeline reports
                 # download and parse outcomes in its return value instead of raising.
-                error_msg = f"Pipeline error for {paper.arxiv_id}: {result}"
-                logger.error(error_msg)
-                results["errors"].append(error_msg)
-                results["failure_reasons"][paper.arxiv_id] = PdfOutcome(status="parse_error", reason=str(result))
-                continue
+                logger.error(f"Pipeline error for {paper.arxiv_id}: {e}")
+                return (paper, False, None, PdfOutcome(status="parse_error", reason=str(e)))
+            return (paper, download_success, parsed_paper, outcome)
 
-            download_success, parsed_paper, outcome = result
+        paper_repo = PaperRepository(db_session) if db_session is not None else None
+
+        # Handle each paper the moment it finishes, so a run that dies partway keeps the
+        # work it already completed rather than losing every parse done so far.
+        for completed in asyncio.as_completed([pipeline_for(paper) for paper in papers]):
+            paper, download_success, parsed_paper, outcome = await completed
 
             if download_success:
                 # Counted on download success regardless of what parsing did next.
@@ -221,19 +225,21 @@ class MetadataFetcher:
             if parsed_paper:
                 results["parsed"] += 1
                 results["parsed_papers"][paper.arxiv_id] = parsed_paper
-                continue
-
-            results["failure_reasons"][paper.arxiv_id] = outcome
-            if outcome.status == "skipped":
-                # A deliberate skip (size/page limits) is not an incident.
-                results["skipped"].append(paper.arxiv_id)
-                logger.info(f"Skipped PDF for {paper.arxiv_id}: {outcome.reason}")
             else:
-                if outcome.status == "parse_error":
-                    results["parse_failures"].append(paper.arxiv_id)
-                error_msg = f"{paper.arxiv_id}: {outcome.reason}"
-                logger.error(f"PDF processing failed for {error_msg}")
-                results["errors"].append(error_msg)
+                results["failure_reasons"][paper.arxiv_id] = outcome
+                if outcome.status == "skipped":
+                    # A deliberate skip (size/page limits) is not an incident.
+                    results["skipped"].append(paper.arxiv_id)
+                    logger.info(f"Skipped PDF for {paper.arxiv_id}: {outcome.reason}")
+                else:
+                    if outcome.status == "parse_error":
+                        results["parse_failures"].append(paper.arxiv_id)
+                    error_msg = f"{paper.arxiv_id}: {outcome.reason}"
+                    logger.error(f"PDF processing failed for {error_msg}")
+                    results["errors"].append(error_msg)
+
+            if paper_repo is not None and self._store_paper(paper, parsed_paper, outcome, paper_repo, db_session):
+                results["stored"] += 1
 
         # Simple processing summary. Each failure is already in results["errors"] with its
         # reason attached, so it is not appended a second time as a bare arxiv_id.
@@ -339,6 +345,62 @@ class MetadataFetcher:
             logger.error(f"Failed to serialize parsed content: {e}")
             return {"pdf_processed": False, "parser_metadata": {"error": str(e)}}
 
+    def _build_paper_create(
+        self, paper: ArxivPaper, parsed_paper: Optional[ParsedPaper], outcome: Optional[PdfOutcome]
+    ) -> PaperCreate:
+        """Build the row payload for one paper, with parsed content or the reason there is none."""
+        published_date = (
+            date_parser.parse(paper.published_date) if isinstance(paper.published_date, str) else paper.published_date
+        )
+        paper_data = {
+            "arxiv_id": paper.arxiv_id,
+            "title": paper.title,
+            "authors": paper.authors,
+            "abstract": paper.abstract,
+            "categories": paper.categories,
+            "published_date": published_date,
+            "pdf_url": paper.pdf_url,
+        }
+
+        if parsed_paper:
+            paper_data.update(self._serialize_parsed_content(parsed_paper))
+        else:
+            # Store why, so the row itself explains an absent parse.
+            paper_data.update(
+                {
+                    "pdf_processed": False,
+                    "parser_metadata": {
+                        "parser": "docling",
+                        "status": outcome.status if outcome else "not_processed",
+                        "reason": outcome.reason if outcome else "PDF processing was not run for this paper",
+                    },
+                }
+            )
+
+        return PaperCreate(**paper_data)
+
+    def _store_paper(
+        self,
+        paper: ArxivPaper,
+        parsed_paper: Optional[ParsedPaper],
+        outcome: Optional[PdfOutcome],
+        paper_repo: PaperRepository,
+        db_session: Session,
+    ) -> bool:
+        """Persist one paper. Returns whether it was stored."""
+        try:
+            paper_repo.upsert(self._build_paper_create(paper, parsed_paper, outcome))
+            db_session.commit()
+            logger.debug(
+                f"Stored paper {paper.arxiv_id} to database "
+                f"({'with parsed content' if parsed_paper else 'metadata only'})"
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to store paper {paper.arxiv_id}: {e}")
+            db_session.rollback()
+            return False
+
     def _store_papers_to_db(
         self,
         papers: List[ArxivPaper],
@@ -347,7 +409,10 @@ class MetadataFetcher:
         failure_reasons: Optional[Dict[str, PdfOutcome]] = None,
     ) -> int:
         """
-        Store papers and parsed content to database with comprehensive content storage.
+        Store papers and parsed content to database.
+
+        Used when PDF processing is skipped entirely; the PDF pipeline stores each paper
+        itself as soon as that paper finishes.
 
         Args:
             papers: List of ArxivPaper metadata
@@ -360,69 +425,13 @@ class MetadataFetcher:
         """
         paper_repo = PaperRepository(db_session)
         failure_reasons = failure_reasons or {}
-        stored_count = 0
 
-        for paper in papers:
-            try:
-                # Get parsed content if available
-                parsed_paper = parsed_papers.get(paper.arxiv_id)
+        stored_count = sum(
+            self._store_paper(paper, parsed_papers.get(paper.arxiv_id), failure_reasons.get(paper.arxiv_id), paper_repo, db_session)
+            for paper in papers
+        )
 
-                # Base paper data
-                published_date = (
-                    date_parser.parse(paper.published_date) if isinstance(paper.published_date, str) else paper.published_date
-                )
-                paper_data = {
-                    "arxiv_id": paper.arxiv_id,
-                    "title": paper.title,
-                    "authors": paper.authors,
-                    "abstract": paper.abstract,
-                    "categories": paper.categories,
-                    "published_date": published_date,
-                    "pdf_url": paper.pdf_url,
-                }
-
-                # Add parsed content if available
-                if parsed_paper:
-                    parsed_content = self._serialize_parsed_content(parsed_paper)
-                    paper_data.update(parsed_content)
-                    logger.debug(
-                        f"Storing paper {paper.arxiv_id} with parsed content ({len(parsed_content.get('raw_text', '')) if parsed_content.get('raw_text') else 0} chars)"
-                    )
-                else:
-                    # No parsed content - store metadata plus why, so the row is diagnosable.
-                    outcome = failure_reasons.get(paper.arxiv_id)
-                    paper_data.update(
-                        {
-                            "pdf_processed": False,
-                            "parser_metadata": {
-                                "parser": "docling",
-                                "status": outcome.status if outcome else "not_processed",
-                                "reason": outcome.reason if outcome else "PDF processing was not run for this paper",
-                            },
-                        }
-                    )
-                    logger.debug(f"Storing paper {paper.arxiv_id} with metadata only")
-
-                paper_create = PaperCreate(**paper_data)
-                stored_paper = paper_repo.upsert(paper_create)
-
-                if stored_paper:
-                    stored_count += 1
-                    content_info = "with parsed content" if parsed_paper else "metadata only"
-                    logger.debug(f"Stored paper {paper.arxiv_id} to database ({content_info})")
-
-            except Exception as e:
-                logger.error(f"Failed to store paper {paper.arxiv_id}: {e}")
-
-        # Commit all changes
-        try:
-            db_session.commit()
-            logger.info(f"Committed {stored_count} papers to database with full content storage")
-        except Exception as e:
-            logger.error(f"Failed to commit papers to database: {e}")
-            db_session.rollback()
-            stored_count = 0
-
+        logger.info(f"Stored {stored_count} papers to database")
         return stored_count
 
 

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class PDFParserService:
     """Main PDF parsing service using Docling only."""
 
-    def __init__(self, max_pages: int = 20, max_file_size_mb: int = 20, do_ocr: bool = False, do_table_structure: bool = True):
+    def __init__(self, max_pages: int = 20, max_file_size_mb: int = 20, do_ocr: bool = False, do_table_structure: bool = False):
         """
         Initialize PDF parser service with configurable limits.
 
@@ -19,7 +19,7 @@ class PDFParserService:
             max_pages: Maximum number of pages to process (default: 20)
             max_file_size_mb: Maximum file size in MB (default: 20MB)
             do_ocr: Enable OCR for scanned PDFs (default: False, very slow)
-            do_table_structure: Extract table structures (default: True)
+            do_table_structure: Extract table structures (default: False; the parser discards tables)
         """
         # Imported here rather than at module scope: docling and pypdfium2 exist only in
         # the Airflow image, and importing them eagerly would make this module — and every

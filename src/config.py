@@ -34,7 +34,9 @@ class PDFParserSettings(DefaultSettings):
     max_pages: int = 30
     max_file_size_mb: int = 20
     do_ocr: bool = False
-    do_table_structure: bool = True
+    # The parser stores sections and raw text only (docling.py returns tables=[]), so table
+    # structure detection would load a second model and run inference for discarded output.
+    do_table_structure: bool = False
     
 class Settings(DefaultSettings):
     

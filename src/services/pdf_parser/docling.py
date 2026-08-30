@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from pathlib import Path
 from typing import Optional
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class DoclingParser:
     """Docling PDF parser for fallback when GROBID fails."""
 
-    def __init__(self, max_pages: int = 20, max_file_size_mb: int = 20, do_ocr: bool = False, do_table_structure: bool = True):
+    def __init__(self, max_pages: int = 20, max_file_size_mb: int = 20, do_ocr: bool = False, do_table_structure: bool = False):
         """
         Initialize DocumentConverter with optimized pipeline options.
 
@@ -23,7 +24,7 @@ class DoclingParser:
             max_pages: Maximum number of pages to process (default: 20)
             max_file_size_mb: Maximum file size in MB (default: 20MB)
             do_ocr: Enable OCR for scanned PDFs (default: False, very slow)
-            do_table_structure: Extract table structures (default: True)
+            do_table_structure: Extract table structures (default: False; the parser discards tables)
         """
         # Configure pipeline options
         pipeline_options = PdfPipelineOptions(
@@ -114,7 +115,9 @@ class DoclingParser:
 
             # Convert PDF using the modern API
             # Limit processing to avoid memory issues with large papers
-            result = self._converter.convert(str(pdf_path), max_num_pages=self.max_pages, max_file_size=self.max_file_size_bytes)
+            result = await asyncio.to_thread(
+                self._converter.convert, str(pdf_path), max_num_pages=self.max_pages, max_file_size=self.max_file_size_bytes
+            )
 
             # Extract structured content
             doc = result.document
