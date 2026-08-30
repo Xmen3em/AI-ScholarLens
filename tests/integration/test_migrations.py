@@ -4,39 +4,13 @@ These cannot be faked: the point is that the SQL Alembic emits produces exactly 
 schema the models declare, on a database that also hosts Airflow's own tables.
 """
 
-import pytest
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 from src.db.interfaces.postgresql import Base
 from src.db.migrations import BASELINE_REVISION, VERSION_TABLE, run_migrations
 from src.models.paper import Paper  # noqa: F401  (registers `papers` on Base.metadata)
 
 from tests.integration.test_paper_repository import make_paper
-
-
-@pytest.fixture
-def scratch_database(postgres_engine):
-    """A throwaway database on the same server, so migrations start from nothing."""
-    created = []
-
-    def make(name: str):
-        admin = create_engine(postgres_engine.url, isolation_level="AUTOCOMMIT")
-        with admin.connect() as connection:
-            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
-            connection.execute(text(f'CREATE DATABASE "{name}"'))
-        admin.dispose()
-        engine = create_engine(postgres_engine.url.set(database=name))
-        created.append((engine, name))
-        return engine
-
-    yield make
-
-    for engine, name in created:
-        engine.dispose()
-        admin = create_engine(postgres_engine.url, isolation_level="AUTOCOMMIT")
-        with admin.connect() as connection:
-            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
-        admin.dispose()
 
 
 def current_revision(engine):

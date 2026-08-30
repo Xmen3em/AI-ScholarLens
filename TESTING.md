@@ -52,6 +52,12 @@ Persistence is the subject there, so a mocked session would verify nothing: thes
 cover the idempotent `upsert` the ingestion DAG depends on, the unique `arxiv_id`
 constraint, pagination order, and the processing-stats queries.
 
+`tests/integration/test_database_startup.py` covers the entry point every service goes
+through — `make_database()` -> `startup()` -> a usable session — including that a second
+service starting against the same database is a no-op, that a database created before
+migrations existed is baselined without disturbing its rows, and that asking for a session
+before `startup()` fails loudly.
+
 `tests/integration/test_migrations.py` covers the schema itself: that migrations build the
 `papers` table on an empty database, that a database created by the old `create_all` is
 baselined without losing rows, that reruns are idempotent, and that Airflow's tables and its

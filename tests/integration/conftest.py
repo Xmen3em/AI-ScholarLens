@@ -53,3 +53,28 @@ def db_session(postgres_engine) -> Session:
         session.rollback()
         session.execute(text("TRUNCATE TABLE papers"))
         session.commit()
+
+
+@pytest.fixture
+def scratch_database(postgres_engine):
+    """A throwaway database on the same server, so migrations start from nothing."""
+    created = []
+
+    def make(name: str):
+        admin = create_engine(postgres_engine.url, isolation_level="AUTOCOMMIT")
+        with admin.connect() as connection:
+            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
+            connection.execute(text(f'CREATE DATABASE "{name}"'))
+        admin.dispose()
+        engine = create_engine(postgres_engine.url.set(database=name))
+        created.append((engine, name))
+        return engine
+
+    yield make
+
+    for engine, name in created:
+        engine.dispose()
+        admin = create_engine(postgres_engine.url, isolation_level="AUTOCOMMIT")
+        with admin.connect() as connection:
+            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
+        admin.dispose()
