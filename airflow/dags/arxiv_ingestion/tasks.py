@@ -3,7 +3,7 @@ import logging
 import sys
 from datetime import datetime, timedelta
 from functools import lru_cache
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 sys.path.insert(0, "/opt/airflow")
 
@@ -32,7 +32,7 @@ def get_cached_services() -> Tuple[Any, Any, Any, Any]:
 
 async def run_paper_ingestion_pipeline(
     target_date: str,
-    max_results: int = 5,
+    max_results: Optional[int] = None,
     process_pdfs: bool = True,
 ) -> dict:
     """
@@ -97,9 +97,9 @@ def fetch_daily_papers(**context):
         logger.info(f"Fetching papers for date: {target_date}")
         
 
+        # max_results is left unset so ARXIV__MAX_RESULTS drives the batch size.
         results = asyncio.run(run_paper_ingestion_pipeline(
             target_date=target_date,
-            max_results=10,
             process_pdfs=True
             )
                             )
@@ -205,6 +205,7 @@ def generate_daily_report(**context):
                 "pdfs_downloaded": fetch_results.get('pdfs_downloaded', 0) if fetch_results else 0,
                 "pdfs_parsed": fetch_results.get('pdfs_parsed', 0) if fetch_results else 0,
                 "pdfs_skipped": fetch_results.get('pdfs_skipped', 0) if fetch_results else 0,
+                "filtered_non_ai": fetch_results.get('papers_filtered_non_ai', 0) if fetch_results else 0,
                 "stored": fetch_results.get('papers_stored', 0) if fetch_results else 0,
             },
             "processing": {
@@ -221,6 +222,7 @@ def generate_daily_report(**context):
         logger.info("=== DAILY ARXIV PROCESSING REPORT ===")
         logger.info(f"Date: {report['date']}")
         logger.info(f"Papers fetched: {report['papers']['fetched']}")
+        logger.info(f"Filtered as non-AI: {report['papers']['filtered_non_ai']}")
         logger.info(f"PDFs downloaded: {report['papers']['pdfs_downloaded']}")
         logger.info(f"PDFs parsed: {report['papers']['pdfs_parsed']}")
         logger.info(f"PDFs skipped (size/page limits): {report['papers']['pdfs_skipped']}")

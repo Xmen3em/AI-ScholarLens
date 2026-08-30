@@ -12,6 +12,7 @@ from urllib.parse import quote, urlencode
 import httpx
 from src.config import ArxivSettings
 from src.exceptions import ArxivAPIException, ArxivAPITimeoutError, ArxivParseError, PDFDownloadException, PDFDownloadTimeoutError
+from src.policies.ai_scope import ai_scope_query
 from src.schemas.arxiv.paper import ArxivPaper
 
 logger = logging.getLogger(__name__)
@@ -62,10 +63,6 @@ class ArxivClient:
     def max_results(self) -> int:
         return self._settings.max_results
 
-    @property
-    def search_category(self) -> str:
-        return self._settings.search_category
-
     async def fetch_papers(
         self,
         max_results: Optional[int] = None,
@@ -76,7 +73,7 @@ class ArxivClient:
         to_date: Optional[str] = None,
     ) -> List[ArxivPaper]:
         """
-        Fetch papers from arXiv for the configured category.
+        Fetch papers from arXiv across the AI category allowlist.
 
         Args:
             max_results: Maximum number of papers to fetch (uses settings default if None)
@@ -87,13 +84,13 @@ class ArxivClient:
             to_date: Filter papers submitted before this date (format: YYYYMMDD)
 
         Returns:
-            List of ArxivPaper objects for the configured category
+            List of ArxivPaper objects cross-listed into at least one allowlisted AI category
         """
         if max_results is None:
             max_results = self.max_results
 
-        # Build search query
-        search_query = f"cat:{self.search_category}"
+        # Build search query: any of the allowlisted AI categories
+        search_query = ai_scope_query()
 
         # Add date filtering if provided
         if from_date or to_date:
@@ -115,7 +112,7 @@ class ArxivClient:
         url = f"{self.base_url}?{urlencode(params, quote_via=quote, safe=safe)}"
 
         try:
-            logger.info(f"Fetching {max_results} {self.search_category} papers from arXiv")
+            logger.info(f"Fetching {max_results} papers from arXiv matching {search_query}")
 
             # Add rate limiting delay between all requests (arXiv recommends 3 seconds)
             if self._last_request_time is not None:

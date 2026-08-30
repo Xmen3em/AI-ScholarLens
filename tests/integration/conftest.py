@@ -23,8 +23,10 @@ def postgres_engine():
     except ImportError as exc:  # pragma: no cover - depends on the local environment
         pytest.skip(f"testcontainers is not installed: {exc}")
 
-    container = PostgresContainer("postgres:16-alpine")
     try:
+        # Constructing the container already talks to the Docker daemon, so it has to
+        # sit inside the guard too or an absent daemon errors instead of skipping.
+        container = PostgresContainer("postgres:16-alpine")
         container.start()
     except Exception as exc:  # pragma: no cover - depends on the local environment
         pytest.skip(f"Docker is not available for database tests: {exc}")

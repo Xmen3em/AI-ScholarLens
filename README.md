@@ -69,7 +69,7 @@ sequenceDiagram
     participant D as PostgreSQL
 
     S->>M: fetch_and_process_papers()
-    M->>A: Fetch CS.AI metadata
+    M->>A: Fetch AI-category metadata
     A-->>M: Paper metadata
     M->>C: Download PDF if not cached
     C-->>M: Local PDF path
@@ -81,12 +81,38 @@ sequenceDiagram
 
 The ingestion pipeline is designed to degrade gracefully: a failed PDF download or parse should be recorded while allowing other papers to continue through the batch.
 
+### AI category scope
+
+Ingestion covers eight core AI categories from [arXiv's taxonomy](https://arxiv.org/category_taxonomy):
+
+| Category | Field |
+| --- | --- |
+| `cs.AI` | Artificial Intelligence |
+| `cs.LG` | Machine Learning |
+| `cs.CL` | Computation and Language |
+| `cs.CV` | Computer Vision and Pattern Recognition |
+| `cs.RO` | Robotics |
+| `cs.MA` | Multiagent Systems |
+| `cs.NE` | Neural and Evolutionary Computing |
+| `stat.ML` | Machine Learning (Statistics) |
+
+A paper qualifies when **any** of its arXiv categories is in that list, so cross-listed work counts: a
+paper tagged `["quant-ph", "cs.LG"]` is ingested. Adjacent fields such as information retrieval, HCI,
+speech, and signal processing are excluded unless they are cross-listed into an allowlisted category.
+
+The scope is a code constant in `src/policies/ai_scope.py`, not a setting, so no deployment
+configuration can widen ingestion beyond it. It is enforced twice: the arXiv query asks only for these
+categories, and `MetadataFetcher` re-checks every fetched paper before any PDF is downloaded, parsed,
+or stored.
+
+To check the stored corpus against the allowlist, see [Corpus scope audit](#corpus-scope-audit).
+
 ## How the application works today
 
 1. The API starts and connects to PostgreSQL.
 2. The API exposes health, ping, and paper read endpoints.
 3. Airflow schedules the arxiv_paper_ingestion DAG for weekdays at 06:00 UTC. Airflow creates DAGs paused, so it runs only after the DAG is unpaused or triggered manually.
-4. The DAG fetches CS.AI metadata from arXiv.
+4. The DAG fetches metadata from arXiv across the eight allowlisted AI categories.
 5. PDFs are downloaded and cached, then parsed with Docling inside the Airflow image.
 6. Paper metadata and parsed content are upserted into PostgreSQL.
 7. OpenSearch indexing and RAG answering are reserved for later phases.
@@ -205,9 +231,12 @@ AI-ScholarLens/
 │   ├── repositories/            # Query logic (PaperRepository)
 │   ├── models/                  # SQLAlchemy models
 │   ├── schemas/                 # Pydantic contracts
+│   ├── policies/                # AI category allowlist and scope predicate
+│   ├── commands/                # Operational CLIs (python -m src.commands.*)
 │   └── db/                      # Database interface, PostgreSQL impl, factory
 ├── tests/
 │   ├── api/
+│   ├── integration/
 │   └── unit/
 ├── compose.yml
 ├── Dockerfile
@@ -236,10 +265,45 @@ Runtime settings are loaded from environment variables and .env through src/conf
 - POSTGRES_DATABASE_URL
 - OPENSEARCH_HOST
 - OLLAMA_HOST
+- ARXIV__MAX_RESULTS — papers per ingestion run, counted across all eight AI categories combined
+  rather than per category. Defaults to 10, which compose.yml also sets explicitly for Airflow.
 - arXiv rate-limit, timeout, and cache settings
 - PDF page-size and file-size limits
 
+The set of arXiv categories is deliberately **not** configurable; it lives in
+`src/policies/ai_scope.py`. `ARXIV__SEARCH_CATEGORY` has been removed, and any leftover entry for it
+in a local `.env` is ignored.
+
 Do not commit credentials or private environment files.
+
+## Corpus scope audit
+
+`python -m src.commands.ai_scope` checks stored papers against the AI allowlist and removes any that
+predate it.
+
+~~~bash
+# Read-only report of scanned, compliant, and non-compliant rows
+docker compose exec airflow python -m src.commands.ai_scope audit
+
+# Exit non-zero when anything is out of scope (for scripting)
+docker compose exec airflow python -m src.commands.ai_scope audit --fail-on-violation
+
+# Rehearse a cleanup; writes nothing without --apply
+docker compose exec airflow python -m src.commands.ai_scope purge --expected-count 3
+
+# Delete, having reviewed the audit above
+docker compose exec airflow python -m src.commands.ai_scope purge --expected-count 3 --apply
+~~~
+
+`purge` is a dry run unless `--apply` is passed, and `--apply` requires `--expected-count N`. If the
+number of non-compliant rows no longer matches `N`, the command aborts without deleting anything, so a
+stale audit can never authorise a deletion. Deletion is permanent — back the table up first:
+
+~~~bash
+docker compose exec postgres pg_dump -U rag_user -d rag_db -t papers > papers_backup.sql
+~~~
+
+Add `--json` to either subcommand for machine-readable output on stdout; logs stay on stderr.
 
 ## License
 

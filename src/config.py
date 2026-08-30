@@ -24,8 +24,9 @@ class ArxivSettings(DefaultSettings):
     pdf_cache_dir: str = "./data/arxiv_pdfs"
     rate_limit_delay: float = 3.0  # seconds between requests
     timeout_seconds: int = 30
-    max_results: int = 100
-    search_category: str = "cs.AI"  # Default category to search
+    # Total papers per run across every allowlisted AI category. The categories
+    # themselves are fixed in src/policies/ai_scope.py and are not configurable.
+    max_results: int = 10
 
 
 class PDFParserSettings(DefaultSettings):

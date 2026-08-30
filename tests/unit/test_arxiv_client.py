@@ -4,6 +4,7 @@ import httpx
 import pytest
 from src.config import ArxivSettings
 from src.exceptions import ArxivAPIException, ArxivParseError, PDFDownloadException
+from src.policies.ai_scope import AI_CATEGORY_ALLOWLIST, ai_scope_query
 from src.services.arxiv.client import ArxivClient
 
 ARXIV_FEED = """<?xml version="1.0" encoding="UTF-8"?>
@@ -41,7 +42,7 @@ def test_malformed_feed_raises_parse_error():
 
 
 @pytest.mark.anyio
-async def test_fetch_papers_queries_configured_category_and_returns_parsed_papers(stub_httpx):
+async def test_fetch_papers_queries_the_whole_ai_allowlist_and_returns_parsed_papers(stub_httpx):
     requests = stub_httpx(lambda request: httpx.Response(200, text=ARXIV_FEED))
     client = ArxivClient(ArxivSettings())
 
@@ -49,8 +50,23 @@ async def test_fetch_papers_queries_configured_category_and_returns_parsed_paper
 
     assert [paper.arxiv_id for paper in papers] == ["2401.00001v1"]
     query = unquote(str(requests[0].url))
-    assert f"search_query=cat:{client.search_category}" in query
+    assert (
+        "search_query=(cat:cs.AI OR cat:cs.CL OR cat:cs.CV OR cat:cs.LG "
+        "OR cat:cs.MA OR cat:cs.NE OR cat:cs.RO OR cat:stat.ML)" in query
+    )
     assert "max_results=1" in query
+
+
+@pytest.mark.anyio
+async def test_fetch_papers_asks_for_every_allowlisted_category(stub_httpx):
+    """A category silently dropped from the query is a silently shrunken corpus."""
+    requests = stub_httpx(lambda request: httpx.Response(200, text=ARXIV_FEED))
+    client = ArxivClient(ArxivSettings())
+
+    await client.fetch_papers(max_results=1)
+
+    query = unquote(str(requests[0].url))
+    assert all(f"cat:{category}" in query for category in AI_CATEGORY_ALLOWLIST)
 
 
 @pytest.mark.anyio
@@ -61,6 +77,18 @@ async def test_fetch_papers_filters_by_submission_date_window(stub_httpx):
     await client.fetch_papers(max_results=1, from_date="20240101", to_date="20240102")
 
     assert "submittedDate:[202401010000+TO+202401022359]" in unquote(str(requests[0].url))
+
+
+@pytest.mark.anyio
+async def test_date_window_is_ANDed_against_the_grouped_category_clause(stub_httpx):
+    """The group must stay parenthesised, or AND would bind to the last category only."""
+    requests = stub_httpx(lambda request: httpx.Response(200, text=ARXIV_FEED))
+    client = ArxivClient(ArxivSettings())
+
+    await client.fetch_papers(max_results=1, from_date="20240101", to_date="20240102")
+
+    query = unquote(str(requests[0].url))
+    assert f"search_query={ai_scope_query()} AND submittedDate:[202401010000+TO+202401022359]" in query
 
 
 @pytest.mark.parametrize("bad_date", ["2024-01-01", "01/01/2024", "20240132", "2024"])

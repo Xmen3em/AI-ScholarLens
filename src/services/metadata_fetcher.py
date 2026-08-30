@@ -7,6 +7,7 @@ from typing import Any, Dict, List, NamedTuple, Optional
 from dateutil import parser as date_parser
 from sqlalchemy.orm import Session
 from src.exceptions import PipelineException
+from src.policies.ai_scope import matches_ai_scope
 from src.repositories.paper import PaperRepository
 from src.schemas.arxiv.paper import ArxivPaper, PaperCreate
 from src.schemas.pdf_parser.models import ArxivMetadata, ParsedPaper, PdfContent
@@ -90,6 +91,7 @@ class MetadataFetcher:
 
         results = {
             "papers_fetched": 0,
+            "papers_filtered_non_ai": 0,
             "pdfs_downloaded": 0,
             "pdfs_parsed": 0,
             "pdfs_skipped": 0,
@@ -107,6 +109,15 @@ class MetadataFetcher:
             )
 
             results["papers_fetched"] = len(papers)
+
+            # The authoritative scope guard. The arXiv query already asks only for
+            # allowlisted categories, but nothing may reach a download, a parse or the
+            # database on the strength of that request alone.
+            in_scope = [paper for paper in papers if matches_ai_scope(paper.categories)]
+            results["papers_filtered_non_ai"] = len(papers) - len(in_scope)
+            if results["papers_filtered_non_ai"]:
+                logger.warning(f"Discarded {results['papers_filtered_non_ai']} of {len(papers)} papers outside the AI scope")
+            papers = in_scope
 
             if not papers:
                 logger.warning("No papers found")
@@ -139,7 +150,8 @@ class MetadataFetcher:
 
             # Simple logging summary
             logger.info(
-                f"Pipeline completed in {processing_time:.1f}s: {results['papers_fetched']} papers, "
+                f"Pipeline completed in {processing_time:.1f}s: {results['papers_fetched']} papers "
+                f"({results['papers_filtered_non_ai']} filtered as non-AI), "
                 f"{results['pdfs_downloaded']} PDFs downloaded, {results['pdfs_parsed']} parsed, "
                 f"{results['pdfs_skipped']} skipped, {len(results['errors'])} errors"
             )
