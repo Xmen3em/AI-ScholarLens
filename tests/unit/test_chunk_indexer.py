@@ -12,7 +12,7 @@ import pytest
 from opensearchpy.serializer import JSONSerializer
 from src.policies.chunking import MAX_CHUNK_CHARS
 from src.repositories.paper import IndexableRow
-from src.search.index import CHUNK_ALIAS, CHUNK_INDEX
+from src.search.indices import CHUNK_ALIAS, CHUNK_INDEX
 from src.services.chunk_indexer import ChunkIndexer
 
 
@@ -112,7 +112,7 @@ def index(papers, client=None):
 def test_a_paper_becomes_one_document_per_chunk():
     client, run = index([paper(sections=[{"title": "Method", "content": prose(MAX_CHUNK_CHARS * 2)}])])
 
-    assert run.chunks_indexed == len(client.documents) > 1
+    assert run.documents_indexed == len(client.documents) > 1
     assert run.papers_indexed == 1
     assert sorted(client.documents) == ["2608.26469v1:0:0", "2608.26469v1:0:1", "2608.26469v1:0:2"]
 
@@ -157,7 +157,7 @@ def test_malformed_json_columns_are_reduced_to_string_lists(authors):
 def test_a_paper_with_no_indexable_chunks_is_counted_not_indexed(sections):
     client, run = index([paper(sections=sections)])
 
-    assert (run.papers_seen, run.papers_indexed, run.papers_without_chunks) == (1, 0, 1)
+    assert (run.papers_seen, run.papers_indexed, run.papers_without_documents) == (1, 0, 1)
     assert client.documents == {}
 
 
@@ -181,14 +181,14 @@ def test_stale_cleanup_is_skipped_when_any_paper_failed():
     _client, run = index([paper()], client)
 
     assert client.delete_queries == []
-    assert run.stale_chunks_deleted == 0
+    assert run.stale_documents_deleted == 0
 
 
 def test_a_clean_pass_deletes_chunks_older_than_this_run():
     before = datetime.now(timezone.utc)
     client, run = index([paper()])
 
-    assert run.stale_chunks_deleted == 7
+    assert run.stale_documents_deleted == 7
     target, body = client.delete_queries[0]
     assert target == CHUNK_ALIAS
     cutoff = datetime.fromisoformat(body["query"]["range"]["indexed_at"]["lt"])

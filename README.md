@@ -10,7 +10,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 |---|---|---|
 | Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
-| Phase 3 | OpenSearch indexing and hybrid retrieval | In progress — chunk indexing complete, retrieval next |
+| Phase 3 | OpenSearch indexing and hybrid retrieval | In progress — BM25 keyword search complete, dense vectors next |
 | Phase 4 | Chunking and retrieval evaluation | Planned |
 | Phase 5 | Grounded RAG answers with Ollama | Planned |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
@@ -31,7 +31,7 @@ flowchart LR
         API[FastAPI API<br/>:8000]
         Airflow[Airflow Scheduler + DAG<br/>:8080 or AIRFLOW_PORT]
         DB[(PostgreSQL<br/>papers + parsed content)]
-        Search[(OpenSearch<br/>paper-chunks index)]
+        Search[(OpenSearch<br/>arxiv-papers + paper-chunks)]
         Ollama[Ollama<br/>answers Phase 5]
     end
 
@@ -42,6 +42,7 @@ flowchart LR
 
     User --> API
     API --> DB
+    API -- BM25 search --> Search
     API -- health check --> Ollama
 
     Airflow --> Arxiv
@@ -108,6 +109,46 @@ or stored.
 
 To check the stored corpus against the allowlist, see [Corpus scope audit](#corpus-scope-audit).
 
+### Search
+
+Two OpenSearch indices, for two different questions.
+
+| Index | Document | Answers |
+| --- | --- | --- |
+| `arxiv-papers` | one per paper | "which papers are about X" |
+| `paper-chunks` | one per passage | "which passage says X" |
+
+One index cannot do both. BM25 normalizes relevance by field length, so in a
+paper-sized document the passage that actually matched is buried, and a passage-sized
+document has no title or abstract to weight.
+
+Both are rewritten in full by the `index_to_opensearch` DAG task and both go through an
+alias, so a mapping change can be rolled out by building the next index and repointing.
+
+#### Ranking papers
+
+`POST /api/v1/search/` scores matches across three fields, weighted:
+
+| Field | Boost | Why |
+| --- | --- | --- |
+| `title` | 3x | The strongest signal a paper *is about* the query |
+| `abstract` | 2x | The author's own summary of it |
+| `authors` | 1x | Searching by name, which a fuzzy text match would otherwise rank below an incidental mention |
+
+The query is a `best_fields` multi-match, so a paper whose title alone matches the whole
+query beats one that spreads the terms across three fields — which is the only way a 3x
+title boost means anything. `fuzziness: AUTO` with `prefix_length: 2` absorbs typos
+("retreival augmnted generaton" finds the RAG papers) while keeping the first two
+characters exact, so short queries do not match half the vocabulary. Titles and
+abstracts are stemmed with snowball; author names are only lowercased, because stemming
+a surname produces something no query spells.
+
+Results carry `<mark>`-wrapped highlights — whole field for titles and authors,
+fragments for abstracts — and `took_ms` from OpenSearch. Category filtering is a `filter`
+clause rather than a query clause, so a category never contributes to relevance. An
+empty query browses: filters and the newest-first sort still apply, which is how "the
+latest cs.CL papers" is asked for.
+
 ### Search chunks
 
 Parsed papers are split into retrievable chunks and written to the `paper-chunks`
@@ -145,8 +186,9 @@ share a name with an existing index, so it has to exist from the first write.
 4. The DAG fetches metadata from arXiv across the eight allowlisted AI categories.
 5. PDFs are downloaded and cached, then parsed with Docling inside the Airflow image.
 6. Paper metadata and parsed content are upserted into PostgreSQL.
-7. The DAG rewrites every stored paper into the `paper-chunks` OpenSearch index.
-8. Retrieval endpoints and RAG answering are reserved for later phases.
+7. The DAG rewrites every stored paper into both OpenSearch indices.
+8. `POST /api/v1/search/` ranks papers with BM25 over the `arxiv-papers` index.
+9. Dense retrieval and RAG answering are reserved for later phases.
 
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 
@@ -198,6 +240,7 @@ The API documentation is available at http://localhost:8000/docs. Airflow is ava
 | GET | /api/v1/health | API, database, and Ollama health information |
 | GET | /api/v1/papers/ | List stored papers with pagination |
 | GET | /api/v1/papers/{arxiv_id} | Retrieve one stored paper |
+| POST | /api/v1/search/ | BM25 keyword search over papers |
 | GET | /docs | Interactive OpenAPI documentation |
 
 Example:
@@ -206,7 +249,19 @@ Example:
 Invoke-RestMethod http://localhost:8000/api/v1/ping
 Invoke-RestMethod http://localhost:8000/api/v1/health
 Invoke-RestMethod http://localhost:8000/api/v1/papers/
+
+# Relevance-ranked search
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
+  -Body '{"query": "retrieval augmented generation", "size": 5}'
+
+# The newest cs.CL papers, no query term
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
+  -Body '{"query": "", "categories": ["cs.CL"], "newest_first": true}'
 ~~~
+
+`size` is 1-50, `offset` 0-1000, and `categories` must be inside the ingested AI
+allowlist — a filter on `hep-th` is a 422 rather than a silent zero-result page, because
+the corpus can never contain one.
 
 ## Testing
 
@@ -259,12 +314,15 @@ AI-ScholarLens/
 │   │   ├── ollama/              # Ollama client
 │   │   ├── pdf_parser/          # Docling parser
 │   │   ├── metadata_fetcher.py  # Ingestion orchestration
-│   │   └── chunk_indexer.py     # Corpus -> OpenSearch chunk index
+│   │   ├── reindex.py           # Idempotent full-corpus reindex, shared
+│   │   ├── paper_indexer.py     # Corpus -> arxiv-papers index
+│   │   ├── chunk_indexer.py     # Corpus -> paper-chunks index
+│   │   └── paper_search.py      # BM25 search over arxiv-papers
 │   ├── repositories/            # Query logic (PaperRepository)
 │   ├── models/                  # SQLAlchemy models
 │   ├── schemas/                 # Pydantic contracts
 │   ├── policies/                # AI category allowlist, chunk boundaries
-│   ├── search/                  # OpenSearch index mapping and client
+│   ├── search/                  # Index mappings, query builder, client
 │   ├── commands/                # Operational CLIs (python -m src.commands.*)
 │   └── db/                      # Database interface, PostgreSQL impl, factory
 │       ├── migrations.py        # Startup migration runner

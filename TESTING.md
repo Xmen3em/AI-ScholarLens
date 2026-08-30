@@ -41,6 +41,14 @@ The suite currently covers:
   alias, JSON columns reduced to string lists, and a rejected chunk failing only its own paper
 - That stale-chunk cleanup is skipped when any paper failed to index — otherwise a transient
   failure would delete chunks that are still good
+- The search query body: the 3x/2x/1x field boosts, `best_fields` scoring, fuzzy matching,
+  the category filter, pagination, date sorting, and highlight configuration
+- How an OpenSearch response becomes a `SearchResponse`, including a null score on a
+  date-sorted hit, a malformed highlight, and a missing index reported as an empty result
+- The paper indexer: one document per paper, unparsed papers still searchable, and the
+  full document text kept out of the paper index
+- The search endpoint: every option forwarded, defaults applied, invalid input rejected
+  with a 422 before the backend is touched, and an unreachable backend surfaced as a 503
 - The Airflow-to-metadata-fetcher method contract, and that every `xcom_pull` names a task the
   DAG actually declares
 
@@ -175,7 +183,7 @@ Inspect the task graph and logs for:
 1. `setup_environment` — database connection succeeds.
 2. `fetch_daily_papers` — arXiv metadata is fetched.
 3. `process_failed_pdfs` — failures are reported without stopping the report path.
-4. `index_paper_chunks` — chunk and paper counts are reported.
+4. `index_to_opensearch` — paper and chunk document counts are reported.
 5. `generate_daily_report` — counts and processing time are logged, including
    `Filtered as non-AI`.
 6. `cleanup_temp_files` — temporary PDFs are cleaned up.
@@ -199,20 +207,43 @@ docker compose exec airflow python -m src.commands.ai_scope audit
 
 A healthy run reports 0 non-compliant papers.
 
-### Chunk index
+### Search indices
 
-The `index_paper_chunks` task log reports papers seen, papers indexed, chunks written, and
-stale chunks removed. Check the index directly:
+The `index_to_opensearch` task log reports, for each index, papers seen, papers indexed,
+documents written, and stale documents removed. Check the indices directly:
 
 ```powershell
+curl.exe "http://localhost:9200/arxiv-papers/_count"
 curl.exe "http://localhost:9200/paper-chunks/_count"
+curl.exe "http://localhost:9200/_alias/arxiv-papers"
 curl.exe "http://localhost:9200/_alias/paper-chunks"
-curl.exe -X GET "http://localhost:9200/paper-chunks/_search" -H "Content-Type: application/json" -d "{\"query\":{\"match\":{\"content\":\"reinforcement learning\"}},\"size\":3,\"_source\":[\"arxiv_id\",\"section_title\"]}"
 ```
 
-The alias must resolve to `paper-chunks-v1`. Triggering the DAG a second time is the real check:
-the count must not change, and `stale_chunks_deleted` must be 0 — chunk ids are positional, so a
-rerun overwrites rather than duplicates. A count that grows on a rerun means chunk identity broke.
+`arxiv-papers` must hold one document per row in `papers`, including the rows whose PDF never
+parsed. Each alias must resolve to its `-v1` index.
+
+Triggering the DAG a second time is the real check: both counts must stay the same and
+`stale_documents_deleted` must be 0 — document ids are derived from the paper, so a rerun
+overwrites rather than duplicates. A count that grows on a rerun means document identity broke.
+
+### Search endpoint
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
+  -Body '{"query": "retrieval augmented generation", "size": 3}'
+```
+
+Check that the top hit has the query terms in its *title* rather than only its abstract — that
+is the 3x title boost doing its job — and that `highlights` comes back with `<mark>` tags. A
+misspelled query ("retreival augmnted generaton") must return the same papers; if it returns
+nothing, fuzzy matching is not reaching the query body.
+
+`took_ms` is OpenSearch's own timing. On this corpus the whole round trip measures 15-40ms:
+
+```powershell
+curl.exe -s -o NUL -w "%{time_total}s" -X POST http://localhost:8000/api/v1/search/ `
+  -H "Content-Type: application/json" -d '{\"query\":\"reinforcement learning\"}'
+```
 
 ### Corpus scope audit and cleanup
 

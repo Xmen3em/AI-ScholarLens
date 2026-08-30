@@ -31,6 +31,23 @@ class IndexableRow(NamedTuple):
     sections: Any
 
 
+class SearchableRow(NamedTuple):
+    """Just enough of a paper to build its search document.
+
+    Separate from IndexableRow, and a separate query, because the two indices need
+    different columns: this one needs the abstract and the PDF link, and must not
+    drag ``sections`` along, which is the whole parsed document.
+    """
+
+    arxiv_id: str
+    title: str
+    authors: Any
+    abstract: str
+    categories: Any
+    published_date: datetime
+    pdf_url: str
+
+
 class PaperRepository:
     """Queries and writes over the papers table.
 
@@ -158,6 +175,24 @@ class PaperRepository:
             .order_by(Paper.arxiv_id)
         )
         return [IndexableRow(*row) for row in self.session.execute(stmt)]
+
+    def list_searchable(self) -> List[SearchableRow]:
+        """Every paper's metadata, for the paper search index.
+
+        Unlike ``list_indexable`` this returns unparsed papers too: title, abstract,
+        authors and categories all come from arXiv, so a paper whose PDF never parsed
+        is still worth finding.
+        """
+        stmt = select(
+            Paper.arxiv_id,
+            Paper.title,
+            Paper.authors,
+            Paper.abstract,
+            Paper.categories,
+            Paper.published_date,
+            Paper.pdf_url,
+        ).order_by(Paper.arxiv_id)
+        return [SearchableRow(*row) for row in self.session.execute(stmt)]
 
     def delete_by_ids(self, paper_ids: Sequence[UUID]) -> int:
         """Delete the given papers and return how many rows went.

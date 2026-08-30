@@ -14,7 +14,9 @@ from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.chunk_indexer import ChunkIndexer
 from src.services.metadata_fetcher import make_metadata_fetcher
+from src.services.paper_indexer import PaperIndexer
 from src.services.pdf_parser.factory import make_pdf_parser_service
+from src.services.reindex import IndexRun
 
 logger = logging.getLogger(__name__)
 
@@ -154,45 +156,63 @@ def process_failed_pdfs(**context):
         raise Exception(error_msg)
     
     
-def index_paper_chunks(**context):
-    """Write every stored paper's chunks into the OpenSearch index.
+def index_to_opensearch(**context):
+    """Rewrite both OpenSearch indices from what is stored in PostgreSQL.
+
+    Both indices in one task because they describe the same corpus and must not drift
+    apart: a paper searchable in `arxiv-papers` whose passages are missing from
+    `paper-chunks` is worse than neither being updated.
 
     Indexes the whole corpus rather than just this run's papers. The pass is
-    idempotent — chunk ids are derived from position, so a rewrite overwrites — and
-    that is what lets it heal a run that failed halfway and pick up papers parsed
-    before indexing existed.
+    idempotent — document ids are derived from the paper — and that is what lets it
+    heal a run that failed halfway and pick up papers stored before indexing existed.
     """
-    logger.info("Indexing paper chunks into OpenSearch...")
+    logger.info("Indexing papers and chunks into OpenSearch...")
 
     try:
         _arxiv_client, _pdf_parser, database, _metadata_fetcher = get_cached_services()
+        client = make_search_client()
 
         with database.get_session() as session:
-            indexer = ChunkIndexer(make_search_client(), PaperRepository(session))
-            run = indexer.index_corpus()
+            repository = PaperRepository(session)
+            papers = PaperIndexer(client, repository).index_corpus()
+            chunks = ChunkIndexer(client, repository).index_corpus()
 
+        errors = papers.errors + chunks.errors
         results = {
-            "status": "failed" if run.errors else "success",
-            "papers_seen": run.papers_seen,
-            "papers_indexed": run.papers_indexed,
-            "papers_without_chunks": run.papers_without_chunks,
-            "chunks_indexed": run.chunks_indexed,
-            "stale_chunks_deleted": run.stale_chunks_deleted,
-            "errors": run.errors,
+            "status": "failed" if errors else "success",
+            "papers": _index_summary(papers),
+            "chunks": _index_summary(chunks),
+            "errors": errors,
         }
 
-        # Loud, but not fatal: the papers that did index are still searchable, and the
-        # next run rewrites everything anyway.
-        for error in run.errors:
-            logger.error("Chunk indexing error: %s", error)
+        # Loud, but not fatal: whatever did index is still searchable, and the next
+        # run rewrites everything anyway.
+        for error in errors:
+            logger.error("Indexing error: %s", error)
 
-        logger.info("Indexed %d chunks from %d papers", run.chunks_indexed, run.papers_indexed)
+        logger.info(
+            "Indexed %d paper documents and %d chunks",
+            papers.documents_indexed,
+            chunks.documents_indexed,
+        )
         return results
 
     except Exception as e:
-        error_msg = f"Error during chunk indexing: {str(e)}"
+        error_msg = f"Error during OpenSearch indexing: {str(e)}"
         logger.error(error_msg)
         raise Exception(error_msg)
+
+
+def _index_summary(run: IndexRun) -> dict:
+    """One index pass, flattened for XCom."""
+    return {
+        "papers_seen": run.papers_seen,
+        "papers_indexed": run.papers_indexed,
+        "papers_without_documents": run.papers_without_documents,
+        "documents_indexed": run.documents_indexed,
+        "stale_documents_deleted": run.stale_documents_deleted,
+    }
 
 
 def generate_daily_report(**context):
@@ -207,7 +227,7 @@ def generate_daily_report(**context):
         
         failed_pdf_results = context['task_instance'].xcom_pull(task_ids='process_failed_pdfs')
         
-        index_results = context['task_instance'].xcom_pull(task_ids='index_paper_chunks')
+        index_results = context['task_instance'].xcom_pull(task_ids='index_to_opensearch')
         
         report = {
             'date': context['ds'],
@@ -226,9 +246,9 @@ def generate_daily_report(**context):
                 "failed_pdf_retries": failed_pdf_results.get('errors_logged', 0) if failed_pdf_results else 0,
             },
             "opensearch": {
-                "papers_indexed": index_results.get('papers_indexed', 0) if index_results else 0,
-                "chunks_indexed": index_results.get('chunks_indexed', 0) if index_results else 0,
-                "stale_chunks_deleted": index_results.get('stale_chunks_deleted', 0) if index_results else 0,
+                "papers_indexed": index_results['papers']['documents_indexed'] if index_results else 0,
+                "chunks_indexed": index_results['chunks']['documents_indexed'] if index_results else 0,
+                "papers_without_chunks": index_results['chunks']['papers_without_documents'] if index_results else 0,
                 "status": index_results.get('status', 'unknown') if index_results else 'unknown',
             }
         }   
@@ -243,8 +263,9 @@ def generate_daily_report(**context):
         logger.info(f"Papers stored: {report['papers']['stored']}")
         logger.info(f"Processing time: {report['processing']['processing_time_seconds']:.1f}s")
         logger.info(f"Errors encountered: {report['processing']['errors']}")
-        logger.info(f"Chunks indexed: {report['opensearch']['chunks_indexed']} from {report['opensearch']['papers_indexed']} papers")
-        logger.info(f"Stale chunks removed: {report['opensearch']['stale_chunks_deleted']}")
+        logger.info(f"Papers searchable: {report['opensearch']['papers_indexed']}")
+        logger.info(f"Chunks indexed: {report['opensearch']['chunks_indexed']}")
+        logger.info(f"Papers with no chunks (unparsed): {report['opensearch']['papers_without_chunks']}")
         logger.info("=== END REPORT ===")
 
         # Without this the report exists only in the task log, so nothing downstream

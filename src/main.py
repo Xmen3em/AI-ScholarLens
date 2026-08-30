@@ -6,8 +6,10 @@ import uvicorn
 from fastapi import FastAPI
 from src.config import get_settings
 from src.db.factory import make_database
-from src.routers import papers, ping
+from src.routers import papers, ping, search
+from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
+from src.services.paper_search import PaperSearchService
 
 # Setup logging
 logging.basicConfig(
@@ -33,7 +35,10 @@ async def lifespan(app: FastAPI):
 
     # Initialize API services (PDF parsing runs in the Airflow worker image)
     app.state.arxiv_client = make_arxiv_client()
-    logger.info("Services initialized: arXiv API client")
+    # Built here rather than per request: the OpenSearch client holds a connection
+    # pool, and rebuilding it on every search would throw that pool away each time.
+    app.state.paper_search = PaperSearchService(make_search_client())
+    logger.info("Services initialized: arXiv API client, paper search")
 
     logger.info("API ready")
     yield
@@ -53,6 +58,7 @@ app = FastAPI(
 # Include routers
 app.include_router(ping.router, prefix="/api/v1")
 app.include_router(papers.router, prefix="/api/v1")
+app.include_router(search.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

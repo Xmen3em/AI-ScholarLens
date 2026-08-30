@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 from src.config import Settings
 from src.db.interfaces.base import BaseDatabase
+from src.services.paper_search import PaperSearchService
 
 
 @lru_cache
@@ -29,6 +30,12 @@ def get_db_session(database: Annotated[BaseDatabase, Depends(get_database)]) -> 
         yield session
 
 
+def get_paper_search(request: Request) -> PaperSearchService:
+    """Get the paper search service from the request state."""
+    return request.app.state.paper_search
+
+
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DatabaseDep = Annotated[BaseDatabase, Depends(get_database)]
 SessionDep = Annotated[Session, Depends(get_db_session)]
+PaperSearchDep = Annotated[PaperSearchService, Depends(get_paper_search)]

@@ -8,7 +8,7 @@ from airflow.operators.python import PythonOperator
 from arxiv_ingestion.tasks import (
     fetch_daily_papers,
     generate_daily_report,
-    index_paper_chunks,
+    index_to_opensearch,
     process_failed_pdfs,
     setup_environment,
 )
@@ -56,8 +56,8 @@ retry_task = PythonOperator(
 )
 
 index_task = PythonOperator(
-    task_id="index_paper_chunks",
-    python_callable=index_paper_chunks,
+    task_id="index_to_opensearch",
+    python_callable=index_to_opensearch,
     dag=dag,
 )
 
