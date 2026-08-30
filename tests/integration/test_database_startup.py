@@ -24,7 +24,7 @@ def started_database(scratch_database):
 
     def start(name: str) -> PostgreSQLDatabase:
         engine = scratch_database(name)
-        database = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=str(engine.url)))
+        database = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=engine.url.render_as_string(hide_password=False)))
         database.startup()
         databases.append(database)
         return database
@@ -51,7 +51,7 @@ def test_startup_migrates_an_empty_database_and_yields_a_usable_session(started_
 def test_a_second_service_starting_against_the_same_database_is_a_no_op(started_database, scratch_database):
     """The API and the Airflow DAG both call make_database() against one database."""
     first = started_database("scope_startup_shared")
-    url = str(first.engine.url)
+    url = first.engine.url.render_as_string(hide_password=False)
 
     second = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=url))
     try:
@@ -71,7 +71,7 @@ def test_startup_baselines_a_database_created_before_migrations_existed(scratch_
         session.add(Paper(**make_paper("2401.00001").model_dump()))
         session.commit()
 
-    database = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=str(engine.url)))
+    database = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=engine.url.render_as_string(hide_password=False)))
     try:
         database.startup()
 
@@ -85,7 +85,7 @@ def test_startup_baselines_a_database_created_before_migrations_existed(scratch_
 def test_a_session_before_startup_fails_loudly(scratch_database):
     """Better a clear error than a connection to nothing."""
     engine = scratch_database("scope_startup_unstarted")
-    database = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=str(engine.url)))
+    database = PostgreSQLDatabase(config=PostgreSQLSettings(database_url=engine.url.render_as_string(hide_password=False)))
 
     with pytest.raises(RuntimeError, match="startup"):
         with database.get_session():
@@ -95,7 +95,7 @@ def test_a_session_before_startup_fails_loudly(scratch_database):
 def test_make_database_wires_settings_through_to_a_working_session(monkeypatch, scratch_database):
     """The path every service actually takes, settings included."""
     engine = scratch_database("scope_startup_factory")
-    monkeypatch.setenv("POSTGRES_DATABASE_URL", str(engine.url))
+    monkeypatch.setenv("POSTGRES_DATABASE_URL", engine.url.render_as_string(hide_password=False))
 
     database = make_database()
     try:

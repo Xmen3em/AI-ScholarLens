@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from src.exceptions import PDFParsingException, PDFValidationError
+from src.exceptions import PDFParsingException, PDFSkippedError, PDFValidationError
 from src.schemas.pdf_parser.models import PdfContent
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class PDFParserService:
             max_pages=max_pages, max_file_size_mb=max_file_size_mb, do_ocr=do_ocr, do_table_structure=do_table_structure
         )
 
-    async def parse_pdf(self, pdf_path: Path) -> Optional[PdfContent]:
+    async def parse_pdf(self, pdf_path: Path) -> PdfContent:
         """
         Parse PDF using Docling parser only.
 
@@ -38,9 +38,11 @@ class PDFParserService:
             pdf_path: Path to PDF file
 
         Returns:
-            PdfContent, or None if the parser declined the file (size or page limits).
+            PdfContent extracted from the document.
 
         Raises:
+            PDFSkippedError: the file exceeds a configured page or size limit. A skip is a
+                policy decision, not a failure, and the message names the limit that tripped.
             PDFValidationError: the file is missing or not a readable PDF.
             PDFParsingException: parsing was attempted and failed.
         """
@@ -50,16 +52,10 @@ class PDFParserService:
 
         try:
             result = await self.docling_parser.parse_pdf(pdf_path)
-            if result:
-                logger.info(f"Parsed {pdf_path.name}")
-                return result
+            logger.info(f"Parsed {pdf_path.name}")
+            return result
 
-            # None means the parser declined the file on purpose (size or page limits).
-            # That is a skip, not a failure, so let it through instead of raising.
-            logger.info(f"Skipped {pdf_path.name}: outside configured size or page limits")
-            return None
-
-        except (PDFValidationError, PDFParsingException):
+        except (PDFSkippedError, PDFValidationError, PDFParsingException):
             raise
         except Exception as e:
             logger.error(f"Docling parsing error for {pdf_path.name}: {e}")
