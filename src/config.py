@@ -34,7 +34,10 @@ class ArxivSettings(DefaultSettings):
 class PDFParserSettings(DefaultSettings):
     """PDF parser service settings."""
 
-    max_pages: int = 30
+    # 45, not 30: a sample of the live corpus skipped 5 of 6 papers on page count
+    # alone, at 31-41 pages. Papers skipped here never get raw_text, so they are
+    # invisible to retrieval.
+    max_pages: int = 45
     max_file_size_mb: int = 20
     do_ocr: bool = False
     # The parser stores sections and raw text only (docling.py returns tables=[]), so table
