@@ -223,3 +223,48 @@ async def test_filtered_count_is_zero_when_every_paper_is_in_scope(paper, record
     results = await run_pipeline(paper, parsed_content(), recording_session)
 
     assert results["papers_filtered_non_ai"] == 0
+
+
+class StubParsedPaper:
+    """Only ``pdf_content`` is read, so a duck type is enough to drive serialization."""
+
+    def __init__(self, pdf_content):
+        self.pdf_content = pdf_content
+
+
+class ExplodingContent:
+    """Parsed content whose access raises whatever the test wants."""
+
+    def __init__(self, error):
+        self._error = error
+
+    def __getattr__(self, name):
+        raise self._error
+
+
+def serialize(pdf_content):
+    fetcher = MetadataFetcher(arxiv_client=FakeArxivClient([]), pdf_parser=FakePdfParser(None))
+    return fetcher._serialize_parsed_content(StubParsedPaper(pdf_content))
+
+
+def test_missing_pdf_content_is_recorded_rather_than_raised():
+    result = serialize(None)
+
+    assert result["pdf_processed"] is False
+    assert "pdf_content" in result["parser_metadata"]["error"]
+
+
+@pytest.mark.parametrize("error", [AttributeError("no sections"), TypeError("not iterable"), ValueError("bad value")])
+def test_malformed_parser_output_degrades_to_an_unprocessed_row(error):
+    """Bad data from the parser must not take down the rest of the batch."""
+    result = serialize(ExplodingContent(error))
+
+    assert result["pdf_processed"] is False
+    assert result["parser_metadata"]["error"] == str(error)
+
+
+@pytest.mark.parametrize("error", [KeyError("bug"), RuntimeError("bug"), ZeroDivisionError("bug")])
+def test_a_defect_in_serialization_surfaces_instead_of_being_filed_as_unprocessed(error):
+    """The old bare `except Exception` recorded our own bugs as "PDF not processed"."""
+    with pytest.raises(type(error)):
+        serialize(ExplodingContent(error))

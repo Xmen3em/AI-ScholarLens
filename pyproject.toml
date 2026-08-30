@@ -46,6 +46,19 @@ lint.select = [
   "I",
 ]
 
+[tool.mypy]
+# src/ has no __init__.py, so without this mypy resolves src/db/... as both "db.*" and
+# "src.db.*" and aborts before checking anything. Matches the flags pre-commit passes.
+explicit_package_bases = true
+mypy_path = "."
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+# docling and pypdfium2 live only in the Airflow image; the API venv cannot import them.
+module = ["docling.*", "pypdfium2.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

@@ -108,6 +108,9 @@ def run_audit(repository: PaperRepository, *, fail_on_violation: bool = False) -
 def run_purge(repository: PaperRepository, *, expected_count: Optional[int], apply: bool = False) -> ScopeOutcome:
     """Delete non-compliant papers. Writes nothing unless ``apply`` is true.
 
+    Owns the caller's transaction: it commits on success and rolls back on a count
+    mismatch, so it must be handed a session with no other pending work.
+
     When applying, the scan takes SELECT ... FOR UPDATE row locks that are held until
     the commit below, so a concurrent ingestion run cannot update a paper between the
     count that authorises the delete and the delete itself. Rows inserted after the

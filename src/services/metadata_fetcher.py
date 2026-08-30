@@ -89,7 +89,7 @@ class MetadataFetcher:
             Dictionary with processing results and statistics
         """
 
-        results = {
+        results: Dict[str, Any] = {
             "papers_fetched": 0,
             "papers_filtered_non_ai": 0,
             "pdfs_downloaded": 0,
@@ -188,7 +188,7 @@ class MetadataFetcher:
         Returns:
             Dictionary with processing results and statistics
         """
-        results = {
+        results: Dict[str, Any] = {
             "downloaded": 0,
             "parsed": 0,
             "parsed_papers": {},
@@ -250,7 +250,12 @@ class MetadataFetcher:
                     logger.error(f"PDF processing failed for {error_msg}")
                     results["errors"].append(error_msg)
 
-            if paper_repo is not None and self._store_paper(paper, parsed_paper, outcome, paper_repo, db_session):
+            # paper_repo and db_session are set together above; naming both narrows them.
+            if (
+                paper_repo is not None
+                and db_session is not None
+                and self._store_paper(paper, parsed_paper, outcome, paper_repo, db_session)
+            ):
                 results["stored"] += 1
 
         # Simple processing summary. Each failure is already in results["errors"] with its
@@ -335,14 +340,15 @@ class MetadataFetcher:
         Returns:
             Dictionary with serialized content for database storage
         """
+        pdf_content = parsed_paper.pdf_content
+        if pdf_content is None:
+            # The schema allows it, but _download_and_parse_pipeline only builds a
+            # ParsedPaper once parsing has produced content.
+            return self._unserializable("ParsedPaper has no pdf_content")
+
         try:
-            pdf_content = parsed_paper.pdf_content
-
-            # Serialize sections
             sections = [{"title": section.title, "content": section.content} for section in pdf_content.sections]
-
-            # Serialize references
-            references = list(pdf_content.references)  #
+            references = list(pdf_content.references)
 
             return {
                 "raw_text": pdf_content.raw_text,
@@ -353,9 +359,17 @@ class MetadataFetcher:
                 "pdf_processed": True,
                 "pdf_processing_date": datetime.now(),
             }
-        except Exception as e:
+        # Only the shapes malformed parser output can produce. A KeyError or an
+        # ImportError here is a defect in this code, and recording it as "PDF not
+        # processed" would bury it in a column nobody reads.
+        except (AttributeError, TypeError, ValueError) as e:
             logger.error(f"Failed to serialize parsed content: {e}")
-            return {"pdf_processed": False, "parser_metadata": {"error": str(e)}}
+            return self._unserializable(str(e))
+
+    @staticmethod
+    def _unserializable(reason: str) -> Dict[str, Any]:
+        """The row payload for a paper whose parsed content could not be serialized."""
+        return {"pdf_processed": False, "parser_metadata": {"error": reason}}
 
     def _build_paper_create(
         self, paper: ArxivPaper, parsed_paper: Optional[ParsedPaper], outcome: Optional[PdfOutcome]
@@ -364,7 +378,7 @@ class MetadataFetcher:
         published_date = (
             date_parser.parse(paper.published_date) if isinstance(paper.published_date, str) else paper.published_date
         )
-        paper_data = {
+        paper_data: Dict[str, Any] = {
             "arxiv_id": paper.arxiv_id,
             "title": paper.title,
             "authors": paper.authors,
@@ -399,13 +413,16 @@ class MetadataFetcher:
         paper_repo: PaperRepository,
         db_session: Session,
     ) -> bool:
-        """Persist one paper. Returns whether it was stored."""
+        """Persist one paper. Returns whether it was stored.
+
+        Commits per paper on purpose: a batch runs for minutes, and one bad paper must
+        not discard the ones already through. The repository leaves that choice here.
+        """
         try:
             paper_repo.upsert(self._build_paper_create(paper, parsed_paper, outcome))
             db_session.commit()
             logger.debug(
-                f"Stored paper {paper.arxiv_id} to database "
-                f"({'with parsed content' if parsed_paper else 'metadata only'})"
+                f"Stored paper {paper.arxiv_id} to database ({'with parsed content' if parsed_paper else 'metadata only'})"
             )
             return True
         except Exception as e:
@@ -439,7 +456,9 @@ class MetadataFetcher:
         failure_reasons = failure_reasons or {}
 
         stored_count = sum(
-            self._store_paper(paper, parsed_papers.get(paper.arxiv_id), failure_reasons.get(paper.arxiv_id), paper_repo, db_session)
+            self._store_paper(
+                paper, parsed_papers.get(paper.arxiv_id), failure_reasons.get(paper.arxiv_id), paper_repo, db_session
+            )
             for paper in papers
         )
 

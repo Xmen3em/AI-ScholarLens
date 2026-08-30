@@ -1,6 +1,8 @@
-from typing import List, Union
+from typing import Annotated, List, Union
+
 from pydantic import BaseModel, Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
 
 class DefaultSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -54,7 +56,9 @@ class Settings(DefaultSettings):
     opensearch_host: str = "http://localhost:9200"
     
     ollama_host: str = "http://localhost:11434"
-    ollama_models: List[str] = Field(default=["llama3.2:1b"])
+    # NoDecode: without it pydantic-settings JSON-decodes a complex field straight from
+    # .env and raises before parse_ollama_models ever sees the comma-separated string.
+    ollama_models: Annotated[List[str], NoDecode] = Field(default=["llama3.2:1b"])
     ollama_default_model: str = "llama3.2:1b"
     ollama_timeout: int = 300
     

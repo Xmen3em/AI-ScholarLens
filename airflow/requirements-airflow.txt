@@ -4,6 +4,8 @@ httpx>=0.27.0
 # Shared code under src/ therefore must stay inside the 1.4/2.0 overlap: use Column()
 # rather than Mapped[]/mapped_column(), and import declarative_base from sqlalchemy.orm.
 sqlalchemy>=1.4.36,<2.0.0
+# Alembic is not pinned here on purpose: apache-airflow already installs it under the
+# constraint file above, and re-pinning it risks upgrading past what Airflow supports.
 pydantic>=2.0.0,<3.0.0
 python-dateutil>=2.8.0
 

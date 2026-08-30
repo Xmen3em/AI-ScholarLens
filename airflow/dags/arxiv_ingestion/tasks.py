@@ -231,7 +231,11 @@ def generate_daily_report(**context):
         logger.info(f"Errors encountered: {report['processing']['errors']}")
         logger.info(f"OpenSearch placeholders: {report['opensearch']['placeholders_created']}")
         logger.info("=== END REPORT ===")
-    
+
+        # Without this the report exists only in the task log, so nothing downstream
+        # can read it and the run's numbers vanish once logs rotate.
+        return report
+
     except Exception as e:
         error_msg = f"Error during daily report generation: {str(e)}"
         logger.error(error_msg)

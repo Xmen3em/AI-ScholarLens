@@ -6,6 +6,17 @@ This guide covers the automated tests and Docker-backed checks for the current W
 
 These tests do not require Docker, PostgreSQL, OpenSearch, Ollama, Airflow, or internet access.
 
+`.env.test` is loaded into the environment by pytest-dotenv (`env_files` in `pyproject.toml`).
+Environment variables outrank the `.env` file in pydantic-settings, so the suite is insulated
+from whatever a developer keeps locally — without it, a stray `OLLAMA_MODELS` or
+`ARXIV__MAX_RESULTS` on one machine silently changes what the tests exercise.
+
+Adding a setting to `src/config.py` means adding it to both `.env.example` and `.env.test`;
+`tests/unit/test_config_and_schemas.py` derives the expected variable names from the settings
+models and fails if either file drifts, in either direction — a missing setting or a name left
+behind after a rename. It also loads `.env.example` through `Settings` to prove that
+`cp .env.example .env` yields a config that works.
+
 From the project root:
 
 ```powershell
@@ -40,6 +51,13 @@ container started by `testcontainers`, with the schema created from the SQLAlche
 Persistence is the subject there, so a mocked session would verify nothing: these tests
 cover the idempotent `upsert` the ingestion DAG depends on, the unique `arxiv_id`
 constraint, pagination order, and the processing-stats queries.
+
+`tests/integration/test_migrations.py` covers the schema itself: that migrations build the
+`papers` table on an empty database, that a database created by the old `create_all` is
+baselined without losing rows, that reruns are idempotent, and that Airflow's tables and its
+`alembic_version` row in the same database are left alone. Its last test compares the migrated
+schema against `Base.metadata` column by column, so a model change with no matching migration
+fails the build.
 
 `tests/integration/test_ai_scope_command.py` covers the audit and purge command against the
 same container: that the audit reports non-compliant rows without touching them, that a

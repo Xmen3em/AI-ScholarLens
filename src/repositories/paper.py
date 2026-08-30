@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import Any, List, NamedTuple, Optional, Sequence
+from typing import Any, List, NamedTuple, Optional, Sequence, cast
 from uuid import UUID
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 from src.models.paper import Paper
 from src.schemas.arxiv.paper import PaperCreate
@@ -19,13 +20,21 @@ class CategoryRow(NamedTuple):
 
 
 class PaperRepository:
+    """Queries and writes over the papers table.
+
+    No method here commits. The caller owns the transaction, so it can group several
+    writes into one unit and roll the whole thing back; committing per write would take
+    that choice away and leave rollback responsibility split between two layers.
+    """
+
     def __init__(self, session: Session):
         self.session = session
 
     def create(self, paper: PaperCreate) -> Paper:
+        """Insert a paper. Flushes so constraints fire here, but does not commit."""
         db_paper = Paper(**paper.model_dump())
         self.session.add(db_paper)
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(db_paper)
         return db_paper
 
@@ -87,8 +96,9 @@ class PaperRepository:
         }
 
     def update(self, paper: Paper) -> Paper:
+        """Persist changes to a paper. Flushes but does not commit."""
         self.session.add(paper)
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(paper)
         return paper
 
@@ -121,16 +131,17 @@ class PaperRepository:
     def delete_by_ids(self, paper_ids: Sequence[UUID]) -> int:
         """Delete the given papers and return how many rows went.
 
-        Unlike ``create`` and ``update``, this deliberately does not commit: the caller
-        owns the transaction so that a count check and the delete it authorises stay a
-        single atomic unit. Committing here would release the locks in between.
+        Like every write here, this does not commit: a count check and the delete it
+        authorises have to stay one atomic unit, and committing would release the locks
+        that hold that guarantee.
         """
         if not paper_ids:
             return 0  # `IN ()` is a syntax error, and there is nothing to do anyway.
         # synchronize_session is stated rather than defaulted: SQLAlchemy 1.4 (the Airflow
         # image) and 2.0 (the API image) disagree on the default, and the caller commits
         # and exits, so there is no identity map left to keep in step.
-        result = self.session.execute(
-            delete(Paper).where(Paper.id.in_(paper_ids)), execution_options={"synchronize_session": False}
+        result = cast(
+            CursorResult,
+            self.session.execute(delete(Paper).where(Paper.id.in_(paper_ids)), execution_options={"synchronize_session": False}),
         )
         return result.rowcount

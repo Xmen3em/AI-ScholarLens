@@ -109,7 +109,7 @@ To check the stored corpus against the allowlist, see [Corpus scope audit](#corp
 
 ## How the application works today
 
-1. The API starts and connects to PostgreSQL.
+1. The API starts, connects to PostgreSQL, and brings the schema to the latest migration.
 2. The API exposes health, ping, and paper read endpoints.
 3. Airflow schedules the arxiv_paper_ingestion DAG for weekdays at 06:00 UTC. Airflow creates DAGs paused, so it runs only after the DAG is unpaused or triggered manually.
 4. The DAG fetches metadata from arXiv across the eight allowlisted AI categories.
@@ -234,6 +234,8 @@ AI-ScholarLens/
 │   ├── policies/                # AI category allowlist and scope predicate
 │   ├── commands/                # Operational CLIs (python -m src.commands.*)
 │   └── db/                      # Database interface, PostgreSQL impl, factory
+│       ├── migrations.py        # Startup migration runner
+│       └── alembic/             # Alembic env and versions/
 ├── tests/
 │   ├── api/
 │   ├── integration/
@@ -260,6 +262,16 @@ This keeps the README useful to both developers and future agents without requir
 
 ## Configuration
 
+Copy `.env.example` to `.env` and adjust:
+
+~~~bash
+cp .env.example .env
+~~~
+
+`.env.example` lists every setting with its in-code default, so an empty `.env` is a working
+one. Docker Compose does not read `.env` — it sets the container environment inline in
+`compose.yml` — so `.env` matters when running the API or tooling on the host.
+
 Runtime settings are loaded from environment variables and .env through src/config.py. Important settings include:
 
 - POSTGRES_DATABASE_URL
@@ -275,6 +287,37 @@ The set of arXiv categories is deliberately **not** configurable; it lives in
 in a local `.env` is ignored.
 
 Do not commit credentials or private environment files.
+
+## Database migrations
+
+The schema is owned by Alembic, in `src/db/alembic/versions/`. `PostgreSQLDatabase.startup()`
+runs `alembic upgrade head`, so both the API and the Airflow DAG converge on the same schema
+without a manual step. A PostgreSQL advisory lock serialises them, since both call
+`make_database()`.
+
+This replaced `Base.metadata.create_all`, which only ever created *missing tables*. It never
+altered an existing one, so any new column silently failed to reach a deployed database.
+
+A database created before migrations existed is detected (schema present, no history) and
+stamped at `0001_papers_baseline` before newer revisions run, so no manual `alembic stamp` is
+needed and existing rows are untouched.
+
+After changing a model:
+
+~~~bash
+make migration m="add citation_count to papers"   # autogenerate
+# review the generated file in src/db/alembic/versions/ before committing
+make migrate                                       # apply locally
+~~~
+
+Two constraints are load-bearing, both in `src/db/alembic/env.py`:
+
+- **The version table is `alembic_version_scholarlens`, not `alembic_version`.** Compose points
+  Airflow at the same `rag_db`, and Airflow runs Alembic itself — sharing the default table
+  would interleave two unrelated migration histories.
+- **`include_name` limits autogenerate to this project's tables.** Without it, autogenerate
+  compares against a database full of Airflow's tables and emits `drop_table()` for every one
+  of them, including Airflow's own `alembic_version`.
 
 ## Corpus scope audit
 

@@ -43,6 +43,12 @@ lint: ## Lint and type check
 test: ## Run tests
 	uv run pytest
 
+migrate: ## Apply database migrations
+	uv run alembic upgrade head
+
+migration: ## Generate a migration from model changes (make migration m="add x")
+	uv run alembic revision --autogenerate -m "$(m)"
+
 test-cov: ## Run tests with coverage
 	uv run pytest --cov=src --cov-report=html
 

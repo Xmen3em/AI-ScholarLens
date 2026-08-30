@@ -44,8 +44,9 @@ def postgres_engine():
 def db_session(postgres_engine) -> Session:
     """A session on the real schema, left empty for the next test.
 
-    The repository commits internally, so the table is truncated between tests rather
-    than wrapped in a transaction that those commits would end.
+    The repository no longer commits, but the code under test does (MetadataFetcher
+    commits per paper, ai_scope commits a purge), so the table is truncated between
+    tests rather than wrapped in a transaction those commits would end.
     """
     with Session(postgres_engine) as session:
         yield session

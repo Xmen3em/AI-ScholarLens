@@ -57,8 +57,10 @@ def store_raw(db_session, arxiv_id: str, categories) -> None:
 
 
 def seed(repository, *specs) -> None:
+    """Insert papers and commit, as a completed ingestion run would have left them."""
     for arxiv_id, categories in specs:
         repository.upsert(make_paper(arxiv_id, categories=categories))
+    repository.session.commit()
 
 
 def test_audit_reports_scanned_compliant_and_non_compliant_rows(repository):

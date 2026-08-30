@@ -162,3 +162,65 @@ async def test_completed_download_is_cached_without_leftovers(stub_httpx, writab
 
     assert result.read_bytes() == b"%PDF-1.4 body"
     assert [path.name for path in writable_cache_dir.iterdir()] == ["2401.00001.pdf"]
+
+
+def recording_async_client(monkeypatch, handler):
+    """Patch httpx.AsyncClient and capture the keyword arguments it was built with."""
+    real_client_cls = httpx.AsyncClient
+    captured: dict = {}
+
+    def factory(*args, **kwargs):
+        captured.update(kwargs)
+        kwargs.pop("transport", None)
+        return real_client_cls(*args, transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", factory)
+    return captured
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda client: client.fetch_papers(max_results=1),
+        lambda client: client.fetch_papers_with_query("cat:cs.AI", max_results=1),
+        lambda client: client.fetch_paper_by_id("2401.00001"),
+    ],
+    ids=["fetch_papers", "fetch_papers_with_query", "fetch_paper_by_id"],
+)
+@pytest.mark.anyio
+async def test_every_arxiv_request_carries_the_configured_timeout(monkeypatch, call):
+    """fetch_paper_by_id used a bare client, so a stalled connection never timed out."""
+    captured = recording_async_client(monkeypatch, lambda request: httpx.Response(200, text=ARXIV_FEED))
+    client = ArxivClient(ArxivSettings(rate_limit_delay=0.0, timeout_seconds=7))
+
+    await call(client)
+
+    assert captured["timeout"] == 7
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda client: client.fetch_papers(max_results=1),
+        lambda client: client.fetch_papers_with_query("cat:cs.AI", max_results=1),
+        lambda client: client.fetch_paper_by_id("2401.00001"),
+    ],
+    ids=["fetch_papers", "fetch_papers_with_query", "fetch_paper_by_id"],
+)
+@pytest.mark.anyio
+async def test_every_arxiv_request_waits_out_the_rate_limit(stub_httpx, monkeypatch, call):
+    """arXiv asks for 3 seconds between requests; fetch_paper_by_id never waited."""
+    slept: list[float] = []
+
+    async def record_sleep(seconds):
+        slept.append(seconds)
+
+    monkeypatch.setattr("src.services.arxiv.client.asyncio.sleep", record_sleep)
+    stub_httpx(lambda request: httpx.Response(200, text=ARXIV_FEED))
+    client = ArxivClient(ArxivSettings(rate_limit_delay=3.0))
+
+    await call(client)  # first request has nothing to wait for
+    assert slept == []
+
+    await call(client)  # second request must be spaced out
+    assert len(slept) == 1 and 0 < slept[0] <= 3.0
