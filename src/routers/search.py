@@ -2,7 +2,14 @@
 
 from fastapi import APIRouter
 from src.dependencies import SearchDep
-from src.schemas.api.search import ChunkSearchRequest, ChunkSearchResponse, SearchRequest, SearchResponse
+from src.schemas.api.search import (
+    ChunkSearchRequest,
+    ChunkSearchResponse,
+    HybridSearchRequest,
+    HybridSearchResponse,
+    SearchRequest,
+    SearchResponse,
+)
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -33,6 +40,26 @@ def search_chunks(request: ChunkSearchRequest, search: SearchDep) -> ChunkSearch
     it returns forty pieces of a single paper instead of the best passage from each.
     """
     return search.search_chunks(
+        request.query,
+        size=request.size,
+        offset=request.offset,
+        categories=request.categories,
+    )
+
+
+@router.post("/hybrid", response_model=HybridSearchResponse)
+def search_hybrid(request: HybridSearchRequest, search: SearchDep) -> HybridSearchResponse:
+    """Find passages by meaning and by wording at once.
+
+    Runs the BM25 passage query and a vector similarity query over the same index,
+    then fuses them with reciprocal rank fusion — only the rank positions are used, so
+    BM25 scores and cosine similarities never have to be put on one scale. `score` on
+    each hit is therefore the fused score, not BM25, and sits near 1/60.
+
+    Falls back to keyword-only if the embedding model is unreachable, and says so in
+    `mode`. Worse results beat no results, and the keyword half is complete on its own.
+    """
+    return search.search_hybrid(
         request.query,
         size=request.size,
         offset=request.offset,

@@ -45,6 +45,15 @@ The suite currently covers:
   the category filter, pagination, date sorting, and highlight configuration
 - That the passage profile scores content over section heading and never the paper title,
   and that both profiles match by the same rules — only the fields differ
+- Reciprocal rank fusion: agreement across both rankings outranks a single confident hit,
+  only positions are used, and ties break deterministically
+- Embedding reuse: an unchanged passage is never embedded twice, edited text is re-embedded
+  without touching its neighbours, and an embedding failure fails the run rather than
+  indexing a passage with no vector
+- The alias swap: it moves onto the new index in one action, only after a clean rewrite,
+  and the superseded index is left in place to roll back to
+- Hybrid fallback: an unreachable embedding model returns keyword results labelled
+  `mode: keyword`, and never issues a vector query
 - How an OpenSearch response becomes a `SearchResponse`, including a null score on a
   date-sorted hit, a malformed highlight, and a missing index reported as an empty result
 - The paper indexer: one document per paper, unparsed papers still searchable, and the
@@ -239,6 +248,26 @@ Check that the top hit has the query terms in its *title* rather than only its a
 is the 3x title boost doing its job — and that `highlights` comes back with `<mark>` tags. A
 misspelled query ("retreival augmnted generaton") must return the same papers; if it returns
 nothing, fuzzy matching is not reaching the query body.
+
+Hybrid search fuses both rankings:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid -ContentType application/json `
+  -Body '{"query": "how do they stop the model making things up", "size": 5}'
+```
+
+`mode` must read `hybrid`. If it reads `keyword`, `fallback_reason` says why — most often
+the embedding model has not been pulled:
+
+```powershell
+docker compose exec ollama ollama pull nomic-embed-text
+```
+
+That fallback is the behaviour to check deliberately: stop Ollama, search again, and the
+endpoint must still return keyword results with `mode: keyword` rather than a 503.
+
+Hybrid `score` values sit near 1/60 and are *not* BM25 scores — they are fused ranks, so
+comparing them against `/search/chunks` scores is meaningless.
 
 Passage search is the other half:
 

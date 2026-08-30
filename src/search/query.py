@@ -144,3 +144,18 @@ class SearchQuery:
         if self.newest_first or not self.query.strip():
             return [{"published_date": {"order": "desc"}}, "_score"]
         return None
+
+
+def vector_query(profile: QueryProfile, vector: Sequence[float], *, size: int,
+                 categories: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+    """Approximate-nearest-neighbour search over the embedding field.
+
+    The category filter goes *inside* the knn clause rather than beside it. A filter
+    applied afterwards would prune results the ANN search had already committed to,
+    so a narrow filter would quietly return far fewer than the requested k; the lucene
+    engine applies it during the graph walk instead.
+    """
+    knn: Dict[str, Any] = {"vector": list(vector), "k": size}
+    if categories:
+        knn["filter"] = {"terms": {"categories": list(categories)}}
+    return {"size": size, "_source": list(profile.source), "query": {"knn": {"embedding": knn}}}

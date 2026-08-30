@@ -92,6 +92,15 @@ class OllamaTimeoutError(OllamaException):
     """Exception raised when Ollama service times out."""
 
 
+class EmbeddingError(OllamaException):
+    """Exception raised when the embedding model returns something unusable.
+
+    Distinct from a connection or timeout failure: the service answered, but with
+    the wrong number of vectors or vectors of the wrong width, which would corrupt
+    the index rather than merely fail the run.
+    """
+
+
 # General application exceptions
 class ConfigurationError(Exception):
     """Exception raised when configuration is invalid."""

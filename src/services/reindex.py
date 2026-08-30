@@ -14,6 +14,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Sequence
 
 from opensearchpy import OpenSearch
 from opensearchpy.helpers import bulk
+from src.search.indices import point_alias_at
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,10 @@ class IndexRun:
     papers_without_documents: int = 0
     documents_indexed: int = 0
     stale_documents_deleted: int = 0
+    # Zero for an index that stores no vectors. Reuse is what keeps a full rewrite
+    # affordable: embedding one passage costs about two thirds of a second on CPU.
+    embeddings_computed: int = 0
+    embeddings_reused: int = 0
     errors: List[str] = field(default_factory=list)
 
 
@@ -47,8 +52,12 @@ class CorpusReindexer(ABC):
     is picked up without anyone tracking which papers are new.
     """
 
-    def __init__(self, client: OpenSearch, alias: str):
+    def __init__(self, client: OpenSearch, index: str, alias: str):
         self.client = client
+        # Writes go to the concrete index and reads go through the alias, which only
+        # moves once the rewrite is complete. A mapping change is then a new index
+        # filled in the background while searches keep hitting the old, complete one.
+        self.index = index
         self.alias = alias
 
     def index_corpus(self) -> IndexRun:
@@ -60,10 +69,13 @@ class CorpusReindexer(ABC):
             logger.warning("Skipping stale-document cleanup: %d papers failed to index", len(run.errors))
         else:
             run.stale_documents_deleted = self._delete_documents_older_than(stamp)
+            replaced = point_alias_at(self.client, self.alias, self.index)
+            if replaced:
+                logger.info("Left %s behind; delete it once %s is confirmed good", replaced, self.index)
 
         logger.info(
             "%s: indexed %d/%d papers, %d documents, %d stale removed",
-            self.alias,
+            self.index,
             run.papers_indexed,
             run.papers_seen,
             run.documents_indexed,
@@ -120,9 +132,9 @@ class CorpusReindexer(ABC):
         the same case for a document a concurrent run rewrites mid-delete: a conflict
         means the document is current, which is precisely when it must be kept.
         """
-        self.client.indices.refresh(index=self.alias)
+        self.client.indices.refresh(index=self.index)
         response = self.client.delete_by_query(
-            index=self.alias,
+            index=self.index,
             body={"query": {"range": {"indexed_at": {"lt": stamp.isoformat()}}}},
             conflicts="proceed",
             refresh=True,

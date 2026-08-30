@@ -10,8 +10,8 @@ The project is intentionally split into small replaceable components. The arXiv 
 |---|---|---|
 | Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
-| Phase 3 | OpenSearch indexing and hybrid retrieval | In progress — BM25 keyword search complete, dense vectors next |
-| Phase 4 | Chunking and retrieval evaluation | Planned |
+| Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
+| Phase 4 | Chunking and retrieval evaluation | In progress — chunking complete, evaluation next |
 | Phase 5 | Grounded RAG answers with Ollama | Planned |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
 
@@ -122,8 +122,18 @@ One index cannot do both. BM25 normalizes relevance by field length, so in a
 paper-sized document the passage that actually matched is buried, and a passage-sized
 document has no title or abstract to weight.
 
-Both are rewritten in full by the `index_to_opensearch` DAG task and both go through an
-alias, so a mapping change can be rolled out by building the next index and repointing.
+Both are rewritten in full by the `index_to_opensearch` DAG task. Writes go to the
+concrete index (`arxiv-papers-v1`, `paper-chunks-v2`) and reads go through the alias,
+which is moved onto the new index in a single atomic action **only after** a clean
+rewrite. A mapping change — such as `paper-chunks` gaining its vector field — is
+therefore rolled out by filling a new index while searches keep hitting the old,
+complete one. The superseded index is left in place to roll back to, and is yours to
+delete once the new one is confirmed good.
+
+Embedding a passage costs about two thirds of a second on CPU, so re-embedding the whole
+corpus on every pass would cost a quarter of an hour and grow with the corpus. Each
+document stores a hash of its text, and a rewrite reuses the stored vector whenever that
+hash still matches — a normal daily run embeds only the passages that are actually new.
 
 Both endpoints share one query builder, differing only in a profile: which fields are
 searched and with what boost, which are returned, and how they are highlighted. The
@@ -153,6 +163,31 @@ fragments for abstracts — and `took_ms` from OpenSearch. Category filtering is
 clause rather than a query clause, so a category never contributes to relevance. An
 empty query browses: filters and the newest-first sort still apply, which is how "the
 latest cs.CL papers" is asked for.
+
+#### Hybrid ranking
+
+`POST /api/v1/search/hybrid` runs the keyword query and a vector similarity query over
+the same passages and fuses the two rankings with **reciprocal rank fusion**.
+
+Only rank positions are used, never the underlying numbers. A BM25 score and a cosine
+similarity are on incomparable scales, and normalizing them means inventing a conversion
+nobody can defend; RRF sidesteps that entirely by asking only "how highly did each half
+rank this?". A passage both halves place well beats one that either half puts first. The
+`score` on a hybrid hit is therefore the fused score — near 1/60, not a BM25 score.
+
+Each half retrieves five pages deep before fusing, because fusion can only reorder what
+it is given: a passage ranked 8th by one half and 40th by the other is invisible unless
+both lists run past the page being served.
+
+**Embeddings** come from `nomic-embed-text` running in the Ollama container — 768
+dimensions, no API key, no external calls. The model is prompted with its task prefixes
+(`search_document:` when indexing, `search_query:` when searching); without them queries
+and passages land in different regions of the space and similarity quietly degrades,
+which is invisible in the output because the vectors still have the right shape.
+
+If Ollama is unreachable the endpoint **falls back to keyword-only** and says so in
+`mode`, with the reason in `fallback_reason`. Worse results beat no results, and the
+keyword half is complete on its own.
 
 #### Ranking passages
 
@@ -205,8 +240,11 @@ share a name with an existing index, so it has to exist from the first write.
 5. PDFs are downloaded and cached, then parsed with Docling inside the Airflow image.
 6. Paper metadata and parsed content are upserted into PostgreSQL.
 7. The DAG rewrites every stored paper into both OpenSearch indices.
-8. `POST /api/v1/search/` ranks papers with BM25 over the `arxiv-papers` index.
-9. Dense retrieval and RAG answering are reserved for later phases.
+8. Passages are embedded with `nomic-embed-text`, reusing stored vectors for text that
+   has not changed.
+9. `/api/v1/search/` ranks papers with BM25; `/search/chunks` ranks passages; `/search/hybrid`
+   fuses keyword and vector rankings.
+10. Retrieval evaluation and RAG answering are reserved for later phases.
 
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 
@@ -260,6 +298,7 @@ The API documentation is available at http://localhost:8000/docs. Airflow is ava
 | GET | /api/v1/papers/{arxiv_id} | Retrieve one stored paper |
 | POST | /api/v1/search/ | BM25 keyword search over papers |
 | POST | /api/v1/search/chunks | BM25 keyword search over passages |
+| POST | /api/v1/search/hybrid | Keyword and vector search, fused with RRF |
 | GET | /docs | Interactive OpenAPI documentation |
 
 Example:
@@ -280,6 +319,10 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType
 # The passages that answer a question, not the papers that mention it
 Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -ContentType application/json `
   -Body '{"query": "how are the benchmarks constructed", "size": 5}'
+
+# The same, ranked by meaning as well as wording
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid -ContentType application/json `
+  -Body '{"query": "how do they stop the model making things up", "size": 5}'
 ~~~
 
 `size` is 1-50, `offset` 0-1000, and `categories` must be inside the ingested AI
@@ -338,6 +381,7 @@ AI-ScholarLens/
 │   │   ├── arxiv/               # arXiv client
 │   │   ├── ollama/              # Ollama client
 │   │   ├── pdf_parser/          # Docling parser
+│   │   ├── embeddings/          # Ollama embedding client
 │   │   ├── metadata_fetcher.py  # Ingestion orchestration
 │   │   ├── reindex.py           # Idempotent full-corpus reindex, shared
 │   │   ├── paper_indexer.py     # Corpus -> arxiv-papers index
@@ -347,7 +391,7 @@ AI-ScholarLens/
 │   ├── models/                  # SQLAlchemy models
 │   ├── schemas/                 # Pydantic contracts
 │   ├── policies/                # AI category allowlist, chunk boundaries
-│   ├── search/                  # Index mappings, query builder, client
+│   ├── search/                  # Index mappings, query builder, RRF, client
 │   ├── commands/                # Operational CLIs (python -m src.commands.*)
 │   └── db/                      # Database interface, PostgreSQL impl, factory
 │       ├── migrations.py        # Startup migration runner

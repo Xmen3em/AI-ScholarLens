@@ -37,6 +37,12 @@ def index(papers, client=None):
     return client, PaperIndexer(client, FakeRepository(papers)).index_corpus()
 
 
+def test_the_alias_follows_a_clean_rewrite():
+    client, _ = index([paper()])
+
+    assert client.indices.aliases == {PAPER_ALIAS: PAPER_INDEX}
+
+
 def test_each_paper_becomes_one_document_keyed_by_its_arxiv_id():
     client, run = index([paper("2608.00001v1"), paper("2608.00002v1")])
 
@@ -100,11 +106,12 @@ def test_a_missing_index_is_created_with_its_alias():
     assert client.indices.aliases == {PAPER_ALIAS: PAPER_INDEX}
 
 
-def test_documents_are_written_through_the_alias():
+def test_documents_are_written_to_the_concrete_index_not_the_alias():
+    """The alias must keep serving the previous index until the rewrite is complete."""
     client, _ = index([paper()])
     index_name, _source = next(iter(client.documents.values()))
 
-    assert index_name == PAPER_ALIAS
+    assert index_name == PAPER_INDEX
 
 
 def test_stale_cleanup_is_skipped_when_a_paper_failed():

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Sequence
 
 from opensearchpy import OpenSearch
 from src.repositories.paper import PaperRepository, SearchableRow
-from src.search.indices import PAPER_ALIAS, ensure_paper_index
+from src.search.indices import PAPER_ALIAS, PAPER_INDEX, ensure_paper_index
 from src.services.reindex import CorpusReindexer, strings
 
 
@@ -17,8 +17,8 @@ class PaperIndexer(CorpusReindexer):
     still findable — it just has no passages in the chunk index.
     """
 
-    def __init__(self, client: OpenSearch, repository: PaperRepository, alias: str = PAPER_ALIAS):
-        super().__init__(client, alias)
+    def __init__(self, client: OpenSearch, repository: PaperRepository, index: str = PAPER_INDEX, alias: str = PAPER_ALIAS):
+        super().__init__(client, index, alias)
         self.repository = repository
 
     def ensure_index(self) -> None:
@@ -30,7 +30,7 @@ class PaperIndexer(CorpusReindexer):
     def documents(self, paper: SearchableRow, stamp: datetime) -> List[Dict[str, Any]]:
         return [
             {
-                "_index": self.alias,
+                "_index": self.index,
                 "_id": paper.arxiv_id,
                 "_source": {
                     "arxiv_id": paper.arxiv_id,

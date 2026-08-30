@@ -63,6 +63,10 @@ class Settings(DefaultSettings):
     # .env and raises before parse_ollama_models ever sees the comma-separated string.
     ollama_models: Annotated[List[str], NoDecode] = Field(default=["llama3.2:1b"])
     ollama_default_model: str = "llama3.2:1b"
+    # Pull with `docker compose exec ollama ollama pull nomic-embed-text`. Changing this
+    # to a model of a different width means rebuilding the chunk index, because the
+    # knn_vector mapping fixes the dimension.
+    ollama_embedding_model: str = "nomic-embed-text"
     ollama_timeout: int = 300
     
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)

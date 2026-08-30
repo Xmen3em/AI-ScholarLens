@@ -2,7 +2,7 @@ import pytest
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 from src.dependencies import get_db_session, get_search
 from src.main import app
-from src.schemas.api.search import ChunkHit, ChunkSearchResponse, SearchHit, SearchResponse
+from src.schemas.api.search import ChunkHit, ChunkSearchResponse, HybridSearchResponse, SearchHit, SearchResponse
 
 
 class EmptyDatabaseSession:
@@ -84,6 +84,32 @@ class StubSearch:
             ],
         )
 
+
+    def search_hybrid(self, query, *, size, offset, categories):
+        self.calls.append({"query": query, "size": size, "offset": offset, "categories": categories})
+        if self.raises:
+            raise self.raises
+        return HybridSearchResponse(
+            query=query,
+            total=2,
+            took_ms=71,
+            mode="hybrid",
+            fallback_reason=None,
+            hits=[
+                ChunkHit(
+                    arxiv_id="2608.26469v1",
+                    title="Active Curriculum Refinement",
+                    section_title="2.1 Reinforcement Learning",
+                    section_index=4,
+                    chunk_index=0,
+                    content="In many reinforcement learning domains...",
+                    categories=["cs.LG"],
+                    published_date="2026-08-26T00:00:00",
+                    score=0.0328,
+                    highlights={},
+                )
+            ],
+        )
 
     def search_chunks(self, query, *, size, offset, categories):
         self.calls.append({"query": query, "size": size, "offset": offset, "categories": categories})
@@ -228,3 +254,30 @@ async def test_an_unreachable_backend_is_a_503_for_chunk_search_too(client):
         app.dependency_overrides.pop(get_search, None)
 
     assert response.status_code == 503
+
+
+@pytest.mark.anyio
+async def test_hybrid_search_reports_which_ranking_produced_it(client, search_service):
+    response = await client.post("/api/v1/search/hybrid", json={"query": "reinforcement learning"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["mode"] == "hybrid"
+    assert body["fallback_reason"] is None
+    assert body["hits"][0]["score"] == 0.0328
+
+
+@pytest.mark.anyio
+async def test_hybrid_search_forwards_paging_and_filters(client, search_service):
+    await client.post("/api/v1/search/hybrid", json={"query": "rag", "size": 5, "offset": 5, "categories": ["cs.LG"]})
+
+    assert search_service.calls == [{"query": "rag", "size": 5, "offset": 5, "categories": ["cs.LG"]}]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("payload", [{}, {"query": ""}, {"query": "rag", "categories": ["hep-th"]}])
+async def test_hybrid_search_validates_like_the_other_endpoints(client, search_service, payload):
+    response = await client.post("/api/v1/search/hybrid", json=payload)
+
+    assert response.status_code == 422
+    assert search_service.calls == []

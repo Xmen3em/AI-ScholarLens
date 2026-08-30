@@ -11,6 +11,7 @@ from src.db.factory import make_database
 from src.routers import papers, ping, search
 from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
+from src.services.embeddings.factory import make_embedder
 from src.services.search import SearchService
 
 # Setup logging
@@ -39,7 +40,7 @@ async def lifespan(app: FastAPI):
     app.state.arxiv_client = make_arxiv_client()
     # Built here rather than per request: the OpenSearch client holds a connection
     # pool, and rebuilding it on every search would throw that pool away each time.
-    app.state.search = SearchService(make_search_client())
+    app.state.search = SearchService(make_search_client(), make_embedder())
     logger.info("Services initialized: arXiv API client, search")
 
     logger.info("API ready")

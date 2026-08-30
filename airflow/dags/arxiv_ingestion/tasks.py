@@ -13,6 +13,7 @@ from src.repositories.paper import PaperRepository
 from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.chunk_indexer import ChunkIndexer
+from src.services.embeddings.factory import make_embedder
 from src.services.metadata_fetcher import make_metadata_fetcher
 from src.services.paper_indexer import PaperIndexer
 from src.services.pdf_parser.factory import make_pdf_parser_service
@@ -176,7 +177,7 @@ def index_to_opensearch(**context):
         with database.get_session() as session:
             repository = PaperRepository(session)
             papers = PaperIndexer(client, repository).index_corpus()
-            chunks = ChunkIndexer(client, repository).index_corpus()
+            chunks = ChunkIndexer(client, repository, make_embedder()).index_corpus()
 
         errors = papers.errors + chunks.errors
         results = {
@@ -212,6 +213,8 @@ def _index_summary(run: IndexRun) -> dict:
         "papers_without_documents": run.papers_without_documents,
         "documents_indexed": run.documents_indexed,
         "stale_documents_deleted": run.stale_documents_deleted,
+        "embeddings_computed": run.embeddings_computed,
+        "embeddings_reused": run.embeddings_reused,
     }
 
 
@@ -249,6 +252,8 @@ def generate_daily_report(**context):
                 "papers_indexed": index_results['papers']['documents_indexed'] if index_results else 0,
                 "chunks_indexed": index_results['chunks']['documents_indexed'] if index_results else 0,
                 "papers_without_chunks": index_results['chunks']['papers_without_documents'] if index_results else 0,
+                "embeddings_computed": index_results['chunks']['embeddings_computed'] if index_results else 0,
+                "embeddings_reused": index_results['chunks']['embeddings_reused'] if index_results else 0,
                 "status": index_results.get('status', 'unknown') if index_results else 'unknown',
             }
         }   
@@ -266,6 +271,7 @@ def generate_daily_report(**context):
         logger.info(f"Papers searchable: {report['opensearch']['papers_indexed']}")
         logger.info(f"Chunks indexed: {report['opensearch']['chunks_indexed']}")
         logger.info(f"Papers with no chunks (unparsed): {report['opensearch']['papers_without_chunks']}")
+        logger.info(f"Embeddings computed: {report['opensearch']['embeddings_computed']} (reused {report['opensearch']['embeddings_reused']})")
         logger.info("=== END REPORT ===")
 
         # Without this the report exists only in the task log, so nothing downstream

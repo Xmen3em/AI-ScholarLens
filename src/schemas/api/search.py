@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 from src.policies.ai_scope import AI_CATEGORY_ALLOWLIST
@@ -48,6 +48,10 @@ class ChunkSearchRequest(BaseSearchRequest):
     query: str = Field(..., min_length=1, max_length=500, description="Text to search for inside paper sections")
 
 
+class HybridSearchRequest(ChunkSearchRequest):
+    """A hybrid search over passages: BM25 and vector similarity, fused."""
+
+
 class SearchHit(BaseModel):
     """One paper that matched, with the fragments that made it match."""
 
@@ -93,3 +97,14 @@ class ChunkSearchResponse(BaseModel):
     total: int = Field(..., description="Passages matching the query, not the number returned")
     hits: List[ChunkHit]
     took_ms: int = Field(..., description="Time OpenSearch spent on the query")
+
+
+class HybridSearchResponse(ChunkSearchResponse):
+    """Fused passages, plus which ranking actually produced them."""
+
+    mode: Literal["hybrid", "keyword"] = Field(
+        ..., description="'keyword' when the embedding model was unreachable and the search fell back to BM25"
+    )
+    fallback_reason: Optional[str] = Field(
+        default=None, description="Why the vector half was skipped, when mode is 'keyword'"
+    )
