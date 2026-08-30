@@ -6,7 +6,7 @@ from typing import Any, Dict, List, NamedTuple, Optional
 
 from dateutil import parser as date_parser
 from sqlalchemy.orm import Session
-from src.exceptions import PipelineException
+from src.exceptions import PDFSkippedError, PipelineException
 from src.policies.ai_scope import matches_ai_scope
 from src.repositories.paper import PaperRepository
 from src.schemas.arxiv.paper import ArxivPaper, PaperCreate
@@ -308,13 +308,14 @@ class MetadataFetcher:
             async with parse_semaphore:
                 logger.debug(f"Starting parse: {paper.arxiv_id}")
                 pdf_content = await self.pdf_parser.parse_pdf(pdf_path)
+        except PDFSkippedError as e:
+            # A policy decision, not a failure. The message names the limit and the value
+            # that tripped it, so the papers row records which one to reconsider.
+            logger.info(f"Skipped {paper.arxiv_id}: {e}")
+            return (True, None, PdfOutcome(status="skipped", reason=str(e)))
         except Exception as e:
             logger.error(f"Parse error for {paper.arxiv_id}: {e}")
             return (True, None, PdfOutcome(status="parse_error", reason=str(e)))
-
-        if not pdf_content:
-            # The parser declined the file on purpose (size or page limits).
-            return (True, None, PdfOutcome(status="skipped", reason="outside configured size or page limits"))
 
         arxiv_metadata = ArxivMetadata(
             title=paper.title,

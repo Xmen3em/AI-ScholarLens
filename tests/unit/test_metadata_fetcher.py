@@ -8,6 +8,7 @@ leaving the failure reason only in the task log.
 from pathlib import Path
 
 import pytest
+from src.exceptions import PDFSkippedError
 from src.schemas.arxiv.paper import ArxivPaper
 from src.schemas.pdf_parser.models import ParserType, PdfContent
 from src.services.metadata_fetcher import MetadataFetcher
@@ -100,8 +101,8 @@ async def run_pipeline(paper, parser_result, session):
 
 @pytest.mark.anyio
 async def test_declined_pdf_is_reported_as_skip_not_error(paper, recording_session):
-    # A parser returning None means "outside the configured size or page limits".
-    results = await run_pipeline(paper, None, recording_session)
+    declined = PDFSkippedError("page count 47 exceeds max_pages limit of 30")
+    results = await run_pipeline(paper, declined, recording_session)
 
     assert results["pdfs_skipped"] == 1
     assert results["errors"] == []
@@ -124,7 +125,12 @@ async def test_parse_failure_is_reported_as_error(paper, recording_session):
 @pytest.mark.parametrize(
     ("parser_result", "expected_status", "expected_reason_fragment"),
     [
-        pytest.param(None, "skipped", "size or page limits", id="declined-by-parser"),
+        pytest.param(
+            PDFSkippedError("page count 47 exceeds max_pages limit of 30"),
+            "skipped",
+            "max_pages limit of 30",
+            id="declined-by-parser",
+        ),
         pytest.param(RuntimeError("libGL.so.1 missing"), "parse_error", "libGL.so.1", id="parser-raised"),
     ],
 )
@@ -144,7 +150,7 @@ async def test_stored_row_records_why_the_pdf_has_no_content(
     ("parser_result", "expected_parsed"),
     [
         pytest.param(parsed_content(), 1, id="parse-succeeded"),
-        pytest.param(None, 0, id="parse-declined"),
+        pytest.param(PDFSkippedError("file size 31.2MB exceeds max_file_size_mb limit of 20MB"), 0, id="parse-declined"),
         pytest.param(RuntimeError("boom"), 0, id="parse-raised"),
     ],
 )
@@ -268,3 +274,21 @@ def test_a_defect_in_serialization_surfaces_instead_of_being_filed_as_unprocesse
     """The old bare `except Exception` recorded our own bugs as "PDF not processed"."""
     with pytest.raises(type(error)):
         serialize(ExplodingContent(error))
+
+
+@pytest.mark.parametrize(
+    ("declined", "fragment"),
+    [
+        (PDFSkippedError("page count 47 exceeds max_pages limit of 30"), "max_pages limit of 30"),
+        (PDFSkippedError("file size 31.2MB exceeds max_file_size_mb limit of 20MB"), "max_file_size_mb limit of 20MB"),
+    ],
+    ids=["pages", "size"],
+)
+@pytest.mark.anyio
+async def test_the_skip_reason_names_the_limit_that_tripped(paper, recording_session, declined, fragment):
+    """A generic "size or page limits" gave no way to tell which cap to reconsider."""
+    await run_pipeline(paper, declined, recording_session)
+
+    reason = recording_session.stored["2401.00001"].parser_metadata["reason"]
+    assert reason == str(declined)
+    assert fragment in reason

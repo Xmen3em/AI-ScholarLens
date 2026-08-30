@@ -7,7 +7,7 @@ import pypdfium2 as pdfium
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption
-from src.exceptions import PDFParsingException, PDFValidationError
+from src.exceptions import PDFParsingException, PDFSkippedError, PDFValidationError
 from src.schemas.pdf_parser.models import PaperFigure, PaperSection, PaperTable, ParserType, PdfContent
 
 logger = logging.getLogger(__name__)
@@ -65,8 +65,9 @@ class DoclingParser:
                 logger.warning(
                     f"PDF file size ({file_size / 1024 / 1024:.1f}MB) exceeds limit ({self.max_file_size_bytes / 1024 / 1024:.1f}MB), skipping processing"
                 )
-                raise PDFValidationError(
-                    f"PDF file too large: {file_size / 1024 / 1024:.1f}MB > {self.max_file_size_bytes / 1024 / 1024:.1f}MB"
+                raise PDFSkippedError(
+                    f"file size {file_size / 1024 / 1024:.1f}MB exceeds max_file_size_mb "
+                    f"limit of {self.max_file_size_bytes / 1024 / 1024:.0f}MB"
                 )
 
             # Check if file starts with PDF header
@@ -85,26 +86,32 @@ class DoclingParser:
                 logger.warning(
                     f"PDF has {actual_pages} pages, exceeding limit of {self.max_pages} pages. Skipping processing to avoid performance issues."
                 )
-                raise PDFValidationError(f"PDF has too many pages: {actual_pages} > {self.max_pages}")
+                raise PDFSkippedError(f"page count {actual_pages} exceeds max_pages limit of {self.max_pages}")
 
             return True
 
-        except PDFValidationError:
+        # PDFSkippedError is not a PDFValidationError, so it has to be named here or the
+        # catch-all below rewraps a policy skip as a validation failure.
+        except (PDFSkippedError, PDFValidationError):
             raise
         except Exception as e:
             logger.error(f"Error validating PDF {pdf_path}: {e}")
             raise PDFValidationError(f"Error validating PDF {pdf_path}: {e}")
 
-    async def parse_pdf(self, pdf_path: Path) -> Optional[PdfContent]:
+    async def parse_pdf(self, pdf_path: Path) -> PdfContent:
         """
-        Parse PDF using Docling as fallback parser.
-        Limited to 20 pages to avoid memory issues with large papers.
+        Parse PDF using Docling.
 
         Args:
             pdf_path: Path to PDF file
 
         Returns:
-            PdfContent object or None if parsing failed
+            PdfContent extracted from the document.
+
+        Raises:
+            PDFSkippedError: the file exceeds a configured page or size limit.
+            PDFValidationError: the file is missing, empty, or not a readable PDF.
+            PDFParsingException: parsing was attempted and failed.
         """
         try:
             # Validate PDF first (includes size and page limits)
@@ -153,15 +160,12 @@ class DoclingParser:
                 metadata={"source": "docling", "note": "Content extracted from PDF, metadata comes from arXiv API"},
             )
 
-        except PDFValidationError as e:
-            # Handle size/page limit validation errors gracefully by returning None
-            error_msg = str(e).lower()
-            if "too large" in error_msg or "too many pages" in error_msg:
-                logger.info(f"Skipping PDF processing due to size/page limits: {e}")
-                return None
-            else:
-                # Re-raise other validation errors (corrupted files, etc.)
-                raise
+        except PDFSkippedError as e:
+            logger.info(f"Skipping {pdf_path.name}: {e}")
+            raise
+        except PDFValidationError:
+            # A broken or unreadable file, which is a failure rather than a skip.
+            raise
         except Exception as e:
             logger.error(f"Failed to parse PDF with Docling: {e}")
             logger.error(f"PDF path: {pdf_path}")

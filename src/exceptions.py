@@ -23,6 +23,16 @@ class PDFValidationError(PDFParsingException):
     """Exception raised when PDF file validation fails."""
 
 
+class PDFSkippedError(PDFParsingException):
+    """A readable PDF the parser declined because it exceeds a configured limit.
+
+    Deliberately not a PDFValidationError: that means "this file is broken", while this
+    means "this file is fine, our limits say no". The message names the limit and the
+    value that tripped it, so the reason reaches the papers row instead of a generic
+    "outside configured size or page limits".
+    """
+
+
 class PDFDownloadException(Exception):
     """Base exception for PDF download-related errors."""
 
