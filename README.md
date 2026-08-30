@@ -10,7 +10,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 |---|---|---|
 | Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
-| Phase 3 | OpenSearch indexing and hybrid retrieval | Planned |
+| Phase 3 | OpenSearch indexing and hybrid retrieval | In progress — chunk indexing complete, retrieval next |
 | Phase 4 | Chunking and retrieval evaluation | Planned |
 | Phase 5 | Grounded RAG answers with Ollama | Planned |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
@@ -31,7 +31,7 @@ flowchart LR
         API[FastAPI API<br/>:8000]
         Airflow[Airflow Scheduler + DAG<br/>:8080 or AIRFLOW_PORT]
         DB[(PostgreSQL<br/>papers + parsed content)]
-        Search[(OpenSearch<br/>Phase 3)]
+        Search[(OpenSearch<br/>paper-chunks index)]
         Ollama[Ollama<br/>answers Phase 5]
     end
 
@@ -48,6 +48,7 @@ flowchart LR
     Airflow --> PDF
     PDF --> Docling
     Docling --> DB
+    DB -- chunks --> Search
     Airflow --> DB
 
     DB -. index papers .-> Search
@@ -107,6 +108,35 @@ or stored.
 
 To check the stored corpus against the allowlist, see [Corpus scope audit](#corpus-scope-audit).
 
+### Search chunks
+
+Parsed papers are split into retrievable chunks and written to the `paper-chunks`
+OpenSearch index by the `index_paper_chunks` DAG task. The rules live in
+`src/policies/chunking.py`:
+
+- **The unit is a section.** Docling already recovers the paper's own structure, so a
+  section is a real boundary rather than a blind split. A section longer than 2000
+  characters is split further at the last paragraph, line, or sentence boundary that
+  fits, with 200 characters of overlap so a passage cut mid-argument stays recoverable.
+- **Reference lists are excluded.** A bibliography is a list of other people's titles:
+  indexed as body text it matches almost any query and grounds nothing. It is the
+  largest section in the corpus — 26 of 26 parsed papers, 234k of 1.8M characters. The
+  text stays in `papers.sections` for whoever extracts citations later.
+- **Sections under 100 characters are dropped.** Measured on the live corpus, all 48 of
+  them were arXiv stamp lines, author affiliation blocks, or bare link captions.
+- **Chunk ids are positional** (`{arxiv_id}:{section_index}:{chunk_index}`), so
+  re-indexing a paper overwrites its chunks instead of duplicating them.
+
+Each pass rewrites the whole corpus, then deletes any chunk it did not rewrite — which
+covers both a paper re-parsed into fewer sections and a paper purged from the database.
+That cleanup is skipped when any paper failed to index, so a transient failure cannot
+delete chunks that are still good.
+
+Writes and reads both go through the `paper-chunks` alias, which points at
+`paper-chunks-v1`. An OpenSearch mapping cannot be changed in place, so a field-type
+change means building the next index and repointing the alias — and an alias cannot
+share a name with an existing index, so it has to exist from the first write.
+
 ## How the application works today
 
 1. The API starts, connects to PostgreSQL, and brings the schema to the latest migration.
@@ -115,7 +145,8 @@ To check the stored corpus against the allowlist, see [Corpus scope audit](#corp
 4. The DAG fetches metadata from arXiv across the eight allowlisted AI categories.
 5. PDFs are downloaded and cached, then parsed with Docling inside the Airflow image.
 6. Paper metadata and parsed content are upserted into PostgreSQL.
-7. OpenSearch indexing and RAG answering are reserved for later phases.
+7. The DAG rewrites every stored paper into the `paper-chunks` OpenSearch index.
+8. Retrieval endpoints and RAG answering are reserved for later phases.
 
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 
@@ -227,11 +258,13 @@ AI-ScholarLens/
 │   │   ├── arxiv/               # arXiv client
 │   │   ├── ollama/              # Ollama client
 │   │   ├── pdf_parser/          # Docling parser
-│   │   └── metadata_fetcher.py  # Ingestion orchestration
+│   │   ├── metadata_fetcher.py  # Ingestion orchestration
+│   │   └── chunk_indexer.py     # Corpus -> OpenSearch chunk index
 │   ├── repositories/            # Query logic (PaperRepository)
 │   ├── models/                  # SQLAlchemy models
 │   ├── schemas/                 # Pydantic contracts
-│   ├── policies/                # AI category allowlist and scope predicate
+│   ├── policies/                # AI category allowlist, chunk boundaries
+│   ├── search/                  # OpenSearch index mapping and client
 │   ├── commands/                # Operational CLIs (python -m src.commands.*)
 │   └── db/                      # Database interface, PostgreSQL impl, factory
 │       ├── migrations.py        # Startup migration runner

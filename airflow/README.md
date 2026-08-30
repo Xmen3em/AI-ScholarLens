@@ -31,13 +31,14 @@ creates DAGs paused, so it only runs after being unpaused or triggered.
 setup_environment
   └─> fetch_daily_papers
         ├─> process_failed_pdfs ─┐
-        └─> create_opensearch_placeholders ─┴─> generate_daily_report ─> cleanup_temp_files
+        └─> index_paper_chunks ─────────┴─> generate_daily_report ─> cleanup_temp_files
 ```
 
 Each run fetches the previous day's submissions across the eight AI categories fixed in
 `src/policies/ai_scope.py`, capped by `ARXIV__MAX_RESULTS` (10 in `compose.yml`) as a
-total across all of them. `create_opensearch_placeholders` only counts papers awaiting
-indexing — indexing itself is not implemented yet.
+total across all of them. `index_paper_chunks` then rewrites the whole corpus into the
+`paper-chunks` OpenSearch index: the pass is idempotent, so it also heals a partial run
+and picks up papers parsed before indexing existed.
 
 ## Two constraints worth knowing
 

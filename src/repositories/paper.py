@@ -19,6 +19,18 @@ class CategoryRow(NamedTuple):
     categories: Any
 
 
+class IndexableRow(NamedTuple):
+    """Just enough of a paper to build its search-index documents."""
+
+    arxiv_id: str
+    title: str
+    authors: Any
+    categories: Any
+    published_date: datetime
+    # Parser output, so it may be null or malformed; chunk_sections judges it.
+    sections: Any
+
+
 class PaperRepository:
     """Queries and writes over the papers table.
 
@@ -127,6 +139,25 @@ class PaperRepository:
         if for_update:
             stmt = stmt.with_for_update()
         return [CategoryRow(*row) for row in self.session.execute(stmt)]
+
+    def list_indexable(self) -> List[IndexableRow]:
+        """Every parsed paper's indexable content, for the search index.
+
+        Selects columns rather than whole ``Paper`` rows, and leaves out ``raw_text``:
+        it holds the same text as ``sections`` in one piece, so loading it would double
+        the corpus in memory for nothing.
+
+        Returns the whole corpus each call. That is deliberate while it is small — a full
+        re-index is idempotent and self-healing, and it picks up papers parsed before
+        indexing existed. Revisit when the corpus outgrows a single daily pass; at roughly
+        45 chunks a paper, that is around the low thousands of papers.
+        """
+        stmt = (
+            select(Paper.arxiv_id, Paper.title, Paper.authors, Paper.categories, Paper.published_date, Paper.sections)
+            .where(Paper.sections != None)
+            .order_by(Paper.arxiv_id)
+        )
+        return [IndexableRow(*row) for row in self.session.execute(stmt)]
 
     def delete_by_ids(self, paper_ids: Sequence[UUID]) -> int:
         """Delete the given papers and return how many rows went.
