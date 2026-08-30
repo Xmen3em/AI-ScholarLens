@@ -152,33 +152,34 @@ def process_failed_pdfs(**context):
     
     
 def create_opensearch_placeholders(**context):
+    """Report how many stored papers are waiting to be indexed.
+
+    Creates nothing: OpenSearch indexing is not implemented yet. Reporting a count is
+    honest, but the previous message claimed placeholders had been created for those
+    papers, which put a fabricated result into the daily report.
+
+    The function and task_id keep their names so the DAG's task history stays
+    continuous; rename both when indexing lands and this task starts doing the work.
     """
-    Create OpenSearch placeholders for the ingested papers.
-    This function is designed to be used as an Airflow task.
-    """
-    logger.info("Starting OpenSearch placeholder creation task...")
-    
+    logger.info("Counting papers awaiting OpenSearch indexing...")
+
     try:
         fetch_results = context['task_instance'].xcom_pull(key='fetch_results', task_ids='fetch_daily_papers')
-        
-        if not fetch_results:
-            logger.info("No papers found to create OpenSearch placeholders.")
-            return {"status": "success", "message": "No papers found to create OpenSearch placeholders."}
-        
-        papers_stored = fetch_results.get('papers_stored', 0)
-        logger.info(f"Number of papers stored in the database: {papers_stored}")
-        
-        placeholder_results = {
-            "status": "placeholder",
+        papers_stored = fetch_results.get('papers_stored', 0) if fetch_results else 0
+
+        # One shape on every path: generate_daily_report reads papers_ready_for_indexing,
+        # and the old empty-batch branch omitted it entirely.
+        results = {
+            "status": "not_implemented",
             "papers_ready_for_indexing": papers_stored,
-            "message": f"OpenSearch placeholders created for {papers_stored} papers."
+            "message": f"{papers_stored} papers awaiting indexing; OpenSearch indexing is not implemented yet.",
         }
-        
-        logger.info(f"OpenSearch placeholder creation completed successfully. Results: {placeholder_results}")        
-        return placeholder_results
+
+        logger.info(results["message"])
+        return results
     
     except Exception as e:
-        error_msg = f"Error during OpenSearch placeholder creation: {str(e)}"
+        error_msg = f"Error counting papers awaiting indexing: {str(e)}"
         logger.error(error_msg)
         raise Exception(error_msg)
     
@@ -214,7 +215,7 @@ def generate_daily_report(**context):
                 "failed_pdf_retries": failed_pdf_results.get('errors_logged', 0) if failed_pdf_results else 0,
             },
             "opensearch": {
-                "placeholders_created": opensearch_results.get('papers_ready_for_indexing', 0) if opensearch_results else 0,
+                "awaiting_indexing": opensearch_results.get('papers_ready_for_indexing', 0) if opensearch_results else 0,
                 "status": opensearch_results.get('status', 'unknown') if opensearch_results else 'unknown',
             }
         }   
@@ -229,7 +230,7 @@ def generate_daily_report(**context):
         logger.info(f"Papers stored: {report['papers']['stored']}")
         logger.info(f"Processing time: {report['processing']['processing_time_seconds']:.1f}s")
         logger.info(f"Errors encountered: {report['processing']['errors']}")
-        logger.info(f"OpenSearch placeholders: {report['opensearch']['placeholders_created']}")
+        logger.info(f"Awaiting OpenSearch indexing: {report['opensearch']['awaiting_indexing']}")
         logger.info("=== END REPORT ===")
 
         # Without this the report exists only in the task log, so nothing downstream

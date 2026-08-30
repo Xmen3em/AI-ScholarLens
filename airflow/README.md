@@ -1,33 +1,56 @@
-# Airflow Configuration
+# Airflow
 
-This directory contains Apache Airflow configuration and DAGs for the arXiv Paper Curator project.
+Orchestration for the arXiv ingestion pipeline. The Airflow service is defined in the
+project's `compose.yml`; `make start` brings it up at http://localhost:8080 with the
+admin/admin account that `entrypoint.sh` creates.
 
-## Week 1 Setup
-
-For Week 1, we have a basic setup with:
-
-- **hello_world_dag.py**: Simple test DAG to verify Airflow is working
-- **init-db.sql**: Database initialization script
-
-## Directory Structure
+## Layout
 
 ```
 airflow/
-├── README.md           # This file
-├── init-db.sql         # Database initialization
+├── Dockerfile                  # Airflow 2.10.3 + Docling and its native dependencies
+├── entrypoint.sh               # airflow db init, admin user, webserver + scheduler
+├── requirements-airflow.txt    # Project dependencies for this image
 └── dags/
-    └── hello_world_dag.py  # Test DAG for Week 1
+    ├── arxiv_paper_ingestion.py    # DAG definition and task wiring
+    ├── arxiv_ingestion/
+    │   └── tasks.py                # The task callables
+    └── hello_world_dag.py          # Connectivity check
 ```
 
-## Usage
+The application code is not copied into the image — `compose.yml` bind-mounts `./src`
+to `/opt/airflow/src`, and `tasks.py` puts `/opt/airflow` on `sys.path` so it can
+`import src.*`. Editing `src/` therefore affects the next DAG run without a rebuild.
 
-The Airflow service is configured to run via Docker Compose and can be accessed at:
-- Web UI: http://localhost:8080
-- Default credentials: admin/[auto-generated password]
+## arxiv_paper_ingestion
 
-## Future Weeks
+Runs weekdays at 06:00 UTC (`0 6 * * 1-5`), one run at a time, no catchup. Airflow
+creates DAGs paused, so it only runs after being unpaused or triggered.
 
-In later weeks, this directory will contain:
-- arXiv paper fetching DAGs
-- PDF processing workflows
-- Data pipeline orchestration
+```
+setup_environment
+  └─> fetch_daily_papers
+        ├─> process_failed_pdfs ─┐
+        └─> create_opensearch_placeholders ─┴─> generate_daily_report ─> cleanup_temp_files
+```
+
+Each run fetches the previous day's submissions across the eight AI categories fixed in
+`src/policies/ai_scope.py`, capped by `ARXIV__MAX_RESULTS` (10 in `compose.yml`) as a
+total across all of them. `create_opensearch_placeholders` only counts papers awaiting
+indexing — indexing itself is not implemented yet.
+
+## Two constraints worth knowing
+
+**SQLAlchemy 1.4.** Airflow 2.10 does not support SQLAlchemy 2.x, while the API image
+installs 2.x from `pyproject.toml`. Shared code under `src/` must stay inside the
+overlap: declare columns with `Column()` rather than `Mapped[]`/`mapped_column()`, import
+`declarative_base` from `sqlalchemy.orm`, and avoid 2.0-only names such as `sa.UUID`.
+
+**One database, two Alembic histories.** Compose points Airflow's metadata database and
+the application at the same `rag_db`. Airflow owns the `alembic_version` table; the
+application's migrations use `alembic_version_scholarlens` and restrict autogenerate to
+their own tables. See the migrations section of the root README before touching
+`src/db/alembic/env.py`.
+
+Docling and its native dependencies exist only in this image, which is why PDF parsing
+belongs to the DAG rather than the API.
