@@ -3,13 +3,15 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from opensearchpy.exceptions import OpenSearchException
 from src.config import get_settings
 from src.db.factory import make_database
 from src.routers import papers, ping, search
 from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
-from src.services.paper_search import PaperSearchService
+from src.services.search import SearchService
 
 # Setup logging
 logging.basicConfig(
@@ -37,8 +39,8 @@ async def lifespan(app: FastAPI):
     app.state.arxiv_client = make_arxiv_client()
     # Built here rather than per request: the OpenSearch client holds a connection
     # pool, and rebuilding it on every search would throw that pool away each time.
-    app.state.paper_search = PaperSearchService(make_search_client())
-    logger.info("Services initialized: arXiv API client, paper search")
+    app.state.search = SearchService(make_search_client())
+    logger.info("Services initialized: arXiv API client, search")
 
     logger.info("API ready")
     yield
@@ -54,6 +56,18 @@ app = FastAPI(
     version=os.getenv("APP_VERSION", "0.1.0"),
     lifespan=lifespan,
 )
+
+@app.exception_handler(OpenSearchException)
+async def search_backend_unavailable(request: Request, exc: Exception) -> JSONResponse:
+    """The search backend being unreachable or refusing a query is a 503, not a 500.
+
+    Registered once rather than wrapped around each search route: the mapping is a
+    property of the dependency, not of any one endpoint. A missing index does not
+    arrive here — the search service answers that with an empty result.
+    """
+    logger.error("Search backend failed for %s: %s", request.url.path, exc)
+    return JSONResponse(status_code=503, content={"detail": "Search is unavailable"})
+
 
 # Include routers
 app.include_router(ping.router, prefix="/api/v1")

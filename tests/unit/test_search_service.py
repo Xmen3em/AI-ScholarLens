@@ -3,7 +3,7 @@
 import pytest
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 from opensearchpy.exceptions import NotFoundError
-from src.services.paper_search import PaperSearchService
+from src.services.search import SearchService
 
 
 def raw_hit(arxiv_id="2608.26469v1", score=4.2, highlight=None, **overrides):
@@ -46,14 +46,14 @@ class FakeSearchClient:
 
 
 def service(client):
-    return PaperSearchService(client)
+    return SearchService(client)
 
 
 # --- shaping the response ---------------------------------------------------
 
 
 def test_hits_carry_the_paper_and_its_score():
-    result = service(FakeSearchClient(response([raw_hit(score=9.5)]))).search("rag")
+    result = service(FakeSearchClient(response([raw_hit(score=9.5)]))).search_papers("rag")
 
     assert result.total == 1
     assert result.hits[0].arxiv_id == "2608.26469v1"
@@ -62,13 +62,13 @@ def test_hits_carry_the_paper_and_its_score():
 
 
 def test_the_total_is_the_match_count_not_the_page_size():
-    result = service(FakeSearchClient(response([raw_hit()], total=347))).search("rag")
+    result = service(FakeSearchClient(response([raw_hit()], total=347))).search_papers("rag")
 
     assert (result.total, len(result.hits)) == (347, 1)
 
 
 def test_the_query_and_the_backend_timing_are_reported_back():
-    result = service(FakeSearchClient(response([], took=42))).search("graph neural networks")
+    result = service(FakeSearchClient(response([], took=42))).search_papers("graph neural networks")
 
     assert result.query == "graph neural networks"
     assert result.took_ms == 42
@@ -76,20 +76,20 @@ def test_the_query_and_the_backend_timing_are_reported_back():
 
 def test_highlights_are_passed_through():
     highlight = {"title": ["<mark>Retrieval</mark> Augmented Generation"]}
-    result = service(FakeSearchClient(response([raw_hit(highlight=highlight)]))).search("retrieval")
+    result = service(FakeSearchClient(response([raw_hit(highlight=highlight)]))).search_papers("retrieval")
 
     assert result.hits[0].highlights == highlight
 
 
 def test_a_hit_without_highlights_gets_an_empty_mapping_not_a_null():
-    result = service(FakeSearchClient(response([raw_hit()]))).search("rag")
+    result = service(FakeSearchClient(response([raw_hit()]))).search_papers("rag")
 
     assert result.hits[0].highlights == {}
 
 
 @pytest.mark.parametrize("highlight", ["a string", {"title": "not a list"}, {"title": [1, 2]}, 7])
 def test_a_malformed_highlight_is_dropped_rather_than_breaking_the_response(highlight):
-    result = service(FakeSearchClient(response([raw_hit(highlight=highlight)]))).search("rag")
+    result = service(FakeSearchClient(response([raw_hit(highlight=highlight)]))).search_papers("rag")
 
     assert result.hits[0].highlights == {}
 
@@ -98,7 +98,7 @@ def test_a_date_sorted_hit_has_no_score_but_still_reports_a_number():
     """OpenSearch returns _score: null when a sort replaces relevance ranking."""
     hit = raw_hit()
     hit["_score"] = None
-    result = service(FakeSearchClient(response([hit]))).search("", newest_first=True)
+    result = service(FakeSearchClient(response([hit]))).search_papers("", newest_first=True)
 
     assert result.hits[0].score == 0.0
 
@@ -108,7 +108,7 @@ def test_a_date_sorted_hit_has_no_score_but_still_reports_a_number():
 
 def test_search_arguments_reach_the_query_body():
     client = FakeSearchClient()
-    service(client).search("rag", size=25, offset=50, categories=["cs.CL"], newest_first=True)
+    service(client).search_papers("rag", size=25, offset=50, categories=["cs.CL"], newest_first=True)
 
     _index, body = client.requests[0]
     assert (body["size"], body["from"]) == (25, 50)
@@ -118,7 +118,7 @@ def test_search_arguments_reach_the_query_body():
 
 def test_the_alias_is_queried_rather_than_a_versioned_index():
     client = FakeSearchClient()
-    service(client).search("rag")
+    service(client).search_papers("rag")
 
     assert client.requests[0][0] == "arxiv-papers"
 
@@ -130,7 +130,7 @@ def test_a_missing_index_is_an_empty_result_not_an_error():
     """Expected on a stack that has never run the ingestion DAG."""
     client = FakeSearchClient(raises=NotFoundError(404, "index_not_found_exception", {}))
 
-    result = service(client).search("rag")
+    result = service(client).search_papers("rag")
 
     assert (result.total, result.hits) == (0, [])
 
@@ -140,4 +140,4 @@ def test_an_unreachable_backend_propagates():
     client = FakeSearchClient(raises=OpenSearchConnectionError("N/A", "refused", Exception()))
 
     with pytest.raises(OpenSearchConnectionError):
-        service(client).search("rag")
+        service(client).search_papers("rag")

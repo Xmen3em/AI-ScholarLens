@@ -4,16 +4,14 @@ from pydantic import BaseModel, Field, field_validator
 from src.policies.ai_scope import AI_CATEGORY_ALLOWLIST
 
 
-class SearchRequest(BaseModel):
-    """A BM25 search over the paper index."""
+class BaseSearchRequest(BaseModel):
+    """The paging and filtering every search shares."""
 
-    # Empty is allowed and means "browse": the filters and the newest-first sort still
-    # apply, which is how "the latest cs.CL papers" is asked for.
-    query: str = Field(default="", max_length=500, description="Text to search for in titles, abstracts, and authors")
     size: int = Field(default=10, ge=1, le=50, description="Number of results to return")
+    # Capped because OpenSearch refuses offset + size past index.max_result_window,
+    # which defaults to 10,000; a 422 beats a 500 from the backend.
     offset: int = Field(default=0, ge=0, le=1000, description="Results to skip, for pagination")
     categories: Optional[List[str]] = Field(default=None, description="Restrict to these arXiv categories")
-    newest_first: bool = Field(default=False, description="Sort by publication date instead of relevance")
 
     @field_validator("categories")
     @classmethod
@@ -31,6 +29,25 @@ class SearchRequest(BaseModel):
         return value
 
 
+class SearchRequest(BaseSearchRequest):
+    """A BM25 search over whole papers."""
+
+    # Empty is allowed and means "browse": the filters and the newest-first sort still
+    # apply, which is how "the latest cs.CL papers" is asked for.
+    query: str = Field(default="", max_length=500, description="Text to search for in titles, abstracts, and authors")
+    newest_first: bool = Field(default=False, description="Sort by publication date instead of relevance")
+
+
+class ChunkSearchRequest(BaseSearchRequest):
+    """A BM25 search over passages.
+
+    Requires a query. Browsing passages by date has no use: a passage is only
+    meaningful as an answer to something.
+    """
+
+    query: str = Field(..., min_length=1, max_length=500, description="Text to search for inside paper sections")
+
+
 class SearchHit(BaseModel):
     """One paper that matched, with the fragments that made it match."""
 
@@ -45,10 +62,34 @@ class SearchHit(BaseModel):
     highlights: Dict[str, List[str]] = Field(default_factory=dict, description="Matched fragments, marked with <mark>")
 
 
+class ChunkHit(BaseModel):
+    """One passage that matched, positioned within its paper."""
+
+    arxiv_id: str
+    title: str = Field(..., description="Title of the paper the passage came from")
+    section_title: str
+    section_index: int
+    chunk_index: int
+    content: str
+    categories: List[str]
+    published_date: Optional[str] = None
+    score: float = Field(..., description="BM25 relevance score")
+    highlights: Dict[str, List[str]] = Field(default_factory=dict, description="Matched fragments, marked with <mark>")
+
+
 class SearchResponse(BaseModel):
-    """Search results, with the total available behind them."""
+    """Matching papers, with the total available behind them."""
 
     query: str
     total: int = Field(..., description="Papers matching the query, not the number returned")
     hits: List[SearchHit]
+    took_ms: int = Field(..., description="Time OpenSearch spent on the query")
+
+
+class ChunkSearchResponse(BaseModel):
+    """Matching passages, with the total available behind them."""
+
+    query: str
+    total: int = Field(..., description="Passages matching the query, not the number returned")
+    hits: List[ChunkHit]
     took_ms: int = Field(..., description="Time OpenSearch spent on the query")

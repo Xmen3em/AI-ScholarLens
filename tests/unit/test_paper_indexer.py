@@ -6,6 +6,7 @@ import pytest
 from src.repositories.paper import SearchableRow
 from src.search.indices import PAPER_ALIAS, PAPER_INDEX
 from src.services.paper_indexer import PaperIndexer
+
 from tests.unit.test_chunk_indexer import FakeSearchClient
 
 _UNSET = object()

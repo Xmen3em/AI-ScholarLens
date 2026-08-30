@@ -43,11 +43,13 @@ The suite currently covers:
   failure would delete chunks that are still good
 - The search query body: the 3x/2x/1x field boosts, `best_fields` scoring, fuzzy matching,
   the category filter, pagination, date sorting, and highlight configuration
+- That the passage profile scores content over section heading and never the paper title,
+  and that both profiles match by the same rules — only the fields differ
 - How an OpenSearch response becomes a `SearchResponse`, including a null score on a
   date-sorted hit, a malformed highlight, and a missing index reported as an empty result
 - The paper indexer: one document per paper, unparsed papers still searchable, and the
   full document text kept out of the paper index
-- The search endpoint: every option forwarded, defaults applied, invalid input rejected
+- Both search endpoints: every option forwarded, defaults applied, invalid input rejected
   with a 422 before the backend is touched, and an unreachable backend surfaced as a 503
 - The Airflow-to-metadata-fetcher method contract, and that every `xcom_pull` names a task the
   DAG actually declares
@@ -238,7 +240,17 @@ is the 3x title boost doing its job — and that `highlights` comes back with `<
 misspelled query ("retreival augmnted generaton") must return the same papers; if it returns
 nothing, fuzzy matching is not reaching the query body.
 
-`took_ms` is OpenSearch's own timing. On this corpus the whole round trip measures 15-40ms:
+Passage search is the other half:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -ContentType application/json `
+  -Body '{"query": "how are the benchmarks constructed", "size": 4}'
+```
+
+Each hit must carry `section_index` and `chunk_index`, and the results should span several
+papers. If they all come from one, the paper title has crept back into the scored fields.
+
+`took_ms` is OpenSearch's own timing. On this corpus the whole round trip measures 15-85ms:
 
 ```powershell
 curl.exe -s -o NUL -w "%{time_total}s" -X POST http://localhost:8000/api/v1/search/ `

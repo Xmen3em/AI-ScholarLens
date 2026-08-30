@@ -1,30 +1,71 @@
-"""Building the BM25 query for the paper index."""
+"""Building the BM25 query, for whichever index is being searched."""
 
-from typing import Any, Dict, List, Optional, Sequence
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-# Boosts, in the order a reader of a search result cares about them. A title match
-# is the strongest signal a paper is about the query; the abstract is the author's
-# own summary; an author match is usually someone searching by name, which the
-# fuzzy text query would otherwise score below an incidental abstract mention.
-DEFAULT_SEARCH_FIELDS: Sequence[str] = ("title^3", "abstract^2", "authors^1")
-
-# Returned to the caller. raw_text is deliberately absent: the documents average
-# 70k characters, and nothing in a result list displays them.
-SOURCE_FIELDS: Sequence[str] = ("arxiv_id", "title", "authors", "abstract", "categories", "published_date", "pdf_url")
+from src.search.indices import CHUNK_ALIAS, PAPER_ALIAS
 
 _HIGHLIGHT_TAGS = {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]}
 
 
-class PaperQuery:
+@dataclass(frozen=True)
+class QueryProfile:
+    """Everything that differs between searching papers and searching passages.
+
+    The query *shape* is the same for both — a fuzzy multi-match, a category filter,
+    pagination, highlighting — so it lives in one place and the fields it applies to
+    are data.
+    """
+
+    alias: str
+    # Searched, with boosts.
+    fields: Tuple[str, ...]
+    # Returned. Never the full document text: papers average 70k characters.
+    source: Tuple[str, ...]
+    highlight: Dict[str, Any]
+
+
+# Boosts in the order a reader of a result cares about them. A title match is the
+# strongest signal a paper is *about* the query; the abstract is the author's own
+# summary; an author match is usually someone searching by name, which the fuzzy
+# text query would otherwise rank below an incidental abstract mention.
+PAPER_PROFILE = QueryProfile(
+    alias=PAPER_ALIAS,
+    fields=("title^3", "abstract^2", "authors^1"),
+    source=("arxiv_id", "title", "authors", "abstract", "categories", "published_date", "pdf_url"),
+    highlight={
+        # Whole field for title and authors: a truncated title is worse than no
+        # highlight at all. The abstract gets fragments because it is long.
+        "title": {"number_of_fragments": 0, **_HIGHLIGHT_TAGS},
+        "authors": {"number_of_fragments": 0, **_HIGHLIGHT_TAGS},
+        "abstract": {"fragment_size": 150, "number_of_fragments": 3, **_HIGHLIGHT_TAGS},
+    },
+)
+
+# The paper title is deliberately absent. Measured on this corpus, boosting it floods
+# the results with a single paper — six hits collapsed to one distinct paper, because
+# every one of its forty-odd chunks carries the same matching title. section_title
+# earns its ^2: it lifts "F LIMITATIONS AND FUTURE WORK" into the top three for
+# "limitations and future work", which content alone ranked fifth.
+CHUNK_PROFILE = QueryProfile(
+    alias=CHUNK_ALIAS,
+    fields=("content^3", "section_title^2"),
+    source=("arxiv_id", "title", "section_title", "section_index", "chunk_index", "content", "categories", "published_date"),
+    highlight={"content": {"fragment_size": 200, "number_of_fragments": 3, **_HIGHLIGHT_TAGS}},
+)
+
+
+class SearchQuery:
     """One search request, as the body OpenSearch expects.
 
     Kept apart from the service that runs it so the query can be asserted on
-    directly — a boost or a filter that silently stopped being applied is
-    invisible in a result list but obvious in the body.
+    directly — a boost or a filter that silently stopped being applied is invisible
+    in a result list but obvious in the body.
     """
 
     def __init__(
         self,
+        profile: QueryProfile,
         query: str,
         *,
         size: int = 10,
@@ -32,6 +73,7 @@ class PaperQuery:
         categories: Optional[Sequence[str]] = None,
         newest_first: bool = False,
     ):
+        self.profile = profile
         self.query = query
         self.size = size
         self.offset = offset
@@ -43,11 +85,16 @@ class PaperQuery:
             "query": self._match(),
             "size": self.size,
             "from": self.offset,
-            # Without this OpenSearch stops counting at 10,000 and the last page of
-            # a paginated result set reports a total it cannot reach.
+            # Without this OpenSearch stops counting at 10,000 and the last page of a
+            # paginated result set reports a total it cannot reach.
             "track_total_hits": True,
-            "_source": list(SOURCE_FIELDS),
-            "highlight": self._highlight(),
+            "_source": list(self.profile.source),
+            "highlight": {
+                "fields": dict(self.profile.highlight),
+                # require_field_match would drop a highlight whenever the match came
+                # from a different field than the one being highlighted.
+                "require_field_match": False,
+            },
         }
         sort = self._sort()
         if sort:
@@ -57,6 +104,8 @@ class PaperQuery:
     def _match(self) -> Dict[str, Any]:
         clause: Dict[str, Any] = {"must": [self._text_query()]}
         if self.categories:
+            # A filter clause, not a query clause: a category must never contribute
+            # to relevance, or filtering turns into searching.
             clause["filter"] = [{"terms": {"categories": self.categories}}]
         return {"bool": clause}
 
@@ -71,10 +120,10 @@ class PaperQuery:
         return {
             "multi_match": {
                 "query": self.query,
-                "fields": list(DEFAULT_SEARCH_FIELDS),
-                # best_fields, not cross_fields: a paper whose title alone matches the
-                # whole query is a better hit than one that spreads the terms across
-                # three fields, and the 3x title boost only means something if the
+                "fields": list(self.profile.fields),
+                # best_fields, not cross_fields: a document whose strongest field
+                # matches the whole query is a better hit than one that spreads the
+                # terms across several, and a field boost only means something if the
                 # best single field wins.
                 "type": "best_fields",
                 "operator": "or",
@@ -86,26 +135,11 @@ class PaperQuery:
             }
         }
 
-    def _highlight(self) -> Dict[str, Any]:
-        return {
-            "fields": {
-                # Whole field for title and authors: a truncated title is worse than
-                # no highlight at all. The abstract gets fragments because it is long.
-                "title": {"number_of_fragments": 0, **_HIGHLIGHT_TAGS},
-                "authors": {"number_of_fragments": 0, **_HIGHLIGHT_TAGS},
-                "abstract": {"fragment_size": 150, "number_of_fragments": 3, **_HIGHLIGHT_TAGS},
-            },
-            # The boosted field list and the highlighted field list are the same three
-            # fields, but require_field_match would drop a highlight whenever the match
-            # came from a different one.
-            "require_field_match": False,
-        }
-
     def _sort(self) -> Optional[List[Any]]:
         """Sort order, or None to let BM25 rank.
 
-        Date-sorted results keep ``_score`` as the tiebreaker so papers submitted the
-        same day still come back most-relevant-first.
+        Date-sorted results keep ``_score`` as the tiebreaker so documents published
+        the same day still come back most-relevant-first.
         """
         if self.newest_first or not self.query.strip():
             return [{"published_date": {"order": "desc"}}, "_score"]

@@ -125,6 +125,11 @@ document has no title or abstract to weight.
 Both are rewritten in full by the `index_to_opensearch` DAG task and both go through an
 alias, so a mapping change can be rolled out by building the next index and repointing.
 
+Both endpoints share one query builder, differing only in a profile: which fields are
+searched and with what boost, which are returned, and how they are highlighted. The
+matching rules — `best_fields`, fuzziness, the filter clause, `track_total_hits` — are
+the same for both, and a test asserts they stay that way.
+
 #### Ranking papers
 
 `POST /api/v1/search/` scores matches across three fields, weighted:
@@ -148,6 +153,19 @@ fragments for abstracts — and `took_ms` from OpenSearch. Category filtering is
 clause rather than a query clause, so a category never contributes to relevance. An
 empty query browses: filters and the newest-first sort still apply, which is how "the
 latest cs.CL papers" is asked for.
+
+#### Ranking passages
+
+`POST /api/v1/search/chunks` scores the passage text at 3x and its section heading at 2x.
+
+The paper title is deliberately **not** scored. Every passage of a paper carries the same
+title, so boosting it returns forty pieces of one paper instead of the best passage from
+each — measured on this corpus, six results collapsed to a single distinct paper. The
+section heading earns its 2x: it lifts "F LIMITATIONS AND FUTURE WORK" into the top three
+for "limitations and future work", which the passage text alone ranked fifth.
+
+Each hit carries `section_index` and `chunk_index` alongside the `arxiv_id`, so a quoted
+passage can always be traced back to where in the paper it came from.
 
 ### Search chunks
 
@@ -241,6 +259,7 @@ The API documentation is available at http://localhost:8000/docs. Airflow is ava
 | GET | /api/v1/papers/ | List stored papers with pagination |
 | GET | /api/v1/papers/{arxiv_id} | Retrieve one stored paper |
 | POST | /api/v1/search/ | BM25 keyword search over papers |
+| POST | /api/v1/search/chunks | BM25 keyword search over passages |
 | GET | /docs | Interactive OpenAPI documentation |
 
 Example:
@@ -257,11 +276,17 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType
 # The newest cs.CL papers, no query term
 Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
   -Body '{"query": "", "categories": ["cs.CL"], "newest_first": true}'
+
+# The passages that answer a question, not the papers that mention it
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -ContentType application/json `
+  -Body '{"query": "how are the benchmarks constructed", "size": 5}'
 ~~~
 
 `size` is 1-50, `offset` 0-1000, and `categories` must be inside the ingested AI
 allowlist — a filter on `hep-th` is a 422 rather than a silent zero-result page, because
-the corpus can never contain one.
+the corpus can never contain one. `/search/` accepts an empty query and browses;
+`/search/chunks` requires one, because a passage is only meaningful as an answer to
+something.
 
 ## Testing
 
