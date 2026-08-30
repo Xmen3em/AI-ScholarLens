@@ -1,25 +1,31 @@
 import logging
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Any, Generator, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from src.db.interfaces.base import BaseDatabase
+from src.db.migrations import run_migrations
 
 logger = logging.getLogger(__name__)
+
 
 class PostgreSQLSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="POSTGRES_", extra="ignore")
 
-    database_url: str = Field(default="postgresql://rag_user:rag_password@localhost:5432/rag_db", description="PostgreSQL database URL")
+    database_url: str = Field(
+        default="postgresql://rag_user:rag_password@localhost:5432/rag_db", description="PostgreSQL database URL"
+    )
     echo_sql: bool = Field(default=False, description="Whether to echo SQL statements")
     pool_size: int = Field(default=20, description="Size of the connection pool")
     max_overflow: int = Field(default=0, description="Maximum number of connections to create beyond the pool size")
-        
-Base = declarative_base()
+
+
+Base: Any = declarative_base()  # Any: declarative_base() is untyped, so subclasses would be rejected.
+
 
 class PostgreSQLDatabase(BaseDatabase):
     def __init__(self, config: PostgreSQLSettings):
@@ -50,25 +56,12 @@ class PostgreSQLDatabase(BaseDatabase):
                 conn.execute(text("SELECT 1"))
                 logger.info("Database connection test successful")
 
-            # Check which tables exist before creating
-            inspector = inspect(self.engine)
-            existing_tables = inspector.get_table_names()
+            # Migrations, not create_all: create_all adds missing tables but never
+            # alters existing ones, so column changes never reached a deployed database.
+            run_migrations(self.engine)
 
-            # Create tables if they don't exist (idempotent operation)
-            Base.metadata.create_all(bind=self.engine)
-
-            # Check if any new tables were created
-            updated_tables = inspector.get_table_names()
-            if new_tables := set(updated_tables) - set(existing_tables):
-                logger.info(f"Created new tables: {', '.join(new_tables)}")
-            else:
-                logger.info("All tables already exist - no new tables created")
-
-            logger.info("PostgreSQL database initialized successfully")
             assert self.engine is not None
-            logger.info(f"Database: {self.engine.url.database}")
-            logger.info(f"Total tables: {', '.join(updated_tables) if updated_tables else 'None'}")
-            logger.info("Database connection established")
+            logger.info(f"PostgreSQL database ready: {self.engine.url.database}")
 
         except Exception as e:
             logger.error(f"Failed to initialize PostgreSQL database: {e}")
@@ -84,7 +77,7 @@ class PostgreSQLDatabase(BaseDatabase):
     def get_session(self) -> Generator[Session, None, None]:
         if not self.session_factory:
             raise RuntimeError("Database session factory is not initialized. Call startup() first.")
-        
+
         session: Session = self.session_factory()
         try:
             yield session
@@ -93,4 +86,4 @@ class PostgreSQLDatabase(BaseDatabase):
             logger.error(f"Session rollback due to exception: {e}")
             raise
         finally:
-            session.close()     
+            session.close()

@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from src.repositories.paper import PaperRepository
 from src.schemas.arxiv.paper import PaperCreate
 
@@ -105,3 +106,42 @@ def test_processing_stats_on_an_empty_table_do_not_divide_by_zero(repository):
     assert stats["total_papers"] == 0
     assert stats["processing_rate"] == 0
     assert stats["text_extraction_rate"] == 0
+
+
+def visible_elsewhere(postgres_engine) -> int:
+    """How many papers another connection can see, i.e. what is actually committed."""
+    with Session(postgres_engine) as session:
+        return PaperRepository(session).get_count()
+
+
+def test_writes_are_not_committed_until_the_caller_commits(repository, db_session, postgres_engine):
+    """The repository used to commit inside every write, so callers had no say."""
+    repository.upsert(make_paper("2401.00001"))
+
+    assert repository.get_count() == 1, "the writing session sees its own uncommitted row"
+    assert visible_elsewhere(postgres_engine) == 0, "nothing should be committed yet"
+
+    db_session.commit()
+
+    assert visible_elsewhere(postgres_engine) == 1
+
+
+def test_a_partial_batch_can_be_rolled_back_whole(repository, db_session, postgres_engine):
+    """Impossible while the repository committed per write: the first rows were already durable."""
+    repository.upsert(make_paper("2401.00001"))
+    repository.upsert(make_paper("2401.00002"))
+
+    db_session.rollback()
+
+    assert visible_elsewhere(postgres_engine) == 0
+    assert repository.get_count() == 0
+
+
+def test_several_writes_commit_together_as_one_unit(repository, db_session, postgres_engine):
+    for index in range(1, 4):
+        repository.upsert(make_paper(f"2401.0000{index}"))
+    assert visible_elsewhere(postgres_engine) == 0
+
+    db_session.commit()
+
+    assert visible_elsewhere(postgres_engine) == 3

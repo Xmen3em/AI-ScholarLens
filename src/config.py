@@ -1,6 +1,8 @@
-from typing import List, Union
+from typing import Annotated, List, Union
+
 from pydantic import BaseModel, Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
 
 class DefaultSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -24,8 +26,9 @@ class ArxivSettings(DefaultSettings):
     pdf_cache_dir: str = "./data/arxiv_pdfs"
     rate_limit_delay: float = 3.0  # seconds between requests
     timeout_seconds: int = 30
-    max_results: int = 100
-    search_category: str = "cs.AI"  # Default category to search
+    # Total papers per run across every allowlisted AI category. The categories
+    # themselves are fixed in src/policies/ai_scope.py and are not configurable.
+    max_results: int = 10
 
 
 class PDFParserSettings(DefaultSettings):
@@ -53,7 +56,9 @@ class Settings(DefaultSettings):
     opensearch_host: str = "http://localhost:9200"
     
     ollama_host: str = "http://localhost:11434"
-    ollama_models: List[str] = Field(default=["llama3.2:1b"])
+    # NoDecode: without it pydantic-settings JSON-decodes a complex field straight from
+    # .env and raises before parse_ollama_models ever sees the comma-separated string.
+    ollama_models: Annotated[List[str], NoDecode] = Field(default=["llama3.2:1b"])
     ollama_default_model: str = "llama3.2:1b"
     ollama_timeout: int = 300
     

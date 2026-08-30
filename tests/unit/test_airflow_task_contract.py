@@ -74,3 +74,21 @@ def test_dag_passes_only_arguments_the_metadata_fetcher_accepts(dag_calls):
             unknown_by_method[call.func.attr] = sorted(passed - accepted)
 
     assert not unknown_by_method, f"DAG passes unknown arguments: {unknown_by_method}"
+
+
+def _task_function(name: str) -> ast.FunctionDef:
+    tree = ast.parse(TASKS_MODULE.read_text())
+    return next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+    )
+
+
+def test_daily_report_is_returned_and_not_only_logged():
+    """A task that only logs its result leaves nothing in XCom for anything downstream."""
+    function = _task_function("generate_daily_report")
+
+    returned = [node for node in ast.walk(function) if isinstance(node, ast.Return) and node.value is not None]
+
+    assert returned, "generate_daily_report builds a report but never returns it"

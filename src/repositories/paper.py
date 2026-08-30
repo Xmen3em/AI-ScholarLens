@@ -1,21 +1,40 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, NamedTuple, Optional, Sequence, cast
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 from src.models.paper import Paper
 from src.schemas.arxiv.paper import PaperCreate
 
 
+class CategoryRow(NamedTuple):
+    """Just enough of a paper to judge its category scope."""
+
+    id: UUID
+    arxiv_id: str
+    # Whatever the JSON column round-tripped. A corpus audit has to be able to
+    # report a row whose categories are null or malformed, not choke on it.
+    categories: Any
+
+
 class PaperRepository:
+    """Queries and writes over the papers table.
+
+    No method here commits. The caller owns the transaction, so it can group several
+    writes into one unit and roll the whole thing back; committing per write would take
+    that choice away and leave rollback responsibility split between two layers.
+    """
+
     def __init__(self, session: Session):
         self.session = session
 
     def create(self, paper: PaperCreate) -> Paper:
+        """Insert a paper. Flushes so constraints fire here, but does not commit."""
         db_paper = Paper(**paper.model_dump())
         self.session.add(db_paper)
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(db_paper)
         return db_paper
 
@@ -77,8 +96,9 @@ class PaperRepository:
         }
 
     def update(self, paper: Paper) -> Paper:
+        """Persist changes to a paper. Flushes but does not commit."""
         self.session.add(paper)
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(paper)
         return paper
 
@@ -93,3 +113,35 @@ class PaperRepository:
         else:
             # Create new paper
             return self.create(paper_create)
+
+    def list_all_categories(self, *, for_update: bool = False) -> List[CategoryRow]:
+        """Every paper's identity and categories, for scope auditing.
+
+        Selects three columns rather than whole ``Paper`` rows: a full-corpus scan must
+        not drag ``raw_text``, ``sections`` and ``references`` into memory with it.
+
+        Args:
+            for_update: Take row locks, so a caller can count and then delete atomically.
+        """
+        stmt = select(Paper.id, Paper.arxiv_id, Paper.categories).order_by(Paper.arxiv_id)
+        if for_update:
+            stmt = stmt.with_for_update()
+        return [CategoryRow(*row) for row in self.session.execute(stmt)]
+
+    def delete_by_ids(self, paper_ids: Sequence[UUID]) -> int:
+        """Delete the given papers and return how many rows went.
+
+        Like every write here, this does not commit: a count check and the delete it
+        authorises have to stay one atomic unit, and committing would release the locks
+        that hold that guarantee.
+        """
+        if not paper_ids:
+            return 0  # `IN ()` is a syntax error, and there is nothing to do anyway.
+        # synchronize_session is stated rather than defaulted: SQLAlchemy 1.4 (the Airflow
+        # image) and 2.0 (the API image) disagree on the default, and the caller commits
+        # and exits, so there is no identity map left to keep in step.
+        result = cast(
+            CursorResult,
+            self.session.execute(delete(Paper).where(Paper.id.in_(paper_ids)), execution_options={"synchronize_session": False}),
+        )
+        return result.rowcount

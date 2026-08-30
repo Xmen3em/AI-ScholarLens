@@ -91,6 +91,8 @@ services:
       - PYTHONPATH=/opt/airflow/src
       # Absolute, so the cache does not follow a task's working directory
       - ARXIV__PDF_CACHE_DIR=/opt/airflow/data/arxiv_pdfs
+      # Total papers per run across all allowlisted AI categories
+      - ARXIV__MAX_RESULTS=10
       - HF_HOME=/opt/airflow/.cache/huggingface
     volumes:
       - ./airflow/dags:/opt/airflow/dags

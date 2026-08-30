@@ -23,8 +23,10 @@ def postgres_engine():
     except ImportError as exc:  # pragma: no cover - depends on the local environment
         pytest.skip(f"testcontainers is not installed: {exc}")
 
-    container = PostgresContainer("postgres:16-alpine")
     try:
+        # Constructing the container already talks to the Docker daemon, so it has to
+        # sit inside the guard too or an absent daemon errors instead of skipping.
+        container = PostgresContainer("postgres:16-alpine")
         container.start()
     except Exception as exc:  # pragma: no cover - depends on the local environment
         pytest.skip(f"Docker is not available for database tests: {exc}")
@@ -42,11 +44,37 @@ def postgres_engine():
 def db_session(postgres_engine) -> Session:
     """A session on the real schema, left empty for the next test.
 
-    The repository commits internally, so the table is truncated between tests rather
-    than wrapped in a transaction that those commits would end.
+    The repository no longer commits, but the code under test does (MetadataFetcher
+    commits per paper, ai_scope commits a purge), so the table is truncated between
+    tests rather than wrapped in a transaction those commits would end.
     """
     with Session(postgres_engine) as session:
         yield session
         session.rollback()
         session.execute(text("TRUNCATE TABLE papers"))
         session.commit()
+
+
+@pytest.fixture
+def scratch_database(postgres_engine):
+    """A throwaway database on the same server, so migrations start from nothing."""
+    created = []
+
+    def make(name: str):
+        admin = create_engine(postgres_engine.url, isolation_level="AUTOCOMMIT")
+        with admin.connect() as connection:
+            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
+            connection.execute(text(f'CREATE DATABASE "{name}"'))
+        admin.dispose()
+        engine = create_engine(postgres_engine.url.set(database=name))
+        created.append((engine, name))
+        return engine
+
+    yield make
+
+    for engine, name in created:
+        engine.dispose()
+        admin = create_engine(postgres_engine.url, isolation_level="AUTOCOMMIT")
+        with admin.connect() as connection:
+            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
+        admin.dispose()

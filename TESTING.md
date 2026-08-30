@@ -6,6 +6,17 @@ This guide covers the automated tests and Docker-backed checks for the current W
 
 These tests do not require Docker, PostgreSQL, OpenSearch, Ollama, Airflow, or internet access.
 
+`.env.test` is loaded into the environment by pytest-dotenv (`env_files` in `pyproject.toml`).
+Environment variables outrank the `.env` file in pydantic-settings, so the suite is insulated
+from whatever a developer keeps locally — without it, a stray `OLLAMA_MODELS` or
+`ARXIV__MAX_RESULTS` on one machine silently changes what the tests exercise.
+
+Adding a setting to `src/config.py` means adding it to both `.env.example` and `.env.test`;
+`tests/unit/test_config_and_schemas.py` derives the expected variable names from the settings
+models and fails if either file drifts, in either direction — a missing setting or a name left
+behind after a rename. It also loads `.env.example` through `Settings` to prove that
+`cp .env.example .env` yields a config that works.
+
 From the project root:
 
 ```powershell
@@ -19,6 +30,11 @@ The suite currently covers:
 - Ollama health, generation, and connection-error handling
 - API ping and paper-list/detail endpoints
 - Ingestion pipeline accounting: download/parse counters, skips, and recorded failure reasons
+- The AI category allowlist and its scope predicate, including cross-listed and malformed categories
+- The grouped arXiv category query, and that it stays ANDed with the submission-date window
+- That non-AI papers are counted as `papers_filtered_non_ai` but never downloaded, parsed, or stored
+- The `ai_scope` purge guards: dry run by default, expected-count mismatch aborts, and `--apply`
+  deletes exactly the rows the audit counted
 - The Airflow-to-metadata-fetcher method contract
 
 Run a focused group while developing:
@@ -35,6 +51,26 @@ container started by `testcontainers`, with the schema created from the SQLAlche
 Persistence is the subject there, so a mocked session would verify nothing: these tests
 cover the idempotent `upsert` the ingestion DAG depends on, the unique `arxiv_id`
 constraint, pagination order, and the processing-stats queries.
+
+`tests/integration/test_database_startup.py` covers the entry point every service goes
+through — `make_database()` -> `startup()` -> a usable session — including that a second
+service starting against the same database is a no-op, that a database created before
+migrations existed is baselined without disturbing its rows, and that asking for a session
+before `startup()` fails loudly.
+
+`tests/integration/test_migrations.py` covers the schema itself: that migrations build the
+`papers` table on an empty database, that a database created by the old `create_all` is
+baselined without losing rows, that reruns are idempotent, and that Airflow's tables and its
+`alembic_version` row in the same database are left alone. Its last test compares the migrated
+schema against `Base.metadata` column by column, so a model change with no matching migration
+fails the build.
+
+`tests/integration/test_ai_scope_command.py` covers the audit and purge command against the
+same container: that the audit reports non-compliant rows without touching them, that a
+dry run and a mismatched `--expected-count` both delete nothing, that an applied purge is
+committed and removes only the rows it counted, that rerunning it is idempotent, and that
+cross-listed AI papers survive. Purge hard-deletes, so these are the checks a mocked
+session cannot stand in for.
 
 They need Docker running and take about 20 seconds on the first run, including container
 startup. When Docker is unavailable they skip, so the command above stays green without it.
@@ -133,14 +169,48 @@ Inspect the task graph and logs for:
 2. `fetch_daily_papers` — arXiv metadata is fetched.
 3. `process_failed_pdfs` — failures are reported without stopping the report path.
 4. `create_opensearch_placeholders` — stored-paper count is reported.
-5. `generate_daily_report` — counts and processing time are logged.
+5. `generate_daily_report` — counts and processing time are logged, including
+   `Filtered as non-AI`.
 6. `cleanup_temp_files` — temporary PDFs are cleaned up.
+
+The `fetch_daily_papers` log should show the grouped category query and, when arXiv returns
+anything cross-listed out of scope, a `Discarded N of M papers outside the AI scope` warning.
+The batch size comes from `ARXIV__MAX_RESULTS` (10 in `compose.yml`) and is a total across all
+eight categories, not a per-category quota.
 
 After a successful run, verify that the database count increased:
 
 ```powershell
 docker compose exec postgres psql -U rag_user -d rag_db -c "SELECT arxiv_id, title, pdf_processed FROM papers ORDER BY created_at DESC LIMIT 5;"
 ```
+
+Then confirm nothing out of scope was stored:
+
+```powershell
+docker compose exec airflow python -m src.commands.ai_scope audit
+```
+
+A healthy run reports 0 non-compliant papers.
+
+### Corpus scope audit and cleanup
+
+`audit` is read-only and safe to run at any time. `purge` deletes permanently, so back up
+the table first and keep the dump until the cleaned corpus is accepted:
+
+```powershell
+docker compose exec postgres pg_dump -U rag_user -d rag_db -t papers > papers_backup.sql
+docker compose exec airflow python -m src.commands.ai_scope audit
+docker compose exec airflow python -m src.commands.ai_scope purge --expected-count N
+docker compose exec airflow python -m src.commands.ai_scope purge --expected-count N --apply
+docker compose exec airflow python -m src.commands.ai_scope audit
+```
+
+Take `N` from the audit output. The third command is a rehearsal that writes nothing; the
+fourth performs the deletion and aborts if the count has drifted since the audit. The final
+audit should report 0 non-compliant papers.
+
+Exit codes: `0` success, `1` unexpected error, `2` command-line usage error, `3` violations
+found (only with `audit --fail-on-violation`), `4` expected-count mismatch.
 
 ## 6. PDF processing check
 
