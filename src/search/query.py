@@ -1,11 +1,17 @@
 """Building the BM25 query, for whichever index is being searched."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from src.search.indices import CHUNK_ALIAS, PAPER_ALIAS
 
 _HIGHLIGHT_TAGS = {"pre_tags": ["<mark>"], "post_tags": ["</mark>"]}
+
+# Passages returned per paper. One is too few to ground an answer that needs a claim and
+# its evidence; unbounded returns forty pieces of whichever paper repeats the query most,
+# which is what this corpus actually did — ten of ten results for "RAG" came from a
+# single paper out of 172 matching passages across 34.
+MAX_PASSAGES_PER_PAPER = 3
 
 
 @dataclass(frozen=True)
@@ -23,6 +29,11 @@ class QueryProfile:
     # Returned. Never the full document text: papers average 70k characters.
     source: Tuple[str, ...]
     highlight: Dict[str, Any]
+    # Group results by this field, returning up to MAX_PASSAGES_PER_PAPER per group.
+    # None leaves results flat, which is what one-document-per-paper indices want.
+    collapse_field: Optional[str] = None
+    # The fields each grouped passage carries, when collapsing.
+    passage_source: Tuple[str, ...] = ()
 
 
 # Boosts in the order a reader of a result cares about them. A title match is the
@@ -52,7 +63,15 @@ CHUNK_PROFILE = QueryProfile(
     fields=("content^3", "section_title^2"),
     source=("arxiv_id", "title", "section_title", "section_index", "chunk_index", "content", "categories", "published_date"),
     highlight={"content": {"fragment_size": 200, "number_of_fragments": 3, **_HIGHLIGHT_TAGS}},
+    collapse_field="arxiv_id",
+    passage_source=("section_title", "section_index", "chunk_index", "content"),
 )
+
+# Hybrid fuses two rankings, and fusion needs a flat list of passages to rank: collapsed
+# results are already grouped, and grouping before fusing would mean reconciling two
+# different choices of which passages represent each paper. Hybrid therefore fetches flat
+# candidates and groups once, after fusing.
+CHUNK_CANDIDATE_PROFILE = replace(CHUNK_PROFILE, collapse_field=None)
 
 
 class SearchQuery:
@@ -96,10 +115,28 @@ class SearchQuery:
                 "require_field_match": False,
             },
         }
+        if self.profile.collapse_field:
+            body["collapse"] = self._collapse()
         sort = self._sort()
         if sort:
             body["sort"] = sort
         return body
+
+    def _collapse(self) -> Dict[str, Any]:
+        """Group hits by the profile's field, carrying the best passages of each group.
+
+        ``size`` then counts groups rather than documents, and ``inner_hits.total`` tells
+        the caller how many passages the paper had matching, not just how many came back.
+        """
+        return {
+            "field": self.profile.collapse_field,
+            "inner_hits": {
+                "name": "passages",
+                "size": MAX_PASSAGES_PER_PAPER,
+                "_source": list(self.profile.passage_source),
+                "highlight": {"fields": dict(self.profile.highlight), "require_field_match": False},
+            },
+        }
 
     def _match(self) -> Dict[str, Any]:
         clause: Dict[str, Any] = {"must": [self._text_query()]}

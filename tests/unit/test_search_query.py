@@ -1,7 +1,13 @@
 """The query body is where boosting, filtering, and sorting either happen or silently don't."""
 
 import pytest
-from src.search.query import CHUNK_PROFILE, PAPER_PROFILE, SearchQuery
+from src.search.query import (
+    CHUNK_CANDIDATE_PROFILE,
+    CHUNK_PROFILE,
+    MAX_PASSAGES_PER_PAPER,
+    PAPER_PROFILE,
+    SearchQuery,
+)
 
 
 def multi_match(body):
@@ -148,3 +154,37 @@ def test_the_category_filter_applies_to_passages_too():
     body = SearchQuery(CHUNK_PROFILE, "ablation", categories=["cs.LG"]).build()
 
     assert body["query"]["bool"]["filter"] == [{"terms": {"categories": ["cs.LG"]}}]
+
+
+# --- collapsing by paper ----------------------------------------------------
+
+
+def test_passages_collapse_by_paper():
+    collapse = SearchQuery(CHUNK_PROFILE, "rag").build()["collapse"]
+
+    assert collapse["field"] == "arxiv_id"
+    assert collapse["inner_hits"]["size"] == MAX_PASSAGES_PER_PAPER == 3
+
+
+def test_collapsed_passages_carry_their_position_and_highlights():
+    inner = SearchQuery(CHUNK_PROFILE, "rag").build()["collapse"]["inner_hits"]
+
+    assert {"section_index", "chunk_index", "section_title"} <= set(inner["_source"])
+    assert "content" in inner["highlight"]["fields"]
+
+
+def test_paper_search_does_not_collapse():
+    """One document per paper already; collapsing would be a no-op that costs a group step."""
+    assert "collapse" not in SearchQuery(PAPER_PROFILE, "rag").build()
+
+
+def test_hybrid_candidates_do_not_collapse():
+    """Fusion needs a flat ranking. Collapsing first would mean reconciling two different
+    choices of which passages represent each paper."""
+    assert "collapse" not in SearchQuery(CHUNK_CANDIDATE_PROFILE, "rag").build()
+
+
+def test_the_candidate_profile_differs_from_the_collapsed_one_only_in_collapsing():
+    assert CHUNK_CANDIDATE_PROFILE.fields == CHUNK_PROFILE.fields
+    assert CHUNK_CANDIDATE_PROFILE.source == CHUNK_PROFILE.source
+    assert CHUNK_CANDIDATE_PROFILE.collapse_field is None

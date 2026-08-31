@@ -6,9 +6,24 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 from opensearchpy import OpenSearch
 from opensearchpy.exceptions import NotFoundError
 from src.exceptions import OllamaException
-from src.schemas.api.search import ChunkHit, ChunkSearchResponse, HybridSearchResponse, SearchHit, SearchResponse
+from src.schemas.api.search import (
+    ChunkSearchResponse,
+    HybridSearchResponse,
+    PaperPassages,
+    PassageHit,
+    SearchHit,
+    SearchResponse,
+)
 from src.search.fusion import fused_scores, reciprocal_rank_fusion
-from src.search.query import CHUNK_PROFILE, PAPER_PROFILE, QueryProfile, SearchQuery, vector_query
+from src.search.query import (
+    CHUNK_CANDIDATE_PROFILE,
+    CHUNK_PROFILE,
+    MAX_PASSAGES_PER_PAPER,
+    PAPER_PROFILE,
+    QueryProfile,
+    SearchQuery,
+    vector_query,
+)
 from src.services.embeddings.ollama import OllamaEmbedder
 
 logger = logging.getLogger(__name__)
@@ -59,9 +74,13 @@ class SearchService:
         offset: int = 0,
         categories: Optional[Sequence[str]] = None,
     ) -> ChunkSearchResponse:
-        """Find the passages that say something about the query, not the papers that mention it."""
+        """Find the passages that say something about the query, not the papers that mention it.
+
+        ``size`` counts papers: OpenSearch collapses the hits by paper and returns each
+        one's best passages, so a paper matching two hundred times cannot fill the page.
+        """
         total, hits, took_ms = self._run(CHUNK_PROFILE, query, size=size, offset=offset, categories=categories)
-        return ChunkSearchResponse(query=query, total=total, took_ms=took_ms, hits=[_chunk_hit(hit) for hit in hits])
+        return ChunkSearchResponse(query=query, total=total, took_ms=took_ms, hits=[_collapsed_group(hit) for hit in hits])
 
     def search_hybrid(
         self,
@@ -78,7 +97,9 @@ class SearchService:
         and the response says which ranking produced it.
         """
         depth = max((offset + size) * CANDIDATE_DEPTH, MIN_CANDIDATES)
-        keyword = self._execute(CHUNK_PROFILE.alias, SearchQuery(CHUNK_PROFILE, query, size=depth, categories=categories).build())
+        keyword = self._execute(
+            CHUNK_PROFILE.alias, SearchQuery(CHUNK_CANDIDATE_PROFILE, query, size=depth, categories=categories).build()
+        )
         # The real match count, not the size of the candidate pool. Reporting the pool
         # made `total` cap out at the retrieval depth -- a query matching 172 passages
         # reported 80, which is the one number a caller cannot sanity-check for itself.
@@ -89,11 +110,12 @@ class SearchService:
         except OllamaException as e:
             logger.warning("Falling back to keyword search: %s", e)
             found = keyword["hits"]["hits"]
+            grouped = _group_by_paper([hit["_id"] for hit in found], {hit["_id"]: hit for hit in found})
             return HybridSearchResponse(
                 query=query,
                 total=matches,
                 took_ms=keyword["took"],
-                hits=[_chunk_hit(hit) for hit in found[offset : offset + size]],
+                hits=grouped[offset : offset + size],
                 mode="keyword",
                 # BM25, not RRF: nothing was fused, so the scores are the keyword
                 # half's own and are on a completely different scale.
@@ -126,15 +148,10 @@ class SearchService:
         by_id = {hit["_id"]: hit for hit in [*semantic, *keyword]}
         rankings = [[hit["_id"] for hit in keyword], [hit["_id"] for hit in semantic]]
         order = reciprocal_rank_fusion(rankings)
-        scores = fused_scores(rankings)
-
-        hits = []
-        for document_id in order[offset : offset + size]:
-            hit = _chunk_hit(by_id[document_id])
-            # The fused score, not BM25: rank positions are all RRF sees, so the two
-            # scales never have to be reconciled. Values sit near 1/RRF_K.
-            hit.score = scores[document_id]
-            hits.append(hit)
+        # The fused score, not BM25: rank positions are all RRF sees, so the two scales
+        # never have to be reconciled. Values sit near 1/RRF_K.
+        grouped = _group_by_paper(order, by_id, scores=fused_scores(rankings))
+        hits = grouped[offset : offset + size]
 
         return HybridSearchResponse(
             query=query,
@@ -190,20 +207,71 @@ def _paper_hit(hit: Dict[str, Any]) -> SearchHit:
     )
 
 
-def _chunk_hit(hit: Dict[str, Any]) -> ChunkHit:
+def _collapsed_group(hit: Dict[str, Any]) -> PaperPassages:
+    """One paper and its passages, from a collapsed hit and its inner hits."""
     source = hit["_source"]
-    return ChunkHit(
+    inner = hit["inner_hits"]["passages"]["hits"]
+    return PaperPassages(
         arxiv_id=source["arxiv_id"],
         title=source["title"],
+        categories=source["categories"],
+        published_date=source.get("published_date"),
+        score=_score(hit),
+        matching_passages=inner["total"]["value"],
+        passages=[_passage(passage) for passage in inner["hits"]],
+    )
+
+
+def _group_by_paper(
+    order: Sequence[str], by_id: Dict[str, Dict[str, Any]], scores: Optional[Dict[str, float]] = None
+) -> List[PaperPassages]:
+    """Group an already-ranked list of passages into papers, capped, keeping the order.
+
+    A paper takes the position of its best passage, so the ranking survives the grouping.
+    Dict insertion order does the work: the first passage seen for a paper is its best.
+
+    ``matching_passages`` is left unset, unlike the collapsed path — this only ever sees
+    a bounded candidate pool, so a count from it would understate the truth.
+    """
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for document_id in order:
+        passages = grouped.setdefault(by_id[document_id]["_source"]["arxiv_id"], [])
+        if len(passages) < MAX_PASSAGES_PER_PAPER:
+            passages.append(by_id[document_id])
+
+    papers = []
+    for arxiv_id, hits in grouped.items():
+        source = hits[0]["_source"]
+        papers.append(
+            PaperPassages(
+                arxiv_id=arxiv_id,
+                title=source["title"],
+                categories=source["categories"],
+                published_date=source.get("published_date"),
+                score=_ranked_score(hits[0], scores),
+                passages=[_passage(hit, scores) for hit in hits],
+            )
+        )
+    return papers
+
+
+def _passage(hit: Dict[str, Any], scores: Optional[Dict[str, float]] = None) -> PassageHit:
+    source = hit["_source"]
+    return PassageHit(
         section_title=source["section_title"],
         section_index=source["section_index"],
         chunk_index=source["chunk_index"],
         content=source["content"],
-        categories=source["categories"],
-        published_date=source.get("published_date"),
-        score=_score(hit),
+        score=_ranked_score(hit, scores),
         highlights=_highlights(hit),
     )
+
+
+def _ranked_score(hit: Dict[str, Any], scores: Optional[Dict[str, float]]) -> float:
+    """The fused score when fusing, otherwise the backend's own."""
+    if scores is None:
+        return _score(hit)
+    return scores[hit["_id"]]
 
 
 def _score(hit: Dict[str, Any]) -> float:

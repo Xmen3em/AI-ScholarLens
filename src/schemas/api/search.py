@@ -47,6 +47,8 @@ class ChunkSearchRequest(BaseSearchRequest):
 
     query: str = Field(..., min_length=1, max_length=500, description="Text to search for inside paper sections")
 
+    size: int = Field(default=10, ge=1, le=50, description="Number of papers to return, not passages")
+
 
 class HybridSearchRequest(ChunkSearchRequest):
     """A hybrid search over passages: BM25 and vector similarity, fused."""
@@ -66,19 +68,38 @@ class SearchHit(BaseModel):
     highlights: Dict[str, List[str]] = Field(default_factory=dict, description="Matched fragments, marked with <mark>")
 
 
-class ChunkHit(BaseModel):
+class PassageHit(BaseModel):
     """One passage that matched, positioned within its paper."""
 
-    arxiv_id: str
-    title: str = Field(..., description="Title of the paper the passage came from")
     section_title: str
     section_index: int
     chunk_index: int
     content: str
+    score: float = Field(..., description="Relevance score of this passage; see the response's score_kind")
+    highlights: Dict[str, List[str]] = Field(default_factory=dict, description="Matched fragments, marked with <mark>")
+
+
+class PaperPassages(BaseModel):
+    """One paper, with its best matching passages.
+
+    Results are grouped rather than flat so that a strong paper cannot crowd out every
+    other source. Capped at three passages a paper: enough to carry a claim and its
+    evidence, few enough that ten results still span several papers.
+    """
+
+    arxiv_id: str
+    title: str
     categories: List[str]
     published_date: Optional[str] = None
-    score: float = Field(..., description="BM25 relevance score")
-    highlights: Dict[str, List[str]] = Field(default_factory=dict, description="Matched fragments, marked with <mark>")
+    score: float = Field(..., description="Score of this paper's best passage, which is what ranks the paper")
+    matching_passages: Optional[int] = Field(
+        default=None,
+        description=(
+            "How many passages in this paper matched, which may exceed the number returned. "
+            "Absent from hybrid results, where fusion sees only a bounded candidate pool."
+        ),
+    )
+    passages: List[PassageHit]
 
 
 class SearchResponse(BaseModel):
@@ -91,11 +112,11 @@ class SearchResponse(BaseModel):
 
 
 class ChunkSearchResponse(BaseModel):
-    """Matching passages, with the total available behind them."""
+    """Matching passages, grouped by the paper they came from."""
 
     query: str
-    total: int = Field(..., description="Passages matching the query, not the number returned")
-    hits: List[ChunkHit]
+    total: int = Field(..., description="Passages matching the query, across every paper")
+    hits: List[PaperPassages] = Field(..., description="Papers, best first, each with up to three passages")
     took_ms: int = Field(..., description="Time OpenSearch spent on the query")
 
 

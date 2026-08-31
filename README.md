@@ -164,6 +164,11 @@ clause rather than a query clause, so a category never contributes to relevance.
 empty query browses: filters and the newest-first sort still apply, which is how "the
 latest cs.CL papers" is asked for.
 
+`total` counts matching documents in every case. On the hybrid endpoint that is the
+keyword half's count: fusion reranks a bounded candidate pool, so `offset` cannot walk
+all the way through it. `score_kind` says which scale `score` is on — `rrf` for a fused
+score near 1/60, `bm25` for the keyword half's own, in the tens.
+
 #### Hybrid ranking
 
 `POST /api/v1/search/hybrid` runs the keyword query and a vector similarity query over
@@ -199,8 +204,28 @@ each — measured on this corpus, six results collapsed to a single distinct pap
 section heading earns its 2x: it lifts "F LIMITATIONS AND FUTURE WORK" into the top three
 for "limitations and future work", which the passage text alone ranked fifth.
 
-Each hit carries `section_index` and `chunk_index` alongside the `arxiv_id`, so a quoted
-passage can always be traced back to where in the paper it came from.
+Each passage carries `section_index` and `chunk_index` alongside its paper's `arxiv_id`,
+so a quoted passage can always be traced back to where in the paper it came from.
+
+#### Grouping by paper
+
+Both passage endpoints return **papers, each with up to three passages** — not a flat
+list. `size` counts papers.
+
+Excluding the title from scoring was not enough on its own. A paper that repeats the query
+throughout still owned the whole page: for "RAG", all ten results came from one paper, out
+of 172 matching passages across 34 papers. Three passages is enough to carry a claim and
+its evidence, and few enough that a page still spans several sources — which is what a
+grounded answer needs in order to cite more than one.
+
+`/search/chunks` does this with an OpenSearch `collapse` on `arxiv_id`, so the grouping and
+the cap happen in one server-side query and `matching_passages` reports how many passages
+the paper really had — 24, for that dominant paper.
+
+`/search/hybrid` groups *after* fusing instead. Fusion ranks a flat list, and collapsing
+first would mean reconciling two different choices of which passages represent each paper.
+It therefore leaves `matching_passages` unset: fusion only ever sees a bounded candidate
+pool, so a count from it would understate the truth.
 
 ### Search chunks
 

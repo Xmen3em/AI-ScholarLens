@@ -2,7 +2,14 @@ import pytest
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 from src.dependencies import get_db_session, get_search
 from src.main import app
-from src.schemas.api.search import ChunkHit, ChunkSearchResponse, HybridSearchResponse, SearchHit, SearchResponse
+from src.schemas.api.search import (
+    ChunkSearchResponse,
+    HybridSearchResponse,
+    PaperPassages,
+    PassageHit,
+    SearchHit,
+    SearchResponse,
+)
 
 
 class EmptyDatabaseSession:
@@ -54,6 +61,27 @@ async def test_malformed_arxiv_id_is_rejected_before_lookup(client, empty_databa
     assert response.status_code == 422
 
 
+def _stub_paper(score, highlights=None, matching_passages=7):
+    return PaperPassages(
+        arxiv_id="2608.26469v1",
+        title="Active Curriculum Refinement",
+        categories=["cs.LG"],
+        published_date="2026-08-26T00:00:00",
+        score=score,
+        matching_passages=matching_passages,
+        passages=[
+            PassageHit(
+                section_title="2.1 Reinforcement Learning",
+                section_index=4,
+                chunk_index=0,
+                content="In many reinforcement learning domains...",
+                score=score,
+                highlights=highlights or {},
+            )
+        ],
+    )
+
+
 class StubSearch:
     """Records the arguments the router forwards, and returns a fixed response."""
 
@@ -96,20 +124,7 @@ class StubSearch:
             mode="hybrid",
             score_kind="rrf",
             fallback_reason=None,
-            hits=[
-                ChunkHit(
-                    arxiv_id="2608.26469v1",
-                    title="Active Curriculum Refinement",
-                    section_title="2.1 Reinforcement Learning",
-                    section_index=4,
-                    chunk_index=0,
-                    content="In many reinforcement learning domains...",
-                    categories=["cs.LG"],
-                    published_date="2026-08-26T00:00:00",
-                    score=0.0328,
-                    highlights={},
-                )
-            ],
+            hits=[_stub_paper(score=0.0328)],
         )
 
     def search_chunks(self, query, *, size, offset, categories):
@@ -120,20 +135,7 @@ class StubSearch:
             query=query,
             total=1,
             took_ms=3,
-            hits=[
-                ChunkHit(
-                    arxiv_id="2608.26469v1",
-                    title="Active Curriculum Refinement",
-                    section_title="2.1 Reinforcement Learning",
-                    section_index=4,
-                    chunk_index=0,
-                    content="In many reinforcement learning domains...",
-                    categories=["cs.LG"],
-                    published_date="2026-08-26T00:00:00",
-                    score=11.2,
-                    highlights={"content": ["In many <mark>reinforcement</mark> learning domains"]},
-                )
-            ],
+            hits=[_stub_paper(score=11.2, highlights={"content": ["In many <mark>reinforcement</mark> learning domains"]})],
         )
 
 
@@ -222,10 +224,12 @@ async def test_chunk_search_returns_positioned_passages(client, search_service):
     response = await client.post("/api/v1/search/chunks", json={"query": "reinforcement learning"})
 
     assert response.status_code == 200
-    hit = response.json()["hits"][0]
-    assert (hit["arxiv_id"], hit["section_index"], hit["chunk_index"]) == ("2608.26469v1", 4, 0)
-    assert hit["section_title"] == "2.1 Reinforcement Learning"
-    assert "<mark>" in hit["highlights"]["content"][0]
+    paper = response.json()["hits"][0]
+    assert paper["arxiv_id"] == "2608.26469v1"
+    passage = paper["passages"][0]
+    assert (passage["section_index"], passage["chunk_index"]) == (4, 0)
+    assert passage["section_title"] == "2.1 Reinforcement Learning"
+    assert "<mark>" in passage["highlights"]["content"][0]
 
 
 @pytest.mark.anyio
@@ -264,6 +268,7 @@ async def test_hybrid_search_reports_which_ranking_produced_it(client, search_se
     assert response.status_code == 200
     body = response.json()
     assert body["mode"] == "hybrid"
+    assert body["score_kind"] == "rrf"
     assert body["fallback_reason"] is None
     assert body["hits"][0]["score"] == 0.0328
 

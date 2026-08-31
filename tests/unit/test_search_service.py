@@ -4,13 +4,16 @@ import pytest
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 from opensearchpy.exceptions import NotFoundError
 from src.exceptions import OllamaConnectionError
+from src.search.query import MAX_PASSAGES_PER_PAPER
 from src.services.embeddings.ollama import EMBEDDING_DIMENSIONS
 from src.services.search import SearchService
 
 
 def raw_hit(arxiv_id="2608.26469v1", score=4.2, highlight=None, **overrides):
     source = {
-        "arxiv_id": arxiv_id,
+        # Distinct per document unless a test deliberately shares one, so that grouping
+        # by paper is visible rather than collapsing everything into a single group.
+        "arxiv_id": arxiv_id or f"paper-{doc_id}",
         "title": "Retrieval Augmented Generation",
         "authors": "Ada Lovelace, Alan Turing",
         "abstract": "We study retrieval.",
@@ -162,9 +165,11 @@ def test_an_unreachable_backend_propagates():
 # --- hybrid search ----------------------------------------------------------
 
 
-def chunk_hit(doc_id, arxiv_id="2608.26469v1", **overrides):
+def chunk_hit(doc_id, arxiv_id=None, **overrides):
     source = {
-        "arxiv_id": arxiv_id,
+        # Distinct per document unless a test deliberately shares one, so that grouping
+        # by paper is visible rather than collapsing everything into a single group.
+        "arxiv_id": arxiv_id or f"paper-{doc_id}",
         "title": "Active Curriculum Refinement",
         "section_title": "2.1 Reinforcement Learning",
         "section_index": 4,
@@ -199,7 +204,7 @@ def test_hybrid_returns_documents_from_both_halves():
 
     assert result.mode == "hybrid"
     # "d" was found only by the vector half, so its presence proves both were fused.
-    assert len(result.hits) == 4
+    assert {paper.arxiv_id for paper in result.hits} == {"paper-a", "paper-b", "paper-c", "paper-d"}
 
 
 def test_hybrid_scores_are_the_fused_score_not_bm25():
@@ -271,7 +276,7 @@ def test_hybrid_total_is_the_match_count_not_the_candidate_pool():
     result = service(client).search_hybrid("rag", size=10)
 
     assert result.total == 172
-    assert len(result.hits) == 3
+    assert len(result.hits) == 3  # three distinct papers among the candidates
 
 
 def test_the_fallback_reports_the_same_match_count():
@@ -300,3 +305,64 @@ def test_fallback_scores_are_left_as_bm25_rather_than_faked():
     result = service(client, FakeEmbedder(raises=OllamaConnectionError("down"))).search_hybrid("rag")
 
     assert result.hits[0].score == 3.0  # the raw _score from the stub, untouched
+
+
+# --- grouping by paper ------------------------------------------------------
+
+
+def shared_paper(doc_ids, arxiv_id="2608.26385v1"):
+    return [chunk_hit(doc_id, arxiv_id=arxiv_id) for doc_id in doc_ids]
+
+
+def test_one_dominant_paper_cannot_fill_the_page():
+    """Ten of ten results for "RAG" came from a single paper before this."""
+    hits = shared_paper(["a", "b", "c", "d", "e", "f"])
+    client = TwoResponseClient([], [])
+    client.responses = [response(hits), response([])]
+
+    result = service(client).search_hybrid("rag", size=10)
+
+    assert len(result.hits) == 1
+    assert len(result.hits[0].passages) == MAX_PASSAGES_PER_PAPER
+
+
+def test_a_paper_keeps_the_position_of_its_best_passage():
+    """Grouping must not reorder: the paper of the top passage stays first."""
+    client = TwoResponseClient([], [])
+    client.responses = [
+        response([chunk_hit("a", arxiv_id="first"), *shared_paper(["b", "c", "d", "e"], arxiv_id="second")]),
+        response([]),
+    ]
+
+    result = service(client).search_hybrid("rag", size=10)
+
+    assert [paper.arxiv_id for paper in result.hits] == ["first", "second"]
+    assert [len(paper.passages) for paper in result.hits] == [1, 3]
+
+
+def test_a_papers_score_is_its_best_passages_score():
+    client = TwoResponseClient(keyword_ids=["a", "b"], semantic_ids=[])
+    result = service(client).search_hybrid("rag", size=10)
+
+    for paper in result.hits:
+        assert paper.score == max(passage.score for passage in paper.passages)
+
+
+def test_the_fallback_groups_and_caps_too():
+    """Otherwise degrading to keyword-only would also degrade source diversity."""
+    client = TwoResponseClient([], [])
+    client.responses = [response(shared_paper(["a", "b", "c", "d", "e"])), response([])]
+    embedder = FakeEmbedder(raises=OllamaConnectionError("down"))
+
+    result = service(client, embedder).search_hybrid("rag", size=10)
+
+    assert result.mode == "keyword"
+    assert len(result.hits) == 1
+    assert len(result.hits[0].passages) == MAX_PASSAGES_PER_PAPER
+
+
+def test_hybrid_papers_carry_no_passage_count():
+    """Fusion sees a bounded candidate pool, so any count from it would understate."""
+    result = service(TwoResponseClient(["a"], ["a"])).search_hybrid("rag")
+
+    assert result.hits[0].matching_passages is None

@@ -81,6 +81,8 @@ The suite currently covers:
   full document text kept out of the paper index
 - Both search endpoints: every option forwarded, defaults applied, invalid input rejected
   with a 422 before the backend is touched, and an unreachable backend surfaced as a 503
+- Grouping by paper: a dominant paper cannot fill the page, a paper keeps the position of
+  its best passage, and the keyword fallback groups and caps like the fused path
 - The Airflow-to-metadata-fetcher method contract, and that every `xcom_pull` names a task the
   DAG actually declares
 
@@ -297,8 +299,13 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -Conte
   -Body '{"query": "how are the benchmarks constructed", "size": 4}'
 ```
 
-Each hit must carry `section_index` and `chunk_index`, and the results should span several
-papers. If they all come from one, the paper title has crept back into the scored fields.
+Results are **papers, each with up to three passages**; `size` counts papers. Every passage
+must carry `section_index` and `chunk_index`.
+
+Search for something one paper repeats constantly — `RAG` on this corpus — and check that
+the page still spans several papers, that no paper returns more than three passages, and
+that `matching_passages` exceeds the number returned for the dominant one. If a single
+paper fills the page, the collapse is not being applied.
 
 `took_ms` is OpenSearch's own timing, not the round trip. Measured on this corpus, once
 the JVM and the embedding model are warm — the first few requests after `docker compose up`
