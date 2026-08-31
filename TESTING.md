@@ -279,7 +279,20 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -Conte
 Each hit must carry `section_index` and `chunk_index`, and the results should span several
 papers. If they all come from one, the paper title has crept back into the scored fields.
 
-`took_ms` is OpenSearch's own timing. On this corpus the whole round trip measures 15-85ms:
+`took_ms` is OpenSearch's own timing, not the round trip. Measured on this corpus, once
+the JVM and the embedding model are warm — the first few requests after `docker compose up`
+are several times slower and mean nothing:
+
+| Endpoint | Round trip |
+| --- | --- |
+| `/search/` | 25-40ms |
+| `/search/chunks` | 25-50ms |
+| `/search/hybrid` | 120-270ms |
+
+Hybrid is the outlier because embedding the query on CPU costs 50-110ms on its own, and the
+two candidate queries add 20-50ms each. Roughly 30ms of the keyword half is spent
+highlighting fifty candidates that nothing displays — the page returns at most fifty, and
+usually ten. Worth knowing before treating hybrid as a hot path.
 
 ```powershell
 curl.exe -s -o NUL -w "%{time_total}s" -X POST http://localhost:8000/api/v1/search/ `
