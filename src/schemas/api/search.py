@@ -102,6 +102,16 @@ class ChunkSearchResponse(BaseModel):
 class HybridSearchResponse(ChunkSearchResponse):
     """Fused passages, plus which ranking actually produced them."""
 
+    total: int = Field(
+        ...,
+        description=(
+            "Passages matching the keyword half. Fusion reranks a bounded pool of candidates "
+            "from each half, so offset cannot reach every one of them."
+        ),
+    )
+    score_kind: Literal["rrf", "bm25"] = Field(
+        ..., description="'rrf' for a fused score near 1/60; 'bm25' when mode is 'keyword'"
+    )
     mode: Literal["hybrid", "keyword"] = Field(
         ..., description="'keyword' when the embedding model was unreachable and the search fell back to BM25"
     )

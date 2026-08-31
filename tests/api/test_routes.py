@@ -94,6 +94,7 @@ class StubSearch:
             total=2,
             took_ms=71,
             mode="hybrid",
+            score_kind="rrf",
             fallback_reason=None,
             hits=[
                 ChunkHit(

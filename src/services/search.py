@@ -79,6 +79,10 @@ class SearchService:
         """
         depth = max((offset + size) * CANDIDATE_DEPTH, MIN_CANDIDATES)
         keyword = self._execute(CHUNK_PROFILE.alias, SearchQuery(CHUNK_PROFILE, query, size=depth, categories=categories).build())
+        # The real match count, not the size of the candidate pool. Reporting the pool
+        # made `total` cap out at the retrieval depth -- a query matching 172 passages
+        # reported 80, which is the one number a caller cannot sanity-check for itself.
+        matches = keyword["hits"]["total"]["value"]
 
         try:
             vector = self.embedder.embed_query(query)
@@ -87,10 +91,13 @@ class SearchService:
             found = keyword["hits"]["hits"]
             return HybridSearchResponse(
                 query=query,
-                total=len(found),
+                total=matches,
                 took_ms=keyword["took"],
                 hits=[_chunk_hit(hit) for hit in found[offset : offset + size]],
                 mode="keyword",
+                # BM25, not RRF: nothing was fused, so the scores are the keyword
+                # half's own and are on a completely different scale.
+                score_kind="bm25",
                 fallback_reason=str(e),
             )
 
@@ -101,6 +108,7 @@ class SearchService:
             semantic["hits"]["hits"],
             size=size,
             offset=offset,
+            total=matches,
             took_ms=keyword["took"] + semantic["took"],
         )
 
@@ -112,6 +120,7 @@ class SearchService:
         *,
         size: int,
         offset: int,
+        total: int,
         took_ms: int,
     ) -> HybridSearchResponse:
         by_id = {hit["_id"]: hit for hit in [*semantic, *keyword]}
@@ -128,7 +137,13 @@ class SearchService:
             hits.append(hit)
 
         return HybridSearchResponse(
-            query=query, total=len(order), took_ms=took_ms, hits=hits, mode="hybrid", fallback_reason=None
+            query=query,
+            total=total,
+            took_ms=took_ms,
+            hits=hits,
+            mode="hybrid",
+            score_kind="rrf",
+            fallback_reason=None,
         )
 
     def _run(

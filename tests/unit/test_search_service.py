@@ -192,13 +192,14 @@ class TwoResponseClient:
         return self.responses[min(len(self.bodies) - 1, len(self.responses) - 1)]
 
 
-def test_hybrid_ranks_a_passage_both_halves_agree_on_first():
+def test_hybrid_returns_documents_from_both_halves():
     client = TwoResponseClient(keyword_ids=["a", "b", "c"], semantic_ids=["c", "b", "d"])
 
     result = service(client).search_hybrid("rag", size=4)
 
-    assert [hit.arxiv_id for hit in result.hits] and result.mode == "hybrid"
-    assert result.total == 4  # a, b, c, d
+    assert result.mode == "hybrid"
+    # "d" was found only by the vector half, so its presence proves both were fused.
+    assert len(result.hits) == 4
 
 
 def test_hybrid_scores_are_the_fused_score_not_bm25():
@@ -256,3 +257,46 @@ def test_the_fallback_never_runs_a_vector_query():
 
     assert len(client.bodies) == 1
     assert "knn" not in str(client.bodies[0])
+
+
+# --- what `total` means -----------------------------------------------------
+
+
+def test_hybrid_total_is_the_match_count_not_the_candidate_pool():
+    """Reporting the pool made total cap out at the retrieval depth: a query matching
+    172 passages reported 80, the one number a caller cannot check for itself."""
+    client = TwoResponseClient(keyword_ids=["a", "b"], semantic_ids=["c"])
+    client.responses[0]["hits"]["total"]["value"] = 172
+
+    result = service(client).search_hybrid("rag", size=10)
+
+    assert result.total == 172
+    assert len(result.hits) == 3
+
+
+def test_the_fallback_reports_the_same_match_count():
+    client = TwoResponseClient(keyword_ids=["a", "b"], semantic_ids=[])
+    client.responses[0]["hits"]["total"]["value"] = 172
+    embedder = FakeEmbedder(raises=OllamaConnectionError("down"))
+
+    result = service(client, embedder).search_hybrid("rag")
+
+    assert result.total == 172
+
+
+def test_the_score_scale_is_labelled_because_it_changes_with_the_mode():
+    """A fallback hit carries a BM25 score in the tens; a fused hit carries ~1/60.
+    Without this a client comparing them across responses is comparing nothing."""
+    fused = service(TwoResponseClient(["a"], ["a"])).search_hybrid("rag")
+    assert (fused.mode, fused.score_kind) == ("hybrid", "rrf")
+
+    client = TwoResponseClient(["a"], [])
+    fell_back = service(client, FakeEmbedder(raises=OllamaConnectionError("down"))).search_hybrid("rag")
+    assert (fell_back.mode, fell_back.score_kind) == ("keyword", "bm25")
+
+
+def test_fallback_scores_are_left_as_bm25_rather_than_faked():
+    client = TwoResponseClient(["a"], [])
+    result = service(client, FakeEmbedder(raises=OllamaConnectionError("down"))).search_hybrid("rag")
+
+    assert result.hits[0].score == 3.0  # the raw _score from the stub, untouched

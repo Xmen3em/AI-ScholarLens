@@ -53,11 +53,15 @@ def search_hybrid(request: HybridSearchRequest, search: SearchDep) -> HybridSear
 
     Runs the BM25 passage query and a vector similarity query over the same index,
     then fuses them with reciprocal rank fusion — only the rank positions are used, so
-    BM25 scores and cosine similarities never have to be put on one scale. `score` on
-    each hit is therefore the fused score, not BM25, and sits near 1/60.
+    BM25 scores and cosine similarities never have to be put on one scale.
 
     Falls back to keyword-only if the embedding model is unreachable, and says so in
     `mode`. Worse results beat no results, and the keyword half is complete on its own.
+
+    `score` therefore lives on two different scales, and `score_kind` says which: `rrf`
+    for a fused score near 1/60, or `bm25` for the keyword half's own score, in the
+    tens. `total` counts the passages matching the keyword query; fusion only reranks a
+    bounded pool of candidates, so `offset` cannot walk all the way through them.
     """
     return search.search_hybrid(
         request.query,
