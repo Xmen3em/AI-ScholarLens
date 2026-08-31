@@ -101,6 +101,10 @@ celerybeat.pid
 # Environments
 .env
 .venv
+# A Windows venv cannot share a directory with a WSL one: Linux venvs have
+# bin/python, Windows venvs have Scripts/python.exe, and each uv run replaces the
+# other. PowerShell users set UV_PROJECT_ENVIRONMENT=.venv-win instead.
+.venv-win/
 env/
 venv/
 ENV/

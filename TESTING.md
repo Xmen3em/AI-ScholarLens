@@ -17,10 +17,31 @@ models and fails if either file drifts, in either direction — a missing settin
 behind after a rename. It also loads `.env.example` through `Settings` to prove that
 `cp .env.example .env` yields a config that works.
 
+### Running from both PowerShell and WSL
+
+`.venv` cannot be shared between them. A Linux venv has `bin/python` and a `lib64`
+symlink; a Windows venv has `Scripts\python.exe`. Whichever platform runs `uv` next
+tries to replace the other's venv — and on Windows it fails partway with
+
+```
+error: failed to remove file `...\.venv\lib64`: Access is denied. (os error 5)
+```
+
+because deleting a symlink needs a privilege Windows does not grant by default. By then
+it has already removed `bin/` and `lib/`, so the WSL venv is broken too. Recover with
+`rm -rf .venv && uv sync` from WSL, where the symlink can be removed.
+
+To use both, give Windows its own environment directory (gitignored):
+
+```powershell
+$env:UV_PROJECT_ENVIRONMENT = ".venv-win"    # add to your PowerShell profile to persist
+uv sync
+```
+
 From the project root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
+uv run pytest -q
 ```
 
 The suite currently covers:
