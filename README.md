@@ -12,7 +12,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
 | Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
 | Phase 4 | Chunking and retrieval evaluation | In progress — chunking complete, evaluation next |
-| Phase 5 | Grounded RAG answers with Ollama | Planned |
+| Phase 5 | Grounded RAG answers with Ollama | In progress — API and Gradio implemented; live acceptance pending |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
 
 Update this table and the diagrams when a phase is accepted. Keep unfinished work in the “Planned” or “In progress” rows instead of presenting it as an active runtime dependency.
@@ -32,7 +32,7 @@ flowchart LR
         Airflow[Airflow Scheduler + DAG<br/>:8080 or AIRFLOW_PORT]
         DB[(PostgreSQL<br/>papers + parsed content)]
         Search[(OpenSearch<br/>arxiv-papers + paper-chunks)]
-        Ollama[Ollama<br/>answers Phase 5]
+        Ollama[Ollama<br/>generation + embeddings]
     end
 
     Arxiv[(arXiv API)]
@@ -53,10 +53,9 @@ flowchart LR
     Airflow --> DB
 
     DB -. index papers .-> Search
-    Search -. retrieve context .-> Retriever
-    DB -. retrieve metadata .-> Retriever
-    Ollama -. generate answer .-> Retriever
-    Retriever -. answer .-> API
+    Search -- grouped passages --> Retriever
+    Ollama -- generate answer --> Retriever
+    Retriever -- grounded answer + citations --> API
 ~~~
 
 ### Paper-ingestion flow
@@ -290,6 +289,16 @@ Start the stack from the repository root:
 docker compose up --build -d
 ~~~
 
+Pull both configured models explicitly; startup never downloads models automatically:
+
+~~~powershell
+docker compose exec ollama ollama pull llama3.2:1b
+docker compose exec ollama ollama pull nomic-embed-text
+~~~
+
+The health endpoint returns 503 until the default generation model is installed. A missing
+embedding or other optional configured model reports `degraded` with HTTP 200.
+
 If host port 8080 is already in use, select another Airflow host port:
 
 ~~~powershell
@@ -311,7 +320,15 @@ Airflow creates new DAGs in a paused state. Unpause the ingestion DAG before exp
 docker compose exec airflow airflow dags unpause arxiv_paper_ingestion
 ~~~
 
-The API documentation is available at http://localhost:8000/docs. Airflow is available at http://localhost:8080, or at the configured AIRFLOW_PORT. The default Airflow credentials are admin/admin.
+Launch the Week 5 interface separately:
+
+~~~powershell
+uv run python gradio_launcher.py
+~~~
+
+Gradio is available at http://localhost:7861. The API documentation is available at
+http://localhost:8000/docs. Airflow is available at http://localhost:8080, or at the
+configured AIRFLOW_PORT. The default Airflow credentials are admin/admin.
 
 ## API endpoints
 
@@ -324,6 +341,8 @@ The API documentation is available at http://localhost:8000/docs. Airflow is ava
 | POST | /api/v1/search/ | BM25 keyword search over papers |
 | POST | /api/v1/search/chunks | BM25 keyword search over passages |
 | POST | /api/v1/search/hybrid | Keyword and vector search, fused with RRF |
+| POST | /api/v1/ask | Grounded answer with ordered sources and exact passage citations |
+| POST | /api/v1/stream | The same pipeline as typed Server-Sent Events |
 | GET | /docs | Interactive OpenAPI documentation |
 
 Example:
@@ -348,13 +367,24 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -Conte
 # The same, ranked by meaning as well as wording
 Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid -ContentType application/json `
   -Body '{"query": "how do they stop the model making things up", "size": 5}'
+
+# Standard grounded answer; top_k counts paper groups, not chunks
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/ask -ContentType application/json `
+  -Body '{"query": "how do they ground factual claims", "top_k": 3, "use_hybrid": true}'
+
+# Streaming answer: named sources, delta, and done/error SSE events
+curl.exe -N -X POST http://localhost:8000/api/v1/stream `
+  -H "Content-Type: application/json" `
+  -d '{"query":"how do they ground factual claims","top_k":3,"use_hybrid":true}'
 ~~~
 
 `size` is 1-50, `offset` 0-1000, and `categories` must be inside the ingested AI
 allowlist — a filter on `hep-th` is a 422 rather than a silent zero-result page, because
 the corpus can never contain one. `/search/` accepts an empty query and browses;
 `/search/chunks` requires one, because a passage is only meaningful as an answer to
-something.
+something. `/ask` and `/stream` accept `top_k` from 1-10, an allowlisted configured
+generation model, the same category filter, and either hybrid or grouped BM25 retrieval.
+Every generated marker resolves to an exact returned `section_index` and `chunk_index`.
 
 ## Testing
 
@@ -401,10 +431,12 @@ AI-ScholarLens/
 │   ├── config.py                # Settings loaded from environment
 │   ├── dependencies.py          # FastAPI dependency injection
 │   ├── exceptions.py            # Domain exception hierarchy
-│   ├── routers/                 # FastAPI endpoints
+│   ├── gradio_app.py            # Streaming Gradio client and rendering
+│   ├── routers/                 # FastAPI endpoints, including ask + stream
 │   ├── services/
 │   │   ├── arxiv/               # arXiv client
-│   │   ├── ollama/              # Ollama client
+│   │   ├── ollama/              # Reusable Ollama client and RAG prompt
+│   │   ├── rag/                 # Evidence budgeting, citations, generation
 │   │   ├── pdf_parser/          # Docling parser
 │   │   ├── embeddings/          # Ollama embedding client
 │   │   ├── metadata_fetcher.py  # Ingestion orchestration
@@ -427,6 +459,7 @@ AI-ScholarLens/
 │   └── unit/
 ├── compose.yml
 ├── Dockerfile
+├── gradio_launcher.py
 ├── pyproject.toml
 ├── uv.lock
 ├── TESTING.md

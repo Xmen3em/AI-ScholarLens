@@ -1,6 +1,6 @@
 # Testing AI-ScholarLens
 
-This guide covers the automated tests and Docker-backed checks for the current Week 2 implementation.
+This guide covers the automated tests and Docker-backed checks through the Week 5 RAG implementation.
 
 ## 1. Fast automated tests
 
@@ -48,7 +48,8 @@ The suite currently covers:
 
 - Settings parsing and paper schemas
 - arXiv XML parsing and PDF cache hits
-- Ollama health, generation, and connection-error handling
+- Ollama model-aware readiness, configured generation timeout, validated normal responses,
+  NDJSON streaming, and connection/error handling
 - API ping and paper-list/detail endpoints
 - Ingestion pipeline accounting: download/parse counters, skips, and recorded failure reasons
 - The AI category allowlist and its scope predicate, including cross-listed and malformed categories
@@ -83,6 +84,10 @@ The suite currently covers:
   with a 422 before the backend is touched, and an unreachable backend surfaced as a 503
 - Grouping by paper: a dominant paper cannot fill the page, a paper keeps the position of
   its best passage, and the keyword fallback groups and caps like the fused path
+- RAG controls, grouped top-k semantics, prompt isolation, 12,000-character evidence budgeting,
+  round-robin paper diversity, exact citation coordinates, invalid-marker rejection, and no-evidence behavior
+- Standard answer error mappings and SSE ordering (`sources -> delta* -> done|error`)
+- Gradio payloads, SSE parsing, accumulated rendering, error display, and partial-answer discard
 - The Airflow-to-metadata-fetcher method contract, and that every `xcom_pull` names a task the
   DAG actually declares
 
@@ -138,6 +143,13 @@ Make sure Docker Desktop is running, then run:
 docker compose up --build -d
 ```
 
+Install the two configured models explicitly:
+
+```powershell
+docker compose exec ollama ollama pull llama3.2:1b
+docker compose exec ollama ollama pull nomic-embed-text
+```
+
 If host port `8080` is already occupied, choose another Airflow host port:
 
 ```powershell
@@ -172,7 +184,8 @@ If `AIRFLOW_PORT` is set to `8081`, use `http://localhost:8081/health` instead.
 Expected results:
 
 - API ping returns `status: ok` and `message: pong`.
-- API health returns HTTP 200 and reports database/Ollama status.
+- API health returns HTTP 200 when ready or degraded. It returns 503 when the database,
+  Ollama, or the default generation model is unavailable.
 - OpenSearch returns cluster health JSON.
 - Ollama returns a version JSON response.
 - Airflow returns HTTP 200.
@@ -301,6 +314,29 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -Conte
 
 Results are **papers, each with up to three passages**; `size` counts papers. Every passage
 must carry `section_index` and `chunk_index`.
+
+### Grounded RAG acceptance
+
+Exercise both retrieval modes:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/ask -ContentType application/json `
+  -Body '{"query":"how do the papers ground generated claims","top_k":3,"use_hybrid":true}'
+
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/ask -ContentType application/json `
+  -Body '{"query":"how do the papers ground generated claims","top_k":3,"use_hybrid":false}'
+
+curl.exe -N -X POST http://localhost:8000/api/v1/stream `
+  -H "Content-Type: application/json" `
+  -d '{"query":"how do the papers ground generated claims","top_k":3}'
+```
+
+The standard response must contain ordered PDF `sources`, exact passage `citations`, and only
+markers present in that citation catalog. The stream must order events as
+`sources -> delta* -> done|error`; clients must discard deltas if an `error` arrives.
+
+Launch the UI with `uv run python gradio_launcher.py`, open http://localhost:7861, and verify
+the model/category controls, real-time answer rendering, ordered paper links, and exact evidence locations.
 
 Search for something one paper repeats constantly — `RAG` on this corpus — and check that
 the page still spans several papers, that no paper returns more than three passages, and
