@@ -1,540 +1,472 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-ScholarLens — Living Codebase Overview (Phase 2)</title>
-<style>
-  :root{
-    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2a3240;
-    --ink:#e6edf3; --muted:#9aa7b4; --dim:#6e7c8c;
-    --acc:#58a6ff; --acc2:#7ee787; --acc3:#f0a868; --acc4:#d2a8ff; --acc5:#ff7b72;
-    --mono:"SFMono-Regular",ui-monospace,"Cascadia Code","JetBrains Mono",Consolas,monospace;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px}
-  a{color:var(--acc);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-  code,.mono{font-family:var(--mono);font-size:.86em}
-  /* ---------- hero ---------- */
-  header.hero{
-    background:
-      radial-gradient(1200px 400px at 80% -10%,rgba(88,166,255,.18),transparent),
-      radial-gradient(900px 400px at 0% 0%,rgba(126,231,135,.10),transparent),
-      var(--panel);
-    border-bottom:1px solid var(--line);
-    padding:64px 0 48px;
-  }
-  .eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--acc2);margin:0 0 14px}
-  h1{font-size:2.6rem;line-height:1.1;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
-  h1 .grad{background:linear-gradient(90deg,var(--acc),var(--acc4));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .lede{font-size:1.18rem;color:var(--muted);max-width:760px;margin:0 0 26px}
-  .pills{display:flex;flex-wrap:wrap;gap:8px}
-  .pill{font-family:var(--mono);font-size:.74rem;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--muted)}
-  .pill b{color:var(--acc3);font-weight:600}
-  /* ---------- nav ---------- */
-  nav.toc{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  nav.toc .wrap{display:flex;flex-wrap:wrap;gap:4px;padding-top:10px;padding-bottom:10px}
-  nav.toc a{font-size:.82rem;color:var(--muted);padding:5px 11px;border-radius:7px}
-  nav.toc a:hover{background:var(--panel2);color:var(--ink);text-decoration:none}
-  /* ---------- sections ---------- */
-  section{padding:52px 0;border-bottom:1px solid var(--line)}
-  h2{font-size:1.7rem;margin:0 0 6px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
-  h2 .n{font-family:var(--mono);font-size:.95rem;color:var(--acc);border:1px solid var(--line);border-radius:8px;padding:3px 9px;background:var(--panel2)}
-  .sub{color:var(--dim);margin:0 0 28px;font-size:1rem}
-  h3{font-size:1.06rem;margin:26px 0 8px;color:var(--ink)}
-  p{margin:0 0 14px}
-  .muted{color:var(--muted)}
-  /* ---------- cards / grid ---------- */
-  .grid{display:grid;gap:16px}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  .g3{grid-template-columns:repeat(3,1fr)}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px}
-  .card h4{margin:0 0 6px;font-size:1rem;display:flex;align-items:center;gap:8px}
-  .card p{margin:0;color:var(--muted);font-size:.92rem}
-  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
-  .tag{font-family:var(--mono);font-size:.72rem;color:var(--dim)}
-  /* ---------- architecture diagram ---------- */
-  .diagram{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;margin-top:6px}
-  .layerrow{display:flex;align-items:stretch;gap:14px;flex-wrap:wrap;justify-content:center;margin:10px 0}
-  .node{flex:1 1 150px;min-width:140px;max-width:210px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:center;position:relative}
-  .node .t{font-weight:600;font-size:.92rem;margin-bottom:2px}
-  .node .d{font-size:.74rem;color:var(--dim);font-family:var(--mono)}
-  .node.acc{border-color:rgba(88,166,255,.5)}
-  .node.acc2{border-color:rgba(126,231,135,.45)}
-  .node.acc3{border-color:rgba(240,168,104,.45)}
-  .node.acc4{border-color:rgba(210,168,255,.45)}
-  .node.acc5{border-color:rgba(255,123,114,.45)}
-  .arrow{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:1.4rem;line-height:1}
-  .flowlabel{text-align:center;font-family:var(--mono);font-size:.72rem;color:var(--acc2);letter-spacing:.1em;text-transform:uppercase;margin:18px 0 4px}
-  /* ---------- table ---------- */
-  table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
-  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{color:var(--dim);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.06em}
-  tr:hover td{background:var(--panel)}
-  td .mono{color:var(--acc3)}
-  .method{font-family:var(--mono);font-size:.74rem;font-weight:700;padding:2px 7px;border-radius:5px}
-  .m-get{background:rgba(126,231,135,.15);color:var(--acc2)}
-  .m-post{background:rgba(240,168,104,.15);color:var(--acc3)}
-  .badge{font-family:var(--mono);font-size:.7rem;padding:2px 8px;border-radius:5px;white-space:nowrap}
-  .b-live{background:rgba(126,231,135,.14);color:var(--acc2);border:1px solid rgba(126,231,135,.3)}
-  .b-mock{background:rgba(240,168,104,.14);color:var(--acc3);border:1px solid rgba(240,168,104,.3)}
-  .b-progress{background:rgba(210,168,255,.14);color:var(--acc4);border:1px solid rgba(210,168,255,.3)}
-  .b-future{background:rgba(110,124,140,.14);color:var(--dim);border:1px solid var(--line)}
-  /* ---------- code block ---------- */
-  pre{background:#0a0e14;border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.55;color:#c9d6e3}
-  pre .c{color:var(--dim)}
-  pre .k{color:var(--acc4)}
-  pre .s{color:var(--acc2)}
-  pre .f{color:var(--acc)}
-  /* ---------- file tree ---------- */
-  .tree{font-family:var(--mono);font-size:.84rem;line-height:1.75;color:var(--muted)}
-  .tree .dir{color:var(--acc)}
-  .tree .cm{color:var(--dim)}
-  /* ---------- roadmap ---------- */
-  .road{display:flex;flex-direction:column;gap:0}
-  .step{display:flex;gap:18px;padding:14px 0;border-bottom:1px solid var(--line)}
-  .step:last-child{border-bottom:0}
-  .step .wk{flex:none;width:84px;font-family:var(--mono);font-size:.8rem;color:var(--acc);padding-top:2px}
-  .step .body h4{margin:0 0 3px;font-size:1rem}
-  .step .body p{margin:0;color:var(--muted);font-size:.9rem}
-  .step.done .wk{color:var(--acc2)}
-  .chk{font-family:var(--mono)}
-  /* ---------- callout ---------- */
-  .note{background:linear-gradient(180deg,rgba(88,166,255,.07),transparent);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:14px 18px;margin:20px 0;color:var(--muted);font-size:.92rem}
-  .note b{color:var(--ink)}
-  footer{padding:40px 0 60px;color:var(--dim);font-size:.85rem}
-  .kvs{display:flex;flex-wrap:wrap;gap:8px 26px;font-size:.9rem;color:var(--muted)}
-  .kvs b{color:var(--ink);font-weight:600}
-  @media(max-width:760px){
-    .g2,.g3{grid-template-columns:1fr}
-    h1{font-size:2rem}
-    .layerrow{flex-direction:column;align-items:stretch}
-    .node{max-width:none}
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A living, reader-first technical overview of the AI-ScholarLens arXiv ingestion and hybrid retrieval platform.">
+  <title>AI-ScholarLens — Living Codebase Field Guide</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1118;
+      --surface: #111a24;
+      --raised: #172230;
+      --soft: #0e1620;
+      --border: #2b3948;
+      --border-strong: #405267;
+      --text: #eef4fa;
+      --muted: #aab8c6;
+      --dim: #7f90a2;
+      --blue: #69b7ff;
+      --green: #72d99b;
+      --amber: #f0b866;
+      --violet: #c6a7ff;
+      --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --sm: 6px;
+      --md: 10px;
+      --lg: 14px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 74px; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:hover { color: #9fd2ff; }
+    a:focus-visible, summary:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: var(--sm); }
+    code, pre, .mono { font-family: var(--mono); }
+    code { padding: .12rem .34rem; border: 1px solid rgb(105 183 255 / 16%); border-radius: 4px; background: rgb(105 183 255 / 7%); color: #d7ebff; font-size: .88em; }
+    strong { color: #fff; }
+    .wrap { width: min(1160px, calc(100% - 40px)); max-width: 100%; min-width: 0; margin-inline: auto; }
+    .skip-link { position: fixed; z-index: 100; top: 10px; left: 12px; translate: 0 -160%; padding: 10px 14px; border-radius: var(--sm); background: var(--amber); color: #1c1306; font-weight: 800; }
+    .skip-link:focus { translate: 0; }
+
+    .hero { overflow: hidden; border-bottom: 1px solid var(--border); background: linear-gradient(115deg, rgb(105 183 255 / 11%), transparent 42%), linear-gradient(300deg, rgb(114 217 155 / 7%), transparent 38%), var(--surface); }
+    .hero .wrap { padding-block: 56px 44px; }
+    .eyebrow { margin: 0 0 12px; color: var(--green); font: 700 .76rem/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+    h1 { max-width: 900px; margin: 0; font-size: clamp(2.2rem, 6vw, 4.4rem); line-height: 1.02; letter-spacing: -.045em; }
+    .hero-accent { color: var(--blue); }
+    .lede { max-width: 820px; margin: 22px 0 0; color: var(--muted); font-size: clamp(1.02rem, 2vw, 1.22rem); }
+    .snapshot { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
+    .chip, .status { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 999px; background: var(--soft); color: var(--muted); font: 700 .75rem/1.2 var(--mono); }
+    .chip { min-height: 34px; padding: 7px 11px; }
+    .chip::before, .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+    .chip.phase::before { background: var(--violet); }
+    .chip.verified::before { background: var(--green); }
+
+    .toc { position: sticky; z-index: 20; top: 0; border-bottom: 1px solid var(--border); background: rgb(11 17 24 / 93%); backdrop-filter: blur(12px); }
+    .toc .wrap { display: flex; gap: 2px; overflow-x: auto; padding-block: 8px; scrollbar-width: thin; }
+    .toc a { display: inline-flex; flex: 0 0 auto; align-items: center; min-height: 44px; padding-inline: 12px; border-radius: var(--sm); color: var(--muted); font-size: .82rem; font-weight: 700; text-decoration: none; }
+    .toc a:hover { background: var(--raised); color: var(--text); }
+
+    main section { padding-block: 56px; border-bottom: 1px solid var(--border); }
+    .section-head { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; margin-bottom: 26px; }
+    .section-no { display: inline-grid; min-width: 42px; height: 32px; place-items: center; border: 1px solid var(--border-strong); border-radius: var(--sm); background: var(--raised); color: var(--blue); font: 800 .8rem/1 var(--mono); }
+    h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; letter-spacing: -.02em; }
+    h3 { margin: 26px 0 9px; font-size: 1.08rem; line-height: 1.35; }
+    h4 { margin: 0; font-size: .98rem; }
+    p { margin: 0 0 14px; }
+    .sub { margin: 5px 0 0; color: var(--dim); }
+    .muted { color: var(--muted); }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { min-width: 0; overflow-wrap: anywhere; border: 1px solid var(--border); border-radius: var(--md); background: var(--surface); padding: 19px; }
+    .card h3, .card h4 { margin: 0 0 7px; }
+    .card p:last-child { margin-bottom: 0; }
+    .label { display: block; margin-bottom: 8px; color: var(--dim); font: 700 .69rem/1.3 var(--mono); letter-spacing: .11em; text-transform: uppercase; }
+    .card-live { border-top: 3px solid var(--green); }
+    .card-next { border-top: 3px solid var(--violet); }
+    .card-later { border-top: 3px solid var(--border-strong); }
+    .status { padding: 4px 8px; font-size: .68rem; white-space: nowrap; }
+    .status.live::before { background: var(--green); }
+    .status.progress::before { background: var(--violet); }
+    .status.planned::before { background: var(--dim); }
+
+    .callout { margin-block: 20px; padding: 15px 17px; border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: var(--sm); background: var(--soft); color: var(--muted); }
+    .callout.warning { border-left-color: var(--amber); }
+    .callout.success { border-left-color: var(--green); }
+    .callout p:last-child { margin-bottom: 0; }
+
+    .flow { display: grid; gap: 10px; padding: 22px; border: 1px solid var(--border); border-radius: var(--lg); background: var(--soft); box-shadow: 0 18px 50px rgb(0 0 0 / 22%); }
+    .flow-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 10px; }
+    .flow-node { flex: 1 1 155px; max-width: 220px; min-height: 78px; padding: 13px; border: 1px solid var(--border-strong); border-radius: var(--sm); background: var(--raised); text-align: center; }
+    .flow-node b { display: block; margin-bottom: 3px; }
+    .flow-node span { color: var(--dim); font: .72rem/1.4 var(--mono); }
+    .flow-node.api { border-color: rgb(105 183 255 / 65%); }
+    .flow-node.data { border-color: rgb(114 217 155 / 58%); }
+    .flow-node.worker { border-color: rgb(240 184 102 / 58%); }
+    .flow-node.future { border-style: dashed; color: var(--muted); }
+    .flow-arrow { color: var(--dim); text-align: center; font: 700 .76rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+
+    .table-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--border); border-radius: var(--md); }
+    table { width: 100%; min-width: 680px; border-collapse: collapse; background: var(--soft); font-size: .9rem; }
+    caption { padding: 12px 14px; color: var(--muted); text-align: left; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--surface); color: var(--dim); font: 800 .71rem/1.35 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgb(105 183 255 / 4%); }
+    .method { display: inline-block; min-width: 48px; padding: 3px 7px; border-radius: 4px; text-align: center; font: 800 .7rem/1.2 var(--mono); }
+    .get { background: rgb(114 217 155 / 15%); color: var(--green); }
+    .post { background: rgb(240 184 102 / 15%); color: var(--amber); }
+    pre { margin: 12px 0 20px; padding: 17px; overflow: auto; border: 1px solid var(--border); border-radius: var(--md); background: #070c12; color: #d7e5f2; font-size: .81rem; line-height: 1.65; tab-size: 2; }
+    pre code { padding: 0; border: 0; background: transparent; color: inherit; font-size: inherit; }
+    .tree { color: var(--muted); }
+    .tree .dir { color: var(--blue); }
+    .tree .note-text { color: var(--dim); }
+    .key-list { margin: 10px 0 0; padding-left: 1.25rem; }
+    .key-list li { margin-block: 8px; padding-left: 4px; color: var(--muted); }
+    .key-list li::marker { color: var(--blue); }
+    .steps { margin: 0; padding: 0; list-style: none; counter-reset: steps; }
+    .steps li { display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding-block: 14px; border-bottom: 1px solid var(--border); counter-increment: steps; }
+    .steps li::before { content: counter(steps, decimal-leading-zero); color: var(--blue); font: 800 .78rem/1.65 var(--mono); }
+    .steps li:last-child { border-bottom: 0; }
+    .steps p { margin: 3px 0 0; color: var(--muted); }
+    .roadmap { display: grid; border: 1px solid var(--border); border-radius: var(--md); background: var(--soft); }
+    .phase-row { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 16px; border-bottom: 1px solid var(--border); }
+    .phase-row:last-child { border-bottom: 0; }
+    .phase-name { color: var(--blue); font: 800 .78rem/1.5 var(--mono); }
+    .phase-row p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+    details { border: 1px solid var(--border); border-radius: var(--md); background: var(--surface); }
+    details + details { margin-top: 10px; }
+    summary { min-height: 48px; padding: 12px 16px; cursor: pointer; font-weight: 750; }
+    details > div { padding: 0 16px 15px; color: var(--muted); }
+    footer { padding-block: 36px 54px; color: var(--dim); font-size: .84rem; }
+
+    @media (max-width: 820px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .phase-row { grid-template-columns: 82px 1fr; }
+      .phase-row .status { grid-column: 2; justify-self: start; }
+    }
+    @media (max-width: 560px) {
+      .wrap { width: min(1160px, calc(100% - 28px)); }
+      .hero .wrap { padding-block: 42px 34px; }
+      main section { padding-block: 42px; }
+      .section-head { grid-template-columns: 1fr; gap: 8px; }
+      .section-no { justify-self: start; }
+      .flow { padding: 14px; }
+      .flow-node { max-width: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+    @media print {
+      :root { color-scheme: light; --bg: #fff; --surface: #fff; --raised: #f3f6f8; --soft: #fafbfc; --border: #ccd3da; --border-strong: #9ba8b4; --text: #15202b; --muted: #425466; --dim: #5d6b78; --blue: #075ea8; --green: #126b3b; --amber: #8a4c00; --violet: #6543a5; }
+      .toc { position: static; }
+      .hero, .flow { box-shadow: none; }
+      a { color: inherit; }
+    }
+  </style>
 </head>
 <body>
-
-<header class="hero">
-  <div class="wrap">
-    <p class="eyebrow">Codebase Walkthrough · Phase 2 / Week 2</p>
-    <h1>AI-ScholarLens <span class="grad">— From Papers to RAG</span></h1>
-    <p class="lede">A production-style <b>Retrieval-Augmented Generation (RAG)</b> research assistant, built in replaceable phases. The infrastructure foundation is working, and the current phase adds arXiv metadata ingestion plus PDF processing while OpenSearch retrieval and grounded answers remain planned seams.</p>
-    <div class="pills">
-      <span class="pill"><b>Python</b> 3.12</span>
-      <span class="pill"><b>FastAPI</b> async API</span>
-      <span class="pill"><b>PostgreSQL</b> 16</span>
-      <span class="pill"><b>OpenSearch</b> 2.19</span>
-      <span class="pill"><b>Airflow</b> 2.10</span>
-      <span class="pill"><b>Ollama</b> 0.11</span>
-      <span class="pill"><b>Docker</b> Compose</span>
-    </div>
-  </div>
-</header>
-
-<nav class="toc">
-  <div class="wrap">
-    <a href="#big">The Big Idea</a>
-    <a href="#arch">Architecture</a>
-    <a href="#services">Runtime Services</a>
-    <a href="#layers">Code Layers</a>
-    <a href="#flow">Request Flow</a>
-    <a href="#api">API Endpoints</a>
-    <a href="#data">Data Model</a>
-    <a href="#tree">File Map</a>
-    <a href="#status">Current Status</a>
-    <a href="#roadmap">Roadmap</a>
-    <a href="#deep">Deep Dives</a>
-    <a href="#pipeline">Pipeline</a>
-    <a href="#verify">Run &amp; Verify</a>
-  </div>
-</nav>
-
-<!-- ====================== BIG IDEA ====================== -->
-<section id="big">
-  <div class="wrap">
-    <h2><span class="n">01</span> The Big Idea</h2>
-    <p class="sub">What this project will become — and where Phase 2 fits.</p>
-    <p>The end goal is a personal assistant that <b>automatically pulls academic papers from arXiv, understands them, and answers your research questions with citations.</b> That is a classic RAG pipeline: <i>retrieve</i> relevant documents, then let an LLM <i>generate</i> a grounded answer.</p>
-    <p>A real RAG system needs several moving parts running together — an API to talk to, a database to store papers, a search engine to retrieve them, a scheduler to fetch new ones, and an LLM to write answers. <b>Phase 2 completes the first part of that data path:</b> arXiv metadata is fetched, PDFs are downloaded and parsed in the Airflow image, and paper records are upserted idempotently into PostgreSQL. Papers outside the parser&rsquo;s page limit are recorded as skips, and any failure is stored with its reason.</p>
-    <div class="grid g3" style="margin-top:8px">
-      <div class="card"><h4><span class="dot" style="background:var(--acc2)"></span>Built &amp; working</h4><p>The API, PostgreSQL model/repository, arXiv client, health checks, Docker stack, Airflow ingestion DAG, PDF parser service and an offline pytest suite are in place.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--acc4)"></span>In progress</h4><p>Phase 2 is wiring fetched arXiv papers through metadata persistence and Docling-based PDF extraction. Airflow owns the heavy PDF dependency; the API stays lightweight.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--dim)"></span>Reserved for later</h4><p>OpenSearch indexing/search, embeddings, retrieval-augmented answers and evaluation are intentionally kept as replaceable Phase 3–5 boundaries.</p></div>
-    </div>
-    <div class="note"><b>Mental model:</b> each phase adds one dependable slice without forcing a rewrite. PostgreSQL is the source of truth, Airflow handles scheduled ingestion, and future retrieval/LLM services can be added behind the existing repository, service and API seams.</div>
-  </div>
-</section>
-
-<!-- ====================== ARCHITECTURE ====================== -->
-<section id="arch">
-  <div class="wrap">
-    <h2><span class="n">02</span> Architecture at a Glance</h2>
-    <p class="sub">Six containers on one Docker network, orchestrated by <code>compose.yml</code>; application responsibilities are deliberately separated from infrastructure.</p>
-    <div class="diagram">
-      <div class="flowlabel">Client / Browser</div>
-      <div class="layerrow">
-        <div class="node acc"><div class="t">FastAPI</div><div class="d">:8000 · rag-api</div></div>
+  <a class="skip-link" href="#main">Skip to project overview</a>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Living codebase field guide · current repository snapshot</p>
+      <h1>AI-ScholarLens<br><span class="hero-accent">papers in, evidence out.</span></h1>
+      <p class="lede">A local-first arXiv ingestion and retrieval platform. It collects AI papers, parses their PDFs, stores the source corpus in PostgreSQL, projects two purpose-built OpenSearch indices, and exposes paper-level, passage-level, and hybrid search through FastAPI.</p>
+      <div class="snapshot" aria-label="Project snapshot">
+        <span class="chip phase">Phase 4 · evaluation next</span>
+        <span class="chip verified">Reconciled 15 Sep 2026</span>
+        <span class="chip">Python 3.12</span>
+        <span class="chip">FastAPI + Airflow</span>
+        <span class="chip">PostgreSQL + OpenSearch</span>
+        <span class="chip">Ollama embeddings</span>
       </div>
-      <div class="arrow">↓ &nbsp; talks to &nbsp; ↓</div>
-      <div class="layerrow">
-        <div class="node acc2"><div class="t">PostgreSQL 16</div><div class="d">:5432 · metadata</div></div>
-        <div class="node acc3"><div class="t">OpenSearch 2.19</div><div class="d">:9200 · search</div></div>
-        <div class="node acc4"><div class="t">Ollama 0.11</div><div class="d">:11434 · local LLM</div></div>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Page contents">
+    <div class="wrap">
+      <a href="#orientation">Orientation</a><a href="#architecture">Architecture</a>
+      <a href="#pipeline">Data flow</a><a href="#retrieval">Retrieval</a>
+      <a href="#api">API</a><a href="#data">Data &amp; invariants</a>
+      <a href="#map">Code map</a><a href="#roadmap">Roadmap</a>
+      <a href="#run">Run &amp; verify</a><a href="#reading">Reading paths</a>
+    </div>
+  </nav>
+
+  <main id="main">
+    <section id="orientation">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">01</span><div><h2>Orientation in sixty seconds</h2><p class="sub">What the project is, what is real today, and where its boundary currently ends.</p></div></div>
+        <div class="grid grid-3">
+          <article class="card card-live"><span class="label">Working today</span><h3>Ingest and retrieve</h3><p>Weekday Airflow ingestion, fixed AI-category scope, PDF caching and Docling parsing, idempotent PostgreSQL storage, two OpenSearch indices, BM25 paper and passage search, and vector + keyword fusion are implemented.</p></article>
+          <article class="card card-next"><span class="label">Current phase</span><h3>Evaluate retrieval quality</h3><p>Chunking is complete. Phase 4’s remaining work is a repeatable evaluation set and metrics that reveal whether ranking changes help real research questions.</p></article>
+          <article class="card card-later"><span class="label">Deliberately not built</span><h3>Answer generation</h3><p>There is no <code>/ask</code> route yet. Ollama currently supplies health checks and local embeddings; grounded synthesis with citations belongs to Phase 5.</p></article>
+        </div>
+        <div class="callout success"><p><strong>The core mental model:</strong> PostgreSQL owns the canonical paper record. OpenSearch is a rebuildable retrieval projection. Airflow moves data between external sources and those stores. FastAPI serves reads and search. This separation keeps ingestion failures, index migrations, and future answer generation from collapsing into one coupled process.</p></div>
+        <div class="grid grid-2">
+          <article class="card"><span class="label">Input</span><h3>Eight arXiv AI categories</h3><p><code>cs.AI</code>, <code>cs.LG</code>, <code>cs.CL</code>, <code>cs.CV</code>, <code>cs.RO</code>, <code>cs.MA</code>, <code>cs.NE</code>, and <code>stat.ML</code>. Cross-listed papers qualify when any category is allowlisted.</p></article>
+          <article class="card"><span class="label">Output</span><h3>Ranked papers with evidence passages</h3><p>Clients can browse metadata, find papers by topic, find the passages that answer a question, or combine lexical and semantic rankings. Passage results are grouped by paper to preserve source diversity.</p></article>
+        </div>
       </div>
-      <div class="arrow">↑ &nbsp; also orchestrated alongside &nbsp; ↑</div>
-      <div class="layerrow">
-        <div class="node acc5"><div class="t">Apache Airflow</div><div class="d">${AIRFLOW_PORT:-8080} · scheduler</div></div>
-        <div class="node"><div class="t">OpenSearch Dashboards</div><div class="d">:5601 · search UI</div></div>
-      </div>
-      <p class="muted" style="text-align:center;font-size:.82rem;margin:18px 0 0">All services share the <code>rag-network</code> bridge. API healthchecks cover PostgreSQL and Ollama; Airflow runs the ingestion workflow, while OpenSearch is available for the next phase.</p>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- ====================== SERVICES ====================== -->
-<section id="services">
-  <div class="wrap">
-    <h2><span class="n">03</span> Runtime Services</h2>
-    <p class="sub">Each runs in its own container. Together they support the current ingestion path and leave room for retrieval and generation later.</p>
-    <div class="grid g2">
-      <div class="card"><h4><span class="dot" style="background:var(--acc)"></span>FastAPI &nbsp;<span class="tag">:8000</span></h4><p>The front door. Serves the versioned REST API and Swagger docs at <code>/docs</code>. Its lifespan initializes the database and the arXiv client; the Ollama health client is constructed per request in the health handler. PDF parsing is kept out of this image.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--acc2)"></span>PostgreSQL 16 &nbsp;<span class="tag">:5432</span></h4><p>The system of record. Stores paper metadata plus processed text and parsing status through SQLAlchemy. The repository’s <code>upsert</code> keeps repeated ingestion idempotent.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--acc3)"></span>OpenSearch 2.19 &nbsp;<span class="tag">:9200</span></h4><p>The retrieval engine. In later weeks it powers <b>hybrid search</b> (keyword BM25 + semantic vectors) to find the right papers for a question. Running now, but not yet queried by code.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--acc4)"></span>Ollama 0.11 &nbsp;<span class="tag">:11434</span></h4><p>Local LLM server for a later generation phase. The API currently uses it for a version/health check; answer generation and embeddings are future work.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--acc5)"></span>Apache Airflow 2.10 &nbsp;<span class="tag">:${AIRFLOW_PORT:-8080}</span></h4><p>The scheduler and worker runtime. Its <code>arxiv_paper_ingestion</code> DAG fetches papers, processes failed PDFs, records placeholder indexing work and produces a daily report.</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--dim)"></span>OpenSearch Dashboards &nbsp;<span class="tag">:5601</span></h4><p>A web UI for inspecting the search index — useful for debugging retrieval once data starts flowing in.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ====================== CODE LAYERS ====================== -->
-<section id="layers">
-  <div class="wrap">
-    <h2><span class="n">04</span> How the Code Is Organised</h2>
-    <p class="sub">The <code>src/</code> app follows a clean <b>layered architecture</b> — each layer has one job and only talks to its neighbours. This separation is the whole point of the “production-grade” framing.</p>
-    <div class="diagram">
-      <div class="layerrow">
-        <div class="node acc"><div class="t">Routers</div><div class="d">routers/</div></div>
-        <div class="arrow">→</div>
-        <div class="node acc4"><div class="t">Schemas</div><div class="d">schemas/</div></div>
-        <div class="arrow">→</div>
-        <div class="node acc3"><div class="t">Repositories</div><div class="d">repositories/</div></div>
-        <div class="arrow">→</div>
-        <div class="node acc2"><div class="t">Models</div><div class="d">models/</div></div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="t">Database</div><div class="d">db/</div></div>
-      </div>
-      <p class="muted" style="text-align:center;font-size:.82rem;margin:16px 0 0">HTTP request → validated → business query → ORM object → SQL. Each arrow is a hand-off between layers.</p>
-    </div>
-    <div class="grid g2" style="margin-top:20px">
-      <div class="card"><h4>Routers <span class="tag">· the &ldquo;what URL&rdquo;</span></h4><p>Define the live HTTP endpoints (<code>/health</code>, <code>/ping</code>, paper listing and paper lookup). They validate input and delegate to the repository.</p></div>
-      <div class="card"><h4>Schemas <span class="tag">· the contract</span></h4><p>Pydantic models that validate incoming JSON and shape outgoing responses. They guarantee the API’s data contract independently of the database.</p></div>
-      <div class="card"><h4>Repositories <span class="tag">· the data access</span></h4><p><code>PaperRepository</code> holds all query logic — <code>create</code>, <code>get_by_arxiv_id</code>, <code>upsert</code>. Routers never write raw SQL; they ask the repository.</p></div>
-      <div class="card"><h4>Models <span class="tag">· the table</span></h4><p>SQLAlchemy ORM classes. <code>Paper</code> maps metadata, PDF-processing output and lifecycle fields to the <code>papers</code> table.</p></div>
-      <div class="card"><h4>db/ <span class="tag">· the connection</span></h4><p>A <code>BaseDatabase</code> interface with a <code>PostgreSQLDatabase</code> implementation, built by a <code>factory</code>. The interface means you could swap databases without touching routers.</p></div>
-      <div class="card"><h4>Services <span class="tag">· integrations</span></h4><p><code>services/arxiv</code> talks to arXiv, <code>services/metadata_fetcher.py</code> maps entries to papers, <code>services/pdf_parser</code> handles Docling, and <code>services/ollama</code> provides the current health check.</p></div>
-      <div class="card"><h4>config &amp; dependencies <span class="tag">· the glue</span></h4><p><code>config.py</code> centralises settings from environment variables. <code>dependencies.py</code> uses FastAPI injection so handlers receive a DB session automatically.</p></div>
-    </div>
-    <div class="note"><b>Why bother with layers?</b> Phase 3 can add an OpenSearch client and retrieval repository beside the existing arXiv/PDF services. The routers and schemas can evolve at the API boundary without mixing infrastructure concerns into ingestion code.</div>
-  </div>
-</section>
-
-<!-- ====================== REQUEST FLOW ====================== -->
-<section id="flow">
-  <div class="wrap">
-    <h2><span class="n">05</span> A Request, Start to Finish</h2>
-    <p class="sub">Tracing <code>GET /health</code> — the one endpoint that exercises real infrastructure.</p>
-    <pre><span class="c"># 1. App boots — lifespan() in main.py wires up shared state</span>
-settings = get_settings()              <span class="c"># load config from env</span>
-database = make_database()             <span class="c"># factory → PostgreSQLDatabase.startup()</span>
-app.state.database = database          <span class="c"># test "SELECT 1", create tables if missing</span>
-
-<span class="c"># 2. Request hits the router — routers/ping.py</span>
-<span class="k">async def</span> <span class="f">health_check</span>(settings, database):     <span class="c"># deps injected by FastAPI</span>
-    <span class="k">with</span> database.get_session() <span class="k">as</span> session:
-        session.execute(text(<span class="s">"SELECT 1"</span>))   <span class="c"># ✅ Postgres reachable?</span>
-    ollama = OllamaClient(settings)
-    <span class="k">await</span> ollama.health_check()                <span class="c"># ✅ Ollama reachable? (GET /api/version)</span>
-
-<span class="c"># 3. Response — validated against HealthResponse schema</span>
-{ <span class="s">"status"</span>: <span class="s">"ok"</span>, <span class="s">"version"</span>: <span class="s">"0.1.0"</span>,
-  <span class="s">"services"</span>: { <span class="s">"database"</span>: {...}, <span class="s">"ollama"</span>: {...} } }</pre>
-    <p class="muted">If Postgres or Ollama can’t be reached, the status degrades to <code>"degraded"</code> instead of crashing — exactly how a load-balancer health probe expects to behave.</p>
-  </div>
-</section>
-
-<!-- ====================== API ====================== -->
-<section id="api">
-  <div class="wrap">
-    <h2><span class="n">06</span> API Endpoints</h2>
-    <p class="sub">Mounted under <code>/api/v1</code>. Explore them live at <a href="http://localhost:8000/docs">localhost:8000/docs</a> once running.</p>
-    <table>
-      <thead><tr><th>Method</th><th>Path</th><th>Does</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td><span class="method m-get">GET</span></td><td class="mono">/ping</td><td>Liveness check — returns <code>pong</code>.</td><td><span class="badge b-live">live</span></td></tr>
-        <tr><td><span class="method m-get">GET</span></td><td class="mono">/health</td><td>Deep health — verifies Postgres + Ollama connectivity.</td><td><span class="badge b-live">live</span></td></tr>
-        <tr><td><span class="method m-get">GET</span></td><td class="mono">/papers/</td><td>List stored papers with pagination.</td><td><span class="badge b-live">live</span></td></tr>
-        <tr><td><span class="method m-get">GET</span></td><td class="mono">/papers/{arxiv_id}</td><td>Fetch a stored paper by arXiv ID (validated by regex).</td><td><span class="badge b-live">live</span></td></tr>
-        <tr><td>—</td><td class="mono">/ask</td><td>Question answering endpoint is not implemented yet; it belongs to the future RAG phase.</td><td><span class="badge b-future">planned</span></td></tr>
-      </tbody>
-    </table>
-    <p class="muted" style="margin-top:14px">The current contract is intentionally small: health checks plus paper listing and lookup. Search and <code>/ask</code> will be added only when retrieval and generation are implemented behind tested services.</p>
-  </div>
-</section>
-
-<!-- ====================== DATA MODEL ====================== -->
-<section id="data">
-  <div class="wrap">
-    <h2><span class="n">07</span> The Data Model</h2>
-    <p class="sub">One table so far — <code>papers</code> — defined in <code>models/paper.py</code>.</p>
-    <div class="grid g2">
-      <div>
-        <table>
-          <thead><tr><th>Column</th><th>Type</th><th>Note</th></tr></thead>
+    <section id="architecture">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">02</span><div><h2>Runtime architecture</h2><p class="sub">Six containers share <code>rag-network</code>. Solid responsibilities are live; the dashed answer step is planned.</p></div></div>
+        <div class="flow" role="img" aria-label="Researcher calls FastAPI. FastAPI reads PostgreSQL, searches OpenSearch, and uses Ollama for query embeddings. Airflow fetches arXiv papers, caches and parses PDFs with Docling, writes PostgreSQL, creates document embeddings through Ollama, and rebuilds the OpenSearch indices. Grounded answer generation is planned.">
+          <div class="flow-row"><div class="flow-node api"><b>Researcher / client</b><span>HTTP + JSON</span></div></div>
+          <div class="flow-arrow">↓ API requests</div>
+          <div class="flow-row"><div class="flow-node api"><b>FastAPI</b><span>:8000 · routes + search service</span></div></div>
+          <div class="flow-arrow">↓ canonical reads · search · query vectors</div>
+          <div class="flow-row"><div class="flow-node data"><b>PostgreSQL 16</b><span>:5432 · source of truth</span></div><div class="flow-node data"><b>OpenSearch 2.19</b><span>:9200 · two read aliases</span></div><div class="flow-node data"><b>Ollama 0.11.2</b><span>:11434 · health + embeddings</span></div></div>
+          <div class="flow-arrow">↑ populated and coordinated by</div>
+          <div class="flow-row"><div class="flow-node worker"><b>Airflow 2.10</b><span>:8080* · weekday DAG</span></div><div class="flow-node worker"><b>arXiv + PDF cache + Docling</b><span>external metadata · local heavy parsing</span></div><div class="flow-node"><b>OpenSearch Dashboards</b><span>:5601 · index inspection</span></div></div>
+          <div class="flow-arrow">future boundary</div>
+          <div class="flow-row"><div class="flow-node future"><b>Grounded answer service</b><span>retrieved passages → cited answer · Phase 5</span></div></div>
+        </div>
+        <p class="muted"><small>* Airflow’s host port can be changed with <code>AIRFLOW_PORT</code>; its container port remains 8080.</small></p>
+        <h3>What each runtime owns</h3>
+        <div class="table-wrap"><table>
+          <caption>Operational ownership and dependency boundaries.</caption>
+          <thead><tr><th scope="col">Runtime</th><th scope="col">Owns</th><th scope="col">Does not own</th><th scope="col">Persistence</th></tr></thead>
           <tbody>
-            <tr><td class="mono">id</td><td>UUID</td><td>primary key</td></tr>
-            <tr><td class="mono">arxiv_id</td><td>String</td><td>unique, indexed</td></tr>
-            <tr><td class="mono">title</td><td>String</td><td>—</td></tr>
-            <tr><td class="mono">authors</td><td>JSON</td><td>list of names</td></tr>
-            <tr><td class="mono">abstract</td><td>Text</td><td>arXiv abstract</td></tr>
-            <tr><td class="mono">categories</td><td>JSON</td><td>arXiv tags</td></tr>
-            <tr><td class="mono">published_date</td><td>DateTime</td><td>—</td></tr>
-            <tr><td class="mono">pdf_url</td><td>String</td><td>—</td></tr>
-            <tr><td class="mono">raw_text</td><td>Text</td><td>extracted PDF text</td></tr>
-            <tr><td class="mono">sections / references</td><td>JSON</td><td>parser output</td></tr>
-            <tr><td class="mono">parser_used / parser_metadata</td><td>String / JSON</td><td>processing provenance</td></tr>
-            <tr><td class="mono">pdf_processed</td><td>Boolean</td><td>processing status</td></tr>
-            <tr><td class="mono">pdf_processing_date</td><td>DateTime</td><td>last parse time</td></tr>
-            <tr><td class="mono">created_at / updated_at</td><td>DateTime</td><td>auto timestamps</td></tr>
+            <tr><td><strong>API image</strong></td><td>HTTP routes, validation, repository reads, OpenSearch queries, query embeddings</td><td>Docling and scheduled ingestion</td><td>Stateless; connection pools only</td></tr>
+            <tr><td><strong>Airflow image</strong></td><td>arXiv fetch, PDF cache, Docling parsing, corpus writes, paper/chunk reindexing</td><td>Serving user traffic</td><td>Logs, PDF cache, model cache volumes</td></tr>
+            <tr><td><strong>PostgreSQL</strong></td><td>Metadata, parsed text, sections, parser lifecycle</td><td>Ranking and vector similarity</td><td><code>postgres_data</code></td></tr>
+            <tr><td><strong>OpenSearch</strong></td><td>BM25 documents, vectors, highlights, filtered ranking</td><td>Canonical paper ownership</td><td><code>opensearch_data</code></td></tr>
+            <tr><td><strong>Ollama</strong></td><td><code>nomic-embed-text</code> vectors today; LLM host later</td><td>Search orchestration</td><td><code>ollama_data</code></td></tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
-      <div>
-        <h3 style="margin-top:0">The two faces of a Paper</h3>
-        <p class="muted">A subtle but important pattern: the <b>ORM model</b> (<code>Paper</code>, how it’s stored) is kept separate from the <b>Pydantic schemas</b> (<code>PaperCreate</code>, <code>PaperResponse</code>, how it crosses the API boundary).</p>
-        <p class="muted">The repository’s <code>upsert()</code> ties them together: given a validated <code>PaperCreate</code>, it updates the row if the <code>arxiv_id</code> already exists, otherwise inserts a new one — the standard idempotent write you want for a data pipeline that may see the same paper twice.</p>
-        <div class="card" style="margin-top:8px"><h4>Why JSON columns?</h4><p>Authors, categories, sections and references are naturally structured lists. JSON keeps ingestion flexible while the schema is still evolving; OpenSearch can later receive a search-optimised projection.</p></div>
+    </section>
+
+    <section id="pipeline">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">03</span><div><h2>Data flow: arXiv to searchable evidence</h2><p class="sub">The <code>arxiv_paper_ingestion</code> DAG runs at 06:00 UTC, Monday through Friday, with one active run at a time.</p></div></div>
+        <ol class="steps">
+          <li><div><strong>Prepare the runtime.</strong><p><code>setup_environment</code> constructs cached services and proves the database connection before expensive work starts.</p></div></li>
+          <li><div><strong>Fetch only the approved research scope.</strong><p>The arXiv query spans all eight categories. <code>MetadataFetcher</code> enforces the allowlist again before a paper can consume download, parsing, or storage work.</p></div></li>
+          <li><div><strong>Download and parse defensively.</strong><p>PDFs are cached. Docling runs only in Airflow, accepts at most 20 MB and 45 pages, disables OCR and table-structure extraction by default, and records skips or failures instead of losing the whole batch.</p></div></li>
+          <li><div><strong>Upsert the canonical record.</strong><p><code>PaperRepository.upsert()</code> updates an existing <code>arxiv_id</code> or inserts it. The caller owns commit/rollback, so the repository never hides a transaction boundary.</p></div></li>
+          <li><div><strong>Analyze failures and rebuild both search projections.</strong><p><code>process_failed_pdfs</code> reports failures. <code>index_to_opensearch</code> rewrites both paper and chunk indices from PostgreSQL so they cannot quietly drift apart.</p></div></li>
+          <li><div><strong>Publish run accounting and clean temporary files.</strong><p>The daily report includes fetched, filtered, parsed, skipped, stored, indexed, embedded, reused, and error counts; cleanup removes old temporary PDFs.</p></div></li>
+        </ol>
+        <div class="callout warning"><p><strong>Graceful degradation is intentional.</strong> One bad PDF does not stop unrelated papers. An indexing error prevents stale-document deletion and alias movement, preserving the last complete searchable view. A missing index returns an empty result; an unhealthy search backend becomes HTTP 503.</p></div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- ====================== FILE TREE ====================== -->
-<section id="tree">
-  <div class="wrap">
-    <h2><span class="n">08</span> File Map</h2>
-    <p class="sub">Where everything lives. Start reading at <code>src/main.py</code> and follow the ingestion path through Airflow.</p>
-    <pre class="tree">AI-ScholarLens/
-├── <span class="dir">src/</span>                      <span class="cm"># the FastAPI application</span>
-│   ├── main.py              <span class="cm"># ⭐ entry point — app, lifespan, router wiring</span>
-│   ├── config.py            <span class="cm"># centralised settings (env-driven)</span>
-│   ├── dependencies.py      <span class="cm"># FastAPI dependency injection</span>
-│   ├── <span class="dir">routers/</span>             <span class="cm"># HTTP endpoints: ping, health, papers</span>
-│   ├── <span class="dir">schemas/</span>             <span class="cm"># Pydantic request/response contracts</span>
-│   ├── <span class="dir">repositories/</span>        <span class="cm"># data-access logic (PaperRepository)</span>
-│   ├── <span class="dir">models/</span>              <span class="cm"># SQLAlchemy ORM tables (Paper)</span>
-│   ├── <span class="dir">db/</span>                  <span class="cm"># DB interface + PostgreSQL implementation + factory</span>
-│   └── <span class="dir">services/</span>             <span class="cm"># arXiv, metadata, PDF parser, Ollama integrations</span>
-├── <span class="dir">airflow/dags/</span>            <span class="cm"># arxiv_paper_ingestion.py + task modules</span>
-├── <span class="dir">tests/</span>                   <span class="cm"># pytest suite (api/ + unit/)</span>
-├── README.md                 <span class="cm"># living architecture and phase roadmap</span>
-├── TESTING.md                <span class="cm"># offline, Docker and pipeline test guide</span>
-├── compose.yml              <span class="cm"># ⭐ orchestrates all 6 services</span>
-└── pyproject.toml           <span class="cm"># deps + tooling (uv, ruff, mypy, pytest)</span></pre>
-  </div>
-</section>
-
-<!-- ====================== STATUS ====================== -->
-<section id="status">
-  <div class="wrap">
-    <h2><span class="n">09</span> Current Status</h2>
-    <p class="sub">Use this matrix as the living boundary between implemented behavior and future phases.</p>
-    <div class="grid g3">
-      <div class="card"><h4><span class="dot" style="background:var(--acc2)"></span>Implemented</h4>
-        <p>• FastAPI app, docs and versioned routes<br>• PostgreSQL model/repository + idempotent upsert<br>• arXiv client and metadata mapping<br>• Airflow ingestion DAG and task contracts<br>• Docling PDF parser in the Airflow image, verified end to end<br>• Parsed text, sections and references persisted<br>• Offline pytest suite, Docker-backed repository tests, ruff and mypy hooks</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--acc4)"></span>In progress</h4>
-        <p>• Tune parsing coverage for papers past the 30-page limit<br>• Broaden failure/retry handling beyond the current skip and error paths<br>• Keep API and Airflow dependency boundaries healthy</p></div>
-      <div class="card"><h4><span class="dot" style="background:var(--dim)"></span>Planned</h4>
-        <p>• OpenSearch indexing and hybrid retrieval<br>• Embeddings and chunk-level search<br>• Grounded <code>/ask</code> answers through Ollama<br>• Evaluation, observability and production hardening</p></div>
-    </div>
-    <div class="note"><b>How to keep this accurate:</b> after each phase, update the status cards, endpoint table, file map and roadmap together. If a feature is not backed by code and a test or smoke check, keep it marked as planned.</div>
-  </div>
-</section>
-
-<!-- ====================== ROADMAP ====================== -->
-<section id="roadmap">
-  <div class="wrap">
-    <h2><span class="n">10</span> Phase Roadmap</h2>
-    <p class="sub">The architecture is intentionally incremental: each phase can be tested and reviewed before the next boundary is added.</p>
-    <div class="road">
-      <div class="step done"><div class="wk">Phase 1 <span class="chk">●</span></div><div class="body"><h4>Infrastructure Foundation &nbsp;<span class="badge b-live">complete</span></h4><p>Docker Compose stack, FastAPI skeleton, PostgreSQL schema, health monitoring, and developer tooling.</p></div></div>
-      <div class="step done"><div class="wk">Phase 2 <span class="chk">●</span></div><div class="body"><h4>arXiv Ingestion &amp; PDF Processing &nbsp;<span class="badge b-live">complete</span></h4><p>Fetch arXiv metadata, download and parse PDFs with Docling, and persist paper content through repeatable Airflow tasks.</p></div></div>
-      <div class="step"><div class="wk">Phase 3</div><div class="body"><h4>OpenSearch Indexing &amp; Hybrid Retrieval &nbsp;<span class="badge b-progress">next</span></h4><p>Project paper content into OpenSearch and combine BM25 keyword search with semantic vectors.</p></div></div>
-      <div class="step"><div class="wk">Phase 4</div><div class="body"><h4>Chunking &amp; Evaluation</h4><p>Introduce context-aware chunks, retrieval metrics and regression cases for search quality.</p></div></div>
-      <div class="step"><div class="wk">Phase 5</div><div class="body"><h4>Grounded RAG Answers</h4><p>Connect retrieval to Ollama and add a tested question-answering route with citations.</p></div></div>
-      <div class="step"><div class="wk">Phase 6</div><div class="body"><h4>Production Hardening</h4><p>Add observability, failure recovery, security controls and deployment workflows.</p></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ====================== DEEP DIVE ====================== -->
-<section id="deep">
-  <div class="wrap">
-    <h2><span class="n">11</span> Deep Dives</h2>
-    <p class="sub">Three patterns worth understanding in detail — they’re the load-bearing ideas the rest of the course builds on.</p>
-
-    <h3 style="color:var(--acc)">A · How a database session reaches your handler (Dependency Injection)</h3>
-    <p class="muted">You never see a router open a database connection. Instead FastAPI <b>injects</b> one. The trick is a chain of small functions, each declaring what <i>it</i> needs, resolved lazily at request time.</p>
-    <pre><span class="c"># dependencies.py — the chain, from app state down to a live Session</span>
-
-<span class="k">def</span> <span class="f">get_database</span>(request: Request) -> BaseDatabase:
-    <span class="k">return</span> request.app.state.database        <span class="c"># set once in main.py lifespan()</span>
-
-<span class="k">def</span> <span class="f">get_db_session</span>(database = Depends(get_database)):
-    <span class="k">with</span> database.get_session() <span class="k">as</span> session:    <span class="c"># context-managed…</span>
-        <span class="k">yield</span> session                         <span class="c"># …yielded to the handler…</span>
-                                          <span class="c"># …then auto-closed/rolled-back after</span>
-
-SessionDep = Annotated[Session, Depends(get_db_session)]   <span class="c"># reusable alias</span>
-
-<span class="c"># routers/papers.py — the handler just asks for the type it wants</span>
-<span class="k">def</span> <span class="f">get_paper_details</span>(db: SessionDep, arxiv_id: str):
-    <span class="k">return</span> PaperRepository(db).get_by_arxiv_id(arxiv_id)</pre>
-    <div class="grid g3" style="margin-top:6px">
-      <div class="card"><h4>Why <code>yield</code>, not <code>return</code>?</h4><p>It makes the dependency a context manager. Code after <code>yield</code> runs <i>after</i> the response is sent — guaranteeing the session is closed even if the handler throws.</p></div>
-      <div class="card"><h4>Why the <code>Annotated</code> alias?</h4><p><code>SessionDep</code> bundles the type + its provider once. Handlers stay readable (<code>db: SessionDep</code>) instead of repeating <code>Depends(...)</code> everywhere.</p></div>
-      <div class="card"><h4>Why route through <code>app.state</code>?</h4><p>The DB is built <b>once</b> at startup (<code>lifespan()</code>) and reused. Per-request you only borrow a <i>session</i> from the shared pool — cheap and connection-safe.</p></div>
-    </div>
-    <div class="note"><b>Payoff:</b> handlers are trivially testable. In <code>tests/</code> you override <code>get_db_session</code> with a stand-in session object — no handler code changes. That single seam is why the whole app is mockable.</div>
-
-    <h3 style="color:var(--acc3)">B · The Repository &amp; the idempotent <code>upsert</code></h3>
-    <p class="muted">All SQL lives behind <code>PaperRepository</code>. The interesting method is <code>upsert</code> — the workhorse a data pipeline needs, because Phase 2 will see the same arXiv paper more than once and must not create duplicates.</p>
-    <pre><span class="c"># repositories/paper.py</span>
-<span class="k">def</span> <span class="f">upsert</span>(self, paper_create: PaperCreate) -> Paper:
-    existing = self.get_by_arxiv_id(paper_create.arxiv_id)   <span class="c"># unique, indexed lookup</span>
-    <span class="k">if</span> existing:
-        <span class="k">for</span> key, value <span class="k">in</span> paper_create.model_dump(exclude_unset=<span class="k">True</span>).items():
-            setattr(existing, key, value)                    <span class="c"># patch only provided fields</span>
-        <span class="k">return</span> self.update(existing)                         <span class="c"># UPDATE</span>
-    <span class="k">return</span> self.create(paper_create)                        <span class="c"># INSERT</span></pre>
-    <div class="grid g2" style="margin-top:6px">
-      <div class="card"><h4>“Insert <i>or</i> update” = idempotent</h4><p>Run the same ingestion twice and the table looks identical. That property is what lets Airflow safely re-run a failed job without corrupting data.</p></div>
-      <div class="card"><h4><code>exclude_unset=True</code> matters</h4><p>Only fields actually supplied overwrite the row — a partial update won’t blank out columns you didn’t mention. The <code>arxiv_id</code> index makes the existence check fast.</p></div>
-    </div>
-    <p class="muted">The repository also enforces a boundary: routers speak in <b>schemas</b> (<code>PaperCreate</code>) and receive <b>schemas</b> back, never raw SQLAlchemy queries. Swap PostgreSQL for something else and only this file changes.</p>
-
-    <h3 style="color:var(--acc2)">C · Where Phase 3 search will plug in</h3>
-    <p class="muted">OpenSearch is part of the Docker stack, but the application does not index or query it yet. The current seams make the next phase additive: keep PostgreSQL as the source of truth, then build a search projection from processed paper content.</p>
-    <table>
-      <thead><tr><th>Seam (today)</th><th>Location</th><th>Week 3 fills it with…</th></tr></thead>
-      <tbody>
-        <tr><td class="mono">processed Paper fields</td><td>models/paper.py</td><td>source content for a search document: metadata, raw text, sections and references.</td></tr>
-        <tr><td class="mono">Airflow ingestion DAG</td><td>airflow/dags/</td><td>add a tested indexing task after persistence, with retries and observable failure states.</td></tr>
-        <tr><td class="mono">services/ollama/</td><td>services/</td><td>add a sibling OpenSearch client with configuration, health handling and a narrow interface.</td></tr>
-        <tr><td class="mono">PaperRepository</td><td>repositories/paper.py</td><td>keep PostgreSQL writes independent from the search projection and retrieval queries.</td></tr>
-        <tr><td class="mono">future search route</td><td>routers/ + schemas/</td><td>define a versioned search contract only after BM25/vector behavior has tests.</td></tr>
-      </tbody>
-    </table>
-    <div class="note"><b>The lesson:</b> “hybrid” means keyword search (<b>BM25</b>, strong for exact terms) blended with <b>semantic vectors</b> (strong for meaning). Phase 3 should introduce that capability behind a small service/repository boundary, then Phase 5 can use the retrieved evidence to implement grounded answers.</div>
-  </div>
-</section>
-
-<!-- ====================== AIRFLOW PIPELINE ====================== -->
-<section id="pipeline">
-  <div class="wrap">
-    <h2><span class="n">12</span> The Ingestion Pipeline (Airflow)</h2>
-    <p class="sub">The current DAG is the Phase 2 ingestion backbone: it is scheduled, retryable and split into tasks that can evolve independently.</p>
-
-    <h3 style="color:var(--acc5)">What ships today: <code>arxiv_paper_ingestion</code></h3>
-    <p class="muted">A <b>DAG</b> (Directed Acyclic Graph) is Airflow’s unit of work — tasks plus the order in which they run. The current workflow is scheduled for weekdays at 06:00 UTC, allows two retries, and keeps ingestion steps visible in Airflow.</p>
-    <pre><span class="c"># airflow/dags/arxiv_paper_ingestion.py</span>
-
-setup_environment &gt;&gt; fetch_daily_papers
-fetch_daily_papers &gt;&gt; [process_failed_pdfs,
-                         create_opensearch_placeholders]
-[process_failed_pdfs, create_opensearch_placeholders]
-    &gt;&gt; generate_daily_report &gt;&gt; cleanup_temp_files
-
-<span class="c"># schedule: 0 6 * * 1-5 · retries: 2 · max_active_runs: 1</span></pre>
-    <div class="grid g3" style="margin-top:6px">
-      <div class="card"><h4>Hostnames, not localhost</h4><p>Inside the Docker network services address each other by <i>service name</i> — <code>postgres</code>, <code>opensearch</code>, <code>ollama</code> — never <code>localhost</code>.</p></div>
-      <div class="card"><h4><code>0 6 * * 1-5</code></h4><p>Automatic weekday schedule in UTC. Set a manual run from the Airflow UI when testing a change.</p></div>
-      <div class="card"><h4><code>retries=2</code></h4><p>Transient failures can retry after 30 minutes. Combined with the idempotent <code>upsert</code>, rerunning ingestion is safe.</p></div>
-    </div>
-
-    <h3 style="color:var(--acc3)">The Phase 2 ETL path</h3>
-    <p class="muted">The pipeline follows a classic <b>ETL</b> (Extract → Transform → Load) flow, with indexing kept as an explicit future boundary:</p>
-    <div class="diagram">
-      <div class="layerrow">
-        <div class="node acc5"><div class="t">Extract</div><div class="d">arXiv API</div></div>
-        <div class="arrow">→</div>
-        <div class="node acc3"><div class="t">Transform</div><div class="d">Docling PDF parse</div></div>
-        <div class="arrow">→</div>
-        <div class="node acc2"><div class="t">Load</div><div class="d">repo.upsert() → Postgres</div></div>
-        <div class="arrow">→</div>
-        <div class="node acc"><div class="t">Index</div><div class="d">placeholder → Phase 3</div></div>
+    <section id="retrieval">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">04</span><div><h2>Why retrieval has two indices</h2><p class="sub">Paper discovery and evidence retrieval are different ranking problems, so each gets a different document shape.</p></div></div>
+        <div class="grid grid-2">
+          <article class="card"><span class="label">Alias → concrete index</span><h3><code>arxiv-papers</code> → <code>arxiv-papers-v1</code></h3><p><strong>One document per paper.</strong> Answers “which papers are about this?” using title ×3, abstract ×2, and authors ×1. Every stored paper is searchable even when its PDF could not be parsed.</p></article>
+          <article class="card"><span class="label">Alias → concrete index</span><h3><code>paper-chunks</code> → <code>paper-chunks-v2</code></h3><p><strong>One document per passage.</strong> Answers “where does a paper say this?” using content ×3, section title ×2, plus a 768-dimensional vector for semantic similarity.</p></article>
+        </div>
+        <h3>Chunking policy</h3>
+        <div class="grid grid-3">
+          <article class="card"><h4>Structure first</h4><p>Docling sections are the natural boundary. Long sections split at paragraph, line, sentence, then word boundaries before a hard cut.</p></article>
+          <article class="card"><h4>Retrieval-sized windows</h4><p>Chunks cap at 2,000 characters with 200 characters of overlap. Sections shorter than 100 characters are discarded as parser noise.</p></article>
+          <article class="card"><h4>Groundable text only</h4><p>Bibliographies are excluded because they match many titles without grounding a claim. Their text remains in PostgreSQL for future citation work.</p></article>
+        </div>
+        <h3>Hybrid ranking, step by step</h3>
+        <div class="flow" role="img" aria-label="A search query goes to BM25 passage ranking and a nomic-embed-text query embedding. Vector nearest-neighbor search uses the embedding. Reciprocal rank fusion combines both rankings, then passages are grouped into papers with at most three passages each.">
+          <div class="flow-row"><div class="flow-node api"><b>User query</b><span>1–500 characters</span></div></div>
+          <div class="flow-arrow">splits into two rankings</div>
+          <div class="flow-row"><div class="flow-node worker"><b>BM25</b><span>content ×3 · section title ×2</span></div><div class="flow-node data"><b>Vector KNN</b><span>nomic-embed-text · cosine</span></div></div>
+          <div class="flow-arrow">rank positions only · RRF k = 60</div>
+          <div class="flow-row"><div class="flow-node api"><b>Reciprocal rank fusion</b><span>minimum 50 candidates · otherwise 5 pages deep</span></div></div>
+          <div class="flow-arrow">group after fusion</div>
+          <div class="flow-row"><div class="flow-node data"><b>Papers, best passage first</b><span>maximum 3 passages per paper</span></div></div>
+        </div>
+        <div class="grid grid-2">
+          <article class="card"><h3>Why RRF?</h3><p>BM25 scores and cosine similarities are not comparable. RRF ignores raw scales and rewards passages both systems rank highly. Hybrid responses label <code>score_kind: "rrf"</code>.</p></article>
+          <article class="card"><h3>What if Ollama is down?</h3><p>The hybrid route falls back to keyword results and returns <code>mode: "keyword"</code>, <code>score_kind: "bm25"</code>, and a readable <code>fallback_reason</code>.</p></article>
+        </div>
+        <div class="callout"><p><strong>Index safety:</strong> document IDs are deterministic, unchanged embeddings are reused by content hash, and a full rewrite atomically moves the read alias only when clean. Stale documents are deleted after success. Daily rebuilds are idempotent, self-healing, and friendly to mapping migrations.</p></div>
       </div>
-      <p class="muted" style="text-align:center;font-size:.82rem;margin:14px 0 0">Airflow handles scheduling, retries, logging and run history. The DAG mounts <code>./src</code> into the Airflow image so task code can reuse the project’s models and services.</p>
+    </section>
+
+    <section id="api">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">05</span><div><h2>Public API surface</h2><p class="sub">Application routes live below <code>/api/v1</code>; interactive OpenAPI documentation is served at <code>/docs</code>.</p></div></div>
+        <div class="table-wrap"><table>
+          <caption>Implemented endpoints on the current branch.</caption>
+          <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Purpose</th><th scope="col">Important behavior</th></tr></thead>
+          <tbody>
+            <tr><td><span class="method get">GET</span></td><td><code>/api/v1/ping</code></td><td>Cheap API liveness probe</td><td>Returns <code>{status: "ok", message: "pong"}</code></td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/api/v1/health</code></td><td>PostgreSQL and Ollama dependency status</td><td>Reports <code>ok</code> or <code>degraded</code> per service</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/api/v1/papers/</code></td><td>Newest stored papers</td><td><code>limit</code> 1–100, non-negative <code>offset</code>, total count</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/api/v1/papers/{arxiv_id}</code></td><td>Full canonical paper record</td><td>Validates modern arXiv IDs; returns 404 when absent</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/api/v1/search/</code></td><td>BM25 paper discovery or browsing</td><td>Empty query allowed; category filter and newest-first sort</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/api/v1/search/chunks</code></td><td>BM25 evidence-passage search</td><td>Query required; <code>size</code> counts papers</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/api/v1/search/hybrid</code></td><td>Keyword + semantic evidence search</td><td>RRF or explicit keyword fallback</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/docs</code></td><td>Generated Swagger UI</td><td>Exact request and response models</td></tr>
+          </tbody>
+        </table></div>
+        <h3>Representative hybrid request</h3>
+        <pre><code>POST /api/v1/search/hybrid
+Content-Type: application/json
+
+{
+  "query": "how do they stop the model making things up",
+  "categories": ["cs.CL", "cs.AI"],
+  "size": 5,
+  "offset": 0
+}</code></pre>
+        <h3>How to read a hybrid response</h3>
+        <ul class="key-list">
+          <li><code>hits</code> contains papers, each with at most three ranked <code>passages</code>; it is not a flat list.</li>
+          <li><code>total</code> is the full BM25 passage match count; fusion reranks a bounded candidate pool.</li>
+          <li><code>mode</code> says whether semantic retrieval participated. Never infer that from the score.</li>
+          <li><code>score_kind</code> distinguishes RRF scores near <code>1/60</code> from raw BM25 values.</li>
+          <li><code>matching_passages</code> is truthful for collapsed BM25 results and omitted for bounded hybrid candidates.</li>
+          <li>Categories outside the eight-category corpus return HTTP 422 rather than a misleading empty result.</li>
+        </ul>
+        <div class="callout warning"><p><strong>Planned, not live:</strong> <code>/ask</code> is intentionally absent. It should eventually consume grouped evidence, preserve arXiv and passage provenance, and return citations.</p></div>
+      </div>
+    </section>
+
+    <section id="data">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">06</span><div><h2>Data ownership and load-bearing invariants</h2><p class="sub">The details future changes must preserve to keep the corpus consistent and recoverable.</p></div></div>
+        <div class="grid grid-2">
+          <article class="card"><span class="label">Canonical table</span><h3><code>papers</code></h3><p>Stores UUID identity; unique <code>arxiv_id</code>; title, authors, abstract, categories, publication date, PDF URL; raw text, sections, references; parser metadata and state; created and updated timestamps.</p></article>
+          <article class="card"><span class="label">Schema ownership</span><h3>Alembic at startup</h3><p><code>PostgreSQLDatabase.startup()</code> migrates under an advisory lock. Databases from the old <code>create_all()</code> path are detected and stamped at the baseline without disturbing rows.</p></article>
+        </div>
+        <h3>Invariants worth knowing before editing</h3>
+        <div class="table-wrap"><table>
+          <caption>These rules prevent subtle data loss or incompatibility.</caption>
+          <thead><tr><th scope="col">Invariant</th><th scope="col">Why it exists</th><th scope="col">Where enforced</th></tr></thead>
+          <tbody>
+            <tr><td>PostgreSQL is canonical; search is a projection</td><td>Indices can be rebuilt or rolled back without rewriting source data</td><td>Repository + reindexers</td></tr>
+            <tr><td>Repository writes do not commit</td><td>The caller controls atomic multi-write transactions and rollback</td><td><code>repositories/paper.py</code></td></tr>
+            <tr><td>AI scope is policy, not configuration</td><td>Deployment settings cannot silently widen the corpus</td><td><code>policies/ai_scope.py</code></td></tr>
+            <tr><td>Version table is <code>alembic_version_scholarlens</code></td><td>Airflow shares the DB but has unrelated migration history</td><td><code>db/migrations.py</code></td></tr>
+            <tr><td>Shared ORM code supports SQLAlchemy 1.4 and 2.x</td><td>Airflow 2.10 and the API install different majors</td><td>Models + integration tests</td></tr>
+            <tr><td>Alias moves only after a clean rewrite</td><td>Readers retain the previous complete index after partial failure</td><td><code>CorpusReindexer</code></td></tr>
+            <tr><td>Embedding width is fixed at 768</td><td>Mapping and model changes can otherwise reject or poison vectors</td><td>Embedder + chunk mapping</td></tr>
+            <tr><td>Chunk IDs are deterministic</td><td>Reindexing overwrites rather than duplicates passages</td><td><code>{arxiv_id}:{section_index}:{chunk_index}</code></td></tr>
+          </tbody>
+        </table></div>
+        <h3>Corpus audit safety</h3>
+        <p class="muted">The scope command reports or purges out-of-scope rows. Purge is dry-run by default. A delete requires both <code>--apply</code> and an exact <code>--expected-count</code>, so a stale audit cannot authorize a changed set.</p>
+        <pre><code># Read only
+docker compose exec airflow python -m src.commands.ai_scope audit
+
+# Rehearse, review, back up, then apply
+docker compose exec airflow python -m src.commands.ai_scope purge --expected-count N
+docker compose exec airflow python -m src.commands.ai_scope purge --expected-count N --apply</code></pre>
+      </div>
+    </section>
+
+    <section id="map">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">07</span><div><h2>Code map</h2><p class="sub">Start at the boundary that matches your question, then follow dependencies inward.</p></div></div>
+        <pre class="tree"><code>AI-ScholarLens/
+├── <span class="dir">src/</span>
+│   ├── main.py                         <span class="note-text"># lifespan, shared services, routers, 503 mapping</span>
+│   ├── config.py                       <span class="note-text"># immutable environment-backed settings</span>
+│   ├── dependencies.py                 <span class="note-text"># typed FastAPI injection</span>
+│   ├── <span class="dir">routers/</span>                        <span class="note-text"># health, papers, three search routes</span>
+│   ├── <span class="dir">schemas/</span>                        <span class="note-text"># API, arXiv and parser contracts</span>
+│   ├── <span class="dir">repositories/</span>                   <span class="note-text"># SQL and transaction-neutral writes</span>
+│   ├── <span class="dir">models/</span>                         <span class="note-text"># SQLAlchemy Paper model</span>
+│   ├── <span class="dir">db/</span>                             <span class="note-text"># factory, locked migrations, Alembic</span>
+│   ├── <span class="dir">policies/</span>                       <span class="note-text"># AI scope and chunking rules</span>
+│   ├── <span class="dir">search/</span>                         <span class="note-text"># mappings, query builder, RRF, client</span>
+│   ├── <span class="dir">services/</span>
+│   │   ├── metadata_fetcher.py         <span class="note-text"># ingestion orchestration</span>
+│   │   ├── paper_indexer.py            <span class="note-text"># one document per paper</span>
+│   │   ├── chunk_indexer.py            <span class="note-text"># passages, vectors, reuse</span>
+│   │   ├── reindex.py                  <span class="note-text"># safe full-rewrite algorithm</span>
+│   │   ├── search.py                   <span class="note-text"># execution, fallback, grouping</span>
+│   │   ├── arxiv/ · pdf_parser/        <span class="note-text"># source and extraction adapters</span>
+│   │   └── embeddings/ · ollama/       <span class="note-text"># vector and health clients</span>
+│   └── <span class="dir">commands/ai_scope.py</span>           <span class="note-text"># safe audit/purge CLI</span>
+├── <span class="dir">airflow/</span>
+│   ├── dags/arxiv_paper_ingestion.py   <span class="note-text"># schedule and task graph</span>
+│   └── dags/arxiv_ingestion/tasks.py   <span class="note-text"># ingestion, indexing, reporting</span>
+├── <span class="dir">tests/</span>
+│   ├── unit/                           <span class="note-text"># policies, services, search, contracts</span>
+│   ├── api/                            <span class="note-text"># validation and route behavior</span>
+│   └── integration/                    <span class="note-text"># PostgreSQL, migration, repository, CLI</span>
+├── compose.yml                         <span class="note-text"># six-service local runtime</span>
+├── README.md                           <span class="note-text"># canonical developer guide</span>
+└── TESTING.md                          <span class="note-text"># complete verification guide</span></code></pre>
+        <div class="grid grid-3">
+          <article class="card"><span class="label">HTTP path</span><h3><code>router → schema → service/repository</code></h3><p>Routes validate and delegate. Search orchestration lives in <code>SearchService</code>; SQL stays in the repository.</p></article>
+          <article class="card"><span class="label">Ingestion path</span><h3><code>DAG → task → service → repository</code></h3><p>The DAG declares scheduling. Tasks own Airflow context; reusable application logic stays under <code>src/</code>.</p></article>
+          <article class="card"><span class="label">Retrieval path</span><h3><code>profile → query → execute → shape</code></h3><p>Profiles isolate paper/chunk differences while sharing filtering, fuzzy matching, totals, highlighting, and pagination.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">08</span><div><h2>Delivery roadmap</h2><p class="sub">Status reflects verified repository behavior, not aspiration.</p></div></div>
+        <div class="roadmap">
+          <div class="phase-row"><div class="phase-name">Phase 1</div><div><strong>Service foundation</strong><p>Docker Compose, FastAPI, PostgreSQL, OpenSearch, Ollama, Airflow and health checks.</p></div><span class="status live">complete</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 2</div><div><strong>arXiv ingestion and PDF processing</strong><p>AI-scoped metadata, cache, Docling, persistence, scheduling and accounting.</p></div><span class="status live">complete</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 3</div><div><strong>OpenSearch indexing and hybrid retrieval</strong><p>Paper/chunk projections, BM25, local vectors, KNN, RRF, fallback and grouping.</p></div><span class="status live">complete</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 4</div><div><strong>Chunking and retrieval evaluation</strong><p>Chunking is complete. Evaluation sets, relevance judgments, metrics and regression thresholds remain.</p></div><span class="status progress">in progress</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 5</div><div><strong>Grounded RAG answers</strong><p>Evidence retrieval, prompts, Ollama generation, traceable citations and faithfulness tests.</p></div><span class="status planned">planned</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 6</div><div><strong>Production hardening</strong><p>Observability, security, recovery, deployment and operational ownership.</p></div><span class="status planned">planned</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="run">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">09</span><div><h2>Run and verify</h2><p class="sub">A short path from a checkout to evidence that the current system works.</p></div></div>
+        <h3>1. Start the stack</h3>
+        <pre><code>docker compose up --build -d
+docker compose ps
+docker compose logs --tail=100 api
+docker compose logs --tail=100 airflow</code></pre>
+        <p class="muted">If 8080 is busy in PowerShell: <code>$env:AIRFLOW_PORT = "8081"</code>. Swagger is at <code>http://localhost:8000/docs</code>. Default Airflow login: <code>admin / admin</code>.</p>
+        <h3>2. Pull the embedding model and run ingestion</h3>
+        <pre><code>docker compose exec ollama ollama pull nomic-embed-text
+docker compose exec airflow airflow dags unpause arxiv_paper_ingestion
+docker compose exec airflow airflow dags trigger arxiv_paper_ingestion
+docker compose exec airflow airflow dags list-import-errors</code></pre>
+        <h3>3. Exercise retrieval</h3>
+        <pre><code>Invoke-RestMethod http://localhost:8000/api/v1/health
+
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ `
+  -ContentType application/json `
+  -Body '{"query":"retrieval augmented generation","size":5}'
+
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid `
+  -ContentType application/json `
+  -Body '{"query":"how is hallucination reduced","size":5}'</code></pre>
+        <h3>4. Run the deterministic suite</h3>
+        <pre><code># PowerShell: keep its venv separate from WSL's .venv
+$env:UV_PROJECT_ENVIRONMENT = ".venv-win"
+uv run pytest -q
+uv run ruff check src tests
+uv run mypy src</code></pre>
+        <div class="callout warning"><p><strong>Destructive command:</strong> <code>docker compose down -v</code> deletes PostgreSQL, OpenSearch, Ollama, Airflow log, PDF-cache, and model-cache volumes. Use plain <code>docker compose down</code> to preserve data.</p></div>
+        <p class="muted">The complete matrix—real PostgreSQL tests, index inspection, fallback behavior, latency checks, PDF parsing, and fresh-database validation—lives in <a href="TESTING.md">TESTING.md</a>.</p>
+      </div>
+    </section>
+
+    <section id="reading">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">10</span><div><h2>Choose a reading path</h2><p class="sub">You do not need to read the repository linearly.</p></div></div>
+        <div class="grid grid-2">
+          <article class="card"><span class="label">New contributor</span><h3>Understand the product path</h3><p>Read <code>README.md</code> → <code>src/main.py</code> → the routers → the Airflow DAG. Then run the API examples above.</p></article>
+          <article class="card"><span class="label">Retrieval engineer</span><h3>Trace relevance decisions</h3><p>Read chunking → indices → query → fusion → search service, alongside their unit tests.</p></article>
+          <article class="card"><span class="label">Pipeline engineer</span><h3>Trace ownership and recovery</h3><p>Read DAG tasks → metadata fetcher → repository → migrations → reindexer. Focus on transactions, accounting, and aliases.</p></article>
+          <article class="card"><span class="label">Reviewer or operator</span><h3>Verify claims quickly</h3><p>Start with <code>TESTING.md</code>, the phase table in <code>README.md</code>, <code>compose.yml</code>, and tests named for the invariant.</p></article>
+        </div>
+        <h3>Small glossary</h3>
+        <details><summary>BM25</summary><div>A lexical ranking algorithm. It is strong when query and document share meaningful terms; field boosts say which matches matter most.</div></details>
+        <details><summary>Embedding and KNN</summary><div>An embedding maps text to a vector. K-nearest-neighbor search retrieves passages close to the query vector, capturing similar meaning despite different wording.</div></details>
+        <details><summary>Reciprocal rank fusion (RRF)</summary><div>Combines ranked lists by position rather than raw score. Here it merges keyword and vector candidates with <code>k = 60</code>.</div></details>
+        <details><summary>Index alias</summary><div>A stable read name such as <code>paper-chunks</code> pointing to a versioned concrete index. Atomic moves enable mapping migrations and rollback.</div></details>
+        <details><summary>Retrieval-augmented generation (RAG)</summary><div>The system retrieves evidence before an LLM drafts an answer. Here retrieval is live; grounded generation is the next major boundary.</div></details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p><strong>AI-ScholarLens codebase field guide.</strong> Reconciled with commit <code>7606aeb</code> on branch <code>feat/opensearch-chunk-indexing</code>, 15 September 2026.</p>
+      <p>For exact setup and operations, use <a href="README.md">README.md</a> and <a href="TESTING.md">TESTING.md</a>. This page is a navigational overview; the code and tests remain the source of truth.</p>
     </div>
-    <div class="note"><b>Why Airflow at all?</b> You <i>could</i> fetch papers with a cron and a script. Airflow adds visibility, retries, backfills and dependency ordering — the operational scaffolding for an unattended pipeline. PostgreSQL remains the source of truth, while OpenSearch indexing can be added as a later task without changing the extraction contract.</div>
-  </div>
-</section>
-
-<!-- ====================== RUN & VERIFY ====================== -->
-<section id="verify">
-  <div class="wrap">
-    <h2><span class="n">13</span> Run &amp; Verify — Hands-On</h2>
-    <p class="sub">Use this loop to bring the stack up, confirm the live API, and then trigger the Phase 2 ingestion workflow. For the complete test matrix, see <code>TESTING.md</code>.</p>
-
-    <h3>Step 1 — Boot everything</h3>
-    <pre><span class="c"># from AI-ScholarLens/</span>
-uv sync                              <span class="c"># resolve + install Python deps</span>
-<span class="c"># Optional: set this before Compose if host port 8080 is busy</span>
-$env:AIRFLOW_PORT = "8081"
-docker compose up --build -d         <span class="c"># build and start the stack</span>
-docker compose ps                    <span class="c"># inspect health/status</span>
-</pre>
-    <p class="muted">The first run may take a few minutes because OpenSearch and Ollama are large. The API image intentionally stays lightweight; Docling/PDF dependencies are installed in the Airflow image.</p>
-
-    <h3>Step 2 — Prove the live endpoints</h3>
-    <pre><span class="c"># Deep health check — exercises REAL Postgres + Ollama</span>
-curl.exe http://localhost:8000/api/v1/health
-<span class="s">→ {"status":"ok","version":"0.1.0","services":{
-     "database":{"status":"healthy"...}, "ollama":{"status":"healthy"...}}}</span>
-
-<span class="c"># Liveness</span>
-curl.exe http://localhost:8000/api/v1/ping    <span class="s">→ {"status":"ok","message":"pong"}</span></pre>
-
-    <h3>Step 3 — Exercise the current paper API</h3>
-    <pre><span class="c"># List stored papers (may be empty before ingestion)</span>
-curl.exe http://localhost:8000/api/v1/papers/
-
-<span class="c"># Fetch one stored paper by arXiv ID</span>
-curl.exe http://localhost:8000/api/v1/papers/2401.00001
-
-<span class="c"># Open interactive documentation</span>
-start http://localhost:8000/docs</pre>
-    <p class="muted">A 404 for an arXiv ID that has not been ingested is expected. The question-answering route is deliberately planned for the grounded RAG phase, not mocked into the current API.</p>
-
-    <div class="grid g2" style="margin-top:8px">
-      <div class="card"><h4>Step 4 — Tour the UIs</h4><p>• Swagger: <a href="http://localhost:8000/docs">:8000/docs</a> — try the live routes<br>• Airflow: <a href="http://localhost:8080">:8080</a> by default <span class="tag">admin/admin</span> — trigger <code>arxiv_paper_ingestion</code><br>• OpenSearch: <a href="http://localhost:5601">:5601</a> — indexing is planned</p></div>
-      <div class="card"><h4>Step 5 — Tests &amp; teardown</h4><p><code>.venv\Scripts\python.exe -m pytest -q</code> — runs the offline suite.<br><code>docker compose logs &lt;service&gt;</code> for diagnostics.<br><code>docker compose down</code> to stop; use <code>down -v</code> only when you intentionally want to delete volumes.</p></div>
-    </div>
-    <div class="note"><b>If something won’t start:</b> give healthchecks time to settle, inspect <code>docker compose logs &lt;service&gt;</code>, and confirm ports 8000 / <code>AIRFLOW_PORT</code> / 5432 / 9200 / 5601 / 11434 are free. Low memory is a common culprit — OpenSearch alone reserves a substantial heap.</div>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <p><b style="color:var(--ink)">AI-ScholarLens</b> — Phase 2 living codebase overview. Tech: FastAPI · PostgreSQL · OpenSearch · Airflow · Ollama · Docker Compose.</p>
-    <p>Updated 2026-08-29. Keep this page, <code>README.md</code> and <code>TESTING.md</code> synchronized as each phase is completed.</p>
-  </div>
-</footer>
-
+  </footer>
 </body>
 </html>
