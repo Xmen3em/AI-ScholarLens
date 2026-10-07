@@ -1,0 +1,848 @@
+{
+  "undo-design-2:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-design-2:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-design-2:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-design-2:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-results-1:bm25:ask:3": {
+    "covered_facts": [
+      "undo-results-f1",
+      "undo-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first excerpt supplies both requested percentages. The two additional excerpts describe design or definitions, without answering the numeric question.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "64c3ebd8eaff92fd54802c59d1e8e9bc7fe77b4e285017d186908c5b470e7ee6"
+  },
+  "undo-results-1:bm25:stream:3": {
+    "covered_facts": [
+      "undo-results-f1",
+      "undo-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first excerpt supplies both requested percentages. The two additional excerpts describe design or definitions, without answering the numeric question.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "64c3ebd8eaff92fd54802c59d1e8e9bc7fe77b4e285017d186908c5b470e7ee6"
+  },
+  "undo-results-1:hybrid:ask:3": {
+    "covered_facts": [
+      "undo-results-f1",
+      "undo-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first excerpt supplies both requested percentages. The two additional excerpts describe design or definitions, without answering the numeric question.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "0169af450895fbad6c87e16990a4aae581047d7675a71b9264eba57b119399e7"
+  },
+  "undo-results-1:hybrid:stream:3": {
+    "covered_facts": [
+      "undo-results-f1",
+      "undo-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first excerpt supplies both requested percentages. The two additional excerpts describe design or definitions, without answering the numeric question.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "0169af450895fbad6c87e16990a4aae581047d7675a71b9264eba57b119399e7"
+  },
+  "undo-results-2:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-results-2:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-results-2:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "undo-results-2:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "ave-1:bm25:ask:3": {
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The numeric accuracy and frozen-VLM qualification are present. Decomposition/combination is mentioned, but the lightweight learned classifier is missing, so the combined method fact is incomplete. The hybrid third quote describes fine-tuned baseline models, not AVE.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "b9f20484b3abe076e802af21f46f5b15e38943fcca40097bc7c50ce1c8fa9615"
+  },
+  "ave-1:bm25:stream:3": {
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The numeric accuracy and frozen-VLM qualification are present. Decomposition/combination is mentioned, but the lightweight learned classifier is missing, so the combined method fact is incomplete. The hybrid third quote describes fine-tuned baseline models, not AVE.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "b9f20484b3abe076e802af21f46f5b15e38943fcca40097bc7c50ce1c8fa9615"
+  },
+  "ave-1:hybrid:ask:3": {
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The numeric accuracy and frozen-VLM qualification are present. Decomposition/combination is mentioned, but the lightweight learned classifier is missing, so the combined method fact is incomplete. The hybrid third quote describes fine-tuned baseline models, not AVE.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "2d15991b68cb599936a61ef82e1e849faae71407c4c94eac3bc7e4d644a902b7"
+  },
+  "ave-1:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "ave-2:bm25:ask:3": {
+    "covered_facts": [
+      "ave-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The classifier combining whole-hypothesis and atomic predictions is explicit. No 0.803 test accuracy is quoted. NLI background or selector limitations do not supply the requested result.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "9502a66f6cda090f09d7b30899a77dbe3e917b39f966cf680923595078244f6c"
+  },
+  "ave-2:bm25:stream:3": {
+    "covered_facts": [
+      "ave-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The classifier combining whole-hypothesis and atomic predictions is explicit. No 0.803 test accuracy is quoted. NLI background or selector limitations do not supply the requested result.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "9502a66f6cda090f09d7b30899a77dbe3e917b39f966cf680923595078244f6c"
+  },
+  "ave-2:hybrid:ask:3": {
+    "covered_facts": [
+      "ave-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The classifier combining whole-hypothesis and atomic predictions is explicit. No 0.803 test accuracy is quoted. NLI background or selector limitations do not supply the requested result.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "12eb6e10fbbc60d8f78407fef8e7dcae6800443336c1e732c37afb6031b7f471"
+  },
+  "ave-2:hybrid:stream:3": {
+    "covered_facts": [
+      "ave-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The classifier combining whole-hypothesis and atomic predictions is explicit. No 0.803 test accuracy is quoted. NLI background or selector limitations do not supply the requested result.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "12eb6e10fbbc60d8f78407fef8e7dcae6800443336c1e732c37afb6031b7f471"
+  },
+  "kandinsky-1:bm25:ask:3": {
+    "covered_facts": [
+      "kandinsky-f1",
+      "kandinsky-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Lite 3B and Pro 29B are stated. Five-second duration and 44 kHz audio are absent. Stream dimensions, unrelated model-rating capabilities, and evaluation-resolution descriptions do not answer those requested facts.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "04e0401d86ba1114f6edc53b7d5e30149885c2cc70d5380c055eb8f31bc41c75"
+  },
+  "kandinsky-1:bm25:stream:3": {
+    "covered_facts": [
+      "kandinsky-f1",
+      "kandinsky-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Lite 3B and Pro 29B are stated. Five-second duration and 44 kHz audio are absent. Stream dimensions, unrelated model-rating capabilities, and evaluation-resolution descriptions do not answer those requested facts.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "04e0401d86ba1114f6edc53b7d5e30149885c2cc70d5380c055eb8f31bc41c75"
+  },
+  "kandinsky-1:hybrid:ask:3": {
+    "covered_facts": [
+      "kandinsky-f1",
+      "kandinsky-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Lite 3B and Pro 29B are stated. Five-second duration and 44 kHz audio are absent. Stream dimensions, unrelated model-rating capabilities, and evaluation-resolution descriptions do not answer those requested facts.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "473d1cd4bafa7ecf5a7ba0a278f7cff8f4dc042d3551f1d75b32dc2981e880ca"
+  },
+  "kandinsky-1:hybrid:stream:3": {
+    "covered_facts": [
+      "kandinsky-f1",
+      "kandinsky-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Lite 3B and Pro 29B are stated. Five-second duration and 44 kHz audio are absent. Stream dimensions, unrelated model-rating capabilities, and evaluation-resolution descriptions do not answer those requested facts.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "473d1cd4bafa7ecf5a7ba0a278f7cff8f4dc042d3551f1d75b32dc2981e880ca"
+  },
+  "kandinsky-2:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "kandinsky-2:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "kandinsky-2:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "kandinsky-2:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "arkios-1:bm25:ask:3": {
+    "covered_facts": [
+      "arkios-f1",
+      "arkios-f2",
+      "arkios-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The Arkios excerpt explicitly supplies 1.04B, 150B, and English-Nepali. Other-paper training/evaluation figures and generic language-model statements are irrelevant to Arkios specifications.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "751aba2b4eb4df651f0c3cb9b8a4b7e7f28030ae9bb86ea6a33676bba6bfa009"
+  },
+  "arkios-1:bm25:stream:3": {
+    "covered_facts": [
+      "arkios-f1",
+      "arkios-f2",
+      "arkios-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The Arkios excerpt explicitly supplies 1.04B, 150B, and English-Nepali. Other-paper training/evaluation figures and generic language-model statements are irrelevant to Arkios specifications.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "751aba2b4eb4df651f0c3cb9b8a4b7e7f28030ae9bb86ea6a33676bba6bfa009"
+  },
+  "arkios-1:hybrid:ask:3": {
+    "covered_facts": [
+      "arkios-f1",
+      "arkios-f2",
+      "arkios-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The Arkios excerpt explicitly supplies 1.04B, 150B, and English-Nepali. Other-paper training/evaluation figures and generic language-model statements are irrelevant to Arkios specifications.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "fdc1596dadf3b9f6218ee022ae71cc11c410f9e78dee908b158ce0d0b1cd61a5"
+  },
+  "arkios-1:hybrid:stream:3": {
+    "covered_facts": [
+      "arkios-f1",
+      "arkios-f2",
+      "arkios-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The Arkios excerpt explicitly supplies 1.04B, 150B, and English-Nepali. Other-paper training/evaluation figures and generic language-model statements are irrelevant to Arkios specifications.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "fdc1596dadf3b9f6218ee022ae71cc11c410f9e78dee908b158ce0d0b1cd61a5"
+  },
+  "arkios-2:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Outputs discuss comparison models, benchmark formats, other tokenizer languages, or diagnostic limitations. They supply neither Arkios parameter count, token budget, nor a statement identifying its training language pair.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "33c3370a130d6d05557e24ab8a8c007f39e83b1ea4dfc887a61e2d8a1a073705"
+  },
+  "arkios-2:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Outputs discuss comparison models, benchmark formats, other tokenizer languages, or diagnostic limitations. They supply neither Arkios parameter count, token budget, nor a statement identifying its training language pair.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "33c3370a130d6d05557e24ab8a8c007f39e83b1ea4dfc887a61e2d8a1a073705"
+  },
+  "arkios-2:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Outputs discuss comparison models, benchmark formats, other tokenizer languages, or diagnostic limitations. They supply neither Arkios parameter count, token budget, nor a statement identifying its training language pair.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "ae17b5e6771331a3d59e3efeb54f158702991a1bef901e543f1cdde9a7c66604"
+  },
+  "arkios-2:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Outputs discuss comparison models, benchmark formats, other tokenizer languages, or diagnostic limitations. They supply neither Arkios parameter count, token budget, nor a statement identifying its training language pair.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "ae17b5e6771331a3d59e3efeb54f158702991a1bef901e543f1cdde9a7c66604"
+  },
+  "tokenizer-1:bm25:ask:3": {
+    "covered_facts": [
+      "tokenizer-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The combining-mark exclusion is explained. BM25 asserts a ceiling but never explains the inability to merge across pre-token boundaries. Hybrid explicitly supplies that mechanism. The tokenizer-repair recipe is related background rather than an explanation of why data/vocabulary cannot fix boundaries.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "75dd7f50614ed3332185e2a2a79be9eb63dc623612c09e6b62b0006c91bbc2af"
+  },
+  "tokenizer-1:bm25:stream:3": {
+    "covered_facts": [
+      "tokenizer-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The combining-mark exclusion is explained. BM25 asserts a ceiling but never explains the inability to merge across pre-token boundaries. Hybrid explicitly supplies that mechanism. The tokenizer-repair recipe is related background rather than an explanation of why data/vocabulary cannot fix boundaries.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "75dd7f50614ed3332185e2a2a79be9eb63dc623612c09e6b62b0006c91bbc2af"
+  },
+  "tokenizer-1:hybrid:ask:3": {
+    "covered_facts": [
+      "tokenizer-f1",
+      "tokenizer-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The combining-mark exclusion is explained. BM25 asserts a ceiling but never explains the inability to merge across pre-token boundaries. Hybrid explicitly supplies that mechanism. The tokenizer-repair recipe is related background rather than an explanation of why data/vocabulary cannot fix boundaries.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "99621b97569da0563821fb34fed16b23158a21c650ccb5fab11b59bc99f4e006"
+  },
+  "tokenizer-1:hybrid:stream:3": {
+    "covered_facts": [
+      "tokenizer-f1",
+      "tokenizer-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The combining-mark exclusion is explained. BM25 asserts a ceiling but never explains the inability to merge across pre-token boundaries. Hybrid explicitly supplies that mechanism. The tokenizer-repair recipe is related background rather than an explanation of why data/vocabulary cannot fix boundaries.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "99621b97569da0563821fb34fed16b23158a21c650ccb5fab11b59bc99f4e006"
+  },
+  "tokenizer-2:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "tokenizer-2:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "tokenizer-2:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "tokenizer-2:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "dream-1:bm25:ask:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The conclusion excerpt describes uncertainty-based scale assignment and rescue of confident answers. Generic MAD background and baseline names are not answers. Hybrid also explicitly names the two requested components in a separate method excerpt. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "056c7b20310175f5cfcbb5af79ce1ebbaa2ae70c8d6b7ad2a172483e2775980d"
+  },
+  "dream-1:bm25:stream:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The conclusion excerpt describes uncertainty-based scale assignment and rescue of confident answers. Generic MAD background and baseline names are not answers. Hybrid also explicitly names the two requested components in a separate method excerpt. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "056c7b20310175f5cfcbb5af79ce1ebbaa2ae70c8d6b7ad2a172483e2775980d"
+  },
+  "dream-1:hybrid:ask:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The conclusion excerpt describes uncertainty-based scale assignment and rescue of confident answers. Generic MAD background and baseline names are not answers. Hybrid also explicitly names the two requested components in a separate method excerpt. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "a48505c705c588f4c754a6eb609ef064791c3c8a937b34c564ec4c4616355ed4"
+  },
+  "dream-1:hybrid:stream:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The conclusion excerpt describes uncertainty-based scale assignment and rescue of confident answers. Generic MAD background and baseline names are not answers. Hybrid also explicitly names the two requested components in a separate method excerpt. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "a48505c705c588f4c754a6eb609ef064791c3c8a937b34c564ec4c4616355ed4"
+  },
+  "dream-2:bm25:ask:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The conclusion supplies both mechanisms. The certainty-erosion and rescue-trigger excerpts explain why and when earlier answers are restored. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "30fbc78cdb589136f0916c664dcbe995d44ac360d38cbcf6454f420e966228fc"
+  },
+  "dream-2:bm25:stream:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The conclusion supplies both mechanisms. The certainty-erosion and rescue-trigger excerpts explain why and when earlier answers are restored. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "30fbc78cdb589136f0916c664dcbe995d44ac360d38cbcf6454f420e966228fc"
+  },
+  "dream-2:hybrid:ask:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The conclusion supplies both mechanisms. The certainty-erosion and rescue-trigger excerpts explain why and when earlier answers are restored. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "87ae8861f5e20f3ab745934c80b0732b83f13d56aaa0f6eb4f306fddb9bf2395"
+  },
+  "dream-2:hybrid:stream:3": {
+    "covered_facts": [
+      "dream-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The conclusion supplies both mechanisms. The certainty-erosion and rescue-trigger excerpts explain why and when earlier answers are restored. Under the strict full-fact rubric, the answer does not explicitly describe probing multiple resolutions, so the compound DRA fact receives no full credit despite a relevant description of its scale-assignment function.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "87ae8861f5e20f3ab745934c80b0732b83f13d56aaa0f6eb4f306fddb9bf2395"
+  },
+  "vera-1:bm25:ask:3": {
+    "covered_facts": [
+      "vera-f1",
+      "vera-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The rule invalidates exactly agents losing every root path, and the surviving-path criterion establishes preservation. BM25 implementation advice about signed graph evidence is outside the requested semantics; the hybrid third excerpt directly describes alternate-path preservation.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "a0eedc8ef1db809a8ffe5501b17852729581b4d9a2021536055a03f85aaa30ab"
+  },
+  "vera-1:bm25:stream:3": {
+    "covered_facts": [
+      "vera-f1",
+      "vera-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "The rule invalidates exactly agents losing every root path, and the surviving-path criterion establishes preservation. BM25 implementation advice about signed graph evidence is outside the requested semantics; the hybrid third excerpt directly describes alternate-path preservation.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "a0eedc8ef1db809a8ffe5501b17852729581b4d9a2021536055a03f85aaa30ab"
+  },
+  "vera-1:hybrid:ask:3": {
+    "covered_facts": [
+      "vera-f1",
+      "vera-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The rule invalidates exactly agents losing every root path, and the surviving-path criterion establishes preservation. BM25 implementation advice about signed graph evidence is outside the requested semantics; the hybrid third excerpt directly describes alternate-path preservation.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "af6f54f8db9e93c4b1f2dfe6e962befc2fbed1c11446f0a7a3b60ae84095b005"
+  },
+  "vera-1:hybrid:stream:3": {
+    "covered_facts": [
+      "vera-f1",
+      "vera-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The rule invalidates exactly agents losing every root path, and the surviving-path criterion establishes preservation. BM25 implementation advice about signed graph evidence is outside the requested semantics; the hybrid third excerpt directly describes alternate-path preservation.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "af6f54f8db9e93c4b1f2dfe6e962befc2fbed1c11446f0a7a3b60ae84095b005"
+  },
+  "vera-2:bm25:ask:3": {
+    "covered_facts": [
+      "vera-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "Independent authorization and the concrete two-parent example establish continued authorization. The answer never states the exact criterion that invalidated agents lose every authorizing root path.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "fa8ed3248e657ca1b957a00ea76fe56261cd115486dbe277c285c15ce8db2e52"
+  },
+  "vera-2:bm25:stream:3": {
+    "covered_facts": [
+      "vera-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "Independent authorization and the concrete two-parent example establish continued authorization. The answer never states the exact criterion that invalidated agents lose every authorizing root path.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "fa8ed3248e657ca1b957a00ea76fe56261cd115486dbe277c285c15ce8db2e52"
+  },
+  "vera-2:hybrid:ask:3": {
+    "covered_facts": [
+      "vera-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "Independent authorization and the concrete two-parent example establish continued authorization. The answer never states the exact criterion that invalidated agents lose every authorizing root path.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "fa8ed3248e657ca1b957a00ea76fe56261cd115486dbe277c285c15ce8db2e52"
+  },
+  "vera-2:hybrid:stream:3": {
+    "covered_facts": [
+      "vera-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "Independent authorization and the concrete two-parent example establish continued authorization. The answer never states the exact criterion that invalidated agents lose every authorizing root path.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "fa8ed3248e657ca1b957a00ea76fe56261cd115486dbe277c285c15ce8db2e52"
+  },
+  "multi-vision:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "BM25 partially describes AVE decomposition/combination but omits the learned classifier. Hybrid includes the learned classifier. Neither answer supplies DREAM mechanisms or cites a DREAM excerpt. Generic prompt instructions do not explain how unreliable multimodal predictions are addressed.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "c1495adc98609445a3320d7f244341092d390acccd5d5b1b45fa8a837fbdcffe"
+  },
+  "multi-vision:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "BM25 partially describes AVE decomposition/combination but omits the learned classifier. Hybrid includes the learned classifier. Neither answer supplies DREAM mechanisms or cites a DREAM excerpt. Generic prompt instructions do not explain how unreliable multimodal predictions are addressed.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "c1495adc98609445a3320d7f244341092d390acccd5d5b1b45fa8a837fbdcffe"
+  },
+  "multi-vision:hybrid:ask:3": {
+    "covered_facts": [
+      "multi-vision-ave"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "BM25 partially describes AVE decomposition/combination but omits the learned classifier. Hybrid includes the learned classifier. Neither answer supplies DREAM mechanisms or cites a DREAM excerpt. Generic prompt instructions do not explain how unreliable multimodal predictions are addressed.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "0403f8e9dda364871f97e7830e9eef5787c462f19f2d082113aa321d833d6730"
+  },
+  "multi-vision:hybrid:stream:3": {
+    "covered_facts": [
+      "multi-vision-ave"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "BM25 partially describes AVE decomposition/combination but omits the learned classifier. Hybrid includes the learned classifier. Neither answer supplies DREAM mechanisms or cites a DREAM excerpt. Generic prompt instructions do not explain how unreliable multimodal predictions are addressed.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "0403f8e9dda364871f97e7830e9eef5787c462f19f2d082113aa321d833d6730"
+  },
+  "multi-tokenizer:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "multi-tokenizer:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "multi-tokenizer:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "multi-tokenizer:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention: the pre-reviewed stored corpus supports the requested answer; see pipeline audit for lexical/context/retrieval diagnosis.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-kandinsky:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-kandinsky:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-kandinsky:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-kandinsky:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-undo:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-undo:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-undo:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-undo:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-arkios:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-arkios:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-arkios:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-arkios:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-ave:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-ave:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-ave:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unsupported-ave:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-weather:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-weather:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-weather:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-weather:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-sports:bm25:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-sports:bm25:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-sports:hybrid:ask:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "unrelated-sports:hybrid:stream:3": {
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention for a question unsupported by the preserved corpus.",
+    "reviewer": "Codex semantic source review",
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d"
+  },
+  "_meta": {
+    "reviewed_on": "2026-10-08 Africa/Cairo",
+    "reviewer": "Codex, not independent human annotations",
+    "rubric": "Full required fact credit only when all its clauses are supported in the answer. Relevant excerpts directly contribute to answering the request; merely topical background earns no credit. Partial requested detail may be relevant without covering a complete combined fact. Duplicate useful quotes can earn relevance but do not add fact coverage.",
+    "records_sha256": "a883a24beb743e0a3a2b72d0b5e319092435bcf9029d8af06e4af8242b47119b"
+  }
+}

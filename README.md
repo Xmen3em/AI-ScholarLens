@@ -11,7 +11,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 | Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
 | Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
-| Phase 4 | Chunking and retrieval evaluation | In progress — chunking complete, evaluation next |
+| Phase 4 | Chunking and retrieval evaluation | Initial evaluation complete — 24-case preserved-corpus benchmark; quality limitations documented in [report](evaluation/REPORT.md) |
 | Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
 
@@ -268,7 +268,7 @@ share a name with an existing index, so it has to exist from the first write.
    has not changed.
 9. `/api/v1/search/` ranks papers with BM25; `/search/chunks` ranks passages; `/search/hybrid`
    fuses keyword and vector rankings.
-10. Retrieval evaluation and RAG answering are reserved for later phases.
+10. Retrieval evaluation and grounded RAG answering are implemented; see the [evaluation report](evaluation/REPORT.md) for measured coverage, abstention, and reliability limitations.
 
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 

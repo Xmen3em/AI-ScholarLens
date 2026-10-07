@@ -1,0 +1,154 @@
+{
+  "stage": "post-collection supplemental source review; primary frozen metrics unchanged",
+  "findings": [
+    {
+      "case_id": "undo-design-2",
+      "mode": "bm25",
+      "locators": [
+        [
+          "2610.05622v1",
+          3,
+          2
+        ]
+      ],
+      "judgment": "Complete support for 36 workflows, 36 fault scenarios, 8 domains was returned in the introduction despite a frozen-qrel miss. Actual abstention is due to lexical coverage 0.50, not absence of these facts.",
+      "evidence": [
+        {
+          "arxiv_id": "2610.05622v1",
+          "section_index": 3,
+          "chunk_index": 2,
+          "section_title": "1 Introduction",
+          "content_hash": "8fff391347184d47",
+          "source_excerpt": "del can coordinate tools to accomplish a goal under nominal conditions; and (2) Recovery Capability: whether the agent can diagnose, reconcile, and safely repair execution state when a fault strikes.\nResearch Question. How does recovery behavior change as a fault moves across the external-mutation lifecycle? In distributed architectures, execution proceeds through distinct phases: before remote state modification begins (PRE_MUTATION), mid-execution during active nonatomic state updates (DURING_MUTATION), and after remote commit while awaiting confirmation (POST_MUTATION_PRE_ACK). While UndoBench's taxonomy formalizes additional execution boundaries, our secondary evaluations prospectively cover these three foundational phases to determine whether agent recovery constitutes a single scalar capability or a phase-dependent systems property.\nTo address these foundational challenges, we introduce UndoBench, a benchmark designed to formally separate multi-turn task competence from recovery capability across the external-mutation lifecycle. This paper provides four core contributions:\nMulti-Boundary Benchmark Formulation: A suite of 36 base workflows and 36 fault scenarios across 8 enterprise domains, evaluating agent recovery across distinct execution boundaries relative to external state mutation.\nFigure 1: UndoBench Decoupled Evaluation Architecture. Every workflow is evaluated as a paired counterfactual execution under identical seeds, separating nominal planning competence (Ci) from fault recovery capability (Fi).\nDecoupled Paired Evaluation & CRSR: A counterfactual evaluation paradigm pairing every faulted run with an identical-seed control execution, defining Conditional Recovery Success Rate (CRSR) to evaluate recovery conditional on paired nominal task success.\n"
+        }
+      ]
+    },
+    {
+      "case_id": "kandinsky-1",
+      "mode": "bm25",
+      "locators": [
+        [
+          "2610.05608v1",
+          3,
+          1
+        ]
+      ],
+      "judgment": "Complete support for Lite/Pro sizes, clip duration and audio sample rate was retrieved and supplied in the introduction. The one-sentence candidate choice retains parameter counts and loses duration/sample rate.",
+      "evidence": [
+        {
+          "arxiv_id": "2610.05608v1",
+          "section_index": 3,
+          "chunk_index": 1,
+          "section_title": "1 Introduction",
+          "content_hash": "4e003aeaeff65c57",
+          "source_excerpt": "visual synthesis, including natural lip synchronization, dynamic background sounds, and multilingual speech. However, their source code is unavailable, hindering reproducibility and further research.\nRecent works target joint audio-video generation within a single architecture, including ALIVE [14], SyncFlow [15], JavisDiT [16], 3MDiT [17], LTX-2 and its successor LTX-2.5 [18], MiniMaxH3 [19], and NVIDIA Cosmos 3 [20]. These models align the modalities temporally and semantically through mechanisms ranging from bidirectional cross-attention and hierarchical synchronization to flow-based architectures and omnimodal transformers. Considerable effort has also gone into scaling model size (to about 30B parameters and beyond), supporting additional input modes (image conditioning, multiple references), and developing standardized benchmarks for synchronization and quality, such as VABench [21], T2AV-Compass [22], and AVGen-Bench [23]. Despite this progress, open-source solutions still lag behind closed ones in clip duration, resolution, and synchronization accuracy, keeping this area highly active and open to new approaches.\nContinuing this research, we present Kandinsky 6.0 Video, a family of foundation diffusion models for synchronized text-to-audio-video generation. Our contributions are as follows:\nWe introduce two models of different scale: Kandinsky 6.0 Video Lite (3B parameters) and Kandinsky 6.0 Video Pro (29B parameters). Both generate 5-second video clips with synchronized 44 kHz audio, including lip-sync, and operate in text-to-audio-video (T2AV) and image-to-audio-video (I2AV) modes. Clips are generated in SD resolution and can be upscaled to Full-HD using a built-in super-resolution model.\n"
+        }
+      ]
+    },
+    {
+      "case_id": "kandinsky-1",
+      "mode": "hybrid",
+      "locators": [
+        [
+          "2610.05608v1",
+          23,
+          0
+        ],
+        [
+          "2610.05608v1",
+          77,
+          0
+        ]
+      ],
+      "judgment": "Unjudged passages support parameter counts; overview also supplies 44 kHz. Reviewed abstract is absent. Full clip-duration support is not established in this returned group; candidate selection also loses the available sampling-rate fact.",
+      "evidence": [
+        {
+          "arxiv_id": "2610.05608v1",
+          "section_index": 23,
+          "chunk_index": 0,
+          "section_title": "3.1 Overview",
+          "content_hash": "675049f167cb31ea",
+          "source_excerpt": "Kandinsky 6.0 Video is released in two versions: Kandinsky 6.0 Video Lite (3B parameters) and Kandinsky 6.0 Video Pro (29B parameters). Both versions share the same architecture and are trained with flow matching [3], so we describe it in general terms below and point out version-specific differences where they apply.\nThe core of the model is a CrossDiT network that inherits the architecture of Kandinsky 5.0 [11] and extends it to two modalities, video and audio. This core component is described in detail in Section 3.2.\nBoth versions use the Hunyuan VAE [9] for video encoding and decoding and the MMAudio autoencoder [48], which supports a sampling rate of 44 kHz, for audio. Text is encoded with Qwen2.5-VL-7B-Instruct [44] and CLIP ViT-L/14 [27].\n9\nFigure 1: Simplified scheme of a single Kandinsky 6.0 Video transformer block. The video (top) and audio (bottom) streams each apply self-attention, cross-attention to the text embeddings (T2V and T2A), cross-modal attention, and a feed-forward layer. In the V2A block, video queries attend toaudio keys and values; in theA2Vblock, audio queries attend to video keys and values.\nThe super-resolution model, which is applied to the output of the trained model to obtain Full-HD resolution, is described in Section 3.3."
+        },
+        {
+          "arxiv_id": "2610.05608v1",
+          "section_index": 77,
+          "chunk_index": 0,
+          "section_title": "10 Conclusion",
+          "content_hash": "ce096f17be13741e",
+          "source_excerpt": "We presented Kandinsky 6.0 Video, a family of foundation models for synchronized text-toaudio-video and image-to-audio-video generation, comprising Kandinsky 6.0 Video Lite (3B parameters) and Kandinsky 6.0 Video Pro (29B parameters). Both models use a dual-stream CrossDiT architecture in which a video stream inherited from Kandinsky 5.0 and an audio stream trained from scratch are connected by blockwise bidirectional cross-attention. The models are trained with continuous pre-training, first separately for each modality and then jointly, followed by domain-specific supervised fine-tuning merged into a model soup, reinforcement learning adapted from OmniNFT, and two-stage distillation (π-Flow followed by adversarial refinement) to 10 function evaluations. A separate latent-space super-resolution model, consisting of a Latent Upscaler and a text-free SR-DiT distilled to two network evaluations, raises the output resolution to Full HD. Block offloading and memory presets make both models usable on consumer GPUs with 16-32 GB of memory.\nIn side-by-side human evaluation, Kandinsky 6.0 Video Pro clearly outperforms its predecessor, Kandinsky 5.0 Video Pro, and is preferred over LTX 2.5 in visual quality and speech quality. Compared with proprietary systems, the results are mixed: the model is competitive with Kling 2.6 and Veo 3.1 Fast, with strengths that differ by criterion, while MiniMax H3 and Seedance 2.0 remain stronger on visual criteria; Kandinsky 6.0 Video Pro stays competitive on speech quality and audio-video synchronization. On VABench, Kandinsky 6.0 Video Pro achieves the best scores among the evaluated models (Kandinsky 6.0 Video Lite and LTX 2.5) in speech quality, audio aesthetics, text-video and audio-video alignment, lip-sync, desynchronization, and visual realism. Reinforcement learning reduces the word error rate of generated speech by 47% for the Pro model.\n"
+        }
+      ]
+    },
+    {
+      "case_id": "kandinsky-2",
+      "mode": "bm25",
+      "locators": [
+        [
+          "2610.05608v1",
+          23,
+          0
+        ]
+      ],
+      "judgment": "Some unjudged support is present for sizes and 44 kHz, but full duration evidence is absent. Lexical coverage 0.538 also blocks even a partial answer.",
+      "evidence": [
+        {
+          "arxiv_id": "2610.05608v1",
+          "section_index": 23,
+          "chunk_index": 0,
+          "section_title": "3.1 Overview",
+          "content_hash": "675049f167cb31ea",
+          "source_excerpt": "Kandinsky 6.0 Video is released in two versions: Kandinsky 6.0 Video Lite (3B parameters) and Kandinsky 6.0 Video Pro (29B parameters). Both versions share the same architecture and are trained with flow matching [3], so we describe it in general terms below and point out version-specific differences where they apply.\nThe core of the model is a CrossDiT network that inherits the architecture of Kandinsky 5.0 [11] and extends it to two modalities, video and audio. This core component is described in detail in Section 3.2.\nBoth versions use the Hunyuan VAE [9] for video encoding and decoding and the MMAudio autoencoder [48], which supports a sampling rate of 44 kHz, for audio. Text is encoded with Qwen2.5-VL-7B-Instruct [44] and CLIP ViT-L/14 [27].\n9\nFigure 1: Simplified scheme of a single Kandinsky 6.0 Video transformer block. The video (top) and audio (bottom) streams each apply self-attention, cross-attention to the text embeddings (T2V and T2A), cross-modal attention, and a feed-forward layer. In the V2A block, video queries attend toaudio keys and values; in theA2Vblock, audio queries attend to video keys and values.\nThe super-resolution model, which is applied to the output of the trained model to obtain Full-HD resolution, is described in Section 3.3."
+        }
+      ]
+    },
+    {
+      "case_id": "multi-tokenizer",
+      "mode": "hybrid",
+      "locators": [
+        [
+          "2608.26449v1",
+          2,
+          0
+        ],
+        [
+          "2608.26449v1",
+          5,
+          0
+        ],
+        [
+          "2608.26449v1",
+          16,
+          0
+        ]
+      ],
+      "judgment": "The requested tokenizer mechanism is supported in unjudged alternative passages. Both requested papers were supplied, but each reaches only 7/12 query terms (0.583), so the gate rejects both.",
+      "evidence": [
+        {
+          "arxiv_id": "2608.26449v1",
+          "section_index": 2,
+          "chunk_index": 0,
+          "section_title": "Abstract",
+          "content_hash": "0d43024c95922aea",
+          "source_excerpt": "Byte-level BPE tokenizers that use the HuggingFace ByteLevel pre-tokenizer inherit GPT-2's word regex, where a word is defined as \\p{L}+ , one or more Unicode letters . In abugida scripts, vowels are written as combining marks ; this pattern therefore splits each word at every vowel sign. Since BPE merges only within a pre-token, those splits persist through training regardless of vocabulary size or corpus composition. We formalise this effect as a training-free lower bound on fertility. Across 26 languages from a parallel corpus, every one of the 17 abugidas is affected, ranging from 1 . 47 × (Tibetan) to 9 . 02 × (Thai), whereas Latin, Cyrillic, Hangul, and Han show exactly 1 . 00 × . For 5 languages, matched tokenizer pairs that differ only in this character class fall within 2.2% of the predicted floor, scoring 4.78 versus 1.58 tokens per word on Nepali. When the Nepali share of the training corpus is swept from 5% to 95%, the broken tokenizer barely shifts at all (1.7%) while the fixed one shifts 33.9%, which separates a structural ceiling from a data shortage without needing to inspect any code. We train three 268M models that differ only in their tokenizer; the fixed variant achieves 4.43% lower held-out Nepali bits per byte at equal compute, and it still leads when given the same bytes with 1 . 59 × the compute. A census of 3,479 HuggingFace repositories finds the letters-only word class present in 63.3% of the most-downloaded text-generation models, accounting for 72.5% of their downloads. GPT-4o's o200k pattern already uses a mark-aware word class, making the repair itself prior art. We quantify its value, show how to recognise its absence from symptoms alone, map which scripts it reaches, measure how widely it is deployed, and release a 65,536entry Nepali-English tokenizer with a harness that regenerates every number here from public data on a laptop.\n* Corresponding author and primary contributor. sajalregmi@karelatechnologies.com"
+        },
+        {
+          "arxiv_id": "2608.26449v1",
+          "section_index": 5,
+          "chunk_index": 0,
+          "section_title": "2 Background",
+          "content_hash": "f0c52371842321d6",
+          "source_excerpt": "Pre-tokenization. BPE tokenizers do not apply BPE directly to raw text: a regex first segments the input into chunks, and merges are learned and applied independently within each chunk. GPT-2 introduced the pattern that most byte-level pipelines still employ, whose word alternative matches \\p{L}+ with an optional leading space. Pre-tokenization exists to prevent merges from spanning word boundaries, ensuring that no single token spells 'the cat' ; it enforces this by rendering the boundaries impassable. Byte-level BPE (Sennrich et al., 2016; Radford et al., 2019) maps text to UTF-8 bytes, ensuring no input is out-of-vocabulary, and repeatedly merges the most frequent adjacent pair. Byte-level coverage ensures that every script can be represented , but ensures nothing about how efficiently.\nAbugidas. An alphabet represents vowels as letters. An abugida assigns each consonant an inherent vowel and represents any other vowel as a mark attached to that consonant. Unicode assigns those marks to categories Mn (non-spacing) and Mc (spacing combining), separate from L (The Unicode Consortium, 2024). This separation is correct, since a vowel sign is not an independent letter, and it is precisely what \\p{L}+ fails to account for.\nFertility. We report tokens per whitespacedelimited word alongside bytes per token. Whitespace does not delimit words in Thai, Khmer, Lao, Myanmar, Tibetan, Chinese, or Japanese; for those scripts we report tokens per 100 characters and leave fertility undefined, rather than reporting a number that invites a comparison it cannot support."
+        },
+        {
+          "arxiv_id": "2608.26449v1",
+          "section_index": 16,
+          "chunk_index": 0,
+          "section_title": "12 Conclusion",
+          "content_hash": "6bb330902c22ff43",
+          "source_excerpt": "A character class chosen for English places a floor under Nepali tokenization that Nepali data cannot lift. The floor follows from the pre-tokenizer rather than from measurement: BPE cannot merge across pre-token boundaries, so a regex that splits words at every vowel sign bounds fertility before training begins. On parallel text the effect reaches every abugida we tested and lies dormant in vocalised Arabic and pointed Hebrew.\nThe floor is also tight. Across 5 matched pairs spanning 2 . 2 × in predicted effect, every control arm settles within 2.2% of what a regex match predicts before any training, which makes the bound a design-time check rather than a post-hoc explanation. Yet the word class it checks for remains the ecosystem's default, present in 63.3% of the most-downloaded text-generation repositories on the HuggingFace Hub. Repairing it takes one character class, and the repair was already known. The diagnostic generalises further than the defect does: a metric that will not respond to the input that supposedly drives it is constrained somewhere else, and in a tokenizer pipeline the candidates upstream of the corpus number three: the normaliser, the pre-tokenizer, and the vocabulary budget."
+        }
+      ]
+    }
+  ]
+}

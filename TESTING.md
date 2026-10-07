@@ -530,3 +530,40 @@ docker compose up --build -d
 ```
 
 The `-v` option deletes the PostgreSQL, OpenSearch, Ollama, and Airflow log volumes, along with the cached arXiv PDFs and Docling's downloaded model weights. It is destructive and should not be used as a routine test command: the next ingestion run has to re-download roughly 500 MB of models before it can parse anything.
+## Preserved-corpus retrieval and answer evaluation
+
+The 24-case evaluation-only benchmark and fixed metrics are in
+`evaluation/benchmark.json` and `evaluation/PROTOCOL.md`. The initial comparison
+and limitations are in `evaluation/REPORT.md`. Expected facts and locators were
+reviewed from stored source passages before collection; semantic reviews are
+separate from exact-quotation attribution checks. Read `evaluation/ERRATA.md`
+for the frozen dataset's review-note correction and non-exhaustive judgments.
+
+With the existing local stack running, collect into a **new output directory**:
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.evaluate_retrieval --output test_output/retrieval_eval/new-run
+```
+
+The command reads corpus/index state, validates every reviewed passage, makes
+192 sequential evaluation calls, and saves responses, SSE, latency, candidates,
+and before/after fingerprints. It does not ingest, reparse, reindex, change models,
+or rebuild services. Rerunning with the same output resumes missing calls and
+retains failures; use a new directory for a new measurement. k counts paper
+groups. Hybrid is requested separately at k=3 and k=5.
+
+Review each successful answer against the predeclared facts and save
+`semantic_reviews.json` in the output directory using the structure in
+`evaluation/semantic_reviews.v1.json`. Include each answer's SHA-256 and the raw
+`records.jsonl` SHA-256 in `_meta.records_sha256`; scores reject stale reviews.
+Do not copy the initial semantic judgments to changed model responses. Then:
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.evaluate_retrieval --output test_output/retrieval_eval/new-run --score
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_retrieval_evaluation.py -q
+```
+
+The initial raw run is saved at `test_output/retrieval_eval/run-v1/` (ignored local
+artifacts); the reviewed labels, semantic judgments, comparison report and runner
+are ordinary project files. Keep this benchmark separate from any future tuning
+examples. Evaluation completion does not imply broad answer-quality acceptance.
