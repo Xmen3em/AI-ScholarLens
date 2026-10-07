@@ -8,6 +8,9 @@ from src.schemas.api.rag import Citation
 from src.schemas.api.search import PaperPassages
 
 CITATION_PATTERN = re.compile(r"\[(\d+)\.(\d+)\]")
+MAX_ANSWER_WORDS = 200
+INSUFFICIENT_EVIDENCE_ANSWER = "The retrieved evidence is insufficient to answer this question."
+EXCERPT_LINE_PATTERN = re.compile(r'(?:[-*•]\s+)?["“](.+)["”]\s+(\[\d+\.\d+\])\.?')
 
 
 @dataclass(frozen=True)
@@ -71,6 +74,34 @@ def validate_answer_citations(answer: str, allowed_markers: Iterable[str]) -> No
     unknown = sorted(found - set(allowed_markers))
     if unknown:
         raise ValueError(f"answer contains unknown citation markers: {', '.join(unknown)}")
+
+
+def validate_answer_length(answer: str) -> None:
+    """Count all whitespace-separated words, including standalone citation markers."""
+    if len(answer.split()) > MAX_ANSWER_WORDS:
+        raise ValueError(f"answer exceeds the {MAX_ANSWER_WORDS}-word limit")
+
+
+def validate_answer_evidence(answer: str, citations: Sequence[Citation]) -> None:
+    """Accept only source-exact excerpts, or the fixed evidence abstention.
+
+    Whitespace may differ from PDF extraction. Relevance and whether a quotation
+    fairly represents the surrounding discussion still require acceptance review.
+    """
+    validate_answer_length(answer)
+    if answer.strip() == INSUFFICIENT_EVIDENCE_ANSWER:
+        return
+    validate_answer_citations(answer, {citation.marker for citation in citations})
+    evidence = {citation.marker: " ".join(citation.evidence.split()) for citation in citations}
+    for line in answer.splitlines():
+        if not line.strip():
+            continue
+        match = EXCERPT_LINE_PATTERN.fullmatch(line.strip())
+        if not match:
+            raise ValueError("answer must contain only cited evidence excerpts")
+        quote, marker = match.groups()
+        if " ".join(quote.split()) not in evidence[marker]:
+            raise ValueError("answer excerpt does not match its cited passage")
 
 
 def _citation(papers: Sequence[PaperPassages], paper_index: int, passage_index: int) -> Citation:

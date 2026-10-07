@@ -115,9 +115,12 @@ class OllamaClient:
         prompt: str,
         *,
         system: str | None = None,
+        response_format: Mapping[str, Any] | str | None = None,
         options: Mapping[str, Any] | None = None,
     ) -> AsyncIterator[OllamaGenerateResponse]:
-        payload = self._generation_payload(model, prompt, stream=True, system=system, options=options)
+        payload = self._generation_payload(
+            model, prompt, stream=True, system=system, response_format=response_format, options=options
+        )
         terminal_seen = False
         try:
             async with self._client.stream(

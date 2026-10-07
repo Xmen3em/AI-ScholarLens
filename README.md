@@ -12,7 +12,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
 | Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
 | Phase 4 | Chunking and retrieval evaluation | In progress — chunking complete, evaluation next |
-| Phase 5 | Grounded RAG answers with Ollama | In progress — API and Gradio implemented; live acceptance pending |
+| Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
 
 Update this table and the diagrams when a phase is accepted. Keep unfinished work in the “Planned” or “In progress” rows instead of presenting it as an active runtime dependency.
@@ -385,6 +385,11 @@ the corpus can never contain one. `/search/` accepts an empty query and browses;
 something. `/ask` and `/stream` accept `top_k` from 1-10, an allowlisted configured
 generation model, the same category filter, and either hybrid or grouped BM25 retrieval.
 Every generated marker resolves to an exact returned `section_index` and `chunk_index`.
+Answers quote up to three server-owned evidence sentences selected by the model, with
+source-exact attribution and a server-enforced 200-word limit including citation markers.
+A conservative lexical relevance guard can abstain on unrelated or paraphrased questions.
+Streams emit complete excerpts after the internal selection is validated. See
+[TESTING.md](TESTING.md) for the acceptance evidence and limitations of this extractive mode.
 
 ## Testing
 

@@ -267,7 +267,8 @@ curl.exe "http://localhost:9200/_alias/paper-chunks"
 ```
 
 `arxiv-papers` must hold one document per row in `papers`, including the rows whose PDF never
-parsed. Each alias must resolve to its `-v1` index.
+parsed. Its alias resolves to `arxiv-papers-v1`; `paper-chunks` resolves to the vector-enabled
+`paper-chunks-v2`. Preserve `paper-chunks-v1` when checking or switching the chunk alias.
 
 Triggering the DAG a second time is the real check: both counts must stay the same and
 `stale_documents_deleted` must be 0 — document ids are derived from the paper, so a rerun
@@ -315,6 +316,70 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -Conte
 Results are **papers, each with up to three passages**; `size` counts papers. Every passage
 must carry `section_index` and `chunk_index`.
 
+### Repairing chunkless PDFs under memory pressure
+
+If a whole-PDF retry exits with 137, it was killed; that exit code alone does not prove
+an OOM kill. Inspect the counters in the actual repair container while it still exists.
+Counters from the main Airflow container do not describe a separate `compose run` container.
+
+The explicit repair command below splits the cached PDF into one-page PDFs and starts a
+fresh Docling worker for each batch. Successful batches are checkpointed under the
+persistent PDF cache's `.repair` directory. Re-running the same command resumes those
+checkpoints, keyed by the source PDF hash, Docling version, and batch size. The stored
+paper is updated only after every batch reports a complete conversion and the combined
+content produces usable chunks. The command also refuses to overwrite a row changed
+by another process during parsing. Scheduled ingestion and its default limits are unchanged.
+
+Run from the repository root in PowerShell. First stop competing services; PostgreSQL
+is the only service required during this repair:
+
+```powershell
+docker compose stop api ollama opensearch-dashboards opensearch airflow
+docker compose up -d postgres
+
+try {
+    docker compose run --rm --no-deps -T --name scholarlens-pdf-repair `
+        -w /opt/airflow --entrypoint python `
+        -e OMP_NUM_THREADS=1 -e DOCLING_NUM_THREADS=1 `
+        airflow -u -m src.commands.repair_pdf `
+        2608.27456v1 2608.27763v1 2608.27774v1 `
+        --pages-per-batch 1 --max-pages 60 --max-file-size-mb 50 --apply
+
+    $repairExitCode = $LASTEXITCODE
+    Write-Host "Repair exit code: $repairExitCode"
+}
+finally {
+    docker compose up -d
+}
+```
+
+`src/` is mounted into the Airflow service, so this command does not require an image
+rebuild. Omit `--apply` to inspect the specified stored rows without downloading,
+parsing, or updating their content. Use exact versioned IDs. Papers already producing
+chunks are skipped. Errors are reported per paper; the command attempts the remaining
+IDs and exits nonzero if any failed.
+
+In a second terminal, monitor the named repair container while it is running:
+
+```powershell
+docker stats --no-stream scholarlens-pdf-repair
+docker exec scholarlens-pdf-repair cat /sys/fs/cgroup/memory.events
+```
+
+Look for `Completed pages ...`, followed by `REPAIRED <id>: ... chunks` for each paper
+and exit code 0. If a worker fails, the error names the original page range and checkpoint
+directory. Retry with the same options to resume. The command reduces the number of
+pages resident in each Docling worker; a single unusually complex page may still exceed
+available memory. Page batching can change section segmentation, so inspect the resulting
+evidence and reindex the whole corpus after a successful repair.
+
+`2608.30076v2` is intentionally excluded from this repair list: its
+[arXiv record](https://arxiv.org/abs/2608.30076v2) marks it withdrawn with no PDF available.
+Keep its metadata and document that exclusion rather than relabeling another version
+as v2. For the reported 48-paper corpus, successful repair of the three IDs above leaves
+47 papers producing chunks and one withdrawn paper without chunks, assuming no ingestion
+has changed the corpus meanwhile. That is an acceptance exclusion, not a repaired PDF.
+
 ### Grounded RAG acceptance
 
 Exercise both retrieval modes:
@@ -334,6 +399,65 @@ curl.exe -N -X POST http://localhost:8000/api/v1/stream `
 The standard response must contain ordered PDF `sources`, exact passage `citations`, and only
 markers present in that citation catalog. The stream must order events as
 `sources -> delta* -> done|error`; clients must discard deltas if an `error` arrives.
+
+The current 1B model mixed methods and results between papers even after stronger prose
+instructions. Answers therefore use constrained evidence selection: the model chooses up to
+three server-owned sentence IDs, and the server renders their original text as quotations
+with their original passage markers. Each excerpt must match its cited passage, allowing
+only whitespace normalization. The public response fields and complete citation evidence
+are unchanged. This trades fluent synthesis for directly verifiable attribution; it does
+not establish that a quotation is relevant or fairly represents the surrounding discussion.
+
+Only papers whose retrieved evidence covers at least 60% of the question's non-stopword
+terms are eligible. Matching uses a small English inflection normalizer. This conservative
+lexical guard rejects obvious topic-only matches, such as weather mentions without the
+requested location and forecast details; it is not a semantic relevance guarantee and may
+abstain on questions phrased with synonyms. From each eligible passage, the best matching
+whole sentence is offered to the model, weighting terms that are rarer within that passage
+more highly. This keeps the 1B model's selection catalog small.
+
+Sentences shorter than seven or longer than 55 whitespace-separated words are omitted,
+never cut. If no usable sentences exist, or the model selects none, the answer is the fixed
+insufficient-evidence message. Review potential loss of coverage on long or poorly extracted
+sentences and on paraphrased questions as part of acceptance.
+
+Acceptance verified on 2026-10-08 (Africa/Cairo): all eight live cases passed after
+rebuilding only the API. BM25 `/ask` and `/stream` returned 84-word answers; hybrid returned
+95-word answers. Targeted KBEVO and penalty-scoring answers were 77 and 61 words, and both
+weather requests abstained. Every returned citation was checked against the stored source
+chunk at its section/chunk coordinates, and selected excerpts were reviewed in context.
+The running Gradio app produced six updates with an answer, paper links, evidence, and
+locators. Automated checks: 357 passed, 32 integration tests skipped; Ruff, mypy, and
+`git diff --check` passed. Corpus remains 58 papers, 57 chunkable, 2,775 chunks; the alias
+still points to v2, and v1 remains at 1,221 documents. Local detailed evidence is saved in
+`test_output/week5_verified_acceptance.json` and `test_output/week5_acceptance.md`.
+
+If `/ask` reports `Generated answer failed grounding validation`, inspect
+`rag_selection_validation_failed` or `rag_answer_validation_failed` in the API logs.
+Diagnostics identify invalid IDs, repeated selections, excerpt mismatches, or excess length
+without logging model text. An invalid selection retries once as plain IDs against the same
+retrieved evidence and model, with identical validation. A second failure remains HTTP 502;
+malformed structured output also fails closed. The retry adds up to one generation call.
+
+`/stream` buffers the internal JSON selection, then emits complete validated excerpts as
+`delta` events. It does not expose model IDs or raw JSON. Updates arrive per excerpt rather
+than per model token. Invalid selections end in `error`, with no `done` event.
+
+Both endpoints enforce a maximum of 200 whitespace-separated words, including standalone
+citation markers. The stream checks the accumulated answer before emitting each delta.
+Overlong answers fail closed; claims and citations are never blindly truncated. Normal
+answers are also bounded by three excerpts of at most 55 words each.
+
+API source is copied into its image. After changing RAG code, rebuild and restart that service:
+
+```powershell
+docker compose up -d --build api
+```
+
+Manually compare each excerpt with its cited passage and surrounding discussion as part of
+acceptance. Check relevance, source identity, background versus contributions, and ablations
+versus proposed methods. A matching quotation establishes attribution, not scientific truth
+or complete coverage. Include an unrelated question that must report insufficient evidence.
 
 Launch the UI with `uv run python gradio_launcher.py`, open http://localhost:7861, and verify
 the model/category controls, real-time answer rendering, ordered paper links, and exact evidence locations.

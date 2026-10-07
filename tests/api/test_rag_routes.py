@@ -39,11 +39,12 @@ def _prepared(request):
 
 
 class StubRAG:
-    def __init__(self, *, raises=None, invalid_stream=False, empty=False):
+    def __init__(self, *, raises=None, invalid_stream=False, empty=False, stream_parts=None):
         self.raises = raises
         self.invalid_stream = invalid_stream
         self.empty = empty
         self.requests = []
+        self.stream_parts = stream_parts
 
     async def ask(self, request):
         self.requests.append(request)
@@ -75,6 +76,11 @@ class StubRAG:
         return prepared
 
     async def generate_stream(self, prepared):
+        if self.stream_parts is not None:
+            for part in self.stream_parts:
+                yield OllamaGenerateResponse(model=prepared.model, response=part, done=False)
+            yield OllamaGenerateResponse(model=prepared.model, response="", done=True)
+            return
         answer = "Ungrounded" if self.invalid_stream else "Grounded answer [1.1]."
         yield OllamaGenerateResponse(model=prepared.model, response="Grounded ", done=False)
         yield OllamaGenerateResponse(model=prepared.model, response=answer.removeprefix("Grounded "), done=True)
@@ -185,6 +191,28 @@ async def test_stream_empty_retrieval_skips_generation_and_finishes_deterministi
     assert [name for name, _ in events] == ["sources", "done"]
     assert events[0][1]["citations"] == []
     assert "insufficient" in events[-1][1]["answer"].lower()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("over_limit", [False, True])
+async def test_stream_enforces_word_limit_across_fragmented_deltas(client, over_limit):
+    parts = ["word\n" * 199, "[1.", "1]"]
+    if over_limit:
+        parts += ["\nextra"]
+    app.dependency_overrides[get_rag] = lambda: StubRAG(stream_parts=parts)
+    try:
+        response = await client.post("/api/v1/stream", json={"query": "grounded rag"})
+    finally:
+        app.dependency_overrides.pop(get_rag, None)
+
+    events = _sse_events(response.text)
+    deltas = "".join(payload["delta"] for name, payload in events if name == "delta")
+    assert len(deltas.split()) <= 200
+    if over_limit:
+        assert events[-1][0] == "error"
+        assert all(name != "done" for name, _ in events)
+    else:
+        assert events[-1] == ("done", {"answer": "".join(parts)})
 
 
 class StubOllamaHealth:

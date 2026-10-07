@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from src.dependencies import RAGDep
 from src.schemas.api.rag import AskRequest, AskResponse, DeltaEvent, DoneEvent, ErrorEvent
+from src.services.rag.context import validate_answer_length
 from src.services.rag.service import INSUFFICIENT_EVIDENCE_ANSWER, PreparedRAG
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ async def _events(prepared: PreparedRAG, rag: RAGDep) -> AsyncIterator[str]:
         async for chunk in rag.generate_stream(prepared):
             if chunk.response:
                 answer += chunk.response
+                validate_answer_length(answer)
                 yield _event("delta", DeltaEvent(delta=chunk.response))
         rag.validate_answer(prepared, answer)
         yield _event("done", DoneEvent(answer=answer))

@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
-from src.schemas.api.rag import AskRequest
+from src.schemas.api.rag import AskRequest, Citation
 from src.schemas.api.search import PaperPassages, PassageHit
-from src.services.rag.context import build_context, validate_answer_citations
+from src.services.rag.context import build_context, validate_answer_citations, validate_answer_evidence
 
 
 def _paper(number: int, passage_lengths: tuple[int, ...] = (20, 20, 20)) -> PaperPassages:
@@ -87,3 +87,41 @@ def test_grounding_rejects_missing_and_unknown_markers():
 
 def test_grounding_accepts_only_known_markers():
     validate_answer_citations("The result follows from both papers [1.1] [2.1].", {"[1.1]", "[2.1]"})
+
+
+@pytest.fixture
+def attribution_evidence():
+    # The two methods were conflated in the recorded Week 5 live answers.
+    return [
+        Citation(marker="[1.1]", arxiv_id="2608.26386v1", title="Co-Evolving Structured Knowledge and Reasoning",
+                 section_title="Abstract", section_index=0, chunk_index=0,
+                 evidence="We propose KBEVO: a co-evolving framework that jointly learns to construct a structured knowledge base and reason over it."),
+        Citation(marker="[3.1]", arxiv_id="2608.00003v1", title="CritICL",
+                 section_title="Source-of-Gain Ablation", section_index=1, chunk_index=0,
+                 evidence="Generic GPT critique provides critique information without failuremode-specific alignment.\nFinally, shuffled failure labels break the correspondence between failure modes and retrieved critiques."),
+    ]
+
+
+def test_evidence_validation_accepts_exact_excerpts_with_matching_passages(attribution_evidence):
+    validate_answer_evidence(
+        '"We propose KBEVO: a co-evolving framework that jointly learns to construct a structured knowledge base and reason over it." [1.1]\n\n'
+        '- "Generic GPT critique provides critique information without failuremode-specific alignment. Finally, shuffled failure labels break the correspondence between failure modes and retrieved critiques." [3.1]',
+        attribution_evidence,
+    )
+
+
+@pytest.mark.parametrize("answer", [
+    '"We propose KBEVO: a co-evolving framework that jointly learns to construct a structured knowledge base and reason over it." [3.1]',
+    '"KBEVO reduces hallucination by using generic GPT critique." [1.1]',
+    '"We propose KBEVO: a co-evolving framework that jointly learns to construct a structured knowledge base and reason over it." [1.1]\nIt reduces hallucinations [3.1].',
+    'These papers use dense correct-exemplar retrieval and generic GPT critique [1.1].',
+])
+def test_evidence_validation_rejects_misattributed_and_unsupported_claims(attribution_evidence, answer):
+    with pytest.raises(ValueError):
+        validate_answer_evidence(answer, attribution_evidence)
+
+
+def test_insufficient_evidence_is_allowed_only_as_the_fixed_abstention(attribution_evidence):
+    validate_answer_evidence("The retrieved evidence is insufficient to answer this question.", attribution_evidence)
+    with pytest.raises(ValueError):
+        validate_answer_evidence("The retrieved evidence is insufficient to answer this question. But KBEVO fixes it [1.1].", attribution_evidence)

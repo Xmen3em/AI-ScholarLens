@@ -16,14 +16,14 @@ from src.schemas.api.rag import AskRequest, AskResponse, GeneratedAnswer, Source
 from src.schemas.api.search import ChunkSearchResponse, HybridSearchResponse
 from src.schemas.ollama import OllamaGenerateResponse
 from src.services.ollama.client import OllamaClient
-from src.services.rag.context import RAGContext, build_context, validate_answer_citations
+from src.services.rag.context import INSUFFICIENT_EVIDENCE_ANSWER, RAGContext, build_context, validate_answer_evidence
+from src.services.rag.excerpts import build_excerpts, render_selection
 from src.services.search import SearchService
 
 logger = logging.getLogger(__name__)
 
 EVIDENCE_CHARACTER_BUDGET = 12_000
 GENERATION_OPTIONS = {"temperature": 0, "num_predict": 512, "num_ctx": 8192}
-INSUFFICIENT_EVIDENCE_ANSWER = "The retrieved evidence is insufficient to answer this question."
 SYSTEM_PROMPT_PATH = Path(__file__).parents[1] / "ollama" / "prompts" / "rag_system.txt"
 
 
@@ -89,53 +89,115 @@ class RAGService:
 
     async def ask(self, request: AskRequest) -> AskResponse:
         prepared = await self.prepare(request)
-        if not prepared.context.citations:
+        if not build_excerpts(prepared.context.citations, request.query):
             return self._response(prepared, INSUFFICIENT_EVIDENCE_ANSWER)
 
         generated = await self.ollama.generate(
             prepared.model,
             self._prompt(prepared, structured=True),
             system=self.system_prompt,
-            response_format=GeneratedAnswer.model_json_schema(),
+            response_format=self._selection_schema(prepared),
             options=GENERATION_OPTIONS,
         )
         self._log_generation(generated)
         try:
-            answer = GeneratedAnswer.model_validate_json(generated.response).answer.strip()
-        except (ValidationError, ValueError) as exc:
-            raise OllamaResponseError("Ollama returned invalid structured output") from exc
-        self.validate_answer(prepared, answer)
+            answer = self._selected_answer(prepared, generated.response, structured=True)
+            self.validate_answer(prepared, answer)
+        except GroundingError:
+            # Retry invalid selections once as plain IDs against the same evidence.
+            # Never rewrite model claims or invent citations.
+            generated = await self.ollama.generate(
+                prepared.model,
+                self._prompt(prepared, structured=False),
+                system=self.system_prompt,
+                options=GENERATION_OPTIONS,
+            )
+            self._log_generation(generated)
+            answer = self._selected_answer(prepared, generated.response, structured=False)
+            self.validate_answer(prepared, answer)
         return self._response(prepared, answer)
 
     async def generate_stream(self, prepared: PreparedRAG) -> AsyncIterator[OllamaGenerateResponse]:
+        if not build_excerpts(prepared.context.citations, prepared.request.query):
+            yield OllamaGenerateResponse(model=prepared.model, response=INSUFFICIENT_EVIDENCE_ANSWER, done=True)
+            return
+        # IDs are internal, never user-visible deltas. Buffer the short selection
+        # before rendering and streaming complete, validated evidence excerpts.
+        selection = ""
         async for chunk in self.ollama.generate_stream(
             prepared.model,
-            self._prompt(prepared, structured=False),
+            self._prompt(prepared, structured=True),
             system=self.system_prompt,
+            response_format=self._selection_schema(prepared),
             options=GENERATION_OPTIONS,
         ):
             if chunk.done:
                 self._log_generation(chunk)
-            yield chunk
+            selection += chunk.response
+        answer = self._selected_answer(prepared, selection, structured=True)
+        self.validate_answer(prepared, answer)
+        for line in answer.splitlines(keepends=True):
+            yield OllamaGenerateResponse(model=prepared.model, response=line, done=False)
+        yield OllamaGenerateResponse(model=prepared.model, response="", done=True)
 
     def validate_answer(self, prepared: PreparedRAG, answer: str) -> None:
         try:
-            validate_answer_citations(answer, {citation.marker for citation in prepared.context.citations})
+            validate_answer_evidence(answer, prepared.context.citations)
         except ValueError as exc:
-            raise GroundingError("Generated answer failed citation validation") from exc
+            logger.warning(
+                "rag_answer_validation_failed model=%s mode=%s reason=%s",
+                prepared.model,
+                prepared.search_mode,
+                exc,
+            )
+            raise GroundingError("Generated answer failed grounding validation") from exc
 
     @staticmethod
     def _prompt(prepared: PreparedRAG, *, structured: bool) -> str:
+        excerpts = build_excerpts(prepared.context.citations, prepared.request.query)
+        blocks = []
+        for citation in prepared.context.citations:
+            sentences = [f"{key}: {excerpt.text}" for key, excerpt in excerpts.items() if excerpt.marker == citation.marker]
+            blocks.append(f"{citation.marker}\nPaper: {citation.title}\nSection: {citation.section_title}\n" + "\n".join(sentences))
+        catalog = "\n\n".join(blocks)
         output = (
-            'Return a JSON object with exactly one field named "answer".'
+            'Return a JSON object with exactly one field named "answer", an array of up to three selected IDs. '
+            'Return {"answer": []} if no sentence answers the question.'
             if structured
-            else "Return only the answer text."
+            else "Return only up to three IDs separated by spaces, or NONE if no sentence answers the question."
         )
         return (
             f"Question:\n{prepared.request.query}\n\n"
-            f"Evidence catalog:\n{prepared.context.prompt_context}\n\n"
-            f"{output}"
+            f"Evidence catalog:\n{catalog}\n\n"
+            f"Answer the original question: {prepared.request.query}\n"
+            f"Allowed citation markers: {', '.join(c.marker for c in prepared.context.citations)}.\n"
+            "Select the sentences that directly answer the question. Prefer different relevant papers. "
+            "Distinguish background discussion, proposed methods, and comparison baselines. "
+            "The server will quote selected sentences and attach their original passage citations. "
+            f"{output}\nSelected evidence IDs:"
         )
+
+    @staticmethod
+    def _selection_schema(prepared: PreparedRAG) -> dict:
+        schema = GeneratedAnswer.model_json_schema()
+        ids = list(build_excerpts(prepared.context.citations, prepared.request.query))
+        schema["properties"]["answer"]["items"]["enum"] = ids
+        return schema
+
+    @staticmethod
+    def _selected_answer(prepared: PreparedRAG, raw: str, *, structured: bool) -> str:
+        if structured:
+            try:
+                selection = GeneratedAnswer.model_validate_json(raw).answer
+            except (ValidationError, ValueError) as exc:
+                raise OllamaResponseError("Ollama returned invalid structured output") from None
+        else:
+            selection = [] if raw.strip() == "NONE" else raw.split()
+        try:
+            return render_selection(selection, build_excerpts(prepared.context.citations, prepared.request.query))
+        except ValueError as exc:
+            logger.warning("rag_selection_validation_failed reason=%s", exc)
+            raise GroundingError("Generated answer failed grounding validation") from exc
 
     @staticmethod
     def _response(prepared: PreparedRAG, answer: str) -> AskResponse:
@@ -157,10 +219,11 @@ class RAGService:
     @staticmethod
     def _log_generation(result: OllamaGenerateResponse) -> None:
         logger.info(
-            "rag_generation load_ns=%s prompt_eval_ns=%s generation_ns=%s prompt_tokens=%s output_tokens=%s",
+            "rag_generation load_ns=%s prompt_eval_ns=%s generation_ns=%s prompt_tokens=%s output_tokens=%s done_reason=%s",
             result.load_duration,
             result.prompt_eval_duration,
             result.eval_duration,
             result.prompt_eval_count,
             result.eval_count,
+            result.done_reason,
         )

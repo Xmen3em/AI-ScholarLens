@@ -157,12 +157,13 @@ async def test_generate_stream_parses_valid_ndjson_and_requires_terminal_chunk(s
     requests = stub_httpx(lambda request: httpx.Response(200, content=body))
     client = OllamaClient(settings)
 
-    chunks = [chunk async for chunk in client.generate_stream("llama3.2:1b", "prompt")]
+    chunks = [chunk async for chunk in client.generate_stream("llama3.2:1b", "prompt", response_format={"type": "object"})]
     await client.aclose()
 
     assert [chunk.response for chunk in chunks] == ["hello ", "[1.1]"]
     assert chunks[-1].done is True
     assert json.loads(requests[0].content)["stream"] is True
+    assert json.loads(requests[0].content)["format"] == {"type": "object"}
 
 
 @pytest.mark.anyio
