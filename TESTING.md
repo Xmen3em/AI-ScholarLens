@@ -570,6 +570,27 @@ examples. Evaluation completion does not imply broad answer-quality acceptance.
 
 ## Answer-quality fixes before Week 6
 
+The subsequent selector continuation is documented in
+`evaluation/selector_reliability/REPORT.md` and `PROTOCOL.md`. The internal
+structured `answer` is now an ID string constrained to `NONE` or one to three
+known IDs in increasing numeric order. The server checks the same language and
+rejects duplicate JSON keys before parsing; the one plain-ID retry retains its
+distinct/known/count guards. The public response contract is unchanged.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_selector_contract.py tests/unit/test_rag_service.py tests/api/test_rag_routes.py -q
+.venv-win/Scripts/python.exe -m src.commands.evaluate_retrieval --benchmark evaluation/selector_reliability/final_holdout.json --output test_output/selector_reliability/new-validation --candidates-per-passage 1
+```
+
+Use a new output directory and new answer-bound semantic reviews. All saved
+questions are inspected data after their reported collection. Further tuning
+requires separate development examples and another fresh source-reviewed
+holdout. Exact-payload replays and synthetic 4/9/27/90-ID grammar probes are
+saved under `test_output/selector_reliability/`; baseline runtime is preserved as
+`service_baseline.py`. Both rejected-map and final-string build contexts and
+source hashes are retained. Rebuild only the API to test runtime edits, then
+verify source parity and candidate default `1` before measuring.
+
 Read `evaluation/quality_fixes/REPORT.md` and `PROTOCOL.md`. The initial 12-case
 holdout compares baseline and three-candidate expansion. Expansion improved offered
 facts but regressed relevance, so the default remains one sentence per passage.

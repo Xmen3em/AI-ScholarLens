@@ -79,4 +79,4 @@ class GeneratedAnswer(BaseModel):
     """Internal evidence selection; public answer text is rendered by the server."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
-    answer: list[str] = Field(..., max_length=3)
+    answer: str

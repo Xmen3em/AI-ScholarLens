@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"id":"calibration","query":"How does Zephyr calibrate sensors?","papers":[{"id":"synthetic-zephyr","text":"Zephyr calibrates sensors against a stable laboratory reference signal."}],"required_sentences":["Zephyr calibrates sensors against a stable laboratory reference signal."]},
+    {"id":"schedule","query":"How many Quartz jobs and workers are scheduled?","papers":[{"id":"synthetic-quartz","text":"Quartz schedules twelve jobs across four workers each morning."}],"required_sentences":["Quartz schedules twelve jobs across four workers each morning."]},
+    {"id":"detector","query":"What accuracy does the Cedar detector report?","papers":[{"id":"synthetic-cedar","text":"The Cedar detector reports an accuracy of 0.918 on held-out examples."}],"required_sentences":["The Cedar detector reports an accuracy of 0.918 on held-out examples."]},
+    {"id":"multi","query":"How do Zephyr and Cedar calibrate sensors?","papers":[{"id":"synthetic-zephyr","text":"Zephyr calibrates sensors against a stable laboratory reference signal."},{"id":"synthetic-cedar","text":"Cedar calibrates sensors using independent temperature measurements every morning."}],"required_sentences":["Zephyr calibrates sensors against a stable laboratory reference signal.","Cedar calibrates sensors using independent temperature measurements every morning."]},
+    {"id":"missing","query":"What accuracy does the Cedar detector report for underwater sonar?","papers":[{"id":"synthetic-cedar","text":"The Cedar detector reports an accuracy of 0.918 on held-out examples. Underwater sonar is mentioned as possible future work without results."}],"required_sentences":[]},
+    {"id":"unrelated","query":"Who won the lunar football tournament?","papers":[{"id":"synthetic-zephyr","text":"Zephyr calibrates sensors against a stable laboratory reference signal."}],"required_sentences":[]}
+  ]
+}

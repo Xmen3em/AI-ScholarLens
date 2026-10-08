@@ -1,0 +1,237 @@
+{
+  "_meta": {
+    "records_sha256": "5a7d1d0f9a802c8188676c310f86ac31f49bce0cab5f4d0445168c8930e9dd60",
+    "reviewer": "Codex source/semantic review; all distinct successful answers inspected",
+    "reviewed_on": "2026-10-08"
+  },
+  "diff-access:bm25:ask:3": {
+    "answer_digest": "83f0e4f80880a0abcd7f6bdb1f8863af9617181110e27d28d1556fecbb7417da",
+    "covered_facts": [
+      "diff-access-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Output logits without internals is complete. The LiRA shadow-model access requirement is unrelated filler."
+  },
+  "diff-access:bm25:stream:3": {
+    "answer_digest": "83f0e4f80880a0abcd7f6bdb1f8863af9617181110e27d28d1556fecbb7417da",
+    "covered_facts": [
+      "diff-access-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Output logits without internals is complete. The LiRA shadow-model access requirement is unrelated filler."
+  },
+  "diff-access:hybrid:ask:3": {
+    "answer_digest": "73e382e7252b3a805de44a4cb072da78ac9388af88c9211781b4088a7f7517a9",
+    "covered_facts": [
+      "diff-access-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The graybox sentence explicitly supplies output distributions without model internals. The code-review evaluation sentence is unrelated."
+  },
+  "diff-access:hybrid:stream:3": {
+    "answer_digest": "73e382e7252b3a805de44a4cb072da78ac9388af88c9211781b4088a7f7517a9",
+    "covered_facts": [
+      "diff-access-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The graybox sentence explicitly supplies output distributions without model internals. The code-review evaluation sentence is unrelated."
+  },
+  "diff-stages:bm25:ask:3": {
+    "answer_digest": "9a3a888729eb4671bebb88c4481e158b2718fc17c0f670f4cfe74c89610f0f72",
+    "covered_facts": [
+      "diff-stages-f1",
+      "diff-stages-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "The abstract supplies both complete stages; the second quotation also directly describes extraction and aggregation."
+  },
+  "diff-stages:bm25:stream:3": {
+    "answer_digest": "9a3a888729eb4671bebb88c4481e158b2718fc17c0f670f4cfe74c89610f0f72",
+    "covered_facts": [
+      "diff-stages-f1",
+      "diff-stages-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "The abstract supplies both complete stages; the second quotation also directly describes extraction and aggregation."
+  },
+  "diff-stages:hybrid:ask:3": {
+    "answer_digest": "8fa1723d4a995c3db3fe9df7e88b3455344aeafceda41eada6276124494dc52b",
+    "covered_facts": [
+      "diff-stages-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Aggregation into representative tokens is complete. Extraction mentions logits but omits differences between base and finetuned models. Agent evaluation conditions are filler."
+  },
+  "diff-stages:hybrid:stream:3": {
+    "answer_digest": "8fa1723d4a995c3db3fe9df7e88b3455344aeafceda41eada6276124494dc52b",
+    "covered_facts": [
+      "diff-stages-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Aggregation into representative tokens is complete. Extraction mentions logits but omits differences between base and finetuned models. Agent evaluation conditions are filler."
+  },
+  "sf-edges:bm25:ask:3": {
+    "answer_digest": "dde3173e5872ac1a8791dd8f7d0e0bef79438e8914e92db77148a59e1e01f213",
+    "covered_facts": [
+      "sf-edges-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Sensitive homophily, hub participation and triadic closure are complete. Filtering is useful partial detail but preservation of the remaining graph is absent, so the second fact is incomplete."
+  },
+  "sf-edges:bm25:stream:3": {
+    "answer_digest": "dde3173e5872ac1a8791dd8f7d0e0bef79438e8914e92db77148a59e1e01f213",
+    "covered_facts": [
+      "sf-edges-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Sensitive homophily, hub participation and triadic closure are complete. Filtering is useful partial detail but preservation of the remaining graph is absent, so the second fact is incomplete."
+  },
+  "sf-edges:hybrid:ask:3": {
+    "answer_digest": "cb04e7aec3908f7cdf0a9369f0c4f86ef925d5ee12f8cfb7c85a282c0bda9c15",
+    "covered_facts": [
+      "sf-edges-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "The second quotation supplies all three edge signals. Both sentences are relevant, but downweighting/removal and preservation of the remaining graph are absent from the filtering description."
+  },
+  "sf-edges:hybrid:stream:3": {
+    "answer_digest": "cb04e7aec3908f7cdf0a9369f0c4f86ef925d5ee12f8cfb7c85a282c0bda9c15",
+    "covered_facts": [
+      "sf-edges-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "The second quotation supplies all three edge signals. Both sentences are relevant, but downweighting/removal and preservation of the remaining graph are absent from the filtering description."
+  },
+  "sf-penalty:bm25:ask:3": {
+    "answer_digest": "58eda15aff8cd21a579f298b16ad44e64ea3994740bbd1dc37af5f51bcd113bd",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Statistical parity with warm-up is useful partial detail, but the required linear warm-up is absent. Cosine learning-rate annealing describes a different schedule."
+  },
+  "sf-penalty:bm25:stream:3": {
+    "answer_digest": "58eda15aff8cd21a579f298b16ad44e64ea3994740bbd1dc37af5f51bcd113bd",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Statistical parity with warm-up is useful partial detail, but the required linear warm-up is absent. Cosine learning-rate annealing describes a different schedule."
+  },
+  "sf-penalty:hybrid:ask:3": {
+    "answer_digest": "0fb8735be0fcad1a6ddd8b9469d96f619aa14a7431d40142875e068ec5fec5d5",
+    "covered_facts": [
+      "sf-penalty-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first quotation explicitly supplies the statistical-parity regularizer and linear warm-up. General trade-offs and sensitivity experiments do not answer the penalty/schedule question."
+  },
+  "sf-penalty:hybrid:stream:3": {
+    "answer_digest": "0fb8735be0fcad1a6ddd8b9469d96f619aa14a7431d40142875e068ec5fec5d5",
+    "covered_facts": [
+      "sf-penalty-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first quotation explicitly supplies the statistical-parity regularizer and linear warm-up. General trade-offs and sensitivity experiments do not answer the penalty/schedule question."
+  },
+  "multi-access-edges:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported evidence."
+  },
+  "multi-access-edges:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported evidence."
+  },
+  "multi-access-edges:hybrid:ask:3": {
+    "answer_digest": "88b3224d5fefcf9bb7a5d0c1ca2f8818b07c0b812621e3e5c2681966291136de",
+    "covered_facts": [
+      "multi-access-edges-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Both quotations concern the SF-GNN edge component, with all three signals explicit in the first. Diff Mining access is entirely absent."
+  },
+  "multi-access-edges:hybrid:stream:3": {
+    "answer_digest": "88b3224d5fefcf9bb7a5d0c1ca2f8818b07c0b812621e3e5c2681966291136de",
+    "covered_facts": [
+      "multi-access-edges-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Both quotations concern the SF-GNN edge component, with all three signals explicit in the first. Diff Mining access is entirely absent."
+  },
+  "unsupported-diff-price:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-diff-price:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-diff-price:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-diff-price:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sf-energy:bm25:ask:3": {
+    "answer_digest": "a3f0185b88159f2f62eeba3ed1f9b1f2daba441ab510d1416036cbf497396cd7",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "False substantive answer to an unsupported energy-cost request. Dataset evaluations and sensitivity experiments contain no reported kilowatt-hour energy cost."
+  },
+  "unsupported-sf-energy:bm25:stream:3": {
+    "answer_digest": "a3f0185b88159f2f62eeba3ed1f9b1f2daba441ab510d1416036cbf497396cd7",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "False substantive answer to an unsupported energy-cost request. Dataset evaluations and sensitivity experiments contain no reported kilowatt-hour energy cost."
+  },
+  "unsupported-sf-energy:hybrid:ask:3": {
+    "answer_digest": "75c21ffc11bef5d095c49a9ef6f5fcf48ab0e18a46e5b0d97d21c481f3c7ce71",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 2,
+    "rationale": "False substantive answer to an unsupported energy-cost request. Sensitivity experiments and accuracy/fairness comparisons do not report energy cost."
+  },
+  "unsupported-sf-energy:hybrid:stream:3": {
+    "answer_digest": "75c21ffc11bef5d095c49a9ef6f5fcf48ab0e18a46e5b0d97d21c481f3c7ce71",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 2,
+    "rationale": "False substantive answer to an unsupported energy-cost request. Sensitivity experiments and accuracy/fairness comparisons do not report energy cost."
+  }
+}

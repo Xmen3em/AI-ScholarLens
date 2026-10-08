@@ -1,0 +1,11 @@
+{
+  "fast-family:hybrid": {"facts": [], "relevant": 1, "rationale": "Only the prefix-aligned regression-family quote is useful partial detail; specific Falcon updates are absent. Metadata and unspecified scaling are filler."},
+  "fast-forms:bm25": {"facts": [1], "relevant": 1, "rationale": "The three forms are complete; the general architecture/cost quote is filler."},
+  "fast-forms:hybrid": {"facts": [1], "relevant": 1, "rationale": "The three forms are complete; learning-rate normalization is filler."},
+  "load-size:bm25": {"facts": [1, 2], "relevant": 1, "rationale": "53 puzzles and single-example random deletion are explicit. ECC-inspired targeted deletion is named but its structurally load-bearing target is not described, so the complete third fact is missing."},
+  "load-size:hybrid": {"facts": [1, 2], "relevant": 1, "rationale": "53 puzzles and single-example random deletion are explicit. ECC-inspired targeted deletion lacks the structurally load-bearing target. Model abstention behavior is filler."},
+  "load-score:bm25": {"facts": [], "relevant": 0, "rationale": "Fragile-puzzle prevalence and model abstention results omit the requested definition of what Question Damage Score counts."},
+  "load-score:hybrid": {"facts": [1], "relevant": 1, "rationale": "The task-level question-count definition is complete. Fragile-puzzle prevalence and the distinct token-level Base Damage Score are filler."},
+  "cg-weights:bm25": {"facts": [1, 2], "relevant": 3, "rationale": "All three quotations directly describe LP-determined weights; the abstract also supplies complete dual-variable pricing guidance toward violated constraints."},
+  "cg-weights:hybrid": {"facts": [1], "relevant": 2, "rationale": "The LP-master determinant is complete, and dual-guided pricing is useful partial detail. The column-structure sentence is filler; explicit new-model generation/dual variables/focus are incomplete."}
+}

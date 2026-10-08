@@ -1,0 +1,6 @@
+{
+  "undo-design-1:bm25": {"facts": [1, 2, 3], "relevant": 2, "rationale": "Both quotations explicitly state all three requested counts."},
+  "undo-design-1:hybrid": {"facts": [1, 3], "relevant": 1, "rationale": "The first quotation supplies 36 workflows and eight domains. Fault-scenario count is omitted; unstudied boundaries are filler."},
+  "ave-1:bm25": {"facts": [2], "relevant": 2, "rationale": "Accuracy/no-VLM-fine-tuning is complete. Atomic/full-view combination is useful partial classifier detail but no learned classifier is stated."},
+  "ave-1:hybrid": {"facts": [2], "relevant": 1, "rationale": "Accuracy/no-VLM-fine-tuning is complete. Learned classifier details are absent and baseline fine-tuning requirements are filler."}
+}

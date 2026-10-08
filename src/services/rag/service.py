@@ -1,6 +1,8 @@
 """Grounded retrieval-augmented generation over grouped paper passages."""
 
+import json
 import logging
+import re
 import time
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
@@ -25,6 +27,46 @@ logger = logging.getLogger(__name__)
 EVIDENCE_CHARACTER_BUDGET = 12_000
 GENERATION_OPTIONS = {"temperature": 0, "num_predict": 512, "num_ctx": 8192}
 SYSTEM_PROMPT_PATH = Path(__file__).parents[1] / "ollama" / "prompts" / "rag_system.txt"
+
+
+def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Reject duplicate JSON keys before a dict parser could discard them."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate selection key")
+        result[key] = value
+    return result
+
+
+def _id_range(low: int, high: int) -> str:
+    """Compact a contiguous numeric ID range using basic grammar-safe regex."""
+    groups = []
+    for prefix in range(high // 10 + 1):
+        start, end = max(low, prefix * 10), min(high, prefix * 10 + 9)
+        if start > end:
+            continue
+        suffix = str(start % 10) if start == end else f"[{start % 10}-{end % 10}]"
+        groups.append((str(prefix) if prefix else "") + suffix)
+    return "E(" + "|".join(groups) + ")"
+
+
+def _selection_pattern(count: int) -> str:
+    """Admit NONE or up to three numerically increasing, known evidence IDs.
+
+    Increasing IDs make repetition impossible. Compact numeric ranges avoid
+    enumerating every three-ID subset.
+    Only basic groups, alternatives, digit ranges and optional groups are used.
+    """
+    choices = ["NONE"]
+    for first in range(1, count + 1):
+        second_choices = [
+            f"E{second}" + (f"( {_id_range(second + 1, count)})?" if second < count else "")
+            for second in range(first + 1, count + 1)
+        ]
+        tail = " (" + "|".join(second_choices) + ")" if second_choices else ""
+        choices.append(f"E{first}" + (f"({tail})?" if tail else ""))
+    return "^(" + "|".join(choices) + ")$"
 
 
 @dataclass(frozen=True)
@@ -161,8 +203,9 @@ class RAGService:
         )
         distinct = "distinct " if prepared.candidates_per_passage > 1 else ""
         output = (
-            f'Return a JSON object with exactly one field named "answer", an array of up to three {distinct}selected IDs. '
-            'Return {"answer": []} if no sentence answers the question.'
+            'Return a JSON object with exactly one field named "answer", a string containing up to three selected IDs '
+            'in increasing numeric order, separated by single spaces. '
+            'For example: {"answer": "E1 E3"}. Return {"answer": "NONE"} if no sentence answers the question.'
             if structured
             else f"Return only up to three {distinct}IDs separated by spaces, or NONE if no sentence answers the question."
         )
@@ -183,16 +226,22 @@ class RAGService:
         schema = GeneratedAnswer.model_json_schema()
         ids = list(build_excerpts(prepared.context.citations, prepared.request.query,
                                   candidates_per_passage=prepared.candidates_per_passage))
-        schema["properties"]["answer"]["items"]["enum"] = ids
-        schema["properties"]["answer"]["uniqueItems"] = True
+        schema["properties"]["answer"] = {
+            "type": "string",
+            "pattern": _selection_pattern(len(ids)),
+        }
         return schema
 
     @staticmethod
     def _selected_answer(prepared: PreparedRAG, raw: str, *, structured: bool) -> str:
         if structured:
             try:
-                selection = GeneratedAnswer.model_validate_json(raw).answer
-            except (ValidationError, ValueError) as exc:
+                value = GeneratedAnswer.model_validate(json.loads(raw, object_pairs_hook=_unique_object)).answer
+                pattern = RAGService._selection_schema(prepared)["properties"]["answer"]["pattern"]
+                if re.fullmatch(pattern, value) is None:
+                    raise ValueError("invalid evidence selection")
+                selection = [] if value == "NONE" else value.split()
+            except (ValidationError, ValueError):
                 raise OllamaResponseError("Ollama returned invalid structured output") from None
         else:
             selection = [] if raw.strip() == "NONE" else raw.split()

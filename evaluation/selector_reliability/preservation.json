@@ -1,0 +1,36 @@
+{
+  "initial_file_count": 136,
+  "changed_initial_files": [
+    "src\\schemas\\api\\rag.py",
+    "src\\services\\rag\\service.py",
+    "tests\\unit\\test_rag_service.py",
+    "evaluation\\selector_reliability\\probe.py",
+    "README.md",
+    "TESTING.md",
+    "SESSION_HANDOFF.md"
+  ],
+  "prior_artifact_count": 7503,
+  "prior_artifacts_unchanged": true,
+  "frozen_v1_unchanged": true,
+  "finalized_runtime_and_labels_unchanged": true,
+  "corpus_unchanged": true,
+  "state": {
+    "paper_count": 58,
+    "chunk_count": 2775,
+    "alias": {
+      "paper-chunks-v2": {
+        "aliases": {
+          "paper-chunks": {}
+        }
+      }
+    },
+    "v1_count": 1221,
+    "paper_digest": "fe1188f2bcf0a15b87585ddcc53824e909319683cf99e4c6ae4705a2f1f47c0d",
+    "chunk_digest": "240d4fbab63f8fe58447859b488c3e0379d1a8c896b6bf9c30c90f634cfe5068"
+  },
+  "model_digests_unchanged": true,
+  "model_digests": {
+    "nomic-embed-text:latest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+    "llama3.2:1b": "baf6a787fdffd633537aa2eb51cfd54cb93ff08e28040095462bb63daf552878"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "diff-access:bm25": {"facts": [1], "relevant": 1, "rationale": "Output logits without internals is complete. The LiRA shadow-model access requirement is unrelated filler."},
+  "diff-access:hybrid": {"facts": [1], "relevant": 1, "rationale": "The graybox sentence explicitly supplies output distributions without model internals. The code-review evaluation sentence is unrelated."},
+  "diff-stages:bm25": {"facts": [1, 2], "relevant": 2, "rationale": "The abstract supplies both complete stages; the second quotation also directly describes extraction and aggregation."},
+  "diff-stages:hybrid": {"facts": [2], "relevant": 1, "rationale": "Aggregation into representative tokens is complete. Extraction mentions logits but omits differences between base and finetuned models. Agent evaluation conditions are filler."},
+  "sf-edges:bm25": {"facts": [1], "relevant": 2, "rationale": "Sensitive homophily, hub participation and triadic closure are complete. Filtering is useful partial detail but preservation of the remaining graph is absent, so the second fact is incomplete."},
+  "sf-edges:hybrid": {"facts": [1], "relevant": 2, "rationale": "The second quotation supplies all three edge signals. Both sentences are relevant, but downweighting/removal and preservation of the remaining graph are absent from the filtering description."},
+  "sf-penalty:bm25": {"facts": [], "relevant": 1, "rationale": "Statistical parity with warm-up is useful partial detail, but the required linear warm-up is absent. Cosine learning-rate annealing describes a different schedule."},
+  "sf-penalty:hybrid": {"facts": [1], "relevant": 1, "rationale": "The first quotation explicitly supplies the statistical-parity regularizer and linear warm-up. General trade-offs and sensitivity experiments do not answer the penalty/schedule question."},
+  "multi-access-edges:hybrid": {"facts": [2], "relevant": 2, "rationale": "Both quotations concern the SF-GNN edge component, with all three signals explicit in the first. Diff Mining access is entirely absent."},
+  "unsupported-sf-energy:bm25": {"facts": [], "relevant": 0, "rationale": "False substantive answer to an unsupported energy-cost request. Dataset evaluations and sensitivity experiments contain no reported kilowatt-hour energy cost."},
+  "unsupported-sf-energy:hybrid": {"facts": [], "relevant": 0, "rationale": "False substantive answer to an unsupported energy-cost request. Sensitivity experiments and accuracy/fairness comparisons do not report energy cost."}
+}

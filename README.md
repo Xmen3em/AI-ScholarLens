@@ -277,6 +277,13 @@ remains opt-in (`RAG_SENTENCE_CANDIDATES_PER_PASSAGE=2` or `3`, default `1`) bec
 it reduced excerpt relevance. The 60% lexical gate, exact attribution, frozen v1
 benchmark, repaired corpus and both indexes are preserved. Phase 6 remains planned.
 
+The [selector-reliability continuation](evaluation/selector_reliability/REPORT.md)
+tests a grammar-constrained ID string: up to three known IDs in increasing numeric
+order, or `NONE`. The server independently validates that contract and rejects
+duplicate JSON keys. The sparse keyed-object experiment is retained as rejected
+evaluation data. Selection validity does not establish semantic relevance or
+complete fact coverage; the continuation report records those measurements.
+
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 
 The two images run `src/` under different SQLAlchemy majors: the API installs SQLAlchemy 2.x from `pyproject.toml`, while the Airflow image pins `>=1.4.36,<2.0.0` because Airflow 2.10 does not support SQLAlchemy 2.x. Shared code under `src/` must stay inside the compatible subset — declare columns with `Column()` rather than `Mapped[]`/`mapped_column()`, and import `declarative_base` from `sqlalchemy.orm`.

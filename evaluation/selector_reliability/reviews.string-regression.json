@@ -1,0 +1,141 @@
+{
+  "_meta": {
+    "records_sha256": "fa4d9445770ef295e78fe0d154322ba7be8d07267c64f2a90a8118294bc3cc24",
+    "reviewer": "Codex source/semantic review; all distinct successful answers inspected",
+    "reviewed_on": "2026-10-08"
+  },
+  "undo-design-1:bm25:ask:3": {
+    "answer_digest": "e59e5080f24604fd68b40740aec833d722a9dab8286a4fe62a514241021d706a",
+    "covered_facts": [
+      "undo-design-f1",
+      "undo-design-f2",
+      "undo-design-f3"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Both quotations explicitly state all three requested counts."
+  },
+  "undo-design-1:bm25:stream:3": {
+    "answer_digest": "e59e5080f24604fd68b40740aec833d722a9dab8286a4fe62a514241021d706a",
+    "covered_facts": [
+      "undo-design-f1",
+      "undo-design-f2",
+      "undo-design-f3"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Both quotations explicitly state all three requested counts."
+  },
+  "undo-design-1:hybrid:ask:3": {
+    "answer_digest": "c9309cad8bcab3bbbcbdb7ed23f3c2026495bdab5cba7f3eb94db49bf1977dd9",
+    "covered_facts": [
+      "undo-design-f1",
+      "undo-design-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The first quotation supplies 36 workflows and eight domains. Fault-scenario count is omitted; unstudied boundaries are filler."
+  },
+  "undo-design-1:hybrid:stream:3": {
+    "answer_digest": "c9309cad8bcab3bbbcbdb7ed23f3c2026495bdab5cba7f3eb94db49bf1977dd9",
+    "covered_facts": [
+      "undo-design-f1",
+      "undo-design-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The first quotation supplies 36 workflows and eight domains. Fault-scenario count is omitted; unstudied boundaries are filler."
+  },
+  "ave-1:bm25:ask:3": {
+    "answer_digest": "c2de12a877195ab5458c33374bd2021b797b70c969a07bcafadeefd86df73851",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Accuracy/no-VLM-fine-tuning is complete. Atomic/full-view combination is useful partial classifier detail but no learned classifier is stated."
+  },
+  "ave-1:bm25:stream:3": {
+    "answer_digest": "c2de12a877195ab5458c33374bd2021b797b70c969a07bcafadeefd86df73851",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Accuracy/no-VLM-fine-tuning is complete. Atomic/full-view combination is useful partial classifier detail but no learned classifier is stated."
+  },
+  "ave-1:hybrid:ask:3": {
+    "answer_digest": "6ff2aec4212c463254cf41bd2c53c9b24614f79da135a062301c29612d15a6f6",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Accuracy/no-VLM-fine-tuning is complete. Learned classifier details are absent and baseline fine-tuning requirements are filler."
+  },
+  "ave-1:hybrid:stream:3": {
+    "answer_digest": "6ff2aec4212c463254cf41bd2c53c9b24614f79da135a062301c29612d15a6f6",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Accuracy/no-VLM-fine-tuning is complete. Learned classifier details are absent and baseline fine-tuning requirements are filler."
+  },
+  "multi-tokenizer:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported evidence."
+  },
+  "multi-tokenizer:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported evidence."
+  },
+  "multi-tokenizer:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported evidence."
+  },
+  "multi-tokenizer:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported evidence."
+  },
+  "unsupported-ave:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-ave:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-ave:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-ave:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  }
+}
