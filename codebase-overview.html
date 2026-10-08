@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A living, reader-first technical overview of the AI-ScholarLens arXiv ingestion and hybrid retrieval platform.">
+  <meta name="description" content="AI-ScholarLens architecture, grounded evidence answers, measured selector reliability, preserved corpus, and Week 6 readiness roadmap.">
   <title>AI-ScholarLens — Living Codebase Field Guide</title>
   <style>
     :root {
@@ -164,14 +164,15 @@
     <div class="wrap">
       <p class="eyebrow">Living codebase field guide · current repository snapshot</p>
       <h1>AI-ScholarLens<br><span class="hero-accent">papers in, evidence out.</span></h1>
-      <p class="lede">A local-first arXiv ingestion and retrieval platform. It collects AI papers, parses their PDFs, stores the source corpus in PostgreSQL, projects two purpose-built OpenSearch indices, and exposes paper-level, passage-level, and hybrid search through FastAPI.</p>
+      <p class="lede">A local-first research platform that collects AI papers, parses PDFs, and retrieves evidence with keyword and vector search. FastAPI now serves grounded quotations with traceable citations, through JSON and buffered streaming endpoints. Evaluation records both selector improvements and remaining answer-quality gaps.</p>
       <div class="snapshot" aria-label="Project snapshot">
-        <span class="chip phase">Phase 4 · evaluation next</span>
-        <span class="chip verified">Reconciled 15 Sep 2026</span>
+        <span class="chip phase">Pre-Week-6 results measured</span>
+        <span class="chip verified">Reconciled 8 Oct 2026</span>
         <span class="chip">Python 3.12</span>
         <span class="chip">FastAPI + Airflow</span>
         <span class="chip">PostgreSQL + OpenSearch</span>
-        <span class="chip">Ollama embeddings</span>
+        <span class="chip">Ollama embeddings + selection</span>
+        <span class="chip">58 papers · 2,775 v2 chunks</span>
       </div>
     </div>
   </header>
@@ -180,7 +181,8 @@
     <div class="wrap">
       <a href="#orientation">Orientation</a><a href="#architecture">Architecture</a>
       <a href="#pipeline">Data flow</a><a href="#retrieval">Retrieval</a>
-      <a href="#api">API</a><a href="#data">Data &amp; invariants</a>
+      <a href="#api">API</a><a href="#answers">Grounded answers</a>
+      <a href="#evaluation">Measured results</a><a href="#data">Data &amp; invariants</a>
       <a href="#map">Code map</a><a href="#roadmap">Roadmap</a>
       <a href="#run">Run &amp; verify</a><a href="#reading">Reading paths</a>
     </div>
@@ -191,31 +193,29 @@
       <div class="wrap">
         <div class="section-head"><span class="section-no">01</span><div><h2>Orientation in sixty seconds</h2><p class="sub">What the project is, what is real today, and where its boundary currently ends.</p></div></div>
         <div class="grid grid-3">
-          <article class="card card-live"><span class="label">Working today</span><h3>Ingest and retrieve</h3><p>Weekday Airflow ingestion, fixed AI-category scope, PDF caching and Docling parsing, idempotent PostgreSQL storage, two OpenSearch indices, BM25 paper and passage search, and vector + keyword fusion are implemented.</p></article>
-          <article class="card card-next"><span class="label">Current phase</span><h3>Evaluate retrieval quality</h3><p>Chunking is complete. Phase 4’s remaining work is a repeatable evaluation set and metrics that reveal whether ranking changes help real research questions.</p></article>
-          <article class="card card-later"><span class="label">Deliberately not built</span><h3>Answer generation</h3><p>There is no <code>/ask</code> route yet. Ollama currently supplies health checks and local embeddings; grounded synthesis with citations belongs to Phase 5.</p></article>
+          <article class="card card-live"><span class="label">Working today</span><h3>Retrieve and quote evidence</h3><p>AI-scoped ingestion, parsed-paper storage, BM25 and hybrid search, grounded <code>/ask</code> and <code>/stream</code>, and a Gradio client are implemented. The model selects evidence; the server owns the quotation and citation.</p></article>
+          <article class="card card-next"><span class="label">Latest measured work</span><h3>Selector reliability</h3><p>UndoBench succeeds in 4/4 measured attempts. Final selector collections have 80/80 successful responses and 40/40 equal endpoint pairs. Semantic relevance and complete fact coverage still have gaps.</p></article>
+          <article class="card card-later"><span class="label">Next phase · unstarted</span><h3>Week 6 readiness audit</h3><p>Inspect existing observability, access controls, rate limits, deployment configuration, and backup/restore procedures before adding controls. No Week 6 implementation or deployment has begun.</p></article>
         </div>
-        <div class="callout success"><p><strong>The core mental model:</strong> PostgreSQL owns the canonical paper record. OpenSearch is a rebuildable retrieval projection. Airflow moves data between external sources and those stores. FastAPI serves reads and search. This separation keeps ingestion failures, index migrations, and future answer generation from collapsing into one coupled process.</p></div>
+        <div class="callout success"><p><strong>Ownership:</strong> PostgreSQL owns the canonical paper record. OpenSearch is a rebuildable retrieval projection. Airflow moves data between sources and stores. FastAPI orchestrates retrieval, evidence selection, validation, and cited responses.</p></div>
         <div class="grid grid-2">
           <article class="card"><span class="label">Input</span><h3>Eight arXiv AI categories</h3><p><code>cs.AI</code>, <code>cs.LG</code>, <code>cs.CL</code>, <code>cs.CV</code>, <code>cs.RO</code>, <code>cs.MA</code>, <code>cs.NE</code>, and <code>stat.ML</code>. Cross-listed papers qualify when any category is allowlisted.</p></article>
-          <article class="card"><span class="label">Output</span><h3>Ranked papers with evidence passages</h3><p>Clients can browse metadata, find papers by topic, find the passages that answer a question, or combine lexical and semantic rankings. Passage results are grouped by paper to preserve source diversity.</p></article>
+          <article class="card"><span class="label">Output</span><h3>Ranked papers and cited excerpts</h3><p>Clients can browse metadata, search grouped passages, and request up to three exact evidence quotations. Missing or rejected evidence can produce an explicit insufficient-evidence answer; source validity alone does not guarantee that a quotation answers the question.</p></article>
         </div>
       </div>
     </section>
 
     <section id="architecture">
       <div class="wrap">
-        <div class="section-head"><span class="section-no">02</span><div><h2>Runtime architecture</h2><p class="sub">Six containers share <code>rag-network</code>. Solid responsibilities are live; the dashed answer step is planned.</p></div></div>
-        <div class="flow" role="img" aria-label="Researcher calls FastAPI. FastAPI reads PostgreSQL, searches OpenSearch, and uses Ollama for query embeddings. Airflow fetches arXiv papers, caches and parses PDFs with Docling, writes PostgreSQL, creates document embeddings through Ollama, and rebuilds the OpenSearch indices. Grounded answer generation is planned.">
-          <div class="flow-row"><div class="flow-node api"><b>Researcher / client</b><span>HTTP + JSON</span></div></div>
+        <div class="section-head"><span class="section-no">02</span><div><h2>Runtime architecture</h2><p class="sub">Six containers share <code>rag-network</code>. The optional Gradio client runs separately on the host.</p></div></div>
+        <div class="flow" role="img" aria-label="Researcher or Gradio client calls FastAPI over JSON or SSE. FastAPI reads PostgreSQL, searches OpenSearch, and uses Ollama for query embeddings and evidence-ID selection. The API validates and renders cited quotations. Airflow fetches, parses, stores and indexes papers.">
+          <div class="flow-row"><div class="flow-node api"><b>Researcher / Gradio</b><span>HTTP + JSON / SSE · UI :7861</span></div></div>
           <div class="flow-arrow">↓ API requests</div>
-          <div class="flow-row"><div class="flow-node api"><b>FastAPI</b><span>:8000 · routes + search service</span></div></div>
-          <div class="flow-arrow">↓ canonical reads · search · query vectors</div>
-          <div class="flow-row"><div class="flow-node data"><b>PostgreSQL 16</b><span>:5432 · source of truth</span></div><div class="flow-node data"><b>OpenSearch 2.19</b><span>:9200 · two read aliases</span></div><div class="flow-node data"><b>Ollama 0.11.2</b><span>:11434 · health + embeddings</span></div></div>
+          <div class="flow-row"><div class="flow-node api"><b>FastAPI</b><span>:8000 · search + RAG validation</span></div></div>
+          <div class="flow-arrow">↓ canonical reads · search · vectors + selection</div>
+          <div class="flow-row"><div class="flow-node data"><b>PostgreSQL 16</b><span>:5432 · source of truth</span></div><div class="flow-node data"><b>OpenSearch 2.19</b><span>:9200 · two read aliases</span></div><div class="flow-node data"><b>Ollama 0.11.2</b><span>:11434 · embeddings + local LLM</span></div></div>
           <div class="flow-arrow">↑ populated and coordinated by</div>
           <div class="flow-row"><div class="flow-node worker"><b>Airflow 2.10</b><span>:8080* · weekday DAG</span></div><div class="flow-node worker"><b>arXiv + PDF cache + Docling</b><span>external metadata · local heavy parsing</span></div><div class="flow-node"><b>OpenSearch Dashboards</b><span>:5601 · index inspection</span></div></div>
-          <div class="flow-arrow">future boundary</div>
-          <div class="flow-row"><div class="flow-node future"><b>Grounded answer service</b><span>retrieved passages → cited answer · Phase 5</span></div></div>
         </div>
         <p class="muted"><small>* Airflow’s host port can be changed with <code>AIRFLOW_PORT</code>; its container port remains 8080.</small></p>
         <h3>What each runtime owns</h3>
@@ -223,11 +223,11 @@
           <caption>Operational ownership and dependency boundaries.</caption>
           <thead><tr><th scope="col">Runtime</th><th scope="col">Owns</th><th scope="col">Does not own</th><th scope="col">Persistence</th></tr></thead>
           <tbody>
-            <tr><td><strong>API image</strong></td><td>HTTP routes, validation, repository reads, OpenSearch queries, query embeddings</td><td>Docling and scheduled ingestion</td><td>Stateless; connection pools only</td></tr>
+            <tr><td><strong>API image</strong></td><td>HTTP routes, retrieval, query embeddings, evidence selection, quotation/citation validation, buffered SSE</td><td>Docling and scheduled ingestion</td><td>Stateless; connection pools only</td></tr>
             <tr><td><strong>Airflow image</strong></td><td>arXiv fetch, PDF cache, Docling parsing, corpus writes, paper/chunk reindexing</td><td>Serving user traffic</td><td>Logs, PDF cache, model cache volumes</td></tr>
             <tr><td><strong>PostgreSQL</strong></td><td>Metadata, parsed text, sections, parser lifecycle</td><td>Ranking and vector similarity</td><td><code>postgres_data</code></td></tr>
             <tr><td><strong>OpenSearch</strong></td><td>BM25 documents, vectors, highlights, filtered ranking</td><td>Canonical paper ownership</td><td><code>opensearch_data</code></td></tr>
-            <tr><td><strong>Ollama</strong></td><td><code>nomic-embed-text</code> vectors today; LLM host later</td><td>Search orchestration</td><td><code>ollama_data</code></td></tr>
+            <tr><td><strong>Ollama</strong></td><td><code>nomic-embed-text</code> vectors; <code>llama3.2:1b</code> evidence-ID selection</td><td>Search orchestration and authoritative citation rendering</td><td><code>ollama_data</code></td></tr>
           </tbody>
         </table></div>
       </div>
@@ -287,12 +287,14 @@
           <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Purpose</th><th scope="col">Important behavior</th></tr></thead>
           <tbody>
             <tr><td><span class="method get">GET</span></td><td><code>/api/v1/ping</code></td><td>Cheap API liveness probe</td><td>Returns <code>{status: "ok", message: "pong"}</code></td></tr>
-            <tr><td><span class="method get">GET</span></td><td><code>/api/v1/health</code></td><td>PostgreSQL and Ollama dependency status</td><td>Reports <code>ok</code> or <code>degraded</code> per service</td></tr>
+            <tr><td><span class="method get">GET</span></td><td><code>/api/v1/health</code></td><td>PostgreSQL and Ollama dependency status</td><td>Required dependency failures return 503; optional model gaps can report degraded with 200</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/api/v1/papers/</code></td><td>Newest stored papers</td><td><code>limit</code> 1–100, non-negative <code>offset</code>, total count</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/api/v1/papers/{arxiv_id}</code></td><td>Full canonical paper record</td><td>Validates modern arXiv IDs; returns 404 when absent</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/api/v1/search/</code></td><td>BM25 paper discovery or browsing</td><td>Empty query allowed; category filter and newest-first sort</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/api/v1/search/chunks</code></td><td>BM25 evidence-passage search</td><td>Query required; <code>size</code> counts papers</td></tr>
             <tr><td><span class="method post">POST</span></td><td><code>/api/v1/search/hybrid</code></td><td>Keyword + semantic evidence search</td><td>RRF or explicit keyword fallback</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/api/v1/ask</code></td><td>Grounded evidence quotations as JSON</td><td>Answer, sources, citation evidence/locators, effective search mode and model</td></tr>
+            <tr><td><span class="method post">POST</span></td><td><code>/api/v1/stream</code></td><td>Grounded answer as typed SSE</td><td><code>sources</code>, validated <code>delta</code>, then <code>done</code>; rejected generation emits <code>error</code> without answer deltas or done</td></tr>
             <tr><td><span class="method get">GET</span></td><td><code>/docs</code></td><td>Generated Swagger UI</td><td>Exact request and response models</td></tr>
           </tbody>
         </table></div>
@@ -315,13 +317,67 @@ Content-Type: application/json
           <li><code>matching_passages</code> is truthful for collapsed BM25 results and omitted for bounded hybrid candidates.</li>
           <li>Categories outside the eight-category corpus return HTTP 422 rather than a misleading empty result.</li>
         </ul>
-        <div class="callout warning"><p><strong>Planned, not live:</strong> <code>/ask</code> is intentionally absent. It should eventually consume grouped evidence, preserve arXiv and passage provenance, and return citations.</p></div>
+        <h3>Representative grounded-answer request</h3>
+        <pre><code>POST /api/v1/ask
+Content-Type: application/json
+
+{
+  "query": "What model access does Diff Mining need?",
+  "top_k": 3,
+  "use_hybrid": true
+}</code></pre>
+        <p class="muted">The same payload works with <code>/api/v1/stream</code>. Optional <code>model</code> must be configured; <code>categories</code> uses the corpus allowlist. <code>top_k</code> counts paper groups (1–10, default 3), and the query is limited to 500 characters.</p>
+      </div>
+    </section>
+
+    <section id="answers">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">06</span><div><h2>How grounded answers work</h2><p class="sub">The model selects evidence IDs. The server produces the public answer text.</p></div></div>
+        <ol class="steps">
+          <li><div><strong>Retrieve and build context.</strong><p>BM25 or hybrid returns grouped passages. Context selects whole passages under a 12,000-character budget, prioritizing initial evidence from up to three papers.</p></div></li>
+          <li><div><strong>Offer bounded sentence candidates.</strong><p>A paper must cover at least 60% of the query terms across its context. Only whole 7–55-word sentences qualify. <code>RAG_SENTENCE_CANDIDATES_PER_PASSAGE=1</code> remains the default; 2–3 candidates are opt-in because expansion reduced measured relevance.</p></div></li>
+          <li><div><strong>Constrain and validate the selection.</strong><p>Structured output is <code>{"answer":"E1 E3"}</code> or <code>{"answer":"NONE"}</code>. A grammar admits at most three known IDs in increasing numeric order. Independent server validation rejects duplicate JSON keys, unknown/repeated IDs, malformed shapes and excessive selections.</p></div></li>
+          <li><div><strong>Retry once, then render or reject.</strong><p>An invalid selection gets at most one plain-ID retry against the same evidence. Selections are never sorted, deduplicated, truncated or repaired. Valid IDs become exact source quotations with server-owned citation markers, bounded to three excerpts and 200 words.</p></div></li>
+          <li><div><strong>Buffer before streaming.</strong><p>Both endpoints use ordinary Ollama generation and the same validation path. SSE sends source metadata first, then validated quotation deltas and done. Invalid retries emit an error without leaking answer text. Valid abstention uses the explicit insufficient-evidence response.</p></div></li>
+        </ol>
+        <div class="callout warning"><p><strong>Attribution and relevance are separate.</strong> A correctly quoted source can still be irrelevant to the requested fact. The conservative lexical gate can also reject supported paraphrases or multi-paper questions. These limitations are measured below.</p></div>
+      </div>
+    </section>
+
+    <section id="evaluation">
+      <div class="wrap">
+        <div class="section-head"><span class="section-no">07</span><div><h2>Measured results before Week 6</h2><p class="sub">Selector-reliability continuation, 8 October 2026. Small source-reviewed convenience samples; no independent human annotation.</p></div></div>
+        <div class="grid grid-3">
+          <article class="card card-live"><span class="label">Final selector · all three collections</span><h3>80/80 valid responses</h3><p>40/40 ask/stream pairs returned identical answers. All successful responses passed attribution and word-limit checks. This measures response validity and local agreement.</p></article>
+          <article class="card card-next"><span class="label">Known UndoBench regression</span><h3>4/4 attempts succeeded</h3><p>The previous quality pass failed all four attempts. BM25 now covers all three requested counts; hybrid still omits one. AVE’s answer/abstention mismatch did not recur in six identical-payload replays.</p></article>
+          <article class="card card-later"><span class="label">Repository checks at completion</span><h3>427 passed · 32 skipped</h3><p>Existing integration skips remain. Ruff and mypy passed. Independent selector tests check strict parsing, numeric ID boundaries, same-evidence retry and rejected-stream isolation.</p></article>
+        </div>
+        <h3>Final fresh holdout: seven questions</h3>
+        <div class="table-wrap"><table>
+          <caption>Five supported questions, including two paraphrases and one two-paper question; two unsupported controls. Values apply equally to ask and stream.</caption>
+          <thead><tr><th scope="col">Metric</th><th scope="col">BM25</th><th scope="col">Hybrid</th></tr></thead>
+          <tbody>
+            <tr><td>Mean complete-fact coverage over supported questions</td><td>50.0%</td><td>70.0%</td></tr>
+            <tr><td>Relevant excerpts / all selected excerpts</td><td>6/11 · 54.5%</td><td>7/13 · 53.8%</td></tr>
+            <tr><td>Supported false abstentions per endpoint</td><td>1/5</td><td>0/5</td></tr>
+            <tr><td>Correct unsupported abstentions per endpoint</td><td>1/2</td><td>1/2</td></tr>
+            <tr><td>Two-paper complete facts per endpoint</td><td>0/2</td><td>1/2</td></tr>
+            <tr><td>Ask median / p95 seconds</td><td>7.032 / 91.510</td><td>7.082 / 11.150</td></tr>
+            <tr><td>Stream median / p95 seconds</td><td>1.278 / 3.314</td><td>1.472 / 2.442</td></tr>
+          </tbody>
+        </table></div>
+        <p class="muted">Fresh results: 28/28 successful responses, 14/14 matching endpoint pairs, maximum answer 80 words. The first BM25 ask includes a model reload. Calls were serial, ask before stream, so prompt warmth affects latency; buffered streaming does not establish a generation speedup.</p>
+        <div class="callout warning"><p><strong>Remaining quality failures:</strong> only 4/8 unsupported attempts abstained correctly. All four SF-GNN energy-cost requests returned irrelevant source quotations. Neither mode fully answered the two-paper question. On the first nine questions, now inspected regression data, complete-fact coverage fell from 75.0% to 58.3% for BM25 and from 66.7% to 50.0% for hybrid; relevance also declined. The supported multi-tokenizer regression still falsely abstains under the preserved lexical gate.</p></div>
+        <h3>What was rejected and preserved</h3>
+        <p class="muted">A sparse keyed-map selector produced six failed attempts and was rejected; the installed runtime did not enforce its maximum property count. Batch size 1 was rejected after six AVE replay abstentions and greater prefill cost. Separate synthetic development and a second fresh holdout preceded the final string results. No runtime tuning followed final inspection. Further tuning needs new development examples and another fresh holdout.</p>
+        <div class="callout success"><p><strong>Preservation audit:</strong> 58 papers, 2,775 repaired v2 chunks, and 1,221 retained v1 chunks; alias remains on v2. Stored-paper/v2 text and metadata hashes, model digests, frozen benchmark/judgments, and 7,503 prior raw artifacts are unchanged. Across all experiments, 1,228 successful-answer citation records and 81 successful streams passed mechanical checks. Snapshots exclude embedding vectors and verify v1 by count. Only the local API was rebuilt; no deployment occurred.</p></div>
+        <p>Evidence: <a href="evaluation/selector_reliability/REPORT.md">selector report</a>, <a href="evaluation/selector_reliability/PROTOCOL.md">fixed protocol</a>, <a href="evaluation/selector_reliability/results.final.json">fresh metrics</a>, <a href="evaluation/selector_reliability/preservation.json">preservation audit</a>, and <a href="evaluation/selector_reliability/collection_audit.json">collection audit</a>. Earlier <a href="evaluation/REPORT.md">frozen evaluation</a> and <a href="evaluation/quality_fixes/REPORT.md">quality-pass results</a> remain preserved.</p>
       </div>
     </section>
 
     <section id="data">
       <div class="wrap">
-        <div class="section-head"><span class="section-no">06</span><div><h2>Data ownership and load-bearing invariants</h2><p class="sub">The details future changes must preserve to keep the corpus consistent and recoverable.</p></div></div>
+        <div class="section-head"><span class="section-no">08</span><div><h2>Data ownership and load-bearing invariants</h2><p class="sub">The details future changes must preserve to keep the corpus consistent and recoverable.</p></div></div>
         <div class="grid grid-2">
           <article class="card"><span class="label">Canonical table</span><h3><code>papers</code></h3><p>Stores UUID identity; unique <code>arxiv_id</code>; title, authors, abstract, categories, publication date, PDF URL; raw text, sections, references; parser metadata and state; created and updated timestamps.</p></article>
           <article class="card"><span class="label">Schema ownership</span><h3>Alembic at startup</h3><p><code>PostgreSQLDatabase.startup()</code> migrates under an advisory lock. Databases from the old <code>create_all()</code> path are detected and stamped at the baseline without disturbing rows.</p></article>
@@ -354,13 +410,14 @@ docker compose exec airflow python -m src.commands.ai_scope purge --expected-cou
 
     <section id="map">
       <div class="wrap">
-        <div class="section-head"><span class="section-no">07</span><div><h2>Code map</h2><p class="sub">Start at the boundary that matches your question, then follow dependencies inward.</p></div></div>
+        <div class="section-head"><span class="section-no">09</span><div><h2>Code map</h2><p class="sub">Start at the boundary that matches your question, then follow dependencies inward.</p></div></div>
         <pre class="tree"><code>AI-ScholarLens/
 ├── <span class="dir">src/</span>
 │   ├── main.py                         <span class="note-text"># lifespan, shared services, routers, 503 mapping</span>
 │   ├── config.py                       <span class="note-text"># immutable environment-backed settings</span>
 │   ├── dependencies.py                 <span class="note-text"># typed FastAPI injection</span>
-│   ├── <span class="dir">routers/</span>                        <span class="note-text"># health, papers, three search routes</span>
+│   ├── gradio_app.py                   <span class="note-text"># SSE client, safe answer/citation display</span>
+│   ├── <span class="dir">routers/</span>                        <span class="note-text"># health, papers, search, ask and stream</span>
 │   ├── <span class="dir">schemas/</span>                        <span class="note-text"># API, arXiv and parser contracts</span>
 │   ├── <span class="dir">repositories/</span>                   <span class="note-text"># SQL and transaction-neutral writes</span>
 │   ├── <span class="dir">models/</span>                         <span class="note-text"># SQLAlchemy Paper model</span>
@@ -374,8 +431,9 @@ docker compose exec airflow python -m src.commands.ai_scope purge --expected-cou
 │   │   ├── reindex.py                  <span class="note-text"># safe full-rewrite algorithm</span>
 │   │   ├── search.py                   <span class="note-text"># execution, fallback, grouping</span>
 │   │   ├── arxiv/ · pdf_parser/        <span class="note-text"># source and extraction adapters</span>
-│   │   └── embeddings/ · ollama/       <span class="note-text"># vector and health clients</span>
-│   └── <span class="dir">commands/ai_scope.py</span>           <span class="note-text"># safe audit/purge CLI</span>
+│   │   ├── rag/                        <span class="note-text"># context, excerpts, selector, validation</span>
+│   │   └── embeddings/ · ollama/       <span class="note-text"># vectors, generation, health clients</span>
+│   └── <span class="dir">commands/</span>                       <span class="note-text"># scope audit, PDF repair, read-only evaluation</span>
 ├── <span class="dir">airflow/</span>
 │   ├── dags/arxiv_paper_ingestion.py   <span class="note-text"># schedule and task graph</span>
 │   └── dags/arxiv_ingestion/tasks.py   <span class="note-text"># ingestion, indexing, reporting</span>
@@ -383,11 +441,15 @@ docker compose exec airflow python -m src.commands.ai_scope purge --expected-cou
 │   ├── unit/                           <span class="note-text"># policies, services, search, contracts</span>
 │   ├── api/                            <span class="note-text"># validation and route behavior</span>
 │   └── integration/                    <span class="note-text"># PostgreSQL, migration, repository, CLI</span>
+├── <span class="dir">evaluation/</span>                         <span class="note-text"># frozen benchmark, reviews and reports</span>
+│   ├── quality_fixes/                 <span class="note-text"># measured candidate-expansion trade-offs</span>
+│   └── selector_reliability/           <span class="note-text"># fresh holdouts, strict reviews, preservation</span>
+├── gradio_launcher.py                  <span class="note-text"># optional host UI on :7861</span>
 ├── compose.yml                         <span class="note-text"># six-service local runtime</span>
 ├── README.md                           <span class="note-text"># canonical developer guide</span>
 └── TESTING.md                          <span class="note-text"># complete verification guide</span></code></pre>
         <div class="grid grid-3">
-          <article class="card"><span class="label">HTTP path</span><h3><code>router → schema → service/repository</code></h3><p>Routes validate and delegate. Search orchestration lives in <code>SearchService</code>; SQL stays in the repository.</p></article>
+          <article class="card"><span class="label">HTTP path</span><h3><code>router → schema → service/repository</code></h3><p>Routes validate and delegate. <code>SearchService</code> retrieves; <code>RAGService</code> selects, validates and renders; SQL stays in the repository.</p></article>
           <article class="card"><span class="label">Ingestion path</span><h3><code>DAG → task → service → repository</code></h3><p>The DAG declares scheduling. Tasks own Airflow context; reusable application logic stays under <code>src/</code>.</p></article>
           <article class="card"><span class="label">Retrieval path</span><h3><code>profile → query → execute → shape</code></h3><p>Profiles isolate paper/chunk differences while sharing filtering, fuzzy matching, totals, highlighting, and pagination.</p></article>
         </div>
@@ -396,33 +458,27 @@ docker compose exec airflow python -m src.commands.ai_scope purge --expected-cou
 
     <section id="roadmap">
       <div class="wrap">
-        <div class="section-head"><span class="section-no">08</span><div><h2>Delivery roadmap</h2><p class="sub">Status reflects verified repository behavior, not aspiration.</p></div></div>
+        <div class="section-head"><span class="section-no">10</span><div><h2>Delivery roadmap</h2><p class="sub">Implementation and measured quality are tracked separately. Week 6 has not started.</p></div></div>
         <div class="roadmap">
           <div class="phase-row"><div class="phase-name">Phase 1</div><div><strong>Service foundation</strong><p>Docker Compose, FastAPI, PostgreSQL, OpenSearch, Ollama, Airflow and health checks.</p></div><span class="status live">complete</span></div>
           <div class="phase-row"><div class="phase-name">Phase 2</div><div><strong>arXiv ingestion and PDF processing</strong><p>AI-scoped metadata, cache, Docling, persistence, scheduling and accounting.</p></div><span class="status live">complete</span></div>
           <div class="phase-row"><div class="phase-name">Phase 3</div><div><strong>OpenSearch indexing and hybrid retrieval</strong><p>Paper/chunk projections, BM25, local vectors, KNN, RRF, fallback and grouping.</p></div><span class="status live">complete</span></div>
-          <div class="phase-row"><div class="phase-name">Phase 4</div><div><strong>Chunking and retrieval evaluation</strong><p>Chunking is complete. Evaluation sets, relevance judgments, metrics and regression thresholds remain.</p></div><span class="status progress">in progress</span></div>
-          <div class="phase-row"><div class="phase-name">Phase 5</div><div><strong>Grounded RAG answers</strong><p>Evidence retrieval, prompts, Ollama generation, traceable citations and faithfulness tests.</p></div><span class="status planned">planned</span></div>
-          <div class="phase-row"><div class="phase-name">Phase 6</div><div><strong>Production hardening</strong><p>Observability, security, recovery, deployment and operational ownership.</p></div><span class="status planned">planned</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 4</div><div><strong>Chunking and retrieval evaluation</strong><p>Frozen benchmark, source-reviewed holdouts, answer-bound judgments, retrieval/semantic metrics and preservation audits are recorded. Quality limitations remain explicit.</p></div><span class="status live">measured</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 5</div><div><strong>Grounded RAG answers</strong><p>JSON/SSE routes, Gradio client, strict selector contract, exact citations, bounded retry and Week 5 guards are implemented. Relevance, unsupported abstention and multi-paper completeness need further work.</p></div><span class="status live">implemented</span></div>
+          <div class="phase-row"><div class="phase-name">Phase 6</div><div><strong>Production hardening</strong><p>First inspect existing logs/metrics, access controls, rate limits, deployment configuration and backup/restore procedures; then identify missing controls. No deployment is authorized.</p></div><span class="status planned">unstarted</span></div>
         </div>
       </div>
     </section>
 
     <section id="run">
       <div class="wrap">
-        <div class="section-head"><span class="section-no">09</span><div><h2>Run and verify</h2><p class="sub">A short path from a checkout to evidence that the current system works.</p></div></div>
-        <h3>1. Start the stack</h3>
-        <pre><code>docker compose up --build -d
-docker compose ps
+        <div class="section-head"><span class="section-no">11</span><div><h2>Run and verify</h2><p class="sub">Inspect the preserved local stack and score saved results without changing the corpus.</p></div></div>
+        <h3>1. Inspect the existing stack</h3>
+        <pre><code>docker compose ps
 docker compose logs --tail=100 api
-docker compose logs --tail=100 airflow</code></pre>
-        <p class="muted">If 8080 is busy in PowerShell: <code>$env:AIRFLOW_PORT = "8081"</code>. Swagger is at <code>http://localhost:8000/docs</code>. Default Airflow login: <code>admin / admin</code>.</p>
-        <h3>2. Pull the embedding model and run ingestion</h3>
-        <pre><code>docker compose exec ollama ollama pull nomic-embed-text
-docker compose exec airflow airflow dags unpause arxiv_paper_ingestion
-docker compose exec airflow airflow dags trigger arxiv_paper_ingestion
-docker compose exec airflow airflow dags list-import-errors</code></pre>
-        <h3>3. Exercise retrieval</h3>
+docker compose exec ollama ollama list</code></pre>
+        <p class="muted">Swagger is at <code>http://localhost:8000/docs</code>. Both models are already installed. Fresh setup instructions live in <a href="README.md">README.md</a>; ingestion, repair, reindexing and model downloads are outside this preservation workflow.</p>
+        <h3>2. Exercise retrieval and grounded answers</h3>
         <pre><code>Invoke-RestMethod http://localhost:8000/api/v1/health
 
 Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ `
@@ -431,13 +487,22 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ `
 
 Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid `
   -ContentType application/json `
-  -Body '{"query":"how is hallucination reduced","size":5}'</code></pre>
-        <h3>4. Run the deterministic suite</h3>
-        <pre><code># PowerShell: keep its venv separate from WSL's .venv
-$env:UV_PROJECT_ENVIRONMENT = ".venv-win"
-uv run pytest -q
-uv run ruff check src tests
-uv run mypy src</code></pre>
+  -Body '{"query":"how is hallucination reduced","size":5}'
+
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/ask `
+  -ContentType application/json `
+  -Body '{"query":"What model access does Diff Mining need?","top_k":3,"use_hybrid":true}'</code></pre>
+        <p class="muted">Optional Gradio client: <code>.venv-win/Scripts/python.exe gradio_launcher.py</code>, then open <code>http://localhost:7861</code>.</p>
+        <h3>3. Run checks and score the saved fresh holdout</h3>
+        <pre><code>.venv-win/Scripts/python.exe -m pytest -q
+.venv-win/Scripts/python.exe -m ruff check src tests evaluation/selector_reliability
+.venv-win/Scripts/python.exe -m mypy src
+
+# Read saved records; no model calls or corpus writes
+.venv-win/Scripts/python.exe -m evaluation.selector_reliability.collection_audit
+.venv-win/Scripts/python.exe -m src.commands.evaluate_retrieval `
+  --benchmark evaluation/selector_reliability/final_holdout.json `
+  --output test_output/selector_reliability/final --score</code></pre>
         <div class="callout warning"><p><strong>Destructive command:</strong> <code>docker compose down -v</code> deletes PostgreSQL, OpenSearch, Ollama, Airflow log, PDF-cache, and model-cache volumes. Use plain <code>docker compose down</code> to preserve data.</p></div>
         <p class="muted">The complete matrix—real PostgreSQL tests, index inspection, fallback behavior, latency checks, PDF parsing, and fresh-database validation—lives in <a href="TESTING.md">TESTING.md</a>.</p>
       </div>
@@ -445,26 +510,29 @@ uv run mypy src</code></pre>
 
     <section id="reading">
       <div class="wrap">
-        <div class="section-head"><span class="section-no">10</span><div><h2>Choose a reading path</h2><p class="sub">You do not need to read the repository linearly.</p></div></div>
+        <div class="section-head"><span class="section-no">12</span><div><h2>Choose a reading path</h2><p class="sub">You do not need to read the repository linearly.</p></div></div>
         <div class="grid grid-2">
           <article class="card"><span class="label">New contributor</span><h3>Understand the product path</h3><p>Read <code>README.md</code> → <code>src/main.py</code> → the routers → the Airflow DAG. Then run the API examples above.</p></article>
           <article class="card"><span class="label">Retrieval engineer</span><h3>Trace relevance decisions</h3><p>Read chunking → indices → query → fusion → search service, alongside their unit tests.</p></article>
           <article class="card"><span class="label">Pipeline engineer</span><h3>Trace ownership and recovery</h3><p>Read DAG tasks → metadata fetcher → repository → migrations → reindexer. Focus on transactions, accounting, and aliases.</p></article>
-          <article class="card"><span class="label">Reviewer or operator</span><h3>Verify claims quickly</h3><p>Start with <code>TESTING.md</code>, the phase table in <code>README.md</code>, <code>compose.yml</code>, and tests named for the invariant.</p></article>
+          <article class="card"><span class="label">Reviewer or operator</span><h3>Verify measured claims</h3><p>Start with the <a href="evaluation/selector_reliability/REPORT.md">latest selector report</a>, its reviews and preservation audit, then <code>TESTING.md</code>, <code>compose.yml</code>, and tests named for the invariant.</p></article>
+          <article class="card"><span class="label">RAG engineer</span><h3>Trace an evidence answer</h3><p>Read <code>routers/ask.py</code> → <code>services/rag/service.py</code> → <code>context.py</code> / <code>excerpts.py</code>, then <code>test_selector_contract.py</code> and route tests. Use separate development and fresh holdout data for further changes.</p></article>
+          <article class="card"><span class="label">Week 6 planning</span><h3>Inspect existing controls first</h3><p>Use the latest results and <a href="SESSION_HANDOFF.md">session handoff</a> as context. Inventory observability, access control, rate limits, deployment and recovery before proposing additions.</p></article>
         </div>
         <h3>Small glossary</h3>
         <details><summary>BM25</summary><div>A lexical ranking algorithm. It is strong when query and document share meaningful terms; field boosts say which matches matter most.</div></details>
         <details><summary>Embedding and KNN</summary><div>An embedding maps text to a vector. K-nearest-neighbor search retrieves passages close to the query vector, capturing similar meaning despite different wording.</div></details>
         <details><summary>Reciprocal rank fusion (RRF)</summary><div>Combines ranked lists by position rather than raw score. Here it merges keyword and vector candidates with <code>k = 60</code>.</div></details>
         <details><summary>Index alias</summary><div>A stable read name such as <code>paper-chunks</code> pointing to a versioned concrete index. Atomic moves enable mapping migrations and rollback.</div></details>
-        <details><summary>Retrieval-augmented generation (RAG)</summary><div>The system retrieves evidence before an LLM drafts an answer. Here retrieval is live; grounded generation is the next major boundary.</div></details>
+        <details><summary>Retrieval-augmented generation (RAG)</summary><div>The system retrieves evidence before answering. Here the LLM selects sentence IDs and the server renders exact cited quotations. It does not treat model-written prose as authoritative evidence.</div></details>
+        <details><summary>Fact coverage versus attribution</summary><div>Attribution verifies that a quotation comes from the supplied source. Complete-fact coverage checks whether the selected quotations fully supply requested facts. A response can pass attribution while omitting facts or quoting irrelevant material.</div></details>
       </div>
     </section>
   </main>
 
   <footer>
     <div class="wrap">
-      <p><strong>AI-ScholarLens codebase field guide.</strong> Reconciled with commit <code>7606aeb</code> on branch <code>feat/opensearch-chunk-indexing</code>, 15 September 2026.</p>
+      <p><strong>AI-ScholarLens codebase field guide.</strong> Reconciled with repository snapshot <code>7b75373</code> on branch <code>feat/opensearch-chunk-indexing</code>, 8 October 2026. Latest measured work: selector reliability; Week 6 unstarted.</p>
       <p>For exact setup and operations, use <a href="README.md">README.md</a> and <a href="TESTING.md">TESTING.md</a>. This page is a navigational overview; the code and tests remain the source of truth.</p>
     </div>
   </footer>
