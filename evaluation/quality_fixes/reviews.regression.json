@@ -1,0 +1,97 @@
+{
+  "_meta": {
+    "records_sha256": "52db0113c63790ea08c923bf9ba63748df5a64df2099d19b6be952ea846eeda2",
+    "reviewer": "Codex source review",
+    "split": "Previously inspected v1 regressions, not unseen quality data."
+  },
+  "ave-1:bm25:ask:3": {
+    "answer_digest": "b9f20484b3abe076e802af21f46f5b15e38943fcca40097bc7c50ce1c8fa9615",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "Accuracy/no-VLM-fine-tuning fact is complete. Combination of prediction views is useful partial classifier detail, but the learned classifier is never stated. Hybrid adds unrelated baseline training requirements."
+  },
+  "ave-1:bm25:stream:3": {
+    "answer_digest": "b9f20484b3abe076e802af21f46f5b15e38943fcca40097bc7c50ce1c8fa9615",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "Accuracy/no-VLM-fine-tuning fact is complete. Combination of prediction views is useful partial classifier detail, but the learned classifier is never stated. Hybrid adds unrelated baseline training requirements."
+  },
+  "ave-1:hybrid:ask:3": {
+    "answer_digest": "2d15991b68cb599936a61ef82e1e849faae71407c4c94eac3bc7e4d644a902b7",
+    "covered_facts": [
+      "ave-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Accuracy/no-VLM-fine-tuning fact is complete. Combination of prediction views is useful partial classifier detail, but the learned classifier is never stated. Hybrid adds unrelated baseline training requirements."
+  },
+  "ave-1:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "False abstention on supported literal AVE despite the matching ask supplying the accuracy fact. Endpoint inconsistency remains."
+  },
+  "multi-tokenizer:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported two-paper question still fails the lexical gate."
+  },
+  "multi-tokenizer:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported two-paper question still fails the lexical gate."
+  },
+  "multi-tokenizer:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported two-paper question still fails the lexical gate."
+  },
+  "multi-tokenizer:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported two-paper question still fails the lexical gate."
+  },
+  "unsupported-ave:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-ave:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-ave:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-ave:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  }
+}

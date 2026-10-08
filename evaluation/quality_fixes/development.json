@@ -1,0 +1,125 @@
+{
+  "split": "synthetic development only; distinct from holdout and frozen v1",
+  "cases": [
+    {
+      "id": "aster-literal",
+      "query": "What classifier and accuracy does Aster report?",
+      "required_sentences": [
+        "Aster uses a linear classifier to select visual facts.",
+        "Aster reports an accuracy of 0.812 on the evaluation set."
+      ],
+      "papers": [
+        {
+          "id": "aster",
+          "text": "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on the evaluation set. Earlier research provides general background about the field."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "brio-literal",
+      "query": "What audio duration, sample rate and parameters does Brio support?",
+      "required_sentences": [
+        "Brio supports audio durations of up to 18 seconds.",
+        "Brio generates audio at a sample rate of 32 kHz.",
+        "Brio offers models with 2 billion and 8 billion parameters."
+      ],
+      "papers": [
+        {
+          "id": "brio",
+          "text": "Brio supports audio durations of up to 18 seconds. Brio generates audio at a sample rate of 32 kHz. Brio offers models with 2 billion and 8 billion parameters."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "aster-paraphrase",
+      "query": "How does Aster choose atomic claims, and how often is its prediction right?",
+      "required_sentences": [
+        "Aster uses a linear classifier to select visual facts.",
+        "Aster reports an accuracy of 0.812 on the evaluation set."
+      ],
+      "papers": [
+        {
+          "id": "aster",
+          "text": "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on the evaluation set. Earlier research provides general background about the field."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "brio-paraphrase",
+      "query": "How long can Brio clips last and at what frequency are sounds sampled?",
+      "required_sentences": [
+        "Brio supports audio durations of up to 18 seconds.",
+        "Brio generates audio at a sample rate of 32 kHz."
+      ],
+      "papers": [
+        {
+          "id": "brio",
+          "text": "Brio supports audio durations of up to 18 seconds. Brio generates audio at a sample rate of 32 kHz. Brio offers models with 2 billion and 8 billion parameters."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "multi-classifier",
+      "query": "What classifier do Aster and Cinder use to select visual facts?",
+      "required_sentences": [
+        "Aster uses a linear classifier to select visual facts.",
+        "Cinder uses a neural classifier to select visual facts."
+      ],
+      "papers": [
+        {
+          "id": "aster",
+          "text": "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on the evaluation set. Earlier research provides general background about the field."
+        },
+        {
+          "id": "cinder",
+          "text": "Cinder uses a neural classifier to select visual facts."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "unsupported-topic",
+      "query": "What classifier and accuracy does Aster report for cancer diagnosis?",
+      "required_sentences": [],
+      "papers": [
+        {
+          "id": "aster",
+          "text": "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on the evaluation set. Earlier research provides general background about the field."
+        }
+      ],
+      "answerable": false
+    },
+    {
+      "id": "unsupported-private",
+      "query": "What is the private invoice number for training Brio audio models?",
+      "required_sentences": [],
+      "papers": [
+        {
+          "id": "brio",
+          "text": "Brio supports audio durations of up to 18 seconds. Brio generates audio at a sample rate of 32 kHz. Brio offers models with 2 billion and 8 billion parameters."
+        }
+      ],
+      "answerable": false
+    },
+    {
+      "id": "unrelated",
+      "query": "What time does the Cairo bus depart tomorrow?",
+      "required_sentences": [],
+      "papers": [
+        {
+          "id": "aster",
+          "text": "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on the evaluation set. Earlier research provides general background about the field."
+        },
+        {
+          "id": "brio",
+          "text": "Brio supports audio durations of up to 18 seconds. Brio generates audio at a sample rate of 32 kHz. Brio offers models with 2 billion and 8 billion parameters."
+        }
+      ],
+      "answerable": false
+    }
+  ]
+}

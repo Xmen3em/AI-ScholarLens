@@ -1,0 +1,144 @@
+{
+  "version": "inspected-v1-regression-subset",
+  "reviewed_on": "2026-10-08",
+  "reviewer": "Codex source review",
+  "split": "Inspected regression cases copied unchanged from frozen v1; not new unseen evaluation.",
+  "corpus": {
+    "papers": 58,
+    "chunks": 2775,
+    "alias_target": "paper-chunks-v2",
+    "preserved_v1_chunks": 1221
+  },
+  "cases": [
+    {
+      "id": "undo-design-1",
+      "pair": "undo-design",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How many base workflows, fault scenarios, and enterprise domains does UndoBench span?",
+      "facts": [
+        {
+          "id": "undo-design-f1",
+          "text": "36 base workflows"
+        },
+        {
+          "id": "undo-design-f2",
+          "text": "36 fault scenarios"
+        },
+        {
+          "id": "undo-design-f3",
+          "text": "8 enterprise domains"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05622v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Tool-using AI agents are increasingly deployed across enterprise software systems, yet widely used benchmarks primarily evaluate nominal task completion, conflating baseline planning competence with operational fault recovery. We introduce UndoBench, a benchmark spanning 36 base workflows and 36 fault scenarios across 8 enterprise domains, decoupling task competence from recovery capability via counterfactual paired trials under identical seeds alongside wire-level effect-history and environment-state oracles. On 12 heldout TEST workflows across two open-weight models, two frameworks, and three recovery paradigms (5,760 executions / 2,880 paired trials) in the frozen lost-acknowledgment study, nominal competence reached 83.54% while conditional recovery success rate (CRSR) fell to 46.72%, with naive retry producing duplicate external effects in 53.33% of trials. Extensions to commercial API models reproduced this competence-recovery separation. Evaluations across complementary execution boundaries show that recovery is phase-dependent: before mutation, methods perform similarly without duplicate effects among capable trials; during partial mutation, naive retry, per-call idempotency, and zero-privilege journaling collapse on the evaluated composite workflows; after commit but before acknowledgment, verification and server-side idempotency substantially improve safety. These findings demonstrate that evaluating nominal completion alone masks critical, phase-dependent recovery vulnerabilities in autonomous agents."
+            }
+          ]
+        }
+      ],
+      "review_note": "Counts describe the benchmark, not the 12 heldout TEST workflows."
+    },
+    {
+      "id": "ave-1",
+      "pair": "ave",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How does Atomic Visual Entailment combine predictions, and what SNLI-VE test accuracy does it reach without fine-tuning a vision-language model?",
+      "facts": [
+        {
+          "id": "ave-f1",
+          "text": "Combines full-hypothesis and atomic-fact predictions through a lightweight learned classifier"
+        },
+        {
+          "id": "ave-f2",
+          "text": "0.803 SNLI-VE test accuracy without fine-tuning VLMs"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Visual entailment (VE) asks whether an image supports, contradicts, or leaves undecided a textual hypothesis. Strong results come from fine-tuning large vision-language models on labelled data, while zero-shot and hybrid approaches remain far behind. A VE hypothesis often bundles several visual claims, yet existing zero-shot methods reason over it as a single unit. We propose Atomic Visual Entailment (AVE), which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen vision-language models, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation is worse than not decomposing at all. Full-hypothesis and atomic prediction make complementary errors, and learning which to trust recovers far more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any vision-language model. AVE also localises the visual evidence behind its prediction without region-level supervision. These results suggest that learning which candidate prediction to trust can close much of the gap to fine-tuned systems, offering a practical alternative where fine-tuning a vision-language model directly would need more labelled data or compute than is available."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 6,
+              "chunk_index": 1,
+              "section_title": "✓ Entailment",
+              "source_excerpt": "e 1). Related work on blackbox ensembling instead learns which candidate to trust rather than counting votes, and does so without access to the models that produced the candidates (Xia et al., 2025).\nTo address these two challenges, we propose Atomic Visual Entailment (AVE), a framework that decomposes the hypothesis into atomic facts and combines predictions from both views of the claim. AVE produces a pool of candidate predictions from two frozen VLMs under several prediction strategies and prompt styles. A lightweight classifier then predicts the final label from features describing how those candidates behaved. Because each candidate carries the reasoning that produced it, AVE also localises the visual evidence behind its prediction, without region-level supervision. On SNLI-VE (Xie et al., 2019), AVE outperforms every previously published zero-shot and hybrid result, while every VLM remains frozen.\nIn summary, our contributions are: (1) AVE, a framework that decomposes VE hypotheses into atomic facts and combines full-hypothesis and atomic predictions through a lightweight learned selector, without fine-tuning any VLM; (2) 0.803 test accuracy on SNLI-VE, 14.2 points above the strongest hybrid baseline and within the range of supervised systems; (3) Evidence that atomic reasoning helps only with hypothesis context preserved, and that learned selection exploits the resulting complementary errors far better than majority voting; (4) Zero-shot grounding of predicted evidence, reaching Recall@1 of 0.837 against human annotations without region-level supervision."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 20,
+              "chunk_index": 0,
+              "section_title": "5 Conclusion",
+              "source_excerpt": "We study whether atomic hypothesis decomposition improves zero-shot visual entailment, and whether predictions from different reasoning routes can be combined. We propose AVE, which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen VLMs, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation performs worse than not decomposing at all. Fullhypothesis and atomic reasoning make complementary errors, and learning which to trust recovers substantially more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any VLM. Because the selected prediction carries the reasoning that produced it, AVE also localises the visual evidence behind that prediction, without region-level supervision.\n8"
+            }
+          ]
+        }
+      ],
+      "review_note": "Alternatives reviewed in abstract, contributions and conclusion; comparison table alone is insufficient for both facts."
+    },
+    {
+      "id": "multi-tokenizer",
+      "kind": "multi-paper",
+      "answerable": true,
+      "query": "What tokenizer mechanism links Arkios and Vowel Signs Are Not Letters, and how does each paper use or explain the repair?",
+      "facts": [
+        {
+          "id": "multi-tokenizer-arkios",
+          "text": "Arkios uses a combining-mark-aware byte-level BPE tokenizer for English-Nepali"
+        },
+        {
+          "id": "multi-tokenizer-tokenizer",
+          "text": "Letters-only pre-tokenization fragments combining marks; including marks removes the structural boundary"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 5,
+              "chunk_index": 0,
+              "section_title": "2 Tokenizer",
+              "source_excerpt": "We use a byte-level BPE tokenizer of 65,536 tokens (chosen so every token ID fits in a uint16), trained with a modified pretokenizer regex that uses [\\p{L}\\p{M}]+ as the word class in place of the default \\p{L}+. This closes the Devanagari fragmentation described above while leaving English pretokenization unchanged (Latin letters carry no combining marks after NFC normalization). The tokenizer reaches 1.69 tokens/word on Nepali, which the companion paper (Regmi et al., 2026) shows is competitive with or better than substantially larger frontier tokenizers on the same measure. The tokenizer is frozen for the duration of this project (hash 0x3259671B); all pretraining and SFT shards are packed against this exact tokenizer and are not portable to any other. We do not re-derive the tokenizer analysis here and refer readers to Regmi et al. (2026) for the full fertility sweep, the mixture-invariance diagnostic, and cross-tokenizer comparisons.\nTable 1: Arkios architecture configuration.\nParameters\n1.04B\nLayers\n18\nHidden size (dmodel)\n2048\nAttention heads (Q / KV)\n16 / 8\nHead dimension\n128\nFFN dimension (SwiGLU)\n6144\nVocabulary\n65,536\nContext length\n4096\nRoPE θ\n1,000,000\nTied input/output embeddings\nyes"
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26449v1",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "1 Introduction",
+              "source_excerpt": "Fertility, the mean number of tokens a tokenizer spends per word, sets an exchange rate between a language and every cost tied to a language model. With context length and training budget held fixed, a language tokenized at 5 tokens per word gets a fifth as much effective text as one tokenized at 1. For low-resource languages the corpus is already the binding constraint, and fertility compounds it.\nWe built a bilingual English-Nepali tokenizer and found Nepali fertility near 4.4 tokens per word. The standard diagnosis was a data shortage: Nepali is low-resource, the mixture was English-dominant, and adding more Nepali is the usual remedy. We raised the Nepali share and retrained. The number did not move. We raised it again, and it still had no effect.\nThe cause was one character class. The HuggingFace ByteLevel pre-tokenizer applies the regex from GPT-2 (Radford et al., 2019), whose word alternative is \\p{L}+ , matching one or more Unicode letters. In Devanagari, vowels are written as combining marks. The vowel sign AA falls under category Mc , E under Mn , and the virama under Mn as well. None are L , so \\p{L}+ splits a Nepali word at every vowel sign. BPE, which merges pairs only inside a pre-token, has no way to rejoin them. Under \\p{L}+ , the word nep¯ al¯ ı yields six pre-tokens; under [\\p{L}\\p{M}]+ , just one.\nThe o200k pattern shipped with GPT-4o already uses a mark-aware word class, and SentencePiece (Kudo and Richardson, 2018) sidesteps letter-based pre-tokenization entirely. This is not an unknown defect. We report what it costs, how to recognise it from its symptoms, and how far it reaches across the world's writing systems."
+            }
+          ]
+        }
+      ],
+      "review_note": "Both named papers required; background mentions of one in another do not satisfy two-source coverage."
+    },
+    {
+      "id": "unsupported-ave",
+      "kind": "related-unanswerable",
+      "answerable": false,
+      "query": "How many patients were cured by Atomic Visual Entailment in a randomized clinical trial?",
+      "facts": [],
+      "support": [],
+      "review_note": "AVE evaluates SNLI-VE visual entailment, not patient treatment outcomes."
+    }
+  ]
+}

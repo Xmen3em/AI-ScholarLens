@@ -282,3 +282,87 @@ async def test_real_stream_service_rejects_wrong_selections_before_answer_deltas
     prepared = await service.prepare(AskRequest(query="grounded rag"))
     with pytest.raises(GroundingError):
         _ = [chunk async for chunk in service.generate_stream(prepared)]
+
+
+@pytest.mark.anyio
+async def test_endpoints_share_selection_transport_and_abstention_policy(settings):
+    class TransportSensitiveOllama(StubOllama):
+        async def generate_stream(self, model, prompt, **kwargs):
+            yield OllamaGenerateResponse(model=model, response='{"answer": []}', done=True)
+
+    service = RAGService(StubSearch(_search_response(hits=[_paper()])), TransportSensitiveOllama(), settings)
+    request = AskRequest(query="grounded rag")
+    response = await service.ask(request)
+    prepared = await service.prepare(request)
+    streamed = "".join([chunk.response async for chunk in service.generate_stream(prepared)])
+    assert streamed == response.answer
+    assert streamed != INSUFFICIENT_EVIDENCE_ANSWER
+
+
+@pytest.mark.anyio
+async def test_structured_selection_requests_unique_ids_and_minimal_relevant_quotes(settings):
+    ollama = StubOllama()
+    settings = settings.model_copy(update={"rag_sentence_candidates_per_passage": 3})
+    service = RAGService(StubSearch(_search_response(hits=[_paper()])), ollama, settings)
+    await service.ask(AskRequest(query="grounded rag"))
+    schema = ollama.calls[0]["response_format"]["properties"]["answer"]
+    assert schema["uniqueItems"] is True
+    assert schema["maxItems"] == 3
+    assert "Do not fill unused slots" in ollama.calls[0]["prompt"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("endpoint", ["ask", "stream"])
+async def test_invalid_structured_shape_gets_one_validated_retry_on_both_endpoints(settings, endpoint):
+    ollama = StubOllama(["E1"] * 4, retry_answer=["E1"])
+    service = RAGService(StubSearch(_search_response(hits=[_paper()])), ollama, settings)
+    request = AskRequest(query="grounded rag")
+    if endpoint == "ask":
+        answer = (await service.ask(request)).answer
+    else:
+        prepared = await service.prepare(request)
+        answer = "".join([chunk.response async for chunk in service.generate_stream(prepared)])
+    assert answer == '"The grounded RAG method binds claims to retrieved evidence." [1.1]'
+    assert len(ollama.calls) == 2
+
+
+@pytest.mark.anyio
+async def test_stream_invalid_retry_fails_before_any_answer_delta(settings):
+    ollama = StubOllama(["E1", "E1"], retry_answer=["E1", "E1"])
+    service = RAGService(StubSearch(_search_response(hits=[_paper()])), ollama, settings)
+    prepared = await service.prepare(AskRequest(query="grounded rag"))
+    emitted = []
+    with pytest.raises(GroundingError):
+        async for chunk in service.generate_stream(prepared):
+            emitted.append(chunk)
+    assert emitted == []
+    assert len(ollama.calls) == 2
+
+
+@pytest.mark.anyio
+async def test_opt_in_expansion_reaches_prompt_schema_and_rendering(settings):
+    paper = _paper()
+    paper.passages[0].content = (
+        "Aster uses a linear classifier to select visual facts. "
+        "Aster reports an accuracy of 0.812 on the evaluation set."
+    )
+    settings = settings.model_copy(update={"rag_sentence_candidates_per_passage": 3})
+    service = RAGService(StubSearch(_search_response(hits=[paper])), StubOllama(["E1", "E2"]), settings)
+    request = AskRequest(query="What classifier and accuracy does Aster report?")
+    response = await service.ask(request)
+    prepared = await service.prepare(request)
+    streamed = "".join([chunk.response async for chunk in service.generate_stream(prepared)])
+    assert "linear classifier" in response.answer and "0.812" in response.answer
+    assert streamed == response.answer
+    assert response.answer.count("[1.1]") == 2
+
+
+@pytest.mark.anyio
+async def test_default_keeps_original_prompt_after_development_abstention_regression(settings):
+    ollama = StubOllama()
+    service = RAGService(StubSearch(_search_response(hits=[_paper()])), ollama, settings)
+    await service.ask(AskRequest(query="grounded rag"))
+    prompt = ollama.calls[0]["prompt"]
+    assert "an array of up to three selected IDs" in prompt
+    assert "Do not fill unused slots" not in prompt
+    assert "Include complementary sentences" not in prompt

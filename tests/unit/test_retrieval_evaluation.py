@@ -1,7 +1,7 @@
 """Protect evaluation denominators and fail-closed stream accounting."""
 
 import pytest
-from src.commands.evaluate_retrieval import parse_sse, retrieval_metrics, summarize, validate_reviews
+from src.commands.evaluate_retrieval import audit_answer, parse_sse, retrieval_metrics, summarize, validate_reviews
 
 
 def test_evidence_recall_requires_passage_and_counts_all_units():
@@ -102,3 +102,18 @@ def test_stale_semantic_reviews_cannot_score_changed_answers():
     reviews = {"case:bm25:ask:3": {"answer_digest": "old digest"}}
     with pytest.raises(ValueError, match="reviewed answer changed"):
         validate_reviews(records, reviews)
+
+
+def test_candidate_audit_uses_the_explicit_api_expansion_setting():
+    text = "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on the evaluation set."
+    citation = {"marker": "[1.1]", "arxiv_id": "dev", "title": "Aster", "section_title": "Abstract",
+                "section_index": 0, "chunk_index": 0, "evidence": text}
+    response = {"answer": '"Aster uses a linear classifier to select visual facts." [1.1]', "citations": [citation]}
+    case = {"query": "What classifier and accuracy does Aster report?", "support": []}
+    chunks = [{**citation, "content": text}]
+    papers = [{"arxiv_id": "dev", "sections": [{"content": text}]}]
+    default = audit_answer(response, case, chunks, papers)
+    expanded = audit_answer(response, case, chunks, papers, candidates_per_passage=3)
+    assert len(default["candidates"]) == 1
+    assert len(expanded["candidates"]) == 2
+    assert expanded["attribution_error"] is None

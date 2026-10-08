@@ -1,0 +1,228 @@
+[
+  {
+    "variant": "default",
+    "id": "aster-literal",
+    "endpoint": "ask",
+    "offered_facts": 1,
+    "facts": 2,
+    "candidates": {
+      "E1": "Aster reports an accuracy of 0.812 on the evaluation set."
+    },
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 6.172728299978189
+  },
+  {
+    "variant": "default",
+    "id": "aster-literal",
+    "endpoint": "stream",
+    "offered_facts": 1,
+    "facts": 2,
+    "candidates": {
+      "E1": "Aster reports an accuracy of 0.812 on the evaluation set."
+    },
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 1.1102671000408009
+  },
+  {
+    "variant": "default",
+    "id": "brio-literal",
+    "endpoint": "ask",
+    "offered_facts": 1,
+    "facts": 3,
+    "candidates": {
+      "E1": "Brio supports audio durations of up to 18 seconds."
+    },
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 3.2443220999557525
+  },
+  {
+    "variant": "default",
+    "id": "brio-literal",
+    "endpoint": "stream",
+    "offered_facts": 1,
+    "facts": 3,
+    "candidates": {
+      "E1": "Brio supports audio durations of up to 18 seconds."
+    },
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 1.5833675999892876
+  },
+  {
+    "variant": "default",
+    "id": "aster-paraphrase",
+    "endpoint": "ask",
+    "offered_facts": 0,
+    "facts": 2,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.0005974998930469155
+  },
+  {
+    "variant": "default",
+    "id": "aster-paraphrase",
+    "endpoint": "stream",
+    "offered_facts": 0,
+    "facts": 2,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.00017060001846402884
+  },
+  {
+    "variant": "default",
+    "id": "brio-paraphrase",
+    "endpoint": "ask",
+    "offered_facts": 0,
+    "facts": 2,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.0005132000660523772
+  },
+  {
+    "variant": "default",
+    "id": "brio-paraphrase",
+    "endpoint": "stream",
+    "offered_facts": 0,
+    "facts": 2,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.0002194000408053398
+  },
+  {
+    "variant": "default",
+    "id": "multi-classifier",
+    "endpoint": "ask",
+    "offered_facts": 2,
+    "facts": 2,
+    "candidates": {
+      "E1": "Aster uses a linear classifier to select visual facts.",
+      "E2": "Cinder uses a neural classifier to select visual facts."
+    },
+    "answer": "\"Aster uses a linear classifier to select visual facts.\" [1.1]\n\"Cinder uses a neural classifier to select visual facts.\" [2.1]",
+    "ok": true,
+    "abstained": false,
+    "covered_facts": 2,
+    "seconds": 6.649451599922031
+  },
+  {
+    "variant": "default",
+    "id": "multi-classifier",
+    "endpoint": "stream",
+    "offered_facts": 2,
+    "facts": 2,
+    "candidates": {
+      "E1": "Aster uses a linear classifier to select visual facts.",
+      "E2": "Cinder uses a neural classifier to select visual facts."
+    },
+    "answer": "\"Aster uses a linear classifier to select visual facts.\" [1.1]\n\"Cinder uses a neural classifier to select visual facts.\" [2.1]",
+    "ok": true,
+    "abstained": false,
+    "covered_facts": 2,
+    "seconds": 3.72195370006375
+  },
+  {
+    "variant": "default",
+    "id": "unsupported-topic",
+    "endpoint": "ask",
+    "offered_facts": 0,
+    "facts": 0,
+    "candidates": {
+      "E1": "Aster reports an accuracy of 0.812 on the evaluation set."
+    },
+    "answer": "\"Aster reports an accuracy of 0.812 on the evaluation set.\" [1.1]",
+    "ok": true,
+    "abstained": false,
+    "covered_facts": 0,
+    "seconds": 2.8260411000810564
+  },
+  {
+    "variant": "default",
+    "id": "unsupported-topic",
+    "endpoint": "stream",
+    "offered_facts": 0,
+    "facts": 0,
+    "candidates": {
+      "E1": "Aster reports an accuracy of 0.812 on the evaluation set."
+    },
+    "answer": "\"Aster reports an accuracy of 0.812 on the evaluation set.\" [1.1]",
+    "ok": true,
+    "abstained": false,
+    "covered_facts": 0,
+    "seconds": 1.0541489000897855
+  },
+  {
+    "variant": "default",
+    "id": "unsupported-private",
+    "endpoint": "ask",
+    "offered_facts": 0,
+    "facts": 0,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.0007009999826550484
+  },
+  {
+    "variant": "default",
+    "id": "unsupported-private",
+    "endpoint": "stream",
+    "offered_facts": 0,
+    "facts": 0,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.0003138999454677105
+  },
+  {
+    "variant": "default",
+    "id": "unrelated",
+    "endpoint": "ask",
+    "offered_facts": 0,
+    "facts": 0,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.0005236000288277864
+  },
+  {
+    "variant": "default",
+    "id": "unrelated",
+    "endpoint": "stream",
+    "offered_facts": 0,
+    "facts": 0,
+    "candidates": {},
+    "answer": "The retrieved evidence is insufficient to answer this question.",
+    "ok": true,
+    "abstained": true,
+    "covered_facts": 0,
+    "seconds": 0.000264100031927228
+  }
+]

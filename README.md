@@ -11,7 +11,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 | Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
 | Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
-| Phase 4 | Chunking and retrieval evaluation | Initial evaluation complete — 24-case preserved-corpus benchmark; quality limitations documented in [report](evaluation/REPORT.md) |
+| Phase 4 | Chunking and retrieval evaluation | Initial evaluation and pre-Week-6 quality pass complete; candidate expansion remains opt-in after relevance regressed. See [quality results](evaluation/quality_fixes/REPORT.md). |
 | Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
 
@@ -269,6 +269,13 @@ share a name with an existing index, so it has to exist from the first write.
 9. `/api/v1/search/` ranks papers with BM25; `/search/chunks` ranks passages; `/search/hybrid`
    fuses keyword and vector rankings.
 10. Retrieval evaluation and grounded RAG answering are implemented; see the [evaluation report](evaluation/REPORT.md) for measured coverage, abstention, and reliability limitations.
+
+The [pre-Week-6 quality pass](evaluation/quality_fixes/REPORT.md) measured sentence
+expansion on separate development and fresh corpus questions. Both answer endpoints
+now share buffered selection validation and a bounded retry. Candidate expansion
+remains opt-in (`RAG_SENTENCE_CANDIDATES_PER_PASSAGE=2` or `3`, default `1`) because
+it reduced excerpt relevance. The 60% lexical gate, exact attribution, frozen v1
+benchmark, repaired corpus and both indexes are preserved. Phase 6 remains planned.
 
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 

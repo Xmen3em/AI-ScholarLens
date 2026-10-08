@@ -17,7 +17,7 @@ def test_excerpts_prioritize_question_terms_and_keep_passage_diversity():
     assert excerpts["E1"].text == "Retrieval augmented generation conditions answers on retrieved passages."
     assert excerpts["E1"].marker == "[1.1]"
     assert excerpts["E2"].marker == "[2.1]"
-    assert len(excerpts) == 2  # Only each passage's best sentence is selectable.
+    assert len(excerpts) == 2  # The default offers each passage's best sentence.
     assert render_selection(["E1", "E2"], excerpts) == (
         '"Retrieval augmented generation conditions answers on retrieved passages." [1.1]\n'
         '"We evaluate retrieval augmented generation with knowledge-gap canaries." [2.1]'
@@ -58,3 +58,53 @@ def test_relevance_shortlist_excludes_other_papers_with_only_generic_overlap():
     unrelated.arxiv_id = "2601.00002v1"
     excerpts = build_excerpts([primary, unrelated], "What are Orion knowledge graphs?")
     assert [excerpt.marker for excerpt in excerpts.values()] == ["[1.1]"]
+
+
+def test_candidates_keep_separate_requested_facts_from_one_passage():
+    method = "Aster uses a linear classifier to select visual facts."
+    result = "Aster reports an accuracy of 0.812 on the evaluation set."
+    excerpts = build_excerpts([_citation("[1.1]", method + "\n" + result)],
+                              "What classifier and accuracy does Aster report?", candidates_per_passage=3)
+    assert {e.text for e in excerpts.values()} == {method, result}
+    answer = render_selection(list(excerpts), excerpts)
+    assert method in answer and result in answer
+    assert answer.count("[1.1]") == 2
+
+
+def test_candidate_expansion_is_bounded_and_omits_zero_overlap_background():
+    facts = [
+        "Brio supports audio durations of up to 18 seconds.",
+        "Brio generates audio at a sample rate of 32 kHz.",
+        "Brio offers models with 2 billion and 8 billion parameters.",
+        "Brio includes another audio model for additional experiments.",
+    ]
+    background = "Earlier research provides general background about the field."
+    excerpts = build_excerpts([_citation("[1.1]", " ".join([*facts, background]))],
+                              "What audio duration, sample rate and parameters does Brio support?", candidates_per_passage=3)
+    assert len(excerpts) == 3
+    assert {e.text for e in excerpts.values()} == set(facts[:3])
+
+
+def test_candidate_expansion_keeps_other_passages_and_source_markers():
+    citations = [
+        _citation("[1.1]", "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on its evaluation set."),
+        _citation("[2.1]", "Brio uses a neural classifier to select visual facts. Brio reports an accuracy of 0.734 on its evaluation set."),
+    ]
+    citations[1].arxiv_id = "2601.00002v1"
+    excerpts = build_excerpts(citations, "What classifier and accuracy do Aster and Brio report?", candidates_per_passage=3)
+    assert len(excerpts) == 4
+    assert {e.marker for e in excerpts.values()} == {"[1.1]", "[2.1]"}
+    for excerpt in excerpts.values():
+        citation = next(c for c in citations if c.marker == excerpt.marker)
+        assert excerpt.text in citation.evidence
+
+
+def test_expansion_does_not_change_default_candidate_count():
+    citation = _citation("[1.1]", "Aster uses a linear classifier to select visual facts. Aster reports an accuracy of 0.812 on its evaluation set.")
+    assert len(build_excerpts([citation], "What classifier and accuracy does Aster report?")) == 1
+
+
+@pytest.mark.parametrize("limit", [0, 4])
+def test_candidate_expansion_rejects_limits_outside_the_measured_bound(limit):
+    with pytest.raises(ValueError):
+        build_excerpts([], "classifier", candidates_per_passage=limit)

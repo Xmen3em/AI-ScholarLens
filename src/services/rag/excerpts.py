@@ -9,6 +9,7 @@ from src.schemas.api.rag import Citation
 from src.services.rag.context import INSUFFICIENT_EVIDENCE_ANSWER, validate_answer_length
 
 MAX_EXCERPTS = 3
+MAX_CANDIDATES_PER_PASSAGE = 3
 MAX_EXCERPT_WORDS = 55
 QUESTION_STOPWORDS = frozenset("a an and are as at be by do does for from how in is it of on or papers that the these this to use what which with".split())
 MIN_QUERY_COVERAGE = 0.6
@@ -26,12 +27,14 @@ class EvidenceExcerpt:
     marker: str
 
 
-def build_excerpts(citations: Sequence[Citation], query: str) -> dict[str, EvidenceExcerpt]:
-    """Offer the best matching whole sentence from each retrieved passage.
+def build_excerpts(citations: Sequence[Citation], query: str, *, candidates_per_passage: int = 1) -> dict[str, EvidenceExcerpt]:
+    """Offer bounded matching whole sentences; expansion is an opt-in experiment.
 
     Short headings and overlong sentences are omitted, never truncated. Original
     wording is preserved; only PDF whitespace is normalized.
     """
+    if not 1 <= candidates_per_passage <= MAX_CANDIDATES_PER_PASSAGE:
+        raise ValueError("candidates_per_passage must be between one and three")
     terms = _terms(query)
     # A shared topic mention is insufficient when most requested details are absent.
     # This deliberately abstains on some paraphrases; it is not semantic entailment.
@@ -50,12 +53,12 @@ def build_excerpts(citations: Sequence[Citation], query: str) -> dict[str, Evide
         sentences = [
             " ".join(sentence.split())
             for sentence in raw_sentences
-            if 7 <= len(sentence.split()) <= MAX_EXCERPT_WORDS
+            if 7 <= len(sentence.split()) <= MAX_EXCERPT_WORDS and terms & _terms(sentence)
         ]
         frequency = Counter(term for sentence in raw_sentences for term in _terms(sentence))
         sentences.sort(key=lambda text: -sum(1 / frequency[term] for term in terms & _terms(text)))
-        if sentences:
-            excerpts[f"E{len(excerpts) + 1}"] = EvidenceExcerpt(sentences[0], citation.marker)
+        for sentence in sentences[:candidates_per_passage]:
+            excerpts[f"E{len(excerpts) + 1}"] = EvidenceExcerpt(sentence, citation.marker)
     return excerpts
 
 

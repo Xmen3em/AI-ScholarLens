@@ -567,3 +567,47 @@ The initial raw run is saved at `test_output/retrieval_eval/run-v1/` (ignored lo
 artifacts); the reviewed labels, semantic judgments, comparison report and runner
 are ordinary project files. Keep this benchmark separate from any future tuning
 examples. Evaluation completion does not imply broad answer-quality acceptance.
+
+## Answer-quality fixes before Week 6
+
+Read `evaluation/quality_fixes/REPORT.md` and `PROTOCOL.md`. The initial 12-case
+holdout compares baseline and three-candidate expansion. Expansion improved offered
+facts but regressed relevance, so the default remains one sentence per passage.
+Seven further fresh questions validate the final conservative default. Four v1
+questions are copied unchanged into an explicitly inspected regression subset.
+Both holdouts are now inspected data; future tuning needs new examples.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_rag_excerpts.py tests/unit/test_rag_service.py tests/api/test_rag_routes.py tests/unit/test_retrieval_evaluation.py -q
+.venv-win/Scripts/python.exe -m src.commands.evaluate_retrieval --benchmark evaluation/quality_fixes/final_holdout.json --output test_output/quality_fixes/new-final --candidates-per-passage 1
+.venv-win/Scripts/python.exe -m src.commands.evaluate_retrieval --benchmark evaluation/quality_fixes/regression.json --output test_output/quality_fixes/new-regression --candidates-per-passage 1
+```
+
+The runner's `--candidates-per-passage` controls the **audit**, not the API. Keep it
+aligned with the API's `RAG_SENTENCE_CANDIDATES_PER_PASSAGE` setting. Values 1–3
+are accepted; 1 is the conservative default, 3 was experimentally evaluated, and
+2 has no separate answer-quality acceptance. The host `.env.example` documents
+the setting; Compose needs an explicit API environment override to opt in.
+Do not opt in merely to raise candidate coverage: the report records lower answer
+relevance. The API still needs a source rebuild; rebuild only that service.
+
+Both endpoints use the same ordinary generation transport and at most one
+plain-ID retry on an invalid selection or malformed selection shape. Streaming
+buffers validation, then emits whole source quotations; a rejected retry emits an
+error without answer deltas or done. No model output is repaired or deduplicated.
+The existing 200-word, exact-attribution and lexical gates are retained.
+
+For synthetic development comparisons, the original pre-edit source snapshots
+are saved locally as `test_output/quality_fixes/service.py.before` and
+`excerpts.py.before` (baseline revision
+`f4113e4500598c74c9ad1ac32b6004d007e2266c`). With those snapshots present:
+
+```powershell
+.venv-win/Scripts/python.exe -m evaluation.quality_fixes.development_runner --variant all --output test_output/quality_fixes/new-development.json
+```
+
+This uses static synthetic passages and the existing local Ollama model, without
+retrieving or writing corpus data. It compares original, expanded and conservative
+default selection behavior. Saved corpus runs must receive **new semantic
+reviews** before `--score`; never copy reviews to changed answers. Preserve the
+frozen v1 dataset and its original judgments.

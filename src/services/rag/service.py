@@ -33,6 +33,7 @@ class PreparedRAG:
     context: RAGContext
     search_mode: Literal["hybrid", "bm25"]
     model: str
+    candidates_per_passage: int = 1
 
     def sources_event(self) -> SourcesEvent:
         return SourcesEvent(
@@ -85,12 +86,19 @@ class RAGService:
             mode,
         )
         context = build_context(result.hits, character_budget=EVIDENCE_CHARACTER_BUDGET)
-        return PreparedRAG(request=request, context=context, search_mode=mode, model=model)
+        return PreparedRAG(request=request, context=context, search_mode=mode, model=model,
+                           candidates_per_passage=self.settings.rag_sentence_candidates_per_passage)
 
     async def ask(self, request: AskRequest) -> AskResponse:
         prepared = await self.prepare(request)
-        if not build_excerpts(prepared.context.citations, request.query):
-            return self._response(prepared, INSUFFICIENT_EVIDENCE_ANSWER)
+        answer = await self._generate_answer(prepared)
+        return self._response(prepared, answer)
+
+    async def _generate_answer(self, prepared: PreparedRAG) -> str:
+        """Use one selection transport and bounded validation policy for both routes."""
+        if not build_excerpts(prepared.context.citations, prepared.request.query,
+                              candidates_per_passage=prepared.candidates_per_passage):
+            return INSUFFICIENT_EVIDENCE_ANSWER
 
         generated = await self.ollama.generate(
             prepared.model,
@@ -103,7 +111,7 @@ class RAGService:
         try:
             answer = self._selected_answer(prepared, generated.response, structured=True)
             self.validate_answer(prepared, answer)
-        except GroundingError:
+        except (GroundingError, OllamaResponseError):
             # Retry invalid selections once as plain IDs against the same evidence.
             # Never rewrite model claims or invent citations.
             generated = await self.ollama.generate(
@@ -115,27 +123,12 @@ class RAGService:
             self._log_generation(generated)
             answer = self._selected_answer(prepared, generated.response, structured=False)
             self.validate_answer(prepared, answer)
-        return self._response(prepared, answer)
+        return answer
 
     async def generate_stream(self, prepared: PreparedRAG) -> AsyncIterator[OllamaGenerateResponse]:
-        if not build_excerpts(prepared.context.citations, prepared.request.query):
-            yield OllamaGenerateResponse(model=prepared.model, response=INSUFFICIENT_EVIDENCE_ANSWER, done=True)
-            return
-        # IDs are internal, never user-visible deltas. Buffer the short selection
-        # before rendering and streaming complete, validated evidence excerpts.
-        selection = ""
-        async for chunk in self.ollama.generate_stream(
-            prepared.model,
-            self._prompt(prepared, structured=True),
-            system=self.system_prompt,
-            response_format=self._selection_schema(prepared),
-            options=GENERATION_OPTIONS,
-        ):
-            if chunk.done:
-                self._log_generation(chunk)
-            selection += chunk.response
-        answer = self._selected_answer(prepared, selection, structured=True)
-        self.validate_answer(prepared, answer)
+        # Selection is already buffered: use the same transport/retry as /ask,
+        # then expose only complete validated quotations, never internal IDs.
+        answer = await self._generate_answer(prepared)
         for line in answer.splitlines(keepends=True):
             yield OllamaGenerateResponse(model=prepared.model, response=line, done=False)
         yield OllamaGenerateResponse(model=prepared.model, response="", done=True)
@@ -154,17 +147,24 @@ class RAGService:
 
     @staticmethod
     def _prompt(prepared: PreparedRAG, *, structured: bool) -> str:
-        excerpts = build_excerpts(prepared.context.citations, prepared.request.query)
+        excerpts = build_excerpts(prepared.context.citations, prepared.request.query,
+                                  candidates_per_passage=prepared.candidates_per_passage)
         blocks = []
         for citation in prepared.context.citations:
             sentences = [f"{key}: {excerpt.text}" for key, excerpt in excerpts.items() if excerpt.marker == citation.marker]
             blocks.append(f"{citation.marker}\nPaper: {citation.title}\nSection: {citation.section_title}\n" + "\n".join(sentences))
         catalog = "\n\n".join(blocks)
+        expansion_guidance = (
+            "Never repeat an ID. Do not fill unused slots with background. "
+            "Include complementary sentences when a passage contains several requested details. "
+            if prepared.candidates_per_passage > 1 else ""
+        )
+        distinct = "distinct " if prepared.candidates_per_passage > 1 else ""
         output = (
-            'Return a JSON object with exactly one field named "answer", an array of up to three selected IDs. '
+            f'Return a JSON object with exactly one field named "answer", an array of up to three {distinct}selected IDs. '
             'Return {"answer": []} if no sentence answers the question.'
             if structured
-            else "Return only up to three IDs separated by spaces, or NONE if no sentence answers the question."
+            else f"Return only up to three {distinct}IDs separated by spaces, or NONE if no sentence answers the question."
         )
         return (
             f"Question:\n{prepared.request.query}\n\n"
@@ -172,6 +172,7 @@ class RAGService:
             f"Answer the original question: {prepared.request.query}\n"
             f"Allowed citation markers: {', '.join(c.marker for c in prepared.context.citations)}.\n"
             "Select the sentences that directly answer the question. Prefer different relevant papers. "
+            f"{expansion_guidance}"
             "Distinguish background discussion, proposed methods, and comparison baselines. "
             "The server will quote selected sentences and attach their original passage citations. "
             f"{output}\nSelected evidence IDs:"
@@ -180,8 +181,10 @@ class RAGService:
     @staticmethod
     def _selection_schema(prepared: PreparedRAG) -> dict:
         schema = GeneratedAnswer.model_json_schema()
-        ids = list(build_excerpts(prepared.context.citations, prepared.request.query))
+        ids = list(build_excerpts(prepared.context.citations, prepared.request.query,
+                                  candidates_per_passage=prepared.candidates_per_passage))
         schema["properties"]["answer"]["items"]["enum"] = ids
+        schema["properties"]["answer"]["uniqueItems"] = True
         return schema
 
     @staticmethod
@@ -194,7 +197,8 @@ class RAGService:
         else:
             selection = [] if raw.strip() == "NONE" else raw.split()
         try:
-            return render_selection(selection, build_excerpts(prepared.context.citations, prepared.request.query))
+            return render_selection(selection, build_excerpts(prepared.context.citations, prepared.request.query,
+                                                             candidates_per_passage=prepared.candidates_per_passage))
         except ValueError as exc:
             logger.warning("rag_selection_validation_failed reason=%s", exc)
             raise GroundingError("Generated answer failed grounding validation") from exc

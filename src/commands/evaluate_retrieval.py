@@ -107,7 +107,7 @@ def snapshot(client: httpx.Client, api: str, search: str) -> tuple[dict, list, l
     return state, papers, chunks
 
 
-def audit_answer(response: dict, case: dict, chunks: list, papers: list) -> dict:
+def audit_answer(response: dict, case: dict, chunks: list, papers: list, *, candidates_per_passage: int = 1) -> dict:
     citations = [Citation.model_validate(c) for c in response["citations"]]
     by_coord = {coordinate(c): c for c in chunks}
     by_id = {p["arxiv_id"]: p for p in papers}
@@ -130,7 +130,7 @@ def audit_answer(response: dict, case: dict, chunks: list, papers: list) -> dict
         attribution_error = None
     except ValueError as exc:
         attribution_error = str(exc)
-    candidates = build_excerpts(citations, case["query"])
+    candidates = build_excerpts(citations, case["query"], candidates_per_passage=candidates_per_passage)
     terms = _terms(case["query"])
     coverage = {}
     for aid in {c.arxiv_id for c in citations}:
@@ -173,7 +173,8 @@ def collect(args: argparse.Namespace) -> None:
                         raise ValueError(f"reviewed evidence changed: {case['id']}")
         if meta_path.exists():
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
-            if meta["benchmark_digest"] != fingerprint or meta["before"] != before:
+            if (meta["benchmark_digest"] != fingerprint or meta["before"] != before
+                    or meta.get("candidates_per_passage", 1) != args.candidates_per_passage):
                 raise ValueError("cannot resume with changed labels or corpus")
         else:
             meta = {
@@ -182,6 +183,7 @@ def collect(args: argparse.Namespace) -> None:
                 "api": args.api,
                 "search": args.search,
                 "timeout": args.timeout,
+                "candidates_per_passage": args.candidates_per_passage,
                 "started_unix": time.time(),
                 "models": client.get("http://localhost:11434/api/tags").json(),
             }
@@ -236,7 +238,8 @@ def collect(args: argparse.Namespace) -> None:
                                         record.setdefault("first_delta_seconds", time.perf_counter() - started)
                         record["raw_sse"] = "\n".join(lines) + "\n\n"
                         response = parse_sse(record["raw_sse"])
-                    record["audit"] = audit_answer(response, case, chunks, papers)
+                    record["audit"] = audit_answer(response, case, chunks, papers,
+                                                   candidates_per_passage=args.candidates_per_passage)
                 record["response"] = response
                 record["ok"] = True
             except Exception as exc:
@@ -354,6 +357,8 @@ def main() -> None:
     parser.add_argument("--api", default="http://localhost:8000/api/v1")
     parser.add_argument("--search", default="http://localhost:9200")
     parser.add_argument("--timeout", type=float, default=240)
+    parser.add_argument("--candidates-per-passage", type=int, choices=(1, 2, 3), default=1,
+                        help="Candidate limit configured in the API being audited; does not change the API")
     parser.add_argument("--score", action="store_true", help="Score saved records using semantic_reviews.json; no network")
     args = parser.parse_args()
     if args.score:

@@ -1,0 +1,186 @@
+{
+  "version": "quality-final-holdout-2",
+  "reviewed_on": "2026-10-08",
+  "reviewer": "Codex source review; no independent human labels",
+  "split": "Fresh final-default validation. Labels fixed after rejecting expansion, before final rebuild and before endpoint collection. No further tuning.",
+  "corpus": {
+    "papers": 58,
+    "chunks": 2775,
+    "alias_target": "paper-chunks-v2",
+    "preserved_v1_chunks": 1221
+  },
+  "cases": [
+    {
+      "id": "wiki-layers",
+      "kind": "literal",
+      "answerable": true,
+      "query": "What are the three workspace layers in WikiSkill and what does each store?",
+      "facts": [
+        {
+          "id": "wiki-layers-f1",
+          "text": "Raw Layer stores immutable execution traces."
+        },
+        {
+          "id": "wiki-layers-f2",
+          "text": "Wiki Layer maintains structured knowledge."
+        },
+        {
+          "id": "wiki-layers-f3",
+          "text": "Skill Layer contains evolving procedural knowledge."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27454v1",
+              "section_index": 2,
+              "chunk_index": 2,
+              "section_title": "1. Introduction",
+              "source_excerpt": ", skills). This layer allows skill development to build on increasingly well-supported and integrated knowledge across iterations, rather than on knowledge scattered across skill-evolution artifacts.\nWikiSkill organizes the agent workspace into three layers: a Raw Layer that stores immutable execution traces, a Wiki Layer that maintains structured knowledge, and a Skill Layer that contains evolving procedural knowledge (Figure 2). Each iteration involves four components: an Inference Agent that executes rollouts using the current skills, a Wiki Maintainer that consolidates traces into the wiki, a Skill Proposer that uses the wiki and traces to propose skill updates, and a Gating and Rollback mechanism that retains updates that improve validation performance. While skill updates can be rolled back, the wiki persists so that future updates can build on accumulated knowledge. At a high level, these components form a continual loop in which experience is consolidated into persistent knowledge that supports skill evolution.\nWe evaluate WikiSkill across fi ve benchmarks spanning mathematical reasoning (LiveMathematicanBench (He et al., 2026)), web search (SealQA (Pham et al., 2026)), spreadsheet manipulation (SpreadSheetBench (Ma et al., 2024)), long-context document question answering (OfficeQA (Singhvi et al., 2025)), and interactive embodied tasks (ALFWorld (Shridhar et al., 2021)), using fi ve models from the Qwen (Qwen Team, 2026a,b), Gemma (Gemma Team, 2026), and Gemini (Google DeepMind, 2026) families. We find that WikiSkill outperforms existing skill-evolution methods and improves over no skills in most settings. Interestingly, skill evolution complements model scaling.\n2\nWikiSkill: Compiling Agent Experience into Persistent Knowledge for Skill Evolution\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-rollback",
+      "kind": "literal",
+      "answerable": true,
+      "query": "What persists in WikiSkill when skill updates are rolled back?",
+      "facts": [
+        {
+          "id": "wiki-rollback-f1",
+          "text": "The wiki persists so future updates can build on accumulated knowledge."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27454v1",
+              "section_index": 2,
+              "chunk_index": 2,
+              "section_title": "1. Introduction",
+              "source_excerpt": ", skills). This layer allows skill development to build on increasingly well-supported and integrated knowledge across iterations, rather than on knowledge scattered across skill-evolution artifacts.\nWikiSkill organizes the agent workspace into three layers: a Raw Layer that stores immutable execution traces, a Wiki Layer that maintains structured knowledge, and a Skill Layer that contains evolving procedural knowledge (Figure 2). Each iteration involves four components: an Inference Agent that executes rollouts using the current skills, a Wiki Maintainer that consolidates traces into the wiki, a Skill Proposer that uses the wiki and traces to propose skill updates, and a Gating and Rollback mechanism that retains updates that improve validation performance. While skill updates can be rolled back, the wiki persists so that future updates can build on accumulated knowledge. At a high level, these components form a continual loop in which experience is consolidated into persistent knowledge that supports skill evolution.\nWe evaluate WikiSkill across fi ve benchmarks spanning mathematical reasoning (LiveMathematicanBench (He et al., 2026)), web search (SealQA (Pham et al., 2026)), spreadsheet manipulation (SpreadSheetBench (Ma et al., 2024)), long-context document question answering (OfficeQA (Singhvi et al., 2025)), and interactive embodied tasks (ALFWorld (Shridhar et al., 2021)), using fi ve models from the Qwen (Qwen Team, 2026a,b), Gemma (Gemma Team, 2026), and Gemini (Google DeepMind, 2026) families. We find that WikiSkill outperforms existing skill-evolution methods and improves over no skills in most settings. Interestingly, skill evolution complements model scaling.\n2\nWikiSkill: Compiling Agent Experience into Persistent Knowledge for Skill Evolution\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "criticl-variants",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How do CritICL-dynamic and CritICL-static differ in their use of failure modes?",
+      "facts": [
+        {
+          "id": "criticl-variants-f1",
+          "text": "CritICL-dynamic predicts input-specific failure modes and retrieves critiques."
+        },
+        {
+          "id": "criticl-variants-f2",
+          "text": "CritICL-static uses a global failure-mode profile for stable guidance."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27455v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Recent advances in inference-time scaling have significantly improved the reasoning performance of large language models (LLMs). However, these methods typically rely on repeated generation or external verification. To address this limitation, we introduce CritICL, a novel inference-time framework that improves reasoning while maintaining high efficiency.\nOur key insight is that LLM failure modes exhibit structured patterns across model scales within the same family. Instead of treating failures as undesirable outputs, CritICL leverages them as a source of guidance. Specifically, we utilize failure modes derived from weaker models and incorporate them into inference through critique-based in-context examples. We propose two variants: CritICL-dynamic, which adaptively predicts input-specific failure modes and retrieves critiques, and CritICL-static, which uses a global failure mode profile to provide stable guidance.\nExperimental results show that CritICL consistently outperforms standard in-context learning and achieves performance competitive with or superior to test-time scaling methods, while requiring significantly fewer generations and lower token cost.\nhttps://github.com/umwyf/CRITICL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "criticl-paraphrase",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "How does CritICL tailor advice to a particular problem versus use an overall pattern of model mistakes?",
+      "facts": [
+        {
+          "id": "criticl-paraphrase-f1",
+          "text": "CritICL-dynamic predicts input-specific failure modes and retrieves critiques."
+        },
+        {
+          "id": "criticl-paraphrase-f2",
+          "text": "CritICL-static uses a global failure-mode profile for stable guidance."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27455v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Recent advances in inference-time scaling have significantly improved the reasoning performance of large language models (LLMs). However, these methods typically rely on repeated generation or external verification. To address this limitation, we introduce CritICL, a novel inference-time framework that improves reasoning while maintaining high efficiency.\nOur key insight is that LLM failure modes exhibit structured patterns across model scales within the same family. Instead of treating failures as undesirable outputs, CritICL leverages them as a source of guidance. Specifically, we utilize failure modes derived from weaker models and incorporate them into inference through critique-based in-context examples. We propose two variants: CritICL-dynamic, which adaptively predicts input-specific failure modes and retrieves critiques, and CritICL-static, which uses a global failure mode profile to provide stable guidance.\nExperimental results show that CritICL consistently outperforms standard in-context learning and achieves performance competitive with or superior to test-time scaling methods, while requiring significantly fewer generations and lower token cost.\nhttps://github.com/umwyf/CRITICL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi-knowledge",
+      "kind": "multi-paper",
+      "answerable": true,
+      "query": "How do WikiSkill and CritICL use experience and failure modes to guide agents or models?",
+      "facts": [
+        {
+          "id": "multi-knowledge-f1",
+          "text": "WikiSkill consolidates agent traces into persistent structured knowledge for skill evolution."
+        },
+        {
+          "id": "multi-knowledge-f2",
+          "text": "CritICL uses weaker-model failure modes as critique-based in-context examples."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27454v1",
+              "section_index": 2,
+              "chunk_index": 2,
+              "section_title": "1. Introduction",
+              "source_excerpt": ", skills). This layer allows skill development to build on increasingly well-supported and integrated knowledge across iterations, rather than on knowledge scattered across skill-evolution artifacts.\nWikiSkill organizes the agent workspace into three layers: a Raw Layer that stores immutable execution traces, a Wiki Layer that maintains structured knowledge, and a Skill Layer that contains evolving procedural knowledge (Figure 2). Each iteration involves four components: an Inference Agent that executes rollouts using the current skills, a Wiki Maintainer that consolidates traces into the wiki, a Skill Proposer that uses the wiki and traces to propose skill updates, and a Gating and Rollback mechanism that retains updates that improve validation performance. While skill updates can be rolled back, the wiki persists so that future updates can build on accumulated knowledge. At a high level, these components form a continual loop in which experience is consolidated into persistent knowledge that supports skill evolution.\nWe evaluate WikiSkill across fi ve benchmarks spanning mathematical reasoning (LiveMathematicanBench (He et al., 2026)), web search (SealQA (Pham et al., 2026)), spreadsheet manipulation (SpreadSheetBench (Ma et al., 2024)), long-context document question answering (OfficeQA (Singhvi et al., 2025)), and interactive embodied tasks (ALFWorld (Shridhar et al., 2021)), using fi ve models from the Qwen (Qwen Team, 2026a,b), Gemma (Gemma Team, 2026), and Gemini (Google DeepMind, 2026) families. We find that WikiSkill outperforms existing skill-evolution methods and improves over no skills in most settings. Interestingly, skill evolution complements model scaling.\n2\nWikiSkill: Compiling Agent Experience into Persistent Knowledge for Skill Evolution\n"
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27455v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Recent advances in inference-time scaling have significantly improved the reasoning performance of large language models (LLMs). However, these methods typically rely on repeated generation or external verification. To address this limitation, we introduce CritICL, a novel inference-time framework that improves reasoning while maintaining high efficiency.\nOur key insight is that LLM failure modes exhibit structured patterns across model scales within the same family. Instead of treating failures as undesirable outputs, CritICL leverages them as a source of guidance. Specifically, we utilize failure modes derived from weaker models and incorporate them into inference through critique-based in-context examples. We propose two variants: CritICL-dynamic, which adaptively predicts input-specific failure modes and retrieves critiques, and CritICL-static, which uses a global failure mode profile to provide stable guidance.\nExperimental results show that CritICL consistently outperforms standard in-context learning and achieves performance competitive with or superior to test-time scaling methods, while requiring significantly fewer generations and lower token cost.\nhttps://github.com/umwyf/CRITICL"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unsupported-wiki",
+      "kind": "related-unsupported",
+      "answerable": false,
+      "query": "What is the private bank account number used to fund WikiSkill experiments?",
+      "facts": [],
+      "support": []
+    },
+    {
+      "id": "unsupported-criticl",
+      "kind": "related-unsupported",
+      "answerable": false,
+      "query": "What is the exact CritICL performance score on a future 2035 benchmark?",
+      "facts": [],
+      "support": []
+    }
+  ]
+}

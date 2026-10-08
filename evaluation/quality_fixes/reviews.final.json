@@ -1,0 +1,245 @@
+{
+  "_meta": {
+    "records_sha256": "0417f6a64f656ce50ff530e394b95aa6890e86a73d6c468ef5bda86b5e5ce33c",
+    "reviewer": "Codex semantic source review",
+    "method": "Complete predeclared facts; partial useful details count as relevant but not full fact coverage. No independent human labels."
+  },
+  "wiki-layers:bm25:ask:3": {
+    "answer_digest": "e5740ac3305e6f1a20bda92d85728760b250b2d34283efca1c00593ceadd61c2",
+    "covered_facts": [
+      "wiki-layers-f1",
+      "wiki-layers-f2",
+      "wiki-layers-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The workspace-definition quotation explicitly gives all three layer/storage mappings. A count-only statement and generic benefit statement add no mapping."
+  },
+  "wiki-layers:bm25:stream:3": {
+    "answer_digest": "e5740ac3305e6f1a20bda92d85728760b250b2d34283efca1c00593ceadd61c2",
+    "covered_facts": [
+      "wiki-layers-f1",
+      "wiki-layers-f2",
+      "wiki-layers-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The workspace-definition quotation explicitly gives all three layer/storage mappings. A count-only statement and generic benefit statement add no mapping."
+  },
+  "wiki-layers:hybrid:ask:3": {
+    "answer_digest": "e5740ac3305e6f1a20bda92d85728760b250b2d34283efca1c00593ceadd61c2",
+    "covered_facts": [
+      "wiki-layers-f1",
+      "wiki-layers-f2",
+      "wiki-layers-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The definition quotation covers all three facts; other quotations describe only the layer count and benefit."
+  },
+  "wiki-layers:hybrid:stream:3": {
+    "answer_digest": "e5740ac3305e6f1a20bda92d85728760b250b2d34283efca1c00593ceadd61c2",
+    "covered_facts": [
+      "wiki-layers-f1",
+      "wiki-layers-f2",
+      "wiki-layers-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The definition quotation covers all three facts; other quotations describe only the layer count and benefit."
+  },
+  "wiki-rollback:bm25:ask:3": {
+    "answer_digest": "8db6d1f2e2913e7cce75af0684e315c930672a53e13081ed84405fb8c4b6ead8",
+    "covered_facts": [
+      "wiki-rollback-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The wiki never rolls back, retaining accumulated patterns/logs across iterations. The gate mechanism quotation adds no requested persistent object."
+  },
+  "wiki-rollback:bm25:stream:3": {
+    "answer_digest": "8db6d1f2e2913e7cce75af0684e315c930672a53e13081ed84405fb8c4b6ead8",
+    "covered_facts": [
+      "wiki-rollback-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The wiki never rolls back, retaining accumulated patterns/logs across iterations. The gate mechanism quotation adds no requested persistent object."
+  },
+  "wiki-rollback:hybrid:ask:3": {
+    "answer_digest": "955cc0c6842eed8eb9285c415b7260780b9a11c318c13ca3e80b56be1e3533fb",
+    "covered_facts": [
+      "wiki-rollback-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "First quotation explicitly preserves wiki knowledge for future updates; an algorithm pointer adds no requested detail."
+  },
+  "wiki-rollback:hybrid:stream:3": {
+    "answer_digest": "955cc0c6842eed8eb9285c415b7260780b9a11c318c13ca3e80b56be1e3533fb",
+    "covered_facts": [
+      "wiki-rollback-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "First quotation explicitly preserves wiki knowledge for future updates; an algorithm pointer adds no requested detail."
+  },
+  "criticl-variants:bm25:ask:3": {
+    "answer_digest": "9ff0957d3376f2bf33e06cf96b77ccc23ecb69b8e721318ed327c5d138615712",
+    "covered_facts": [
+      "criticl-variants-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Input-dependent selection plus the third quotation cover dynamic prediction and retrieval. Static global-profile behavior is absent; shared failure structure adds no variant distinction."
+  },
+  "criticl-variants:bm25:stream:3": {
+    "answer_digest": "9ff0957d3376f2bf33e06cf96b77ccc23ecb69b8e721318ed327c5d138615712",
+    "covered_facts": [
+      "criticl-variants-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Input-dependent selection plus the third quotation cover dynamic prediction and retrieval. Static global-profile behavior is absent; shared failure structure adds no variant distinction."
+  },
+  "criticl-variants:hybrid:ask:3": {
+    "answer_digest": "600334419c6c2f8ca07ca58bf513f0d6360d1721e6dd48d416c94e4649cd778e",
+    "covered_facts": [
+      "criticl-variants-f1",
+      "criticl-variants-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Second and third quotations state static global-profile retrieval and dynamic input-specific prediction/retrieval. Shared structure alone supplies no distinction."
+  },
+  "criticl-variants:hybrid:stream:3": {
+    "answer_digest": "600334419c6c2f8ca07ca58bf513f0d6360d1721e6dd48d416c94e4649cd778e",
+    "covered_facts": [
+      "criticl-variants-f1",
+      "criticl-variants-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Second and third quotations state static global-profile retrieval and dynamic input-specific prediction/retrieval. Shared structure alone supplies no distinction."
+  },
+  "criticl-paraphrase:bm25:ask:3": {
+    "answer_digest": "88332f453b5efc15a76b53d8bb51e807f4f996e15b865410851efa7db6c8a082",
+    "covered_facts": [
+      "criticl-paraphrase-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Global profile and recurring family mistakes fully cover static guidance. Similar-failure retrieval is useful partial detail for tailoring, but input-specific failure prediction is absent. Generic weaker-model overview gives no variant distinction."
+  },
+  "criticl-paraphrase:bm25:stream:3": {
+    "answer_digest": "88332f453b5efc15a76b53d8bb51e807f4f996e15b865410851efa7db6c8a082",
+    "covered_facts": [
+      "criticl-paraphrase-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Global profile and recurring family mistakes fully cover static guidance. Similar-failure retrieval is useful partial detail for tailoring, but input-specific failure prediction is absent. Generic weaker-model overview gives no variant distinction."
+  },
+  "criticl-paraphrase:hybrid:ask:3": {
+    "answer_digest": "7ebeb9181826ff3cadd080116f15913dbb3ddc79d80ebde2f919efd3b8ce1e1e",
+    "covered_facts": [
+      "criticl-paraphrase-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Only the global-profile quotation distinguishes a variant. Two repeated weaker-model-overview quotations do not specify dynamic tailoring."
+  },
+  "criticl-paraphrase:hybrid:stream:3": {
+    "answer_digest": "7ebeb9181826ff3cadd080116f15913dbb3ddc79d80ebde2f919efd3b8ce1e1e",
+    "covered_facts": [
+      "criticl-paraphrase-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Only the global-profile quotation distinguishes a variant. Two repeated weaker-model-overview quotations do not specify dynamic tailoring."
+  },
+  "multi-knowledge:bm25:ask:3": {
+    "answer_digest": "16e1bc7ea8b9991cc40829195f5f7fec922852e9c4f5a343b0256f93eb05d279",
+    "covered_facts": [],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Weaker-model critiques and persistent family failure profiles are relevant partial CritICL detail, but the quotations never establish use as in-context examples. WikiSkill quote gives scaling gains, not trace consolidation into persistent structured knowledge."
+  },
+  "multi-knowledge:bm25:stream:3": {
+    "answer_digest": "16e1bc7ea8b9991cc40829195f5f7fec922852e9c4f5a343b0256f93eb05d279",
+    "covered_facts": [],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Weaker-model critiques and persistent family failure profiles are relevant partial CritICL detail, but the quotations never establish use as in-context examples. WikiSkill quote gives scaling gains, not trace consolidation into persistent structured knowledge."
+  },
+  "multi-knowledge:hybrid:ask:3": {
+    "answer_digest": "102a6f4c9e72c55f3fa5c5d73ccbff707e05da6cfe1f2de4b9ef080d81f13e2a",
+    "covered_facts": [],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All three quotations explain partial CritICL guidance, but no weaker-model origin is stated. WikiSkill consolidation and persistence are wholly absent. Neither complete predeclared fact is covered."
+  },
+  "multi-knowledge:hybrid:stream:3": {
+    "answer_digest": "102a6f4c9e72c55f3fa5c5d73ccbff707e05da6cfe1f2de4b9ef080d81f13e2a",
+    "covered_facts": [],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All three quotations explain partial CritICL guidance, but no weaker-model origin is stated. WikiSkill consolidation and persistence are wholly absent. Neither complete predeclared fact is covered."
+  },
+  "unsupported-wiki:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-wiki:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-wiki:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-wiki:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-criticl:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-criticl:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-criticl:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  },
+  "unsupported-criticl:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct abstention on a scoped unsupported question."
+  }
+}

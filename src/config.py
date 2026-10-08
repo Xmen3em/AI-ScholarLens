@@ -68,6 +68,9 @@ class Settings(DefaultSettings):
     # knn_vector mapping fixes the dimension.
     ollama_embedding_model: str = "nomic-embed-text"
     ollama_timeout: int = 300
+    # Expansion improves evidence coverage but regressed relevance in the holdout.
+    # Keep conservative production behavior until selector quality is justified.
+    rag_sentence_candidates_per_passage: int = Field(default=1, ge=1, le=3)
     
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
