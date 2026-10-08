@@ -1,0 +1,26 @@
+[
+  {
+    "id": "aster",
+    "facts": 2,
+    "before": {
+      "offered_facts": 1,
+      "candidates": 1
+    },
+    "after": {
+      "offered_facts": 2,
+      "candidates": 2
+    }
+  },
+  {
+    "id": "brio",
+    "facts": 3,
+    "before": {
+      "offered_facts": 1,
+      "candidates": 1
+    },
+    "after": {
+      "offered_facts": 3,
+      "candidates": 3
+    }
+  }
+]

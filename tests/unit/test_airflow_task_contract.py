@@ -14,6 +14,7 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).parents[2]
 TASKS_MODULE = PROJECT_ROOT / "airflow" / "dags" / "arxiv_ingestion" / "tasks.py"
+DAG_MODULE = PROJECT_ROOT / "airflow" / "dags" / "arxiv_paper_ingestion.py"
 FETCHER_MODULE = PROJECT_ROOT / "src" / "services" / "metadata_fetcher.py"
 
 
@@ -92,3 +93,54 @@ def test_daily_report_is_returned_and_not_only_logged():
     returned = [node for node in ast.walk(function) if isinstance(node, ast.Return) and node.value is not None]
 
     assert returned, "generate_daily_report builds a report but never returns it"
+
+
+def _declared_task_ids() -> set[str]:
+    """Every ``task_id=`` the DAG assigns to an operator."""
+    tree = ast.parse(DAG_MODULE.read_text())
+    return {
+        keyword.value.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        for keyword in node.keywords
+        if keyword.arg == "task_id" and isinstance(keyword.value, ast.Constant)
+    }
+
+
+def _pulled_task_ids() -> set[str]:
+    """Every ``task_ids=`` the task module reads back out of XCom."""
+    tree = ast.parse(TASKS_MODULE.read_text())
+    return {
+        keyword.value.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        for keyword in node.keywords
+        if keyword.arg == "task_ids" and isinstance(keyword.value, ast.Constant)
+    }
+
+
+def test_every_xcom_pull_names_a_task_the_dag_declares():
+    """A pull against a renamed task returns None silently, and the report reads zeros forever."""
+    declared, pulled = _declared_task_ids(), _pulled_task_ids()
+    assert pulled, "no xcom_pull with a literal task_ids found; update or delete this test"
+
+    assert not pulled - declared, f"xcom_pull reads task ids the DAG does not declare: {sorted(pulled - declared)}"
+
+
+def test_every_task_the_dag_declares_has_a_callable_or_a_bash_command():
+    """Catches an operator left pointing at a function that was renamed out from under it."""
+    dag_tree = ast.parse(DAG_MODULE.read_text())
+    imported = {
+        alias.name
+        for node in ast.walk(dag_tree)
+        if isinstance(node, ast.ImportFrom) and node.module == "arxiv_ingestion.tasks"
+        for alias in node.names
+    }
+    defined = {
+        node.name
+        for node in ast.walk(ast.parse(TASKS_MODULE.read_text()))
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+
+    assert imported, "the DAG no longer imports task functions; update or delete this test"
+    assert not imported - defined, f"DAG imports task functions that do not exist: {sorted(imported - defined)}"

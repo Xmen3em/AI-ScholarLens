@@ -15,6 +15,7 @@ dependencies = [
     "requests>=2.32.3",
     "httpx>=0.28.1",
     "make>=0.1.6.post2",
+    "gradio>=6.16.0,<7.0.0",
 ]
 readme = "README.md"
 

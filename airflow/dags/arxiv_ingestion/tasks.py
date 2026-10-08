@@ -9,9 +9,15 @@ sys.path.insert(0, "/opt/airflow")
 
 from sqlalchemy import text
 from src.db.factory import make_database
+from src.repositories.paper import PaperRepository
+from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
+from src.services.chunk_indexer import ChunkIndexer
+from src.services.embeddings.factory import make_embedder
 from src.services.metadata_fetcher import make_metadata_fetcher
+from src.services.paper_indexer import PaperIndexer
 from src.services.pdf_parser.factory import make_pdf_parser_service
+from src.services.reindex import IndexRun
 
 logger = logging.getLogger(__name__)
 
@@ -151,38 +157,66 @@ def process_failed_pdfs(**context):
         raise Exception(error_msg)
     
     
-def create_opensearch_placeholders(**context):
-    """Report how many stored papers are waiting to be indexed.
+def index_to_opensearch(**context):
+    """Rewrite both OpenSearch indices from what is stored in PostgreSQL.
 
-    Creates nothing: OpenSearch indexing is not implemented yet. Reporting a count is
-    honest, but the previous message claimed placeholders had been created for those
-    papers, which put a fabricated result into the daily report.
+    Both indices in one task because they describe the same corpus and must not drift
+    apart: a paper searchable in `arxiv-papers` whose passages are missing from
+    `paper-chunks` is worse than neither being updated.
 
-    The function and task_id keep their names so the DAG's task history stays
-    continuous; rename both when indexing lands and this task starts doing the work.
+    Indexes the whole corpus rather than just this run's papers. The pass is
+    idempotent — document ids are derived from the paper — and that is what lets it
+    heal a run that failed halfway and pick up papers stored before indexing existed.
     """
-    logger.info("Counting papers awaiting OpenSearch indexing...")
+    logger.info("Indexing papers and chunks into OpenSearch...")
 
     try:
-        fetch_results = context['task_instance'].xcom_pull(key='fetch_results', task_ids='fetch_daily_papers')
-        papers_stored = fetch_results.get('papers_stored', 0) if fetch_results else 0
+        _arxiv_client, _pdf_parser, database, _metadata_fetcher = get_cached_services()
+        client = make_search_client()
 
-        # One shape on every path: generate_daily_report reads papers_ready_for_indexing,
-        # and the old empty-batch branch omitted it entirely.
+        with database.get_session() as session:
+            repository = PaperRepository(session)
+            papers = PaperIndexer(client, repository).index_corpus()
+            chunks = ChunkIndexer(client, repository, make_embedder()).index_corpus()
+
+        errors = papers.errors + chunks.errors
         results = {
-            "status": "not_implemented",
-            "papers_ready_for_indexing": papers_stored,
-            "message": f"{papers_stored} papers awaiting indexing; OpenSearch indexing is not implemented yet.",
+            "status": "failed" if errors else "success",
+            "papers": _index_summary(papers),
+            "chunks": _index_summary(chunks),
+            "errors": errors,
         }
 
-        logger.info(results["message"])
+        # Loud, but not fatal: whatever did index is still searchable, and the next
+        # run rewrites everything anyway.
+        for error in errors:
+            logger.error("Indexing error: %s", error)
+
+        logger.info(
+            "Indexed %d paper documents and %d chunks",
+            papers.documents_indexed,
+            chunks.documents_indexed,
+        )
         return results
-    
+
     except Exception as e:
-        error_msg = f"Error counting papers awaiting indexing: {str(e)}"
+        error_msg = f"Error during OpenSearch indexing: {str(e)}"
         logger.error(error_msg)
         raise Exception(error_msg)
-    
+
+
+def _index_summary(run: IndexRun) -> dict:
+    """One index pass, flattened for XCom."""
+    return {
+        "papers_seen": run.papers_seen,
+        "papers_indexed": run.papers_indexed,
+        "papers_without_documents": run.papers_without_documents,
+        "documents_indexed": run.documents_indexed,
+        "stale_documents_deleted": run.stale_documents_deleted,
+        "embeddings_computed": run.embeddings_computed,
+        "embeddings_reused": run.embeddings_reused,
+    }
+
 
 def generate_daily_report(**context):
     """
@@ -196,7 +230,7 @@ def generate_daily_report(**context):
         
         failed_pdf_results = context['task_instance'].xcom_pull(task_ids='process_failed_pdfs')
         
-        opensearch_results = context['task_instance'].xcom_pull(task_ids='create_opensearch_placeholders')
+        index_results = context['task_instance'].xcom_pull(task_ids='index_to_opensearch')
         
         report = {
             'date': context['ds'],
@@ -215,8 +249,12 @@ def generate_daily_report(**context):
                 "failed_pdf_retries": failed_pdf_results.get('errors_logged', 0) if failed_pdf_results else 0,
             },
             "opensearch": {
-                "awaiting_indexing": opensearch_results.get('papers_ready_for_indexing', 0) if opensearch_results else 0,
-                "status": opensearch_results.get('status', 'unknown') if opensearch_results else 'unknown',
+                "papers_indexed": index_results['papers']['documents_indexed'] if index_results else 0,
+                "chunks_indexed": index_results['chunks']['documents_indexed'] if index_results else 0,
+                "papers_without_chunks": index_results['chunks']['papers_without_documents'] if index_results else 0,
+                "embeddings_computed": index_results['chunks']['embeddings_computed'] if index_results else 0,
+                "embeddings_reused": index_results['chunks']['embeddings_reused'] if index_results else 0,
+                "status": index_results.get('status', 'unknown') if index_results else 'unknown',
             }
         }   
         
@@ -230,7 +268,10 @@ def generate_daily_report(**context):
         logger.info(f"Papers stored: {report['papers']['stored']}")
         logger.info(f"Processing time: {report['processing']['processing_time_seconds']:.1f}s")
         logger.info(f"Errors encountered: {report['processing']['errors']}")
-        logger.info(f"Awaiting OpenSearch indexing: {report['opensearch']['awaiting_indexing']}")
+        logger.info(f"Papers searchable: {report['opensearch']['papers_indexed']}")
+        logger.info(f"Chunks indexed: {report['opensearch']['chunks_indexed']}")
+        logger.info(f"Papers with no chunks (unparsed): {report['opensearch']['papers_without_chunks']}")
+        logger.info(f"Embeddings computed: {report['opensearch']['embeddings_computed']} (reused {report['opensearch']['embeddings_reused']})")
         logger.info("=== END REPORT ===")
 
         # Without this the report exists only in the task log, so nothing downstream

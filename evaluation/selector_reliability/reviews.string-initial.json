@@ -1,0 +1,297 @@
+{
+  "_meta": {
+    "records_sha256": "6dd3f471bc6aa6d09cd6fdac46c2ecef6cbe676a2b391043afc9e5fb966cdcec",
+    "reviewer": "Codex source/semantic review; all distinct successful answers inspected",
+    "reviewed_on": "2026-10-08"
+  },
+  "fast-family:bm25:ask:3": {
+    "answer_digest": "d6371662a5c478dc46dedb2de478626cc482848c02d51840bb94e76b08721140",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The prefix-aligned regression family is useful partial update detail, but all three requested mappings are absent. Project metadata is filler."
+  },
+  "fast-family:bm25:stream:3": {
+    "answer_digest": "d6371662a5c478dc46dedb2de478626cc482848c02d51840bb94e76b08721140",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The prefix-aligned regression family is useful partial update detail, but all three requested mappings are absent. Project metadata is filler."
+  },
+  "fast-family:hybrid:ask:3": {
+    "answer_digest": "1abbd52be6c33bcf91362349c35c109c7021693b5b2a542c2d926b3289751022",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The prefix-aligned regression family is useful partial update detail. The unspecified scaled formulation does not describe the three requested updates."
+  },
+  "fast-family:hybrid:stream:3": {
+    "answer_digest": "1abbd52be6c33bcf91362349c35c109c7021693b5b2a542c2d926b3289751022",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "The prefix-aligned regression family is useful partial update detail. The unspecified scaled formulation does not describe the three requested updates."
+  },
+  "fast-forms:bm25:ask:3": {
+    "answer_digest": "554f1f68ecf7096b6baaf084630eed17c2afe8569b3e196c08be238a7bb07a68",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "All three computational forms are complete. Asymptotic costs of other recurrent alternatives are filler."
+  },
+  "fast-forms:bm25:stream:3": {
+    "answer_digest": "554f1f68ecf7096b6baaf084630eed17c2afe8569b3e196c08be238a7bb07a68",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "All three computational forms are complete. Asymptotic costs of other recurrent alternatives are filler."
+  },
+  "fast-forms:hybrid:ask:3": {
+    "answer_digest": "26a03bee1effb3139afaebc6360f7f9365c3157bb60afc869a5270ba2ff25e28",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "All three computational forms are complete. Adaptive-filter background is filler."
+  },
+  "fast-forms:hybrid:stream:3": {
+    "answer_digest": "26a03bee1effb3139afaebc6360f7f9365c3157bb60afc869a5270ba2ff25e28",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "All three computational forms are complete. Adaptive-filter background is filler."
+  },
+  "load-size:bm25:ask:3": {
+    "answer_digest": "6a7f46d21f61030ea73a076002e778ab6054088c090c7cb48e7750c5eedae719",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 1,
+    "rationale": "The single quotation supplies the dataset size and both deletion strategies completely."
+  },
+  "load-size:bm25:stream:3": {
+    "answer_digest": "6a7f46d21f61030ea73a076002e778ab6054088c090c7cb48e7750c5eedae719",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 1,
+    "rationale": "The single quotation supplies the dataset size and both deletion strategies completely."
+  },
+  "load-size:hybrid:ask:3": {
+    "answer_digest": "ae51fb062e40394a09e005a58cf64e707815db43c5b8338a07b16e2adca9f862",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Dataset size and both deletion strategies are complete. Model abstention behavior is filler."
+  },
+  "load-size:hybrid:stream:3": {
+    "answer_digest": "ae51fb062e40394a09e005a58cf64e707815db43c5b8338a07b16e2adca9f862",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Dataset size and both deletion strategies are complete. Model abstention behavior is filler."
+  },
+  "load-score:bm25:ask:3": {
+    "answer_digest": "70b24093160be29eb3d8bac765af2dec4babeab1d1ec0135741cc1b64e2d2ab7",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 2,
+    "rationale": "Fragile-puzzle prevalence and model performance do not define the Question Damage Score or the number of newly unanswerable questions it counts."
+  },
+  "load-score:bm25:stream:3": {
+    "answer_digest": "70b24093160be29eb3d8bac765af2dec4babeab1d1ec0135741cc1b64e2d2ab7",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 2,
+    "rationale": "Fragile-puzzle prevalence and model performance do not define the Question Damage Score or the number of newly unanswerable questions it counts."
+  },
+  "load-score:hybrid:ask:3": {
+    "answer_digest": "ec7eef08d2ec39d5776b097c1b44ab7ee610eb60101dd8239c6f605f2d91fab0",
+    "covered_facts": [
+      "load-score-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The task-level measure explicitly counts questions losing necessary information. Fragile-puzzle prevalence and the separate token-level Base Damage Score are filler."
+  },
+  "load-score:hybrid:stream:3": {
+    "answer_digest": "ec7eef08d2ec39d5776b097c1b44ab7ee610eb60101dd8239c6f605f2d91fab0",
+    "covered_facts": [
+      "load-score-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The task-level measure explicitly counts questions losing necessary information. Fragile-puzzle prevalence and the separate token-level Base Damage Score are filler."
+  },
+  "cg-weights:bm25:ask:3": {
+    "answer_digest": "5cbe7e9691aae95a07c3c1a6d12306898e04c102fedc44a6d4eea495d72fa840",
+    "covered_facts": [
+      "cg-weights-f1",
+      "cg-weights-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "The master LP determines mixture weights and pricing uses dual variables to generate new models focused on violated constraints. Both quotations directly address the requested determinant."
+  },
+  "cg-weights:bm25:stream:3": {
+    "answer_digest": "5cbe7e9691aae95a07c3c1a6d12306898e04c102fedc44a6d4eea495d72fa840",
+    "covered_facts": [
+      "cg-weights-f1",
+      "cg-weights-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "The master LP determines mixture weights and pricing uses dual variables to generate new models focused on violated constraints. Both quotations directly address the requested determinant."
+  },
+  "cg-weights:hybrid:ask:3": {
+    "answer_digest": "d924dd70f8579188528ba4965c61f5d993ef97570ab87de4775cd5a02b7dc503",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Dual-guided pricing is useful partial guidance but omits explicit dual variables/new-model generation/focus; LP-determined weights are absent. The column-structure sentence does not explain the determinant."
+  },
+  "cg-weights:hybrid:stream:3": {
+    "answer_digest": "d924dd70f8579188528ba4965c61f5d993ef97570ab87de4775cd5a02b7dc503",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Dual-guided pricing is useful partial guidance but omits explicit dual variables/new-model generation/focus; LP-determined weights are absent. The column-structure sentence does not explain the determinant."
+  },
+  "multi-forms-weights:bm25:ask:3": {
+    "answer_digest": "ebbca3921b6d201e4776b99976060a32fb23338b05abd6d8f4ffa588685b8308",
+    "covered_facts": [
+      "multi-forms-weights-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Fast Weight computational forms are complete. Temporal alignment and adaptive-filter background are filler; CG4AI mixture-weight determination is absent."
+  },
+  "multi-forms-weights:bm25:stream:3": {
+    "answer_digest": "ebbca3921b6d201e4776b99976060a32fb23338b05abd6d8f4ffa588685b8308",
+    "covered_facts": [
+      "multi-forms-weights-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Fast Weight computational forms are complete. Temporal alignment and adaptive-filter background are filler; CG4AI mixture-weight determination is absent."
+  },
+  "multi-forms-weights:hybrid:ask:3": {
+    "answer_digest": "81bbca3e3487c8e6328a71cc3fe7e619e3f96440750d4e226111dae3916dcae8",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 2,
+    "rationale": "Feasibility guarantees and column structure do not supply Fast Weight computational forms or explain how CG4AI determines mixture weights."
+  },
+  "multi-forms-weights:hybrid:stream:3": {
+    "answer_digest": "81bbca3e3487c8e6328a71cc3fe7e619e3f96440750d4e226111dae3916dcae8",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 2,
+    "rationale": "Feasibility guarantees and column structure do not supply Fast Weight computational forms or explain how CG4AI determines mixture weights."
+  },
+  "unsupported-load-energy:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-load-energy:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-load-energy:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-load-energy:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  }
+}

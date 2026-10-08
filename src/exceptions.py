@@ -92,6 +92,27 @@ class OllamaTimeoutError(OllamaException):
     """Exception raised when Ollama service times out."""
 
 
+class OllamaResponseError(OllamaException):
+    """Ollama answered, but its generated payload did not satisfy the contract."""
+
+
+class GroundingError(LLMException):
+    """A generated answer omitted citations or used markers outside the evidence catalog."""
+
+
+class UnsupportedModelError(LLMException):
+    """A request selected a generation model outside the configured allowlist."""
+
+
+class EmbeddingError(OllamaException):
+    """Exception raised when the embedding model returns something unusable.
+
+    Distinct from a connection or timeout failure: the service answered, but with
+    the wrong number of vectors or vectors of the wrong width, which would corrupt
+    the index rather than merely fail the run.
+    """
+
+
 # General application exceptions
 class ConfigurationError(Exception):
     """Exception raised when configuration is invalid."""

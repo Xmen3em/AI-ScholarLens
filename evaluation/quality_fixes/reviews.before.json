@@ -1,0 +1,377 @@
+{
+  "_meta": {
+    "records_sha256": "2b2235b664e24e41f2cc2515d49df32838a14a901edbbe42cba97767e8eb05d1",
+    "reviewer": "Codex semantic source review",
+    "method": "Review complete facts and excerpt relevance separately from quotation attribution; no independent human labels."
+  },
+  "prime-method:bm25:ask:3": {
+    "answer_digest": "948a13c0dae800314f916e1ec680b2a565d1ff2d71badcdf8d39829786eca025",
+    "covered_facts": [
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All three quotations repeat the context-retention/selected-loss rule. Neither screening criterion set is supplied."
+  },
+  "prime-method:bm25:stream:3": {
+    "answer_digest": "948a13c0dae800314f916e1ec680b2a565d1ff2d71badcdf8d39829786eca025",
+    "covered_facts": [
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All three quotations repeat the context-retention/selected-loss rule. Neither screening criterion set is supplied."
+  },
+  "prime-method:hybrid:ask:3": {
+    "answer_digest": "7816a46a70d78faac13892452da822e803f52123021536d54ade9df195a71339",
+    "covered_facts": [
+      "prime-method-f1",
+      "prime-method-f2",
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The third quotation states both complete screening criterion sets; the first two give the selected-loss rule."
+  },
+  "prime-method:hybrid:stream:3": {
+    "answer_digest": "7816a46a70d78faac13892452da822e803f52123021536d54ade9df195a71339",
+    "covered_facts": [
+      "prime-method-f1",
+      "prime-method-f2",
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "The third quotation states both complete screening criterion sets; the first two give the selected-loss rule."
+  },
+  "prime-paraphrase:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-paraphrase:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-paraphrase:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-paraphrase:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-results:bm25:ask:3": {
+    "answer_digest": "4107faa190e4c7a1eebcc62dee4c82040adb37b8b673a8005ccb2e123f3e8740",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Only the numeric abstract quotation answers the subset size and both matched benchmark gains. Generic quality discussion and benchmark names add no requested detail."
+  },
+  "prime-results:bm25:stream:3": {
+    "answer_digest": "4107faa190e4c7a1eebcc62dee4c82040adb37b8b673a8005ccb2e123f3e8740",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Only the numeric abstract quotation answers the subset size and both matched benchmark gains. Generic quality discussion and benchmark names add no requested detail."
+  },
+  "prime-results:hybrid:ask:3": {
+    "answer_digest": "31d95758c463ad5d09f3164d45f8f29cf27f0619482c54b7fe45843bbffa3939",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Numeric abstract covers both facts; benchmark-name repetition and flattened figure text add no requested detail."
+  },
+  "prime-results:hybrid:stream:3": {
+    "answer_digest": "31d95758c463ad5d09f3164d45f8f29cf27f0619482c54b7fe45843bbffa3939",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Numeric abstract covers both facts; benchmark-name repetition and flattened figure text add no requested detail."
+  },
+  "sea-training:bm25:ask:3": {
+    "answer_digest": "7f00ca86d82dbc21272a1af50ef5213605c5db26894259047705df628479750f",
+    "covered_facts": [
+      "sea-training-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Weighted loss and its purpose are explicit. Six task types partially answer curriculum, but two stages are missing. Problem description adds no solution detail."
+  },
+  "sea-training:bm25:stream:3": {
+    "answer_digest": "7f00ca86d82dbc21272a1af50ef5213605c5db26894259047705df628479750f",
+    "covered_facts": [
+      "sea-training-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Weighted loss and its purpose are explicit. Six task types partially answer curriculum, but two stages are missing. Problem description adds no solution detail."
+  },
+  "sea-training:hybrid:ask:3": {
+    "answer_digest": "0ed8fb47fca9e9c09d7d46eb5ee976ec72782d32ace788e3124761e6c99763ee",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Six task types are useful partial curriculum detail. An inserted Stage 2a is an experimental ablation, not the primary two-stage curriculum. No weighted-loss solution is quoted."
+  },
+  "sea-training:hybrid:stream:3": {
+    "answer_digest": "0ed8fb47fca9e9c09d7d46eb5ee976ec72782d32ace788e3124761e6c99763ee",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Six task types are useful partial curriculum detail. An inserted Stage 2a is an experimental ablation, not the primary two-stage curriculum. No weighted-loss solution is quoted."
+  },
+  "sea-paraphrase:bm25:ask:3": {
+    "answer_digest": "4d695cf8bea69b7619a89724b2fbbd0a9a9a7094ff02d5c7122c5f9052374c37",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Capabilities, FOACODER pretraining objectives, and evaluation-set generation do not explain the requested SEA-LM curriculum or loss."
+  },
+  "sea-paraphrase:bm25:stream:3": {
+    "answer_digest": "4d695cf8bea69b7619a89724b2fbbd0a9a9a7094ff02d5c7122c5f9052374c37",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Capabilities, FOACODER pretraining objectives, and evaluation-set generation do not explain the requested SEA-LM curriculum or loss."
+  },
+  "sea-arrays:bm25:ask:3": {
+    "answer_digest": "d4eb1248f5673e8397b907380d78b18899d02934493a4cb12504cadf3b3df986",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All three quotations contribute evaluated configuration counts; the third includes the 4 to 9 microphone range."
+  },
+  "sea-arrays:bm25:stream:3": {
+    "answer_digest": "d4eb1248f5673e8397b907380d78b18899d02934493a4cb12504cadf3b3df986",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All three quotations contribute evaluated configuration counts; the third includes the 4 to 9 microphone range."
+  },
+  "sea-arrays:hybrid:ask:3": {
+    "answer_digest": "a669788d57638aa939122332a4a65025b139627d3345504aca004699ec5e69ba",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "First quotation gives 1,211 configurations; second gives the 4-9 microphone range and scope."
+  },
+  "sea-arrays:hybrid:stream:3": {
+    "answer_digest": "a669788d57638aa939122332a4a65025b139627d3345504aca004699ec5e69ba",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "First quotation gives 1,211 configurations; second gives the 4-9 microphone range and scope."
+  },
+  "mcr-size:bm25:ask:3": {
+    "answer_digest": "77f6d7acb8d033f774a6a04abacb822d7fadfba99d317bec14a75ebb31f65052",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "2,269 tasks is explicit. Saying five languages without identifying them and repository-selection background do not answer which languages."
+  },
+  "mcr-size:bm25:stream:3": {
+    "answer_digest": "77f6d7acb8d033f774a6a04abacb822d7fadfba99d317bec14a75ebb31f65052",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "2,269 tasks is explicit. Saying five languages without identifying them and repository-selection background do not answer which languages."
+  },
+  "mcr-size:hybrid:ask:3": {
+    "answer_digest": "46404a4e0f5db668b1054723002e8a4e059eb56347be5f13ad24fd94c4327236",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Task count is supplied; the five language names are absent. Generic multilingual characterization adds no requested detail."
+  },
+  "mcr-size:hybrid:stream:3": {
+    "answer_digest": "46404a4e0f5db668b1054723002e8a4e059eb56347be5f13ad24fd94c4327236",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Task count is supplied; the five language names are absent. Generic multilingual characterization adds no requested detail."
+  },
+  "multi-audio:bm25:ask:3": {
+    "answer_digest": "ded17f6eec7cd544ed685ce6a1d50dda36fe0dfd4361522c2e27d2c7fc37fa4f",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Raw models rarely rejecting unsupported audio is a relevant SURE limitation, but the requested unidentifiable-speaker/source condition is missing. SEA-LM quotes describe capabilities and a table, not mono-channel limitations."
+  },
+  "multi-audio:bm25:stream:3": {
+    "answer_digest": "ded17f6eec7cd544ed685ce6a1d50dda36fe0dfd4361522c2e27d2c7fc37fa4f",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Raw models rarely rejecting unsupported audio is a relevant SURE limitation, but the requested unidentifiable-speaker/source condition is missing. SEA-LM quotes describe capabilities and a table, not mono-channel limitations."
+  },
+  "multi-audio:hybrid:ask:3": {
+    "answer_digest": "f8c15695a7891ef86684dc6968a46da5689a6694707a0310976c4c7737d38b21",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Table pointer, data-split artifact and capabilities do not answer either predeclared limitation."
+  },
+  "multi-audio:hybrid:stream:3": {
+    "answer_digest": "f8c15695a7891ef86684dc6968a46da5689a6694707a0310976c4c7737d38b21",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Table pointer, data-split artifact and capabilities do not answer either predeclared limitation."
+  },
+  "unsupported-prime:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-prime:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-prime:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-prime:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "runs": {
+    "before": {
+      "requests": 72,
+      "answer_attempts": 36,
+      "successful_answers": 36,
+      "failures": 0,
+      "citation_records": 272,
+      "maximum_words": 118,
+      "validated_successful_streams": 18,
+      "failed_streams_without_deltas_or_done": 0,
+      "corpus_snapshots_equal": true,
+      "benchmark_and_answer_review_hashes_valid": true
+    },
+    "after": {
+      "requests": 72,
+      "answer_attempts": 36,
+      "successful_answers": 30,
+      "failures": 6,
+      "citation_records": 226,
+      "maximum_words": 118,
+      "validated_successful_streams": 15,
+      "failed_streams_without_deltas_or_done": 3,
+      "corpus_snapshots_equal": true,
+      "benchmark_and_answer_review_hashes_valid": true
+    },
+    "regression": {
+      "requests": 32,
+      "answer_attempts": 16,
+      "successful_answers": 16,
+      "failures": 0,
+      "citation_records": 120,
+      "maximum_words": 73,
+      "validated_successful_streams": 8,
+      "failed_streams_without_deltas_or_done": 0,
+      "corpus_snapshots_equal": true,
+      "benchmark_and_answer_review_hashes_valid": true
+    },
+    "final": {
+      "requests": 56,
+      "answer_attempts": 28,
+      "successful_answers": 28,
+      "failures": 0,
+      "citation_records": 218,
+      "maximum_words": 80,
+      "validated_successful_streams": 14,
+      "failed_streams_without_deltas_or_done": 0,
+      "corpus_snapshots_equal": true,
+      "benchmark_and_answer_review_hashes_valid": true
+    },
+    "string-regression": {
+      "requests": 32,
+      "answer_attempts": 16,
+      "successful_answers": 16,
+      "failures": 0,
+      "citation_records": 120,
+      "maximum_words": 73,
+      "validated_successful_streams": 8,
+      "failed_streams_without_deltas_or_done": 0,
+      "corpus_snapshots_equal": true,
+      "benchmark_and_answer_review_hashes_valid": true
+    },
+    "string-initial": {
+      "requests": 72,
+      "answer_attempts": 36,
+      "successful_answers": 36,
+      "failures": 0,
+      "citation_records": 272,
+      "maximum_words": 118,
+      "validated_successful_streams": 18,
+      "failed_streams_without_deltas_or_done": 0,
+      "corpus_snapshots_equal": true,
+      "benchmark_and_answer_review_hashes_valid": true
+    }
+  },
+  "total": {
+    "requests": 336,
+    "answer_attempts": 168,
+    "successful_answers": 162,
+    "failures": 6,
+    "citation_records": 1228,
+    "validated_successful_streams": 81,
+    "failed_streams_without_deltas_or_done": 3
+  },
+  "maximum_words": 118,
+  "final_image_source_files": 70,
+  "final_image_source_mismatches": [],
+  "final_image_candidate_default": 1
+}

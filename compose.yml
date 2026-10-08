@@ -88,6 +88,9 @@ services:
       # Environment variables for DAG tasks
       - POSTGRES_DATABASE_URL=postgresql+psycopg2://rag_user:rag_password@postgres:5432/rag_db
       - OPENSEARCH_HOST=http://opensearch:9200
+      # The chunk indexer embeds passages here. Without this it would default to
+      # localhost, which inside this container is the container itself.
+      - OLLAMA_HOST=http://ollama:11434
       - PYTHONPATH=/opt/airflow/src
       # Absolute, so the cache does not follow a task's working directory
       - ARXIV__PDF_CACHE_DIR=/opt/airflow/data/arxiv_pdfs

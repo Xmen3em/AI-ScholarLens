@@ -1,0 +1,101 @@
+{
+  "stage": "post-collection semantic pipeline diagnosis",
+  "cases": [
+    {
+      "id": "undo-design-1",
+      "note": "Model selection contract failure: logs show rejected distinct-ID selections, including the bounded /ask retry."
+    },
+    {
+      "id": "undo-design-2",
+      "note": "Lexical gate: UndoBench coverage 0.50 in both modes. BM25 also misses the frozen abstract locator, but its introduction contains all counts (supplemental review)."
+    },
+    {
+      "id": "undo-results-1",
+      "note": "Both numeric facts answered. Extra design/definition excerpts are off the numeric request. Numeric sentence has 50 words and passes the filter."
+    },
+    {
+      "id": "undo-results-2",
+      "note": "Lexical gate: the supporting abstract is supplied, but UndoBench query coverage is only 0.20."
+    },
+    {
+      "id": "ave-1",
+      "note": "One-sentence-per-passage choice drops the lightweight-classifier detail. Hybrid /stream additionally abstains despite useful candidates offered to /ask with the same citation coordinates."
+    },
+    {
+      "id": "ave-2",
+      "note": "One-sentence-per-passage choice favors the method sentence and drops the 0.803 result, even though the supplied abstract contains both."
+    },
+    {
+      "id": "kandinsky-1",
+      "note": "BM25 retrieves complete unjudged introduction support but candidate choice loses duration and sample rate. Hybrid overview supplies sizes and sample rate; full duration support is not established in its returned group. Both outputs quote sizes only."
+    },
+    {
+      "id": "kandinsky-2",
+      "note": "Lexical gate blocks Kandinsky at 0.538 BM25 and 0.462 hybrid. Hybrid supplies the complete reviewed abstract; BM25 supplies partial facts but no established duration support."
+    },
+    {
+      "id": "arkios-1",
+      "note": "All requested facts are in one selected sentence, but the model also selects irrelevant excerpts from other papers despite source ownership being preserved."
+    },
+    {
+      "id": "arkios-2",
+      "note": "Candidate choice drops the parameter/token counts from supplied Arkios abstract and language-pair training statement. Model selects topical or other-paper material with no complete requested fact."
+    },
+    {
+      "id": "tokenizer-1",
+      "note": "BM25 candidate choice omits the cannot-merge-across-boundaries explanation; hybrid supplies it from an unjudged conclusion passage. Both include a repair recipe outside the causal request."
+    },
+    {
+      "id": "tokenizer-2",
+      "note": "Lexical gate: strongest target-paper coverage 0.529 BM25 and 0.471 hybrid, despite supplied support."
+    },
+    {
+      "id": "dream-1",
+      "note": "The 76-word abstract mechanism sentence is filtered. Shorter conclusion explains scale assignment and rollback, but offered selections omit explicit probing, reducing strict compound-fact coverage."
+    },
+    {
+      "id": "dream-2",
+      "note": "Useful rollback detail is returned; explicit multi-resolution probing is absent from selected candidates, so only the complete rollback fact earns credit."
+    },
+    {
+      "id": "vera-1",
+      "note": "Authority target and surviving-path semantics answered; BM25 additionally quotes implementation advice outside the request."
+    },
+    {
+      "id": "vera-2",
+      "note": "Candidate choice offers independent-authority preservation and a two-parent example, omitting the exact all-root-path-loss invalidation rule present in supplied evidence."
+    },
+    {
+      "id": "multi-vision",
+      "note": "DREAM is supplied but fails its per-paper gate at 5/9=0.556. BM25 also lacks a complete AVE classifier fact among offered candidates. Hybrid answers AVE only. Corpus prompt examples are selected as filler."
+    },
+    {
+      "id": "multi-tokenizer",
+      "note": "Both requested papers reach 7/12=0.583 query coverage and are rejected. Hybrid frozen unit recall also misses an unjudged alternative, documented separately."
+    },
+    {
+      "id": "unsupported-kandinsky",
+      "note": "Correct abstention: no stored evidence establishes the requested private, future, unrelated, or out-of-domain detail."
+    },
+    {
+      "id": "unsupported-undo",
+      "note": "Correct abstention: no stored evidence establishes the requested private, future, unrelated, or out-of-domain detail."
+    },
+    {
+      "id": "unsupported-arkios",
+      "note": "Correct abstention: no stored evidence establishes the requested private, future, unrelated, or out-of-domain detail."
+    },
+    {
+      "id": "unsupported-ave",
+      "note": "Correct abstention: no stored evidence establishes the requested private, future, unrelated, or out-of-domain detail."
+    },
+    {
+      "id": "unrelated-weather",
+      "note": "Correct abstention: no stored evidence establishes the requested private, future, unrelated, or out-of-domain detail."
+    },
+    {
+      "id": "unrelated-sports",
+      "note": "Correct abstention: no stored evidence establishes the requested private, future, unrelated, or out-of-domain detail."
+    }
+  ]
+}

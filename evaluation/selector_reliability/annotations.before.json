@@ -1,0 +1,14 @@
+{
+  "fast-family:bm25": {"facts": [], "relevant": 1, "rationale": "Prefix alignment and the regression family are useful partial update detail, but scalar NLMS, per-column and sliding-window mappings are all absent. Audio attention and project metadata are filler."},
+  "fast-family:hybrid": {"facts": [], "relevant": 1, "rationale": "Prefix-aligned regression family is partial detail. Project metadata and the unspecified scaled formulation do not describe the three requested updates."},
+  "fast-forms:bm25": {"facts": [1], "relevant": 1, "rationale": "Recurrent, masked-parallel and chunk-parallel forms are complete. Adaptive-filter background and asymptotic costs are filler for this question."},
+  "fast-forms:hybrid": {"facts": [1], "relevant": 1, "rationale": "The three computational forms are complete. Adaptive-filter background and learning-rate normalization are filler."},
+  "load-size:bm25": {"facts": [1, 2, 3], "relevant": 2, "rationale": "Both quotations describe the 53-puzzle dataset and single-example random and ECC-inspired targeted deletion; all three facts are complete."},
+  "load-size:hybrid": {"facts": [1, 2, 3], "relevant": 2, "rationale": "Dataset size and both deletion strategies are complete in the first two quotations. Model abstention behavior is filler."},
+  "load-score:bm25": {"facts": [1], "relevant": 1, "rationale": "The first quote defines the count of newly unanswerable questions. Fragile-puzzle prevalence and model abstention results do not explain what is counted."},
+  "load-score:hybrid": {"facts": [1], "relevant": 1, "rationale": "The task-level measure counts questions losing necessary information. Fragile-puzzle prevalence and the distinct token-level Base Damage Score are filler."},
+  "cg-weights:bm25": {"facts": [1, 2], "relevant": 3, "rationale": "All quotes directly describe LP-determined mixture weights; the abstract quote also supplies dual-variable guidance toward violated constraints."},
+  "cg-weights:hybrid": {"facts": [1], "relevant": 2, "rationale": "LP master determines mixture weights. Dual-guided pricing is useful partial guidance, but its explicit dual variables/new-model generation/focus are incomplete. The column-structure quote does not explain the determinant."},
+  "multi-forms-weights:bm25": {"facts": [2], "relevant": 2, "rationale": "Two CG4AI quotations supply LP-determined weights; the Fast Weight sentence discusses temporal alignment without providing the requested computational forms."},
+  "multi-forms-weights:hybrid": {"facts": [2], "relevant": 1, "rationale": "Only the LP-master quote supplies the requested determinant. Feasibility guarantees and ensemble structure are filler; Fast Weight forms are absent."}
+}

@@ -1,0 +1,234 @@
+{
+  "version": "selector-reliability-fresh-v1",
+  "reviewed_on": "2026-10-08",
+  "reviewer": "Codex stored-source review",
+  "split": "Fresh convenience holdout; labels fixed before model collection; separate synthetic development.",
+  "corpus": {
+    "papers": 58,
+    "chunks": 2775,
+    "alias_target": "paper-chunks-v2",
+    "preserved_v1_chunks": 1221
+  },
+  "cases": [
+    {
+      "id": "fast-family",
+      "kind": "literal",
+      "answerable": true,
+      "query": "In Fast Weight Attention, what updates do Falcon-1, Falcon-2 and Falcon-3 use?",
+      "facts": [
+        {
+          "id": "fast-family-f1",
+          "text": "Falcon-1 is a scalar NLMS update."
+        },
+        {
+          "id": "fast-family-f2",
+          "text": "Falcon-2 is the per-column extension."
+        },
+        {
+          "id": "fast-family-f3",
+          "text": "Falcon-3 is a sliding-window minibatch update."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27763v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Recurrent fast-weight memories and selective state-space models compress an expanding context into a fixed-size recurrent state, making the state transition an online learning rule. We study this rule under read-after-write autoregressive semantics. For the prefix-prediction objective considered here, the local fast-memory example revealed at step t is the prefix-aligned pair (xt, yt) = (ϕ(kt-1), vt). The common same-step association (ϕ(kt), vt) remains causal, but optimizes a different internal objective. We derive normalized first-order updates for squared-error regression and negative inner-product objectives. The regression family comprises Falcon-1 (a scalar NLMS update), Falcon-2 (its per-column extension), and Falcon-3 (a sliding-window minibatch update); Falcon-1A/Falcon-2A/Falcon-3A are the corresponding inner-product variants. We provide recurrent, masked-parallel, and chunk-parallel forms, together with numerically stable positive-decay renormalization. Representative variants remain competitive in language modeling and improve length extrapolation on variable-digit addition. This framework separates temporal alignment, plasticity, forgetting, and bounded rehearsal in recurrent sequence models.\nDate: March 9, 2026\nProject Page: https://github.com/yifanzhang-pro/fast-weight-attention"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fast-forms",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "Which computational forms of the fast-weight updates are provided in Fast Weight Attention?",
+      "facts": [
+        {
+          "id": "fast-forms-f1",
+          "text": "The updates have recurrent, masked-parallel and chunk-parallel forms."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27763v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Recurrent fast-weight memories and selective state-space models compress an expanding context into a fixed-size recurrent state, making the state transition an online learning rule. We study this rule under read-after-write autoregressive semantics. For the prefix-prediction objective considered here, the local fast-memory example revealed at step t is the prefix-aligned pair (xt, yt) = (ϕ(kt-1), vt). The common same-step association (ϕ(kt), vt) remains causal, but optimizes a different internal objective. We derive normalized first-order updates for squared-error regression and negative inner-product objectives. The regression family comprises Falcon-1 (a scalar NLMS update), Falcon-2 (its per-column extension), and Falcon-3 (a sliding-window minibatch update); Falcon-1A/Falcon-2A/Falcon-3A are the corresponding inner-product variants. We provide recurrent, masked-parallel, and chunk-parallel forms, together with numerically stable positive-decay renormalization. Representative variants remain competitive in language modeling and improve length extrapolation on variable-digit addition. This framework separates temporal alignment, plasticity, forgetting, and bounded rehearsal in recurrent sequence models.\nDate: March 9, 2026\nProject Page: https://github.com/yifanzhang-pro/fast-weight-attention"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "load-size",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How many UKLO puzzles does Load-Bearing Context start from and what two deletion variants does it generate?",
+      "facts": [
+        {
+          "id": "load-size-f1",
+          "text": "It starts from 53 UKLO puzzles."
+        },
+        {
+          "id": "load-size-f2",
+          "text": "Uniform random deletion removes one context example."
+        },
+        {
+          "id": "load-size-f3",
+          "text": "ECC-inspired targeted deletion removes one structurally load-bearing context example."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27756v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Determining whether large language models (LLMs) derive their answers from the provided context or from prior knowledge remains a fundamental challenge. Linguistic Rosetta Stone puzzles from linguistic olympiads provide a uniquely controlled setting: each puzzle is selfcontained, and all answers can be derived solely from a small set of expert-designed context examples without requiring external knowledge. Removing individual context examples, however, may eliminate information required to answer one or more questions while leaving the remainder of the puzzle unchanged. We leverage this property to introduce a diagnostic framework for analyzing the role of individual context examples in puzzle solving. Starting from 53 curated puzzles from the United Kingdom Linguistics Olympiad (UKLO), we generate two modified variants of each puzzle by deleting a single context example: (1) uniform random deletion and (2) targeted deletion inspired by error-correcting code (ECC) theory designed to remove a structurally loadbearing example uniquely carrying information required for answering at least one question. We formalize the impact of these deletions with a Question Damage Score ( D Q ), which classifies puzzles as fragile or robust prior to model evaluation. As a first application of the framework, we evaluate three frontier LLMs on the original and modified puzzles under explicit instructions to abstain when the provided information is insufficient. Despite these instructions, the models rarely abstain and often continue producing correct answers after structurally load-bearing context is removed. These findings motivate further investigation into the roles of context-based reasoning, prior knowledge, memorization, and linguistic inference. Beyond abstention, the proposed framework enables fine-grained analyses of context reliance, including causal interventions, stopping-set analysis, targeted contamination studies, and mechanistic interpretability."
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27756v1",
+              "section_index": 3,
+              "chunk_index": 1,
+              "section_title": "1 Introduction",
+              "source_excerpt": "les are selfcontained: all information needed to solve them is within the provided examples, no external linguistic knowledge is needed. Examples of UKLO Rosetta Stone puzzles are provided in App. A.\nWe introduce a diagnostic framework for studying the role of individual context examples in puzzle solvability and the effect of removing those examples on LLM behavior. Starting from 53 UKLO puzzles, we generate two modified variants of each puzzle by deleting a single context example: (1) uniform random deletion and (2) targeted deletion inspired by error-correcting code (ECC) theory, which targets a load-bearing context example that uniquely carries information required to answer at least one question. We formalize the impact of these deletions using the Question Damage Score ( D Q ), which counts the number of questions that become unanswerable after removing context example l j . Apuzzle with max j D Q ( j ) > 0 contains at least one load-bearing context example whose removal renders one or more questions structurally unanswerable; we call such puzzles fragile . In contrast, a puzzle with max j D Q ( j ) = 0 contains sufficient redundancy that removing any single context example preserves the solvability of every question; we call such puzzles robust .\nAs a first application of the framework, we investigate LLM abstention. Three frontier LLMs solve the original and modified puzzles under explicit instructions to abstain whenever the provided context is insufficient. Across all models, abstention is rare, even after structurally important context is removed, and models often answer correctly on structurally unsolvable variants. Rather than explaining these answers, our framework identifies cases where reasoning over the remaining context alone appears insufficient, motivating future studies of context-based reasoning, prior knowledge, memorization, and linguistic inference.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "load-score",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "In Load-Bearing Context, what does the Question Damage Score count after a context example is removed?",
+      "facts": [
+        {
+          "id": "load-score-f1",
+          "text": "It counts the questions that become unanswerable after deleting that context example."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27756v1",
+              "section_index": 3,
+              "chunk_index": 1,
+              "section_title": "1 Introduction",
+              "source_excerpt": "les are selfcontained: all information needed to solve them is within the provided examples, no external linguistic knowledge is needed. Examples of UKLO Rosetta Stone puzzles are provided in App. A.\nWe introduce a diagnostic framework for studying the role of individual context examples in puzzle solvability and the effect of removing those examples on LLM behavior. Starting from 53 UKLO puzzles, we generate two modified variants of each puzzle by deleting a single context example: (1) uniform random deletion and (2) targeted deletion inspired by error-correcting code (ECC) theory, which targets a load-bearing context example that uniquely carries information required to answer at least one question. We formalize the impact of these deletions using the Question Damage Score ( D Q ), which counts the number of questions that become unanswerable after removing context example l j . Apuzzle with max j D Q ( j ) > 0 contains at least one load-bearing context example whose removal renders one or more questions structurally unanswerable; we call such puzzles fragile . In contrast, a puzzle with max j D Q ( j ) = 0 contains sufficient redundancy that removing any single context example preserves the solvability of every question; we call such puzzles robust .\nAs a first application of the framework, we investigate LLM abstention. Three frontier LLMs solve the original and modified puzzles under explicit instructions to abstain whenever the provided context is insufficient. Across all models, abstention is rare, even after structurally important context is removed, and models often answer correctly on structurally unsolvable variants. Rather than explaining these answers, our framework identifies cases where reasoning over the remaining context alone appears insufficient, motivating future studies of context-based reasoning, prior knowledge, memorization, and linguistic inference.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cg-weights",
+      "kind": "literal",
+      "answerable": true,
+      "query": "In CG4AI, what determines the mixture weights and what guides the pricing subproblem?",
+      "facts": [
+        {
+          "id": "cg-weights-f1",
+          "text": "A master linear program determines the optimal mixture weights."
+        },
+        {
+          "id": "cg-weights-f2",
+          "text": "LP dual variables guide new-model generation in the pricing subproblem toward violated constraints."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26375v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Standard machine-learning training minimizes a loss function over a dataset, but does not guarantee that the resulting model will satisfy predefined rules or constraints on its outputs. In many real-world applications, ranging from autonomous systems to network routing, such guarantees are essential. We propose CG4AI , a framework that builds a convex combination of AI models while enforcing linear constraints on the combined output. A master linear program (LP) determines the optimal mixture weights, while a pricing subproblem generates new models guided by LP dual variables, focusing attention on the most violated constraints. A cutting-plane procedure extends feasibility guarantees beyond the training set. We apply CG4AI to two problems: (i) digit classification on MNIST, where we demonstrate four distinct uses of constraints, learning from constraints alone, improving adversarial robustness, correcting misclassified examples, and enforcing output relabeling; and (ii) the multi-commodity flow problem, where link capacity constraints are enforced on neural-network routing predictors. Experiments on MNIST and standard SNDLIB benchmark networks show that CG4AI reliably produces feasible predictors while achieving better accuracy than single-model baselines.\nKeywords: Column generation, Hard constraints, Neural networks, Ensemble learning, Multi-commodity flow, Trustworthy AI, Linear programming, Safety\n1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi-forms-weights",
+      "kind": "multi",
+      "answerable": true,
+      "query": "What update forms does Fast Weight Attention provide, and what determines mixture weights in CG4AI?",
+      "facts": [
+        {
+          "id": "multi-forms-weights-f1",
+          "text": "Fast Weight Attention provides recurrent, masked-parallel and chunk-parallel forms."
+        },
+        {
+          "id": "multi-forms-weights-f2",
+          "text": "In CG4AI a master linear program determines the optimal mixture weights."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.27763v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Recurrent fast-weight memories and selective state-space models compress an expanding context into a fixed-size recurrent state, making the state transition an online learning rule. We study this rule under read-after-write autoregressive semantics. For the prefix-prediction objective considered here, the local fast-memory example revealed at step t is the prefix-aligned pair (xt, yt) = (ϕ(kt-1), vt). The common same-step association (ϕ(kt), vt) remains causal, but optimizes a different internal objective. We derive normalized first-order updates for squared-error regression and negative inner-product objectives. The regression family comprises Falcon-1 (a scalar NLMS update), Falcon-2 (its per-column extension), and Falcon-3 (a sliding-window minibatch update); Falcon-1A/Falcon-2A/Falcon-3A are the corresponding inner-product variants. We provide recurrent, masked-parallel, and chunk-parallel forms, together with numerically stable positive-decay renormalization. Representative variants remain competitive in language modeling and improve length extrapolation on variable-digit addition. This framework separates temporal alignment, plasticity, forgetting, and bounded rehearsal in recurrent sequence models.\nDate: March 9, 2026\nProject Page: https://github.com/yifanzhang-pro/fast-weight-attention"
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26375v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Standard machine-learning training minimizes a loss function over a dataset, but does not guarantee that the resulting model will satisfy predefined rules or constraints on its outputs. In many real-world applications, ranging from autonomous systems to network routing, such guarantees are essential. We propose CG4AI , a framework that builds a convex combination of AI models while enforcing linear constraints on the combined output. A master linear program (LP) determines the optimal mixture weights, while a pricing subproblem generates new models guided by LP dual variables, focusing attention on the most violated constraints. A cutting-plane procedure extends feasibility guarantees beyond the training set. We apply CG4AI to two problems: (i) digit classification on MNIST, where we demonstrate four distinct uses of constraints, learning from constraints alone, improving adversarial robustness, correcting misclassified examples, and enforcing output relabeling; and (ii) the multi-commodity flow problem, where link capacity constraints are enforced on neural-network routing predictors. Experiments on MNIST and standard SNDLIB benchmark networks show that CG4AI reliably produces feasible predictors while achieving better accuracy than single-model baselines.\nKeywords: Column generation, Hard constraints, Neural networks, Ensemble learning, Multi-commodity flow, Trustworthy AI, Linear programming, Safety\n1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unsupported-load-energy",
+      "kind": "unsupported_related",
+      "answerable": false,
+      "query": "How many kilowatt-hours did Load-Bearing Context use to evaluate its 53 UKLO puzzles?",
+      "facts": [],
+      "support": []
+    },
+    {
+      "id": "unsupported-fast-price",
+      "kind": "unsupported_related",
+      "answerable": false,
+      "query": "What monthly subscription price is charged for Falcon-3 in Fast Weight Attention?",
+      "facts": [],
+      "support": []
+    },
+    {
+      "id": "unsupported-space",
+      "kind": "unsupported_unrelated",
+      "answerable": false,
+      "query": "What is the surface temperature on Neptune today?",
+      "facts": [],
+      "support": []
+    }
+  ]
+}

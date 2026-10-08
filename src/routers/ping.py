@@ -1,84 +1,59 @@
-from fastapi import APIRouter
+import logging
+
+from fastapi import APIRouter, Response, status
 from sqlalchemy import text
+from src.dependencies import DatabaseDep, OllamaDep, SettingsDep
+from src.exceptions import OllamaException
+from src.schemas.api.health import HealthResponse, ServiceStatus
 
-from ..dependencies import DatabaseDep, SettingsDep
-from ..exceptions import OllamaConnectionError, OllamaException, OllamaTimeoutError
-from ..schemas.api.health import HealthResponse, ServiceStatus
-from ..services.ollama import OllamaClient
-
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.get("/ping", tags=["Health"])
 async def ping():
-    """Simple ping endpoint for basic connectivity tests."""
     return {"status": "ok", "message": "pong"}
 
 
-@router.get(
-    "/health",
-    response_model=HealthResponse,
-    summary="Health check",
-    description="Check the health and status of the API service including database connectivity.",
-    response_description="Service health information",
-    tags=["Health"],
-)
-async def health_check(settings: SettingsDep, database: DatabaseDep) -> HealthResponse:
-    """
-    Comprehensive health check endpoint for monitoring and load balancer probes.
+@router.get("/health", response_model=HealthResponse, tags=["Health"], summary="Dependency readiness")
+async def health_check(
+    response: Response,
+    settings: SettingsDep,
+    database: DatabaseDep,
+    ollama: OllamaDep,
+) -> HealthResponse:
+    services: dict[str, ServiceStatus] = {}
+    overall_status = "healthy"
 
-    This endpoint provides information about the service health, version,
-    environment, and checks connectivity to dependent services like database.
-
-    Returns:
-        HealthResponse: Contains service status, version, environment, and service checks
-
-    Example:
-        Response:
-        ```
-        {
-            "status": "ok",
-            "version": "0.1.0",
-            "environment": "development",
-            "service_name": "rag-api",
-            "services": {
-                "database": {"status": "healthy", "message": "Connected successfully"}
-            }
-        }
-        ```
-    """
-    services = {}
-    overall_status = "ok"
-
-    # Test database connectivity
     try:
         with database.get_session() as session:
-            # Simple query to test connection
             session.execute(text("SELECT 1"))
-            services["database"] = ServiceStatus(status="healthy", message="Connected successfully")
-    except Exception as e:
-        services["database"] = ServiceStatus(status="unhealthy", message=f"Connection failed: {str(e)}")
-        overall_status = "degraded"
+        services["database"] = ServiceStatus(status="healthy", message="Connected successfully")
+    except Exception:
+        logger.exception("Database readiness check failed")
+        services["database"] = ServiceStatus(status="unhealthy", message="Database is unavailable")
+        overall_status = "unhealthy"
 
-    # Test Ollama service connectivity (Week 1 notebook requirement)
     try:
-        ollama_client = OllamaClient(settings)
-        ollama_health = await ollama_client.health_check()
-        services["ollama"] = ServiceStatus(status=ollama_health["status"], message=ollama_health["message"])
-        if ollama_health["status"] != "healthy":
+        readiness = await ollama.readiness()
+        missing = [*readiness.missing_required, *readiness.missing_optional]
+        message = (
+            "All configured Ollama models are available"
+            if not missing
+            else f"Missing Ollama models: {', '.join(missing)}"
+        )
+        services["ollama"] = ServiceStatus(status=readiness.status, message=message)
+        if readiness.status == "unhealthy":
+            overall_status = "unhealthy"
+        elif readiness.status == "degraded" and overall_status == "healthy":
             overall_status = "degraded"
-    except OllamaConnectionError as e:
-        services["ollama"] = ServiceStatus(status="unhealthy", message=f"Cannot connect to Ollama: {str(e)}")
-        overall_status = "degraded"
-    except OllamaTimeoutError as e:
-        services["ollama"] = ServiceStatus(status="unhealthy", message=f"Ollama timeout: {str(e)}")
-        overall_status = "degraded"
-    except OllamaException as e:
-        services["ollama"] = ServiceStatus(status="unhealthy", message=f"Ollama error: {str(e)}")
-        overall_status = "degraded"
-    except Exception as e:
-        services["ollama"] = ServiceStatus(status="unhealthy", message=f"Unexpected Ollama error: {str(e)}")
-        overall_status = "degraded"
+    except OllamaException:
+        logger.exception("Ollama readiness check failed")
+        services["ollama"] = ServiceStatus(status="unhealthy", message="Ollama is unavailable")
+        overall_status = "unhealthy"
+
+    if overall_status == "unhealthy":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
     return HealthResponse(
         status=overall_status,

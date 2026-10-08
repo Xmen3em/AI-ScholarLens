@@ -1,0 +1,309 @@
+{
+  "_meta": {
+    "records_sha256": "a10c850cc4e7f70c0c11403ab653bf2db9ceef8e54e54ce3f79ef2a6ed9292e6",
+    "reviewer": "Codex source/semantic review; all distinct successful answers inspected",
+    "reviewed_on": "2026-10-08"
+  },
+  "fast-family:bm25:ask:3": {
+    "answer_digest": "2fd0a7c89af233f3490e69848f8ab405c0c492b41a5fcde39662dc54d3461bb7",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Prefix alignment and the regression family are useful partial update detail, but scalar NLMS, per-column and sliding-window mappings are all absent. Audio attention and project metadata are filler."
+  },
+  "fast-family:bm25:stream:3": {
+    "answer_digest": "2fd0a7c89af233f3490e69848f8ab405c0c492b41a5fcde39662dc54d3461bb7",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Prefix alignment and the regression family are useful partial update detail, but scalar NLMS, per-column and sliding-window mappings are all absent. Audio attention and project metadata are filler."
+  },
+  "fast-family:hybrid:ask:3": {
+    "answer_digest": "7b54dcf51168fbc3ababedb814650c7396653e3409621911ca71624bf363f681",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Prefix-aligned regression family is partial detail. Project metadata and the unspecified scaled formulation do not describe the three requested updates."
+  },
+  "fast-family:hybrid:stream:3": {
+    "answer_digest": "7b54dcf51168fbc3ababedb814650c7396653e3409621911ca71624bf363f681",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Prefix-aligned regression family is partial detail. Project metadata and the unspecified scaled formulation do not describe the three requested updates."
+  },
+  "fast-forms:bm25:ask:3": {
+    "answer_digest": "576f1503deed45ddf0e88430477741c15377787de4a57ece9fc3284d40efca77",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Recurrent, masked-parallel and chunk-parallel forms are complete. Adaptive-filter background and asymptotic costs are filler for this question."
+  },
+  "fast-forms:bm25:stream:3": {
+    "answer_digest": "576f1503deed45ddf0e88430477741c15377787de4a57ece9fc3284d40efca77",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Recurrent, masked-parallel and chunk-parallel forms are complete. Adaptive-filter background and asymptotic costs are filler for this question."
+  },
+  "fast-forms:hybrid:ask:3": {
+    "answer_digest": "b4c1e1c284e6222e888709996a9b643f8015fbe1c4bf6f7a14e569da6683e1b6",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The three computational forms are complete. Adaptive-filter background and learning-rate normalization are filler."
+  },
+  "fast-forms:hybrid:stream:3": {
+    "answer_digest": "b4c1e1c284e6222e888709996a9b643f8015fbe1c4bf6f7a14e569da6683e1b6",
+    "covered_facts": [
+      "fast-forms-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The three computational forms are complete. Adaptive-filter background and learning-rate normalization are filler."
+  },
+  "load-size:bm25:ask:3": {
+    "answer_digest": "b97e6a383efe68d78bbe53ae189ba389f0be2c2760ea6bdb2dacbc789a718db1",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Both quotations describe the 53-puzzle dataset and single-example random and ECC-inspired targeted deletion; all three facts are complete."
+  },
+  "load-size:bm25:stream:3": {
+    "answer_digest": "b97e6a383efe68d78bbe53ae189ba389f0be2c2760ea6bdb2dacbc789a718db1",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 2,
+    "rationale": "Both quotations describe the 53-puzzle dataset and single-example random and ECC-inspired targeted deletion; all three facts are complete."
+  },
+  "load-size:hybrid:ask:3": {
+    "answer_digest": "84e6333ae31ff12d8a88619009e94767f094a2bc99e2c709f9904fcb1722e1be",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Dataset size and both deletion strategies are complete in the first two quotations. Model abstention behavior is filler."
+  },
+  "load-size:hybrid:stream:3": {
+    "answer_digest": "84e6333ae31ff12d8a88619009e94767f094a2bc99e2c709f9904fcb1722e1be",
+    "covered_facts": [
+      "load-size-f1",
+      "load-size-f2",
+      "load-size-f3"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Dataset size and both deletion strategies are complete in the first two quotations. Model abstention behavior is filler."
+  },
+  "load-score:bm25:ask:3": {
+    "answer_digest": "c9289429d4505787d97bd305b107548593259cf0cc6a5ea93335e16a3f822fd1",
+    "covered_facts": [
+      "load-score-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first quote defines the count of newly unanswerable questions. Fragile-puzzle prevalence and model abstention results do not explain what is counted."
+  },
+  "load-score:bm25:stream:3": {
+    "answer_digest": "c9289429d4505787d97bd305b107548593259cf0cc6a5ea93335e16a3f822fd1",
+    "covered_facts": [
+      "load-score-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The first quote defines the count of newly unanswerable questions. Fragile-puzzle prevalence and model abstention results do not explain what is counted."
+  },
+  "load-score:hybrid:ask:3": {
+    "answer_digest": "4fea7c21adbbf7b5e38eda9ef0dec0e9708f737009e2570ee32ffcecc206ff3e",
+    "covered_facts": [
+      "load-score-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The task-level measure counts questions losing necessary information. Fragile-puzzle prevalence and the distinct token-level Base Damage Score are filler."
+  },
+  "load-score:hybrid:stream:3": {
+    "answer_digest": "4fea7c21adbbf7b5e38eda9ef0dec0e9708f737009e2570ee32ffcecc206ff3e",
+    "covered_facts": [
+      "load-score-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The task-level measure counts questions losing necessary information. Fragile-puzzle prevalence and the distinct token-level Base Damage Score are filler."
+  },
+  "cg-weights:bm25:ask:3": {
+    "answer_digest": "d6b664913f9d80319c3a29050d0e77a364dd0a783fd121db8cca31ed07498062",
+    "covered_facts": [
+      "cg-weights-f1",
+      "cg-weights-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All quotes directly describe LP-determined mixture weights; the abstract quote also supplies dual-variable guidance toward violated constraints."
+  },
+  "cg-weights:bm25:stream:3": {
+    "answer_digest": "d6b664913f9d80319c3a29050d0e77a364dd0a783fd121db8cca31ed07498062",
+    "covered_facts": [
+      "cg-weights-f1",
+      "cg-weights-f2"
+    ],
+    "relevant_excerpts": 3,
+    "total_excerpts": 3,
+    "rationale": "All quotes directly describe LP-determined mixture weights; the abstract quote also supplies dual-variable guidance toward violated constraints."
+  },
+  "cg-weights:hybrid:ask:3": {
+    "answer_digest": "435b570edbbc38599f5b0a0c9150db59c22e7359809ca359745d3215da82addf",
+    "covered_facts": [
+      "cg-weights-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "LP master determines mixture weights. Dual-guided pricing is useful partial guidance, but its explicit dual variables/new-model generation/focus are incomplete. The column-structure quote does not explain the determinant."
+  },
+  "cg-weights:hybrid:stream:3": {
+    "answer_digest": "435b570edbbc38599f5b0a0c9150db59c22e7359809ca359745d3215da82addf",
+    "covered_facts": [
+      "cg-weights-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "LP master determines mixture weights. Dual-guided pricing is useful partial guidance, but its explicit dual variables/new-model generation/focus are incomplete. The column-structure quote does not explain the determinant."
+  },
+  "multi-forms-weights:bm25:ask:3": {
+    "answer_digest": "b104af65828fada0357e607d19e9ff4d32ae698425ce5e9277828adfd61e8846",
+    "covered_facts": [
+      "multi-forms-weights-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Two CG4AI quotations supply LP-determined weights; the Fast Weight sentence discusses temporal alignment without providing the requested computational forms."
+  },
+  "multi-forms-weights:bm25:stream:3": {
+    "answer_digest": "b104af65828fada0357e607d19e9ff4d32ae698425ce5e9277828adfd61e8846",
+    "covered_facts": [
+      "multi-forms-weights-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "Two CG4AI quotations supply LP-determined weights; the Fast Weight sentence discusses temporal alignment without providing the requested computational forms."
+  },
+  "multi-forms-weights:hybrid:ask:3": {
+    "answer_digest": "45e275ed7e70c923ca0e3d7fdee523738c0c21a46cdedf473d679e5916a7008e",
+    "covered_facts": [
+      "multi-forms-weights-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Only the LP-master quote supplies the requested determinant. Feasibility guarantees and ensemble structure are filler; Fast Weight forms are absent."
+  },
+  "multi-forms-weights:hybrid:stream:3": {
+    "answer_digest": "45e275ed7e70c923ca0e3d7fdee523738c0c21a46cdedf473d679e5916a7008e",
+    "covered_facts": [
+      "multi-forms-weights-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Only the LP-master quote supplies the requested determinant. Feasibility guarantees and ensemble structure are filler; Fast Weight forms are absent."
+  },
+  "unsupported-load-energy:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-load-energy:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-load-energy:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-load-energy:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-fast-price:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-space:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  }
+}

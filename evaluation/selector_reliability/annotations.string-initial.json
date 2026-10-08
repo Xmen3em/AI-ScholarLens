@@ -1,0 +1,14 @@
+{
+  "fast-family:bm25": {"facts": [], "relevant": 1, "rationale": "The prefix-aligned regression family is useful partial update detail, but all three requested mappings are absent. Project metadata is filler."},
+  "fast-family:hybrid": {"facts": [], "relevant": 1, "rationale": "The prefix-aligned regression family is useful partial update detail. The unspecified scaled formulation does not describe the three requested updates."},
+  "fast-forms:bm25": {"facts": [1], "relevant": 1, "rationale": "All three computational forms are complete. Asymptotic costs of other recurrent alternatives are filler."},
+  "fast-forms:hybrid": {"facts": [1], "relevant": 1, "rationale": "All three computational forms are complete. Adaptive-filter background is filler."},
+  "load-size:bm25": {"facts": [1, 2, 3], "relevant": 1, "rationale": "The single quotation supplies the dataset size and both deletion strategies completely."},
+  "load-size:hybrid": {"facts": [1, 2, 3], "relevant": 1, "rationale": "Dataset size and both deletion strategies are complete. Model abstention behavior is filler."},
+  "load-score:bm25": {"facts": [], "relevant": 0, "rationale": "Fragile-puzzle prevalence and model performance do not define the Question Damage Score or the number of newly unanswerable questions it counts."},
+  "load-score:hybrid": {"facts": [1], "relevant": 1, "rationale": "The task-level measure explicitly counts questions losing necessary information. Fragile-puzzle prevalence and the separate token-level Base Damage Score are filler."},
+  "cg-weights:bm25": {"facts": [1, 2], "relevant": 2, "rationale": "The master LP determines mixture weights and pricing uses dual variables to generate new models focused on violated constraints. Both quotations directly address the requested determinant."},
+  "cg-weights:hybrid": {"facts": [], "relevant": 1, "rationale": "Dual-guided pricing is useful partial guidance but omits explicit dual variables/new-model generation/focus; LP-determined weights are absent. The column-structure sentence does not explain the determinant."},
+  "multi-forms-weights:bm25": {"facts": [1], "relevant": 1, "rationale": "Fast Weight computational forms are complete. Temporal alignment and adaptive-filter background are filler; CG4AI mixture-weight determination is absent."},
+  "multi-forms-weights:hybrid": {"facts": [], "relevant": 0, "rationale": "Feasibility guarantees and column structure do not supply Fast Weight computational forms or explain how CG4AI determines mixture weights."}
+}

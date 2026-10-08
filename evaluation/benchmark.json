@@ -1,0 +1,839 @@
+{
+  "version": 1,
+  "reviewed_on": "2026-10-08",
+  "reviewer": "Codex source review",
+  "split": "evaluation-only; no tuning examples",
+  "corpus": {
+    "papers": 58,
+    "chunks": 2775,
+    "alias_target": "paper-chunks-v2",
+    "preserved_v1_chunks": 1221
+  },
+  "cases": [
+    {
+      "id": "undo-design-1",
+      "pair": "undo-design",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How many base workflows, fault scenarios, and enterprise domains does UndoBench span?",
+      "facts": [
+        {
+          "id": "undo-design-f1",
+          "text": "36 base workflows"
+        },
+        {
+          "id": "undo-design-f2",
+          "text": "36 fault scenarios"
+        },
+        {
+          "id": "undo-design-f3",
+          "text": "8 enterprise domains"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05622v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Tool-using AI agents are increasingly deployed across enterprise software systems, yet widely used benchmarks primarily evaluate nominal task completion, conflating baseline planning competence with operational fault recovery. We introduce UndoBench, a benchmark spanning 36 base workflows and 36 fault scenarios across 8 enterprise domains, decoupling task competence from recovery capability via counterfactual paired trials under identical seeds alongside wire-level effect-history and environment-state oracles. On 12 heldout TEST workflows across two open-weight models, two frameworks, and three recovery paradigms (5,760 executions / 2,880 paired trials) in the frozen lost-acknowledgment study, nominal competence reached 83.54% while conditional recovery success rate (CRSR) fell to 46.72%, with naive retry producing duplicate external effects in 53.33% of trials. Extensions to commercial API models reproduced this competence-recovery separation. Evaluations across complementary execution boundaries show that recovery is phase-dependent: before mutation, methods perform similarly without duplicate effects among capable trials; during partial mutation, naive retry, per-call idempotency, and zero-privilege journaling collapse on the evaluated composite workflows; after commit but before acknowledgment, verification and server-side idempotency substantially improve safety. These findings demonstrate that evaluating nominal completion alone masks critical, phase-dependent recovery vulnerabilities in autonomous agents."
+            }
+          ]
+        }
+      ],
+      "review_note": "Counts describe the benchmark, not the 12 heldout TEST workflows."
+    },
+    {
+      "id": "undo-design-2",
+      "pair": "undo-design",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "What is the size of the workflow and failure-scenario collection, and how many business areas does UndoBench cover?",
+      "facts": [
+        {
+          "id": "undo-design-f1",
+          "text": "36 base workflows"
+        },
+        {
+          "id": "undo-design-f2",
+          "text": "36 fault scenarios"
+        },
+        {
+          "id": "undo-design-f3",
+          "text": "8 enterprise domains"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05622v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Tool-using AI agents are increasingly deployed across enterprise software systems, yet widely used benchmarks primarily evaluate nominal task completion, conflating baseline planning competence with operational fault recovery. We introduce UndoBench, a benchmark spanning 36 base workflows and 36 fault scenarios across 8 enterprise domains, decoupling task competence from recovery capability via counterfactual paired trials under identical seeds alongside wire-level effect-history and environment-state oracles. On 12 heldout TEST workflows across two open-weight models, two frameworks, and three recovery paradigms (5,760 executions / 2,880 paired trials) in the frozen lost-acknowledgment study, nominal competence reached 83.54% while conditional recovery success rate (CRSR) fell to 46.72%, with naive retry producing duplicate external effects in 53.33% of trials. Extensions to commercial API models reproduced this competence-recovery separation. Evaluations across complementary execution boundaries show that recovery is phase-dependent: before mutation, methods perform similarly without duplicate effects among capable trials; during partial mutation, naive retry, per-call idempotency, and zero-privilege journaling collapse on the evaluated composite workflows; after commit but before acknowledgment, verification and server-side idempotency substantially improve safety. These findings demonstrate that evaluating nominal completion alone masks critical, phase-dependent recovery vulnerabilities in autonomous agents."
+            }
+          ]
+        }
+      ],
+      "review_note": "Counts describe the benchmark, not the 12 heldout TEST workflows."
+    },
+    {
+      "id": "undo-results-1",
+      "pair": "undo-results",
+      "kind": "literal",
+      "answerable": true,
+      "query": "What nominal competence and conditional recovery success rate did UndoBench report in its frozen lost-acknowledgment study?",
+      "facts": [
+        {
+          "id": "undo-results-f1",
+          "text": "Nominal competence 83.54%"
+        },
+        {
+          "id": "undo-results-f2",
+          "text": "Conditional recovery success rate 46.72%"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05622v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Tool-using AI agents are increasingly deployed across enterprise software systems, yet widely used benchmarks primarily evaluate nominal task completion, conflating baseline planning competence with operational fault recovery. We introduce UndoBench, a benchmark spanning 36 base workflows and 36 fault scenarios across 8 enterprise domains, decoupling task competence from recovery capability via counterfactual paired trials under identical seeds alongside wire-level effect-history and environment-state oracles. On 12 heldout TEST workflows across two open-weight models, two frameworks, and three recovery paradigms (5,760 executions / 2,880 paired trials) in the frozen lost-acknowledgment study, nominal competence reached 83.54% while conditional recovery success rate (CRSR) fell to 46.72%, with naive retry producing duplicate external effects in 53.33% of trials. Extensions to commercial API models reproduced this competence-recovery separation. Evaluations across complementary execution boundaries show that recovery is phase-dependent: before mutation, methods perform similarly without duplicate effects among capable trials; during partial mutation, naive retry, per-call idempotency, and zero-privilege journaling collapse on the evaluated composite workflows; after commit but before acknowledgment, verification and server-side idempotency substantially improve safety. These findings demonstrate that evaluating nominal completion alone masks critical, phase-dependent recovery vulnerabilities in autonomous agents."
+            }
+          ]
+        }
+      ],
+      "review_note": "Long 58-word numeric sentence may be excluded by 55-word ceiling; do not relabel unanswerable."
+    },
+    {
+      "id": "undo-results-2",
+      "pair": "undo-results",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "In the UndoBench experiment where a completed operation loses its confirmation, what percentages could solve the task normally and recover successfully?",
+      "facts": [
+        {
+          "id": "undo-results-f1",
+          "text": "Nominal competence 83.54%"
+        },
+        {
+          "id": "undo-results-f2",
+          "text": "Conditional recovery success rate 46.72%"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05622v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Tool-using AI agents are increasingly deployed across enterprise software systems, yet widely used benchmarks primarily evaluate nominal task completion, conflating baseline planning competence with operational fault recovery. We introduce UndoBench, a benchmark spanning 36 base workflows and 36 fault scenarios across 8 enterprise domains, decoupling task competence from recovery capability via counterfactual paired trials under identical seeds alongside wire-level effect-history and environment-state oracles. On 12 heldout TEST workflows across two open-weight models, two frameworks, and three recovery paradigms (5,760 executions / 2,880 paired trials) in the frozen lost-acknowledgment study, nominal competence reached 83.54% while conditional recovery success rate (CRSR) fell to 46.72%, with naive retry producing duplicate external effects in 53.33% of trials. Extensions to commercial API models reproduced this competence-recovery separation. Evaluations across complementary execution boundaries show that recovery is phase-dependent: before mutation, methods perform similarly without duplicate effects among capable trials; during partial mutation, naive retry, per-call idempotency, and zero-privilege journaling collapse on the evaluated composite workflows; after commit but before acknowledgment, verification and server-side idempotency substantially improve safety. These findings demonstrate that evaluating nominal completion alone masks critical, phase-dependent recovery vulnerabilities in autonomous agents."
+            }
+          ]
+        }
+      ],
+      "review_note": "Long 58-word numeric sentence may be excluded by 55-word ceiling; do not relabel unanswerable."
+    },
+    {
+      "id": "ave-1",
+      "pair": "ave",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How does Atomic Visual Entailment combine predictions, and what SNLI-VE test accuracy does it reach without fine-tuning a vision-language model?",
+      "facts": [
+        {
+          "id": "ave-f1",
+          "text": "Combines full-hypothesis and atomic-fact predictions through a lightweight learned classifier"
+        },
+        {
+          "id": "ave-f2",
+          "text": "0.803 SNLI-VE test accuracy without fine-tuning VLMs"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Visual entailment (VE) asks whether an image supports, contradicts, or leaves undecided a textual hypothesis. Strong results come from fine-tuning large vision-language models on labelled data, while zero-shot and hybrid approaches remain far behind. A VE hypothesis often bundles several visual claims, yet existing zero-shot methods reason over it as a single unit. We propose Atomic Visual Entailment (AVE), which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen vision-language models, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation is worse than not decomposing at all. Full-hypothesis and atomic prediction make complementary errors, and learning which to trust recovers far more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any vision-language model. AVE also localises the visual evidence behind its prediction without region-level supervision. These results suggest that learning which candidate prediction to trust can close much of the gap to fine-tuned systems, offering a practical alternative where fine-tuning a vision-language model directly would need more labelled data or compute than is available."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 6,
+              "chunk_index": 1,
+              "section_title": "✓ Entailment",
+              "source_excerpt": "e 1). Related work on blackbox ensembling instead learns which candidate to trust rather than counting votes, and does so without access to the models that produced the candidates (Xia et al., 2025).\nTo address these two challenges, we propose Atomic Visual Entailment (AVE), a framework that decomposes the hypothesis into atomic facts and combines predictions from both views of the claim. AVE produces a pool of candidate predictions from two frozen VLMs under several prediction strategies and prompt styles. A lightweight classifier then predicts the final label from features describing how those candidates behaved. Because each candidate carries the reasoning that produced it, AVE also localises the visual evidence behind its prediction, without region-level supervision. On SNLI-VE (Xie et al., 2019), AVE outperforms every previously published zero-shot and hybrid result, while every VLM remains frozen.\nIn summary, our contributions are: (1) AVE, a framework that decomposes VE hypotheses into atomic facts and combines full-hypothesis and atomic predictions through a lightweight learned selector, without fine-tuning any VLM; (2) 0.803 test accuracy on SNLI-VE, 14.2 points above the strongest hybrid baseline and within the range of supervised systems; (3) Evidence that atomic reasoning helps only with hypothesis context preserved, and that learned selection exploits the resulting complementary errors far better than majority voting; (4) Zero-shot grounding of predicted evidence, reaching Recall@1 of 0.837 against human annotations without region-level supervision."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 20,
+              "chunk_index": 0,
+              "section_title": "5 Conclusion",
+              "source_excerpt": "We study whether atomic hypothesis decomposition improves zero-shot visual entailment, and whether predictions from different reasoning routes can be combined. We propose AVE, which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen VLMs, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation performs worse than not decomposing at all. Fullhypothesis and atomic reasoning make complementary errors, and learning which to trust recovers substantially more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any VLM. Because the selected prediction carries the reasoning that produced it, AVE also localises the visual evidence behind that prediction, without region-level supervision.\n8"
+            }
+          ]
+        }
+      ],
+      "review_note": "Alternatives reviewed in abstract, contributions and conclusion; comparison table alone is insufficient for both facts."
+    },
+    {
+      "id": "ave-2",
+      "pair": "ave",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "How does AVE choose among whole-claim and decomposed-claim judgments, and how often is its final decision correct on the SNLI-VE test set with frozen visual-language networks?",
+      "facts": [
+        {
+          "id": "ave-f1",
+          "text": "Combines full-hypothesis and atomic-fact predictions through a lightweight learned classifier"
+        },
+        {
+          "id": "ave-f2",
+          "text": "0.803 SNLI-VE test accuracy without fine-tuning VLMs"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Visual entailment (VE) asks whether an image supports, contradicts, or leaves undecided a textual hypothesis. Strong results come from fine-tuning large vision-language models on labelled data, while zero-shot and hybrid approaches remain far behind. A VE hypothesis often bundles several visual claims, yet existing zero-shot methods reason over it as a single unit. We propose Atomic Visual Entailment (AVE), which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen vision-language models, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation is worse than not decomposing at all. Full-hypothesis and atomic prediction make complementary errors, and learning which to trust recovers far more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any vision-language model. AVE also localises the visual evidence behind its prediction without region-level supervision. These results suggest that learning which candidate prediction to trust can close much of the gap to fine-tuned systems, offering a practical alternative where fine-tuning a vision-language model directly would need more labelled data or compute than is available."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 6,
+              "chunk_index": 1,
+              "section_title": "✓ Entailment",
+              "source_excerpt": "e 1). Related work on blackbox ensembling instead learns which candidate to trust rather than counting votes, and does so without access to the models that produced the candidates (Xia et al., 2025).\nTo address these two challenges, we propose Atomic Visual Entailment (AVE), a framework that decomposes the hypothesis into atomic facts and combines predictions from both views of the claim. AVE produces a pool of candidate predictions from two frozen VLMs under several prediction strategies and prompt styles. A lightweight classifier then predicts the final label from features describing how those candidates behaved. Because each candidate carries the reasoning that produced it, AVE also localises the visual evidence behind its prediction, without region-level supervision. On SNLI-VE (Xie et al., 2019), AVE outperforms every previously published zero-shot and hybrid result, while every VLM remains frozen.\nIn summary, our contributions are: (1) AVE, a framework that decomposes VE hypotheses into atomic facts and combines full-hypothesis and atomic predictions through a lightweight learned selector, without fine-tuning any VLM; (2) 0.803 test accuracy on SNLI-VE, 14.2 points above the strongest hybrid baseline and within the range of supervised systems; (3) Evidence that atomic reasoning helps only with hypothesis context preserved, and that learned selection exploits the resulting complementary errors far better than majority voting; (4) Zero-shot grounding of predicted evidence, reaching Recall@1 of 0.837 against human annotations without region-level supervision."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 20,
+              "chunk_index": 0,
+              "section_title": "5 Conclusion",
+              "source_excerpt": "We study whether atomic hypothesis decomposition improves zero-shot visual entailment, and whether predictions from different reasoning routes can be combined. We propose AVE, which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen VLMs, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation performs worse than not decomposing at all. Fullhypothesis and atomic reasoning make complementary errors, and learning which to trust recovers substantially more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any VLM. Because the selected prediction carries the reasoning that produced it, AVE also localises the visual evidence behind that prediction, without region-level supervision.\n8"
+            }
+          ]
+        }
+      ],
+      "review_note": "Alternatives reviewed in abstract, contributions and conclusion; comparison table alone is insufficient for both facts."
+    },
+    {
+      "id": "kandinsky-1",
+      "pair": "kandinsky",
+      "kind": "literal",
+      "answerable": true,
+      "query": "What are the parameter counts of Kandinsky 6.0 Video Lite and Pro, and what clip duration and audio sample rate do both generate?",
+      "facts": [
+        {
+          "id": "kandinsky-f1",
+          "text": "Lite 3B parameters"
+        },
+        {
+          "id": "kandinsky-f2",
+          "text": "Pro 29B parameters"
+        },
+        {
+          "id": "kandinsky-f3",
+          "text": "5-second clips"
+        },
+        {
+          "id": "kandinsky-f4",
+          "text": "44 kHz synchronized audio"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05608v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "Kandinsky Lab∗",
+              "source_excerpt": "∗ A detailed list of the contributors can be found at the end of this paper.\nAbstract: We present Kandinsky 6.0 Video, a family of foundation diffusion models for synchronized text-to-audio-video generation, comprising Kandinsky 6.0 Video Lite (3B parameters) and Kandinsky 6.0 Video Pro (29B parameters). Both models generate 5-second video clips with synchronized 44 kHz audio, including lip-sync, in text-to-audio-video (T2AV) and imageto-audio-video (I2AV) modes; a built-in super-resolution model raises the output resolution to Full-HD (1920×1080). Building on the video generation capabilities of Kandinsky 5.0, Kandinsky 6.0 Video employs a dual-stream CrossDiT architecture that connects a pretrained video stream and a newly trained audio stream through bidirectional cross-attention for temporal and semantic alignment. Our continuous pretraining strategy first trains the audio stream from scratch on large-scale audio corpora and then trains both streams jointly on paired audiovideo data while preserving unimodal fidelity; pretraining is followed by supervised fine-tuning, reinforcement-learning-based post-training, and distillation. In side-by-side human evaluation, Kandinsky 6.0 Video Pro clearly outperforms its predecessor, Kandinsky 5.0 Video Pro, and remains competitive with leading audio-video generation models, particularly in speech quality. To accelerate open research and deployment in multimedia generation, we release the code, model checkpoints, and diffusers integration under the MIT license.\nDate: October 6, 2026\nWebsite: https://kandinskylab.ai\nGitHub: https://github.com/kandinskylab/kandinsky-6\nHugging Face: https://huggingface.co/collections/kandinskylab/kandinsky-60-diffusers\n1"
+            }
+          ]
+        }
+      ],
+      "review_note": "Stored repaired abstract supports all four facts; contents entries do not count as support."
+    },
+    {
+      "id": "kandinsky-2",
+      "pair": "kandinsky",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "How large are the smaller and larger Kandinsky 6.0 Video networks, and how long are their audiovisual outputs and at what sound sampling frequency?",
+      "facts": [
+        {
+          "id": "kandinsky-f1",
+          "text": "Lite 3B parameters"
+        },
+        {
+          "id": "kandinsky-f2",
+          "text": "Pro 29B parameters"
+        },
+        {
+          "id": "kandinsky-f3",
+          "text": "5-second clips"
+        },
+        {
+          "id": "kandinsky-f4",
+          "text": "44 kHz synchronized audio"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05608v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "Kandinsky Lab∗",
+              "source_excerpt": "∗ A detailed list of the contributors can be found at the end of this paper.\nAbstract: We present Kandinsky 6.0 Video, a family of foundation diffusion models for synchronized text-to-audio-video generation, comprising Kandinsky 6.0 Video Lite (3B parameters) and Kandinsky 6.0 Video Pro (29B parameters). Both models generate 5-second video clips with synchronized 44 kHz audio, including lip-sync, in text-to-audio-video (T2AV) and imageto-audio-video (I2AV) modes; a built-in super-resolution model raises the output resolution to Full-HD (1920×1080). Building on the video generation capabilities of Kandinsky 5.0, Kandinsky 6.0 Video employs a dual-stream CrossDiT architecture that connects a pretrained video stream and a newly trained audio stream through bidirectional cross-attention for temporal and semantic alignment. Our continuous pretraining strategy first trains the audio stream from scratch on large-scale audio corpora and then trains both streams jointly on paired audiovideo data while preserving unimodal fidelity; pretraining is followed by supervised fine-tuning, reinforcement-learning-based post-training, and distillation. In side-by-side human evaluation, Kandinsky 6.0 Video Pro clearly outperforms its predecessor, Kandinsky 5.0 Video Pro, and remains competitive with leading audio-video generation models, particularly in speech quality. To accelerate open research and deployment in multimedia generation, we release the code, model checkpoints, and diffusers integration under the MIT license.\nDate: October 6, 2026\nWebsite: https://kandinskylab.ai\nGitHub: https://github.com/kandinskylab/kandinsky-6\nHugging Face: https://huggingface.co/collections/kandinskylab/kandinsky-60-diffusers\n1"
+            }
+          ]
+        }
+      ],
+      "review_note": "Stored repaired abstract supports all four facts; contents entries do not count as support."
+    },
+    {
+      "id": "arkios-1",
+      "pair": "arkios",
+      "kind": "literal",
+      "answerable": true,
+      "query": "How many parameters and pretraining tokens does Arkios have, and which two languages is it trained on?",
+      "facts": [
+        {
+          "id": "arkios-f1",
+          "text": "1.04B parameters"
+        },
+        {
+          "id": "arkios-f2",
+          "text": "150B pretraining tokens"
+        },
+        {
+          "id": "arkios-f3",
+          "text": "English and Nepali"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We present Arkios, a 1.04B-parameter dense transformer pretrained from scratch on 150B tokens of bilingual English-Nepali text, using a custom single-file C/CUDA training stack and a Devanagari-aware byte-level BPE tokenizer built for this project (Regmi et al., 2026). On ARC-Easy and ARC-Challenge, Arkios exceeds three comparably sized open models (Pythia-1.4B, TinyLlama-1.1B, OLMo-1B) despite an order of magnitude fewer training tokens, though we attribute part of this gap to a compositional match between our educationalweb-text pretraining data and ARC's gradeschool-science format rather than to a general capability advantage. We report full evaluation results under standard protocols, including a correction to an earlier partial-sample estimate, and a set of findings specific to evaluating small models in a low-resource language: most notably, that the standard multiple-choice-letter prompt format used by common evaluation harnesses places this model at chance on Nepali reading comprehension, and simultaneously at chance on English in the same format, which would lead a naive benchmark run to conclude the model has no Nepali ability when in fact it does. Concretely, this model scores at chance in the letter-choice format for both Nepali and English (0.240 and 0.236 respectively, against a chance baseline of 0.250), while scoring the answer text directly reveals genuine, Englishfavoring comprehension (0.306 Nepali, 0.387 English). We describe a manifest-conditioned tool-use contract introduced during instruction tuning (tool calls are permitted only when a tool manifest is declared in context, and suppressed otherwise), and report where that contract holds and where it does not. We release both the base and instruction-tuned model weights under Apache-2.0. "
+            },
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 4,
+              "chunk_index": 0,
+              "section_title": "Contributions.",
+              "source_excerpt": "A 1.04B-parameter bilingual English-Nepali base model, trained from scratch (architecture, tokenizer, and trainer built for this project) on 150B tokens, released with full training and evaluation configuration.\n1\nA from-scratch C/CUDA training stack reaching 42.95% measured model FLOPs utilization (MFU) on a single 8×H100 node, up from an initial 3.1%, after finding and fixing two silent correctness/performance bugs in the cuDNN fused-attention integration (§5).\nAn instruction-tuned chat model whose tool use is conditional on a declared tool manifest rather than fixed to a built-in toolset, with the manifest itself masked out of the training loss so the model conditions on it without learning to generate it.\nA full-test-split evaluation correcting an earlier partial-sample ARC-Challenge estimate, and a Nepali evaluation using Belebele's paired Nepali/English item sets as a sametask, same-difficulty control, which exposes a prompt-format artifact that would otherwise be misread as a language-ability gap (§7.2).\nOpen release of both checkpoints (base and chat) under Apache-2.0.\nWhat this report does not claim. We do not claim state-of-the-art general capability at 1B parameters, a novel architecture, or a new scaling law. The strongest single English result (ARC) is plausibly aided by a compositional match between our pretraining data and the benchmark's domain (§7.1). Nepali capability, while measurably real, trails English throughout, proportional to the roughly 80:1 ratio of unique English to unique Nepali pretraining tokens available to us (§4)."
+            }
+          ]
+        }
+      ],
+      "review_note": ""
+    },
+    {
+      "id": "arkios-2",
+      "pair": "arkios",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "What is the model size and training-text budget of Arkios, and what language pair does the corpus cover?",
+      "facts": [
+        {
+          "id": "arkios-f1",
+          "text": "1.04B parameters"
+        },
+        {
+          "id": "arkios-f2",
+          "text": "150B pretraining tokens"
+        },
+        {
+          "id": "arkios-f3",
+          "text": "English and Nepali"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We present Arkios, a 1.04B-parameter dense transformer pretrained from scratch on 150B tokens of bilingual English-Nepali text, using a custom single-file C/CUDA training stack and a Devanagari-aware byte-level BPE tokenizer built for this project (Regmi et al., 2026). On ARC-Easy and ARC-Challenge, Arkios exceeds three comparably sized open models (Pythia-1.4B, TinyLlama-1.1B, OLMo-1B) despite an order of magnitude fewer training tokens, though we attribute part of this gap to a compositional match between our educationalweb-text pretraining data and ARC's gradeschool-science format rather than to a general capability advantage. We report full evaluation results under standard protocols, including a correction to an earlier partial-sample estimate, and a set of findings specific to evaluating small models in a low-resource language: most notably, that the standard multiple-choice-letter prompt format used by common evaluation harnesses places this model at chance on Nepali reading comprehension, and simultaneously at chance on English in the same format, which would lead a naive benchmark run to conclude the model has no Nepali ability when in fact it does. Concretely, this model scores at chance in the letter-choice format for both Nepali and English (0.240 and 0.236 respectively, against a chance baseline of 0.250), while scoring the answer text directly reveals genuine, Englishfavoring comprehension (0.306 Nepali, 0.387 English). We describe a manifest-conditioned tool-use contract introduced during instruction tuning (tool calls are permitted only when a tool manifest is declared in context, and suppressed otherwise), and report where that contract holds and where it does not. We release both the base and instruction-tuned model weights under Apache-2.0. "
+            },
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 4,
+              "chunk_index": 0,
+              "section_title": "Contributions.",
+              "source_excerpt": "A 1.04B-parameter bilingual English-Nepali base model, trained from scratch (architecture, tokenizer, and trainer built for this project) on 150B tokens, released with full training and evaluation configuration.\n1\nA from-scratch C/CUDA training stack reaching 42.95% measured model FLOPs utilization (MFU) on a single 8×H100 node, up from an initial 3.1%, after finding and fixing two silent correctness/performance bugs in the cuDNN fused-attention integration (§5).\nAn instruction-tuned chat model whose tool use is conditional on a declared tool manifest rather than fixed to a built-in toolset, with the manifest itself masked out of the training loss so the model conditions on it without learning to generate it.\nA full-test-split evaluation correcting an earlier partial-sample ARC-Challenge estimate, and a Nepali evaluation using Belebele's paired Nepali/English item sets as a sametask, same-difficulty control, which exposes a prompt-format artifact that would otherwise be misread as a language-ability gap (§7.2).\nOpen release of both checkpoints (base and chat) under Apache-2.0.\nWhat this report does not claim. We do not claim state-of-the-art general capability at 1B parameters, a novel architecture, or a new scaling law. The strongest single English result (ARC) is plausibly aided by a compositional match between our pretraining data and the benchmark's domain (§7.1). Nepali capability, while measurably real, trails English throughout, proportional to the roughly 80:1 ratio of unique English to unique Nepali pretraining tokens available to us (§4)."
+            }
+          ]
+        }
+      ],
+      "review_note": ""
+    },
+    {
+      "id": "tokenizer-1",
+      "pair": "tokenizer",
+      "kind": "literal",
+      "answerable": true,
+      "query": "Why does the letters-only word regex fragment Nepali words before BPE, and why can more data or vocabulary not fix the resulting fertility ceiling?",
+      "facts": [
+        {
+          "id": "tokenizer-f1",
+          "text": "Vowel signs are Unicode combining marks rather than letters, so a letters-only class splits words"
+        },
+        {
+          "id": "tokenizer-f2",
+          "text": "BPE cannot merge across pre-token boundaries, making the limit structural"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26449v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Byte-level BPE tokenizers that use the HuggingFace ByteLevel pre-tokenizer inherit GPT-2's word regex, where a word is defined as \\p{L}+ , one or more Unicode letters . In abugida scripts, vowels are written as combining marks ; this pattern therefore splits each word at every vowel sign. Since BPE merges only within a pre-token, those splits persist through training regardless of vocabulary size or corpus composition. We formalise this effect as a training-free lower bound on fertility. Across 26 languages from a parallel corpus, every one of the 17 abugidas is affected, ranging from 1 . 47 × (Tibetan) to 9 . 02 × (Thai), whereas Latin, Cyrillic, Hangul, and Han show exactly 1 . 00 × . For 5 languages, matched tokenizer pairs that differ only in this character class fall within 2.2% of the predicted floor, scoring 4.78 versus 1.58 tokens per word on Nepali. When the Nepali share of the training corpus is swept from 5% to 95%, the broken tokenizer barely shifts at all (1.7%) while the fixed one shifts 33.9%, which separates a structural ceiling from a data shortage without needing to inspect any code. We train three 268M models that differ only in their tokenizer; the fixed variant achieves 4.43% lower held-out Nepali bits per byte at equal compute, and it still leads when given the same bytes with 1 . 59 × the compute. A census of 3,479 HuggingFace repositories finds the letters-only word class present in 63.3% of the most-downloaded text-generation models, accounting for 72.5% of their downloads. GPT-4o's o200k pattern already uses a mark-aware word class, making the repair itself prior art. We quantify its value, show how to recognise its absence from symptoms alone, map which scripts it reaches, measure how widely it is deployed, and release a 65,536entry Nepali-English tokenizer with a harness that regenerates every number here from public data on a laptop.\n* Corresponding author and primary contributor. sajalregmi@karelatechnologies.com"
+            },
+            {
+              "arxiv_id": "2608.26449v1",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "1 Introduction",
+              "source_excerpt": "Fertility, the mean number of tokens a tokenizer spends per word, sets an exchange rate between a language and every cost tied to a language model. With context length and training budget held fixed, a language tokenized at 5 tokens per word gets a fifth as much effective text as one tokenized at 1. For low-resource languages the corpus is already the binding constraint, and fertility compounds it.\nWe built a bilingual English-Nepali tokenizer and found Nepali fertility near 4.4 tokens per word. The standard diagnosis was a data shortage: Nepali is low-resource, the mixture was English-dominant, and adding more Nepali is the usual remedy. We raised the Nepali share and retrained. The number did not move. We raised it again, and it still had no effect.\nThe cause was one character class. The HuggingFace ByteLevel pre-tokenizer applies the regex from GPT-2 (Radford et al., 2019), whose word alternative is \\p{L}+ , matching one or more Unicode letters. In Devanagari, vowels are written as combining marks. The vowel sign AA falls under category Mc , E under Mn , and the virama under Mn as well. None are L , so \\p{L}+ splits a Nepali word at every vowel sign. BPE, which merges pairs only inside a pre-token, has no way to rejoin them. Under \\p{L}+ , the word nep¯ al¯ ı yields six pre-tokens; under [\\p{L}\\p{M}]+ , just one.\nThe o200k pattern shipped with GPT-4o already uses a mark-aware word class, and SentencePiece (Kudo and Richardson, 2018) sidesteps letter-based pre-tokenization entirely. This is not an unknown defect. We report what it costs, how to recognise it from its symptoms, and how far it reaches across the world's writing systems."
+            },
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "1 Introduction",
+              "source_excerpt": "Open language models below 2B parameters are almost exclusively English-centric, and where a smaller language is included it is typically as a minority share of a tokenizer whose pretokenization rules were designed for Latin script. This has a specific, correctable failure mode for Devanagari: the byte-level BPE pretokenizer inherited from GPT2-family tokenizers (Radford et al., 2019) splits text into candidate merge units using the regex word class \\p{L}+, which matches Unicode letters. Nepali vowel signs and virama are Unicode combining marks (\\p{M}), not letters, so this rule fragments every Nepali word at every vowel sign before BPE ever sees it, producing a fertility ceiling that no amount of additional data or vocabulary can lift. A companion paper (Regmi et al., 2026) quantifies this cost on Nepali (a 2.5× fertility reduction from a one-line pretokenizer fix) and shows that a data-mixture sweep produces identical fertility under the broken rule, evidence that the ceiling is structural, not a data-mixture problem.\nThis report describes what we built on top of that tokenizer: a from-scratch pretraining run, a custom C/CUDA training stack, an instruction-tuning iteration that converged on a manifest-conditioned tool-use contract, and a full evaluation pass that surfaces several findings about how small models should be evaluated in low-resource languages, not only how well they score."
+            }
+          ]
+        }
+      ],
+      "review_note": "Companion paper and Arkios introduction independently explain this mechanism."
+    },
+    {
+      "id": "tokenizer-2",
+      "pair": "tokenizer",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "Why are Nepali vowel signs split off by the pre-tokenizer, and why does expanding the training collection or token inventory fail to remove that segmentation limit?",
+      "facts": [
+        {
+          "id": "tokenizer-f1",
+          "text": "Vowel signs are Unicode combining marks rather than letters, so a letters-only class splits words"
+        },
+        {
+          "id": "tokenizer-f2",
+          "text": "BPE cannot merge across pre-token boundaries, making the limit structural"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26449v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Byte-level BPE tokenizers that use the HuggingFace ByteLevel pre-tokenizer inherit GPT-2's word regex, where a word is defined as \\p{L}+ , one or more Unicode letters . In abugida scripts, vowels are written as combining marks ; this pattern therefore splits each word at every vowel sign. Since BPE merges only within a pre-token, those splits persist through training regardless of vocabulary size or corpus composition. We formalise this effect as a training-free lower bound on fertility. Across 26 languages from a parallel corpus, every one of the 17 abugidas is affected, ranging from 1 . 47 × (Tibetan) to 9 . 02 × (Thai), whereas Latin, Cyrillic, Hangul, and Han show exactly 1 . 00 × . For 5 languages, matched tokenizer pairs that differ only in this character class fall within 2.2% of the predicted floor, scoring 4.78 versus 1.58 tokens per word on Nepali. When the Nepali share of the training corpus is swept from 5% to 95%, the broken tokenizer barely shifts at all (1.7%) while the fixed one shifts 33.9%, which separates a structural ceiling from a data shortage without needing to inspect any code. We train three 268M models that differ only in their tokenizer; the fixed variant achieves 4.43% lower held-out Nepali bits per byte at equal compute, and it still leads when given the same bytes with 1 . 59 × the compute. A census of 3,479 HuggingFace repositories finds the letters-only word class present in 63.3% of the most-downloaded text-generation models, accounting for 72.5% of their downloads. GPT-4o's o200k pattern already uses a mark-aware word class, making the repair itself prior art. We quantify its value, show how to recognise its absence from symptoms alone, map which scripts it reaches, measure how widely it is deployed, and release a 65,536entry Nepali-English tokenizer with a harness that regenerates every number here from public data on a laptop.\n* Corresponding author and primary contributor. sajalregmi@karelatechnologies.com"
+            },
+            {
+              "arxiv_id": "2608.26449v1",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "1 Introduction",
+              "source_excerpt": "Fertility, the mean number of tokens a tokenizer spends per word, sets an exchange rate between a language and every cost tied to a language model. With context length and training budget held fixed, a language tokenized at 5 tokens per word gets a fifth as much effective text as one tokenized at 1. For low-resource languages the corpus is already the binding constraint, and fertility compounds it.\nWe built a bilingual English-Nepali tokenizer and found Nepali fertility near 4.4 tokens per word. The standard diagnosis was a data shortage: Nepali is low-resource, the mixture was English-dominant, and adding more Nepali is the usual remedy. We raised the Nepali share and retrained. The number did not move. We raised it again, and it still had no effect.\nThe cause was one character class. The HuggingFace ByteLevel pre-tokenizer applies the regex from GPT-2 (Radford et al., 2019), whose word alternative is \\p{L}+ , matching one or more Unicode letters. In Devanagari, vowels are written as combining marks. The vowel sign AA falls under category Mc , E under Mn , and the virama under Mn as well. None are L , so \\p{L}+ splits a Nepali word at every vowel sign. BPE, which merges pairs only inside a pre-token, has no way to rejoin them. Under \\p{L}+ , the word nep¯ al¯ ı yields six pre-tokens; under [\\p{L}\\p{M}]+ , just one.\nThe o200k pattern shipped with GPT-4o already uses a mark-aware word class, and SentencePiece (Kudo and Richardson, 2018) sidesteps letter-based pre-tokenization entirely. This is not an unknown defect. We report what it costs, how to recognise it from its symptoms, and how far it reaches across the world's writing systems."
+            },
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "1 Introduction",
+              "source_excerpt": "Open language models below 2B parameters are almost exclusively English-centric, and where a smaller language is included it is typically as a minority share of a tokenizer whose pretokenization rules were designed for Latin script. This has a specific, correctable failure mode for Devanagari: the byte-level BPE pretokenizer inherited from GPT2-family tokenizers (Radford et al., 2019) splits text into candidate merge units using the regex word class \\p{L}+, which matches Unicode letters. Nepali vowel signs and virama are Unicode combining marks (\\p{M}), not letters, so this rule fragments every Nepali word at every vowel sign before BPE ever sees it, producing a fertility ceiling that no amount of additional data or vocabulary can lift. A companion paper (Regmi et al., 2026) quantifies this cost on Nepali (a 2.5× fertility reduction from a one-line pretokenizer fix) and shows that a data-mixture sweep produces identical fertility under the broken rule, evidence that the ceiling is structural, not a data-mixture problem.\nThis report describes what we built on top of that tokenizer: a from-scratch pretraining run, a custom C/CUDA training stack, an instruction-tuning iteration that converged on a manifest-conditioned tool-use contract, and a full evaluation pass that surfaces several findings about how small models should be evaluated in low-resource languages, not only how well they score."
+            }
+          ]
+        }
+      ],
+      "review_note": "Companion paper and Arkios introduction independently explain this mechanism."
+    },
+    {
+      "id": "dream-1",
+      "pair": "dream",
+      "kind": "literal",
+      "answerable": true,
+      "query": "What are the two core components of DREAM for multimodal multi-agent debate, and what does each do?",
+      "facts": [
+        {
+          "id": "dream-f1",
+          "text": "Dynamic Resolution Assignment probes resolutions using uncertainty to assign visual scale"
+        },
+        {
+          "id": "dream-f2",
+          "text": "Uncertainty-Guided Rollback Aggregation restores earlier low-uncertainty answers displaced by groupthink"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "Multi-agent debate (MAD) has emerged as an effective paradigm to improve the reasoning capabilities of large language models (LLMs) and is increasingly being extended to multimodal settings. However, existing multimodal MAD frameworks typically expose agents to the same fixed visual input, ignoring substantial variation in the visual scale needed across samples and agents. In addition, these frameworks frequently suffer from groupthink-a phenomenon where agents prematurely abandon correct deductions to conform with confident but hallucinated peer responses. To address these bottlenecks, we introduce DREAM (Dynamic Resolution Assignment For Multimodal Multi-Agent Debate), which operates via two core components: (1) Dynamic Resolution Assignment, a zero-shot \"probe round\" where agents test multiple resolutions, quantify uncertainty using Average Normalized Log-Likelihood (ANLL), and use an adaptive threshold to assign each agent to its empirically optimal resolution; (2) Uncertainty-Guided Rollback Aggregation counters groupthink by tracking each agent's uncertainty over rounds and restoring early low-uncertainty answers overridden by group pressure. On six multimodal datasets, DREAM improves the accuracy-token trade-off over multiagent debate baselines by 1.5-3.2% accuracy without dataset-specific tuning."
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 3,
+              "chunk_index": 2,
+              "section_title": "1 INTRODUCTION",
+              "source_excerpt": "nty at 2.0×\nRoute Debate to 2.0×\nEnsures Analytical Accuracy\nStandard MAD\nForces fixed 1.0× baseline.\nWastes tokens on Sample A,\nFails to read Sample B.\n1\nPublished as a conference paper at ICLR 2027\nTo jointly resolve these structural issues, this work introduces DREAM (Dynamic Resolution Assignment for Multimodal Multi-Agent Debate), a plug-and-play wrapper featuring two complementary mechanisms: (1) Dynamic Resolution Assignment (DRA): An exploratory \"Round 0\" probe dynamically determines the optimal visual scale for each sample using Average Normalized Log-Likelihood (ANLL) as a zero-shot uncertainty signal. Based on initial consensus, DRA assigns agents to either a locked single scale to minimize noise, or a mixed-resolution payload for maximal visual coverage. (2) Uncertainty-Guided Rollback Aggregation (URA): A targeted defense against late-stage groupthink that monitors ANLL trajectories throughout the debate. If an agent's uncertainty sharply rises by the final round, URA rescues their most confident prior response. To counteract judge recency bias, rescued answers are strategically prepended to the final prompt, ensuring early, visually grounded deductions are weighed equally against the prevailing groupthink.\nOur main contributions are summarized as follows:\nWe identify and formally characterize two structural bottlenecks universal to all existing multimodal MAD frameworks: static visual resolution assignment and late-stage sycophantic groupthink, and demonstrate how these two challenges are causally intertwined.\nWe propose DREAM, to our knowledge the first multimodal MAD framework to jointly resolve these bottlenecks. DRA introduces a zero-shot uncertainty-driven probing phase that dynamically routes each sample to its empirically optimal resolution strategy, while URA provides a principled rollback mechanism that prevents correct early deductions from being displaced by group pressure.\n"
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 6,
+              "chunk_index": 0,
+              "section_title": "3 METHODOLOGY",
+              "source_excerpt": "We introduce DREAM, a multi-agent multimodal debate framework comprising two key innovations: Dynamic Resolution Assignment (DRA) and Uncertainty-Guided Rollback Aggregation (URA). DRA conducts a preliminary round to identify the most suitable resolution for each agent based on the current sample. Meanwhile, URA monitors each agent's responses throughout the debate, allowing it to recover the low-uncertainty answer that might have been overlooked due to groupthink. Figure 2 details the branching logic of the Route step and how its output feeds the unchanged debate phase and the rollback aggregation step. The full four-phase procedure (Probe → Route → Debate → Aggregate & Judge) is given as Algorithm 1.\n3\nPublished as a conference paper at ICLR 2027"
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 15,
+              "chunk_index": 0,
+              "section_title": "7 CONCLUSION",
+              "source_excerpt": "We have presented DREAM, a framework designed to overcome critical efficiency and consensus bottlenecks in multi-agent multimodal debate. DREAM introduces two core mechanisms: Dynamic Resolution Assignment (DRA), which transforms image resolution scaling into a data-driven, persample decision using zero-shot ANLL uncertainty signals; and Uncertainty-guided Rollback Aggregation (URA), which mitigates debate groupthink by tracking per-agent uncertainty trajectories and rescuing high-confidence answers before they are overridden by group pressure. Across six multimodal reasoning benchmarks, wrapping existing debate baselines with DREAM consistently improves their accuracy-vs-computation trade-off without requiring dataset-specific tuning."
+            }
+          ]
+        }
+      ],
+      "review_note": "Abstract component enumeration may be one overlong sentence; methodology separates the functions."
+    },
+    {
+      "id": "dream-2",
+      "pair": "dream",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "How does DREAM pick an image scale for each debater and rescue an earlier confident answer after peer pressure?",
+      "facts": [
+        {
+          "id": "dream-f1",
+          "text": "Dynamic Resolution Assignment probes resolutions using uncertainty to assign visual scale"
+        },
+        {
+          "id": "dream-f2",
+          "text": "Uncertainty-Guided Rollback Aggregation restores earlier low-uncertainty answers displaced by groupthink"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "Multi-agent debate (MAD) has emerged as an effective paradigm to improve the reasoning capabilities of large language models (LLMs) and is increasingly being extended to multimodal settings. However, existing multimodal MAD frameworks typically expose agents to the same fixed visual input, ignoring substantial variation in the visual scale needed across samples and agents. In addition, these frameworks frequently suffer from groupthink-a phenomenon where agents prematurely abandon correct deductions to conform with confident but hallucinated peer responses. To address these bottlenecks, we introduce DREAM (Dynamic Resolution Assignment For Multimodal Multi-Agent Debate), which operates via two core components: (1) Dynamic Resolution Assignment, a zero-shot \"probe round\" where agents test multiple resolutions, quantify uncertainty using Average Normalized Log-Likelihood (ANLL), and use an adaptive threshold to assign each agent to its empirically optimal resolution; (2) Uncertainty-Guided Rollback Aggregation counters groupthink by tracking each agent's uncertainty over rounds and restoring early low-uncertainty answers overridden by group pressure. On six multimodal datasets, DREAM improves the accuracy-token trade-off over multiagent debate baselines by 1.5-3.2% accuracy without dataset-specific tuning."
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 3,
+              "chunk_index": 2,
+              "section_title": "1 INTRODUCTION",
+              "source_excerpt": "nty at 2.0×\nRoute Debate to 2.0×\nEnsures Analytical Accuracy\nStandard MAD\nForces fixed 1.0× baseline.\nWastes tokens on Sample A,\nFails to read Sample B.\n1\nPublished as a conference paper at ICLR 2027\nTo jointly resolve these structural issues, this work introduces DREAM (Dynamic Resolution Assignment for Multimodal Multi-Agent Debate), a plug-and-play wrapper featuring two complementary mechanisms: (1) Dynamic Resolution Assignment (DRA): An exploratory \"Round 0\" probe dynamically determines the optimal visual scale for each sample using Average Normalized Log-Likelihood (ANLL) as a zero-shot uncertainty signal. Based on initial consensus, DRA assigns agents to either a locked single scale to minimize noise, or a mixed-resolution payload for maximal visual coverage. (2) Uncertainty-Guided Rollback Aggregation (URA): A targeted defense against late-stage groupthink that monitors ANLL trajectories throughout the debate. If an agent's uncertainty sharply rises by the final round, URA rescues their most confident prior response. To counteract judge recency bias, rescued answers are strategically prepended to the final prompt, ensuring early, visually grounded deductions are weighed equally against the prevailing groupthink.\nOur main contributions are summarized as follows:\nWe identify and formally characterize two structural bottlenecks universal to all existing multimodal MAD frameworks: static visual resolution assignment and late-stage sycophantic groupthink, and demonstrate how these two challenges are causally intertwined.\nWe propose DREAM, to our knowledge the first multimodal MAD framework to jointly resolve these bottlenecks. DRA introduces a zero-shot uncertainty-driven probing phase that dynamically routes each sample to its empirically optimal resolution strategy, while URA provides a principled rollback mechanism that prevents correct early deductions from being displaced by group pressure.\n"
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 6,
+              "chunk_index": 0,
+              "section_title": "3 METHODOLOGY",
+              "source_excerpt": "We introduce DREAM, a multi-agent multimodal debate framework comprising two key innovations: Dynamic Resolution Assignment (DRA) and Uncertainty-Guided Rollback Aggregation (URA). DRA conducts a preliminary round to identify the most suitable resolution for each agent based on the current sample. Meanwhile, URA monitors each agent's responses throughout the debate, allowing it to recover the low-uncertainty answer that might have been overlooked due to groupthink. Figure 2 details the branching logic of the Route step and how its output feeds the unchanged debate phase and the rollback aggregation step. The full four-phase procedure (Probe → Route → Debate → Aggregate & Judge) is given as Algorithm 1.\n3\nPublished as a conference paper at ICLR 2027"
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 15,
+              "chunk_index": 0,
+              "section_title": "7 CONCLUSION",
+              "source_excerpt": "We have presented DREAM, a framework designed to overcome critical efficiency and consensus bottlenecks in multi-agent multimodal debate. DREAM introduces two core mechanisms: Dynamic Resolution Assignment (DRA), which transforms image resolution scaling into a data-driven, persample decision using zero-shot ANLL uncertainty signals; and Uncertainty-guided Rollback Aggregation (URA), which mitigates debate groupthink by tracking per-agent uncertainty trajectories and rescuing high-confidence answers before they are overridden by group pressure. Across six multimodal reasoning benchmarks, wrapping existing debate baselines with DREAM consistently improves their accuracy-vs-computation trade-off without requiring dataset-specific tuning."
+            }
+          ]
+        }
+      ],
+      "review_note": "Abstract component enumeration may be one overlong sentence; methodology separates the functions."
+    },
+    {
+      "id": "vera-1",
+      "pair": "vera",
+      "kind": "literal",
+      "answerable": true,
+      "query": "Under VERA disjunctive authority, which agents should lose authority when a delegation edge is revoked, and what happens to shared agents with another authorizing path?",
+      "facts": [
+        {
+          "id": "vera-f1",
+          "text": "Only agents losing every root authorization path are invalidated"
+        },
+        {
+          "id": "vera-f2",
+          "text": "Agents with an alternate authorizing path remain authorized"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.30091v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "VERA: Authority-Preserving Edge Revocation for Federated AI-Agent Workflows",
+              "source_excerpt": "Lifei Liu Independent Researcher Seattle, WA, USA lliu.lifei@gmail.com Haoran Yu Independent Researcher Seattle, WA, USA haoranyu889@gmail.com Xiaochong Jiang Independent Researcher Seattle, WA, USA jiang.xiaoc@northeastern.edu\nAbstract-Modern agent frameworks compose planners, tool agents, remote services, and shared specialists into runtime delegation graphs, but their revocation APIs still resemble token or subtree invalidation. When one delegation is withdrawn, the runtime must know which agents lose authority while independently authorized agents keep working. We study this authority consistency problem and introduce VERA (Verifiable Edge Revocation for Agents), a verifier-checkable revocation contract and API emitted by agent-runtime adapters as signed evidence. Under disjunctive authority, revoking edge e invalidates exactly Tintent(e,G) = reach(G)\\reach(G\\{e}), the agents whose every authorizing root path used e. Used as a contract, this target exposes two runtime failures: tree cascades over-revoke shared agents, while deployer-scoped cascades under-revoke crossdomain descendants. In a LangGraph framework-replay study, 25 workflow/input cells repeated 20 times yield 500 compiledframework traces and 2,000 valid signed delegation decisions; 13/25 cells contain runtime multi-parent sharing and 8/25 contain cross-deployer sharing. Signed replay verifies 500/500 target proofs, preserves all 320 alternate-parent shared-agent cases that tree cascade revokes, and rejects unauthorized signers and omission attacks. Baseline replay over 1,960 edge withdrawals shows that holder/node and tree-style targets cannot express this behavior. We further validate schema portability on A2A, AutoGen, and CrewAI artifacts: nine traces, including five executable CrewAI workflows, yield 53 signed delegation events that pass schema and signature checks.\nIndex Terms-AI agents, multi-agent systems, trustworthy AI, delegation, authorization, revocation, agent workflows"
+            },
+            {
+              "arxiv_id": "2608.30091v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "I. INTRODUCTION",
+              "source_excerpt": "AI-agent workflows are becoming multi-principal systems. Frameworks such as AutoGen [1], CrewAI [2], and LangGraph [3] compose planners, tool agents, remote specialists, and shared service agents; A2A [4] and MCP [5] make those handoffs cross process and organizational boundaries. Recent agent-identity work argues that these tools need authenticated, authorized, and auditable delegated authority [6]-[8]. This paper asks the next workflow question: what revocation contract should an agent runtime or middleware expose when one delegation relationship is withdrawn?\nThe ambiguity is semantic. Consider a node C with two delegations A→C and B →C: if A revokes only its edge, a disjunctive policy keeps C authorized through B →C, so a tree cascade from C over-revokes C and its descendants. Conversely, if A → C → D crosses into another deployer domain, a cascade restricted to A's registry may revoke C but miss D (under-revocation). We therefore argue that revocation must specify its semantic target before choosing a propagation mechanism. Under disjunctive authority-a node is authorized iff some valid root-to-node path survives-revoking edge e should invalidate exactly the nodes that lose all root paths when e is removed,\nthe nodes edge-dominated by e. Our contribution is not to introduce a new dominator algorithm; it is to turn this correctness oracle into an executable agent-workflow contract: the runtime emits edge identifiers, signed delegation events, revocation envelopes, and enough evidence for a relying party to check the target without re-querying a central authorization service. We then measure when common target languages are unsafe or disruptive. Figure 1 shows the failure on concrete multi-agent handoff graphs: a shared specialist should survive if another workflow still delegates to it, while a remote descendant should be revoked if its only authority runs through the withdrawn edge."
+            }
+          ]
+        }
+      ],
+      "review_note": "Distinguish VERA target from unsafe tree cascade baseline."
+    },
+    {
+      "id": "vera-2",
+      "pair": "vera",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "When VERA withdraws one delegation, who is disabled and who can keep working through an independent permission chain?",
+      "facts": [
+        {
+          "id": "vera-f1",
+          "text": "Only agents losing every root authorization path are invalidated"
+        },
+        {
+          "id": "vera-f2",
+          "text": "Agents with an alternate authorizing path remain authorized"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.30091v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "VERA: Authority-Preserving Edge Revocation for Federated AI-Agent Workflows",
+              "source_excerpt": "Lifei Liu Independent Researcher Seattle, WA, USA lliu.lifei@gmail.com Haoran Yu Independent Researcher Seattle, WA, USA haoranyu889@gmail.com Xiaochong Jiang Independent Researcher Seattle, WA, USA jiang.xiaoc@northeastern.edu\nAbstract-Modern agent frameworks compose planners, tool agents, remote services, and shared specialists into runtime delegation graphs, but their revocation APIs still resemble token or subtree invalidation. When one delegation is withdrawn, the runtime must know which agents lose authority while independently authorized agents keep working. We study this authority consistency problem and introduce VERA (Verifiable Edge Revocation for Agents), a verifier-checkable revocation contract and API emitted by agent-runtime adapters as signed evidence. Under disjunctive authority, revoking edge e invalidates exactly Tintent(e,G) = reach(G)\\reach(G\\{e}), the agents whose every authorizing root path used e. Used as a contract, this target exposes two runtime failures: tree cascades over-revoke shared agents, while deployer-scoped cascades under-revoke crossdomain descendants. In a LangGraph framework-replay study, 25 workflow/input cells repeated 20 times yield 500 compiledframework traces and 2,000 valid signed delegation decisions; 13/25 cells contain runtime multi-parent sharing and 8/25 contain cross-deployer sharing. Signed replay verifies 500/500 target proofs, preserves all 320 alternate-parent shared-agent cases that tree cascade revokes, and rejects unauthorized signers and omission attacks. Baseline replay over 1,960 edge withdrawals shows that holder/node and tree-style targets cannot express this behavior. We further validate schema portability on A2A, AutoGen, and CrewAI artifacts: nine traces, including five executable CrewAI workflows, yield 53 signed delegation events that pass schema and signature checks.\nIndex Terms-AI agents, multi-agent systems, trustworthy AI, delegation, authorization, revocation, agent workflows"
+            },
+            {
+              "arxiv_id": "2608.30091v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "I. INTRODUCTION",
+              "source_excerpt": "AI-agent workflows are becoming multi-principal systems. Frameworks such as AutoGen [1], CrewAI [2], and LangGraph [3] compose planners, tool agents, remote specialists, and shared service agents; A2A [4] and MCP [5] make those handoffs cross process and organizational boundaries. Recent agent-identity work argues that these tools need authenticated, authorized, and auditable delegated authority [6]-[8]. This paper asks the next workflow question: what revocation contract should an agent runtime or middleware expose when one delegation relationship is withdrawn?\nThe ambiguity is semantic. Consider a node C with two delegations A→C and B →C: if A revokes only its edge, a disjunctive policy keeps C authorized through B →C, so a tree cascade from C over-revokes C and its descendants. Conversely, if A → C → D crosses into another deployer domain, a cascade restricted to A's registry may revoke C but miss D (under-revocation). We therefore argue that revocation must specify its semantic target before choosing a propagation mechanism. Under disjunctive authority-a node is authorized iff some valid root-to-node path survives-revoking edge e should invalidate exactly the nodes that lose all root paths when e is removed,\nthe nodes edge-dominated by e. Our contribution is not to introduce a new dominator algorithm; it is to turn this correctness oracle into an executable agent-workflow contract: the runtime emits edge identifiers, signed delegation events, revocation envelopes, and enough evidence for a relying party to check the target without re-querying a central authorization service. We then measure when common target languages are unsafe or disruptive. Figure 1 shows the failure on concrete multi-agent handoff graphs: a shared specialist should survive if another workflow still delegates to it, while a remote descendant should be revoked if its only authority runs through the withdrawn edge."
+            }
+          ]
+        }
+      ],
+      "review_note": "Distinguish VERA target from unsafe tree cascade baseline."
+    },
+    {
+      "id": "multi-vision",
+      "kind": "multi-paper",
+      "answerable": true,
+      "query": "How do Atomic Visual Entailment and DREAM each address unreliable multimodal predictions?",
+      "facts": [
+        {
+          "id": "multi-vision-ave",
+          "text": "Combines full-hypothesis and atomic predictions using a learned classifier"
+        },
+        {
+          "id": "multi-vision-dream",
+          "text": "Assigns resolution using uncertainty and restores confident prior answers to counter groupthink"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Visual entailment (VE) asks whether an image supports, contradicts, or leaves undecided a textual hypothesis. Strong results come from fine-tuning large vision-language models on labelled data, while zero-shot and hybrid approaches remain far behind. A VE hypothesis often bundles several visual claims, yet existing zero-shot methods reason over it as a single unit. We propose Atomic Visual Entailment (AVE), which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen vision-language models, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation is worse than not decomposing at all. Full-hypothesis and atomic prediction make complementary errors, and learning which to trust recovers far more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any vision-language model. AVE also localises the visual evidence behind its prediction without region-level supervision. These results suggest that learning which candidate prediction to trust can close much of the gap to fine-tuned systems, offering a practical alternative where fine-tuning a vision-language model directly would need more labelled data or compute than is available."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 6,
+              "chunk_index": 1,
+              "section_title": "✓ Entailment",
+              "source_excerpt": "e 1). Related work on blackbox ensembling instead learns which candidate to trust rather than counting votes, and does so without access to the models that produced the candidates (Xia et al., 2025).\nTo address these two challenges, we propose Atomic Visual Entailment (AVE), a framework that decomposes the hypothesis into atomic facts and combines predictions from both views of the claim. AVE produces a pool of candidate predictions from two frozen VLMs under several prediction strategies and prompt styles. A lightweight classifier then predicts the final label from features describing how those candidates behaved. Because each candidate carries the reasoning that produced it, AVE also localises the visual evidence behind its prediction, without region-level supervision. On SNLI-VE (Xie et al., 2019), AVE outperforms every previously published zero-shot and hybrid result, while every VLM remains frozen.\nIn summary, our contributions are: (1) AVE, a framework that decomposes VE hypotheses into atomic facts and combines full-hypothesis and atomic predictions through a lightweight learned selector, without fine-tuning any VLM; (2) 0.803 test accuracy on SNLI-VE, 14.2 points above the strongest hybrid baseline and within the range of supervised systems; (3) Evidence that atomic reasoning helps only with hypothesis context preserved, and that learned selection exploits the resulting complementary errors far better than majority voting; (4) Zero-shot grounding of predicted evidence, reaching Recall@1 of 0.837 against human annotations without region-level supervision."
+            },
+            {
+              "arxiv_id": "2610.05630v1",
+              "section_index": 20,
+              "chunk_index": 0,
+              "section_title": "5 Conclusion",
+              "source_excerpt": "We study whether atomic hypothesis decomposition improves zero-shot visual entailment, and whether predictions from different reasoning routes can be combined. We propose AVE, which decomposes the hypothesis into atomic facts, produces candidate predictions from both the full hypothesis and its facts using frozen VLMs, and predicts the final label with a lightweight classifier trained only on how those candidates behave. We find that decomposition helps only when the hypothesis context is preserved: judging facts in isolation performs worse than not decomposing at all. Fullhypothesis and atomic reasoning make complementary errors, and learning which to trust recovers substantially more of that complementarity than majority voting, reaching 0.803 test accuracy on SNLI-VE without fine-tuning any VLM. Because the selected prediction carries the reasoning that produced it, AVE also localises the visual evidence behind that prediction, without region-level supervision.\n8"
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "Multi-agent debate (MAD) has emerged as an effective paradigm to improve the reasoning capabilities of large language models (LLMs) and is increasingly being extended to multimodal settings. However, existing multimodal MAD frameworks typically expose agents to the same fixed visual input, ignoring substantial variation in the visual scale needed across samples and agents. In addition, these frameworks frequently suffer from groupthink-a phenomenon where agents prematurely abandon correct deductions to conform with confident but hallucinated peer responses. To address these bottlenecks, we introduce DREAM (Dynamic Resolution Assignment For Multimodal Multi-Agent Debate), which operates via two core components: (1) Dynamic Resolution Assignment, a zero-shot \"probe round\" where agents test multiple resolutions, quantify uncertainty using Average Normalized Log-Likelihood (ANLL), and use an adaptive threshold to assign each agent to its empirically optimal resolution; (2) Uncertainty-Guided Rollback Aggregation counters groupthink by tracking each agent's uncertainty over rounds and restoring early low-uncertainty answers overridden by group pressure. On six multimodal datasets, DREAM improves the accuracy-token trade-off over multiagent debate baselines by 1.5-3.2% accuracy without dataset-specific tuning."
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 3,
+              "chunk_index": 2,
+              "section_title": "1 INTRODUCTION",
+              "source_excerpt": "nty at 2.0×\nRoute Debate to 2.0×\nEnsures Analytical Accuracy\nStandard MAD\nForces fixed 1.0× baseline.\nWastes tokens on Sample A,\nFails to read Sample B.\n1\nPublished as a conference paper at ICLR 2027\nTo jointly resolve these structural issues, this work introduces DREAM (Dynamic Resolution Assignment for Multimodal Multi-Agent Debate), a plug-and-play wrapper featuring two complementary mechanisms: (1) Dynamic Resolution Assignment (DRA): An exploratory \"Round 0\" probe dynamically determines the optimal visual scale for each sample using Average Normalized Log-Likelihood (ANLL) as a zero-shot uncertainty signal. Based on initial consensus, DRA assigns agents to either a locked single scale to minimize noise, or a mixed-resolution payload for maximal visual coverage. (2) Uncertainty-Guided Rollback Aggregation (URA): A targeted defense against late-stage groupthink that monitors ANLL trajectories throughout the debate. If an agent's uncertainty sharply rises by the final round, URA rescues their most confident prior response. To counteract judge recency bias, rescued answers are strategically prepended to the final prompt, ensuring early, visually grounded deductions are weighed equally against the prevailing groupthink.\nOur main contributions are summarized as follows:\nWe identify and formally characterize two structural bottlenecks universal to all existing multimodal MAD frameworks: static visual resolution assignment and late-stage sycophantic groupthink, and demonstrate how these two challenges are causally intertwined.\nWe propose DREAM, to our knowledge the first multimodal MAD framework to jointly resolve these bottlenecks. DRA introduces a zero-shot uncertainty-driven probing phase that dynamically routes each sample to its empirically optimal resolution strategy, while URA provides a principled rollback mechanism that prevents correct early deductions from being displaced by group pressure.\n"
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 6,
+              "chunk_index": 0,
+              "section_title": "3 METHODOLOGY",
+              "source_excerpt": "We introduce DREAM, a multi-agent multimodal debate framework comprising two key innovations: Dynamic Resolution Assignment (DRA) and Uncertainty-Guided Rollback Aggregation (URA). DRA conducts a preliminary round to identify the most suitable resolution for each agent based on the current sample. Meanwhile, URA monitors each agent's responses throughout the debate, allowing it to recover the low-uncertainty answer that might have been overlooked due to groupthink. Figure 2 details the branching logic of the Route step and how its output feeds the unchanged debate phase and the rollback aggregation step. The full four-phase procedure (Probe → Route → Debate → Aggregate & Judge) is given as Algorithm 1.\n3\nPublished as a conference paper at ICLR 2027"
+            },
+            {
+              "arxiv_id": "2610.05615v1",
+              "section_index": 15,
+              "chunk_index": 0,
+              "section_title": "7 CONCLUSION",
+              "source_excerpt": "We have presented DREAM, a framework designed to overcome critical efficiency and consensus bottlenecks in multi-agent multimodal debate. DREAM introduces two core mechanisms: Dynamic Resolution Assignment (DRA), which transforms image resolution scaling into a data-driven, persample decision using zero-shot ANLL uncertainty signals; and Uncertainty-guided Rollback Aggregation (URA), which mitigates debate groupthink by tracking per-agent uncertainty trajectories and rescuing high-confidence answers before they are overridden by group pressure. Across six multimodal reasoning benchmarks, wrapping existing debate baselines with DREAM consistently improves their accuracy-vs-computation trade-off without requiring dataset-specific tuning."
+            }
+          ]
+        }
+      ],
+      "review_note": "Both named papers required; background mentions of one in another do not satisfy two-source coverage."
+    },
+    {
+      "id": "multi-tokenizer",
+      "kind": "multi-paper",
+      "answerable": true,
+      "query": "What tokenizer mechanism links Arkios and Vowel Signs Are Not Letters, and how does each paper use or explain the repair?",
+      "facts": [
+        {
+          "id": "multi-tokenizer-arkios",
+          "text": "Arkios uses a combining-mark-aware byte-level BPE tokenizer for English-Nepali"
+        },
+        {
+          "id": "multi-tokenizer-tokenizer",
+          "text": "Letters-only pre-tokenization fragments combining marks; including marks removes the structural boundary"
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.30092v2",
+              "section_index": 5,
+              "chunk_index": 0,
+              "section_title": "2 Tokenizer",
+              "source_excerpt": "We use a byte-level BPE tokenizer of 65,536 tokens (chosen so every token ID fits in a uint16), trained with a modified pretokenizer regex that uses [\\p{L}\\p{M}]+ as the word class in place of the default \\p{L}+. This closes the Devanagari fragmentation described above while leaving English pretokenization unchanged (Latin letters carry no combining marks after NFC normalization). The tokenizer reaches 1.69 tokens/word on Nepali, which the companion paper (Regmi et al., 2026) shows is competitive with or better than substantially larger frontier tokenizers on the same measure. The tokenizer is frozen for the duration of this project (hash 0x3259671B); all pretraining and SFT shards are packed against this exact tokenizer and are not portable to any other. We do not re-derive the tokenizer analysis here and refer readers to Regmi et al. (2026) for the full fertility sweep, the mixture-invariance diagnostic, and cross-tokenizer comparisons.\nTable 1: Arkios architecture configuration.\nParameters\n1.04B\nLayers\n18\nHidden size (dmodel)\n2048\nAttention heads (Q / KV)\n16 / 8\nHead dimension\n128\nFFN dimension (SwiGLU)\n6144\nVocabulary\n65,536\nContext length\n4096\nRoPE θ\n1,000,000\nTied input/output embeddings\nyes"
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26449v1",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "1 Introduction",
+              "source_excerpt": "Fertility, the mean number of tokens a tokenizer spends per word, sets an exchange rate between a language and every cost tied to a language model. With context length and training budget held fixed, a language tokenized at 5 tokens per word gets a fifth as much effective text as one tokenized at 1. For low-resource languages the corpus is already the binding constraint, and fertility compounds it.\nWe built a bilingual English-Nepali tokenizer and found Nepali fertility near 4.4 tokens per word. The standard diagnosis was a data shortage: Nepali is low-resource, the mixture was English-dominant, and adding more Nepali is the usual remedy. We raised the Nepali share and retrained. The number did not move. We raised it again, and it still had no effect.\nThe cause was one character class. The HuggingFace ByteLevel pre-tokenizer applies the regex from GPT-2 (Radford et al., 2019), whose word alternative is \\p{L}+ , matching one or more Unicode letters. In Devanagari, vowels are written as combining marks. The vowel sign AA falls under category Mc , E under Mn , and the virama under Mn as well. None are L , so \\p{L}+ splits a Nepali word at every vowel sign. BPE, which merges pairs only inside a pre-token, has no way to rejoin them. Under \\p{L}+ , the word nep¯ al¯ ı yields six pre-tokens; under [\\p{L}\\p{M}]+ , just one.\nThe o200k pattern shipped with GPT-4o already uses a mark-aware word class, and SentencePiece (Kudo and Richardson, 2018) sidesteps letter-based pre-tokenization entirely. This is not an unknown defect. We report what it costs, how to recognise it from its symptoms, and how far it reaches across the world's writing systems."
+            }
+          ]
+        }
+      ],
+      "review_note": "Both named papers required; background mentions of one in another do not satisfy two-source coverage."
+    },
+    {
+      "id": "unsupported-kandinsky",
+      "kind": "related-unanswerable",
+      "answerable": false,
+      "query": "What was the exact electricity bill in Egyptian pounds for training Kandinsky 6.0 Video Pro?",
+      "facts": [],
+      "support": [],
+      "review_note": "Stored Kandinsky training/infrastructure sections do not report an Egyptian-pound electricity bill."
+    },
+    {
+      "id": "unsupported-undo",
+      "kind": "related-unanswerable",
+      "answerable": false,
+      "query": "Which Cairo banks deployed UndoBench in production, and what were their customer account numbers?",
+      "facts": [],
+      "support": [],
+      "review_note": "UndoBench reports controlled enterprise workflows, not production Cairo-bank deployments or customer account identifiers."
+    },
+    {
+      "id": "unsupported-arkios",
+      "kind": "related-unanswerable",
+      "answerable": false,
+      "query": "What will the Arkios commercial subscription price be in 2030?",
+      "facts": [],
+      "support": [],
+      "review_note": "Stored Arkios release/limitations text supplies no future subscription pricing."
+    },
+    {
+      "id": "unsupported-ave",
+      "kind": "related-unanswerable",
+      "answerable": false,
+      "query": "How many patients were cured by Atomic Visual Entailment in a randomized clinical trial?",
+      "facts": [],
+      "support": [],
+      "review_note": "AVE evaluates SNLI-VE visual entailment, not patient treatment outcomes."
+    },
+    {
+      "id": "unrelated-weather",
+      "kind": "unrelated",
+      "answerable": false,
+      "query": "Will it rain at my home in Cairo tomorrow afternoon?",
+      "facts": [],
+      "support": [],
+      "review_note": "No personal address or live forecast in the preserved research corpus."
+    },
+    {
+      "id": "unrelated-sports",
+      "kind": "unrelated",
+      "answerable": false,
+      "query": "Who will win the 2030 football World Cup final?",
+      "facts": [],
+      "support": [],
+      "review_note": "A future sporting outcome is not established by this corpus."
+    }
+  ]
+}

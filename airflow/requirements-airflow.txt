@@ -14,3 +14,7 @@ docling>=2.0.0
 
 # Database drivers
 psycopg2-binary>=2.9.0
+
+# Search index. Pinned to the same major as pyproject.toml so the DAG that writes the
+# chunk index and the API that reads it agree on the client contract.
+opensearch-py>=3.0.0,<4.0.0

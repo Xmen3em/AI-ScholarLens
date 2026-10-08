@@ -10,9 +10,9 @@ The project is intentionally split into small replaceable components. The arXiv 
 |---|---|---|
 | Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
 | Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
-| Phase 3 | OpenSearch indexing and hybrid retrieval | Planned |
-| Phase 4 | Chunking and retrieval evaluation | Planned |
-| Phase 5 | Grounded RAG answers with Ollama | Planned |
+| Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
+| Phase 4 | Chunking and retrieval evaluation | Initial evaluation and pre-Week-6 quality pass complete; candidate expansion remains opt-in after relevance regressed. See [quality results](evaluation/quality_fixes/REPORT.md). |
+| Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
 | Phase 6 | Production hardening: observability, security, and deployment | Planned |
 
 Update this table and the diagrams when a phase is accepted. Keep unfinished work in the “Planned” or “In progress” rows instead of presenting it as an active runtime dependency.
@@ -31,8 +31,8 @@ flowchart LR
         API[FastAPI API<br/>:8000]
         Airflow[Airflow Scheduler + DAG<br/>:8080 or AIRFLOW_PORT]
         DB[(PostgreSQL<br/>papers + parsed content)]
-        Search[(OpenSearch<br/>Phase 3)]
-        Ollama[Ollama<br/>answers Phase 5]
+        Search[(OpenSearch<br/>arxiv-papers + paper-chunks)]
+        Ollama[Ollama<br/>generation + embeddings]
     end
 
     Arxiv[(arXiv API)]
@@ -42,19 +42,20 @@ flowchart LR
 
     User --> API
     API --> DB
+    API -- BM25 search --> Search
     API -- health check --> Ollama
 
     Airflow --> Arxiv
     Airflow --> PDF
     PDF --> Docling
     Docling --> DB
+    DB -- chunks --> Search
     Airflow --> DB
 
     DB -. index papers .-> Search
-    Search -. retrieve context .-> Retriever
-    DB -. retrieve metadata .-> Retriever
-    Ollama -. generate answer .-> Retriever
-    Retriever -. answer .-> API
+    Search -- grouped passages --> Retriever
+    Ollama -- generate answer --> Retriever
+    Retriever -- grounded answer + citations --> API
 ~~~
 
 ### Paper-ingestion flow
@@ -107,6 +108,153 @@ or stored.
 
 To check the stored corpus against the allowlist, see [Corpus scope audit](#corpus-scope-audit).
 
+### Search
+
+Two OpenSearch indices, for two different questions.
+
+| Index | Document | Answers |
+| --- | --- | --- |
+| `arxiv-papers` | one per paper | "which papers are about X" |
+| `paper-chunks` | one per passage | "which passage says X" |
+
+One index cannot do both. BM25 normalizes relevance by field length, so in a
+paper-sized document the passage that actually matched is buried, and a passage-sized
+document has no title or abstract to weight.
+
+Both are rewritten in full by the `index_to_opensearch` DAG task. Writes go to the
+concrete index (`arxiv-papers-v1`, `paper-chunks-v2`) and reads go through the alias,
+which is moved onto the new index in a single atomic action **only after** a clean
+rewrite. A mapping change — such as `paper-chunks` gaining its vector field — is
+therefore rolled out by filling a new index while searches keep hitting the old,
+complete one. The superseded index is left in place to roll back to, and is yours to
+delete once the new one is confirmed good.
+
+Embedding a passage costs about two thirds of a second on CPU, so re-embedding the whole
+corpus on every pass would cost a quarter of an hour and grow with the corpus. Each
+document stores a hash of its text, and a rewrite reuses the stored vector whenever that
+hash still matches — a normal daily run embeds only the passages that are actually new.
+
+Both endpoints share one query builder, differing only in a profile: which fields are
+searched and with what boost, which are returned, and how they are highlighted. The
+matching rules — `best_fields`, fuzziness, the filter clause, `track_total_hits` — are
+the same for both, and a test asserts they stay that way.
+
+#### Ranking papers
+
+`POST /api/v1/search/` scores matches across three fields, weighted:
+
+| Field | Boost | Why |
+| --- | --- | --- |
+| `title` | 3x | The strongest signal a paper *is about* the query |
+| `abstract` | 2x | The author's own summary of it |
+| `authors` | 1x | Searching by name, which a fuzzy text match would otherwise rank below an incidental mention |
+
+The query is a `best_fields` multi-match, so a paper whose title alone matches the whole
+query beats one that spreads the terms across three fields — which is the only way a 3x
+title boost means anything. `fuzziness: AUTO` with `prefix_length: 2` absorbs typos
+("retreival augmnted generaton" finds the RAG papers) while keeping the first two
+characters exact, so short queries do not match half the vocabulary. Titles and
+abstracts are stemmed with snowball; author names are only lowercased, because stemming
+a surname produces something no query spells.
+
+Results carry `<mark>`-wrapped highlights — whole field for titles and authors,
+fragments for abstracts — and `took_ms` from OpenSearch. Category filtering is a `filter`
+clause rather than a query clause, so a category never contributes to relevance. An
+empty query browses: filters and the newest-first sort still apply, which is how "the
+latest cs.CL papers" is asked for.
+
+`total` counts matching documents in every case. On the hybrid endpoint that is the
+keyword half's count: fusion reranks a bounded candidate pool, so `offset` cannot walk
+all the way through it. `score_kind` says which scale `score` is on — `rrf` for a fused
+score near 1/60, `bm25` for the keyword half's own, in the tens.
+
+#### Hybrid ranking
+
+`POST /api/v1/search/hybrid` runs the keyword query and a vector similarity query over
+the same passages and fuses the two rankings with **reciprocal rank fusion**.
+
+Only rank positions are used, never the underlying numbers. A BM25 score and a cosine
+similarity are on incomparable scales, and normalizing them means inventing a conversion
+nobody can defend; RRF sidesteps that entirely by asking only "how highly did each half
+rank this?". A passage both halves place well beats one that either half puts first. The
+`score` on a hybrid hit is therefore the fused score — near 1/60, not a BM25 score.
+
+Each half retrieves five pages deep before fusing, because fusion can only reorder what
+it is given: a passage ranked 8th by one half and 40th by the other is invisible unless
+both lists run past the page being served.
+
+**Embeddings** come from `nomic-embed-text` running in the Ollama container — 768
+dimensions, no API key, no external calls. The model is prompted with its task prefixes
+(`search_document:` when indexing, `search_query:` when searching); without them queries
+and passages land in different regions of the space and similarity quietly degrades,
+which is invisible in the output because the vectors still have the right shape.
+
+If Ollama is unreachable the endpoint **falls back to keyword-only** and says so in
+`mode`, with the reason in `fallback_reason`. Worse results beat no results, and the
+keyword half is complete on its own.
+
+#### Ranking passages
+
+`POST /api/v1/search/chunks` scores the passage text at 3x and its section heading at 2x.
+
+The paper title is deliberately **not** scored. Every passage of a paper carries the same
+title, so boosting it returns forty pieces of one paper instead of the best passage from
+each — measured on this corpus, six results collapsed to a single distinct paper. The
+section heading earns its 2x: it lifts "F LIMITATIONS AND FUTURE WORK" into the top three
+for "limitations and future work", which the passage text alone ranked fifth.
+
+Each passage carries `section_index` and `chunk_index` alongside its paper's `arxiv_id`,
+so a quoted passage can always be traced back to where in the paper it came from.
+
+#### Grouping by paper
+
+Both passage endpoints return **papers, each with up to three passages** — not a flat
+list. `size` counts papers.
+
+Excluding the title from scoring was not enough on its own. A paper that repeats the query
+throughout still owned the whole page: for "RAG", all ten results came from one paper, out
+of 172 matching passages across 34 papers. Three passages is enough to carry a claim and
+its evidence, and few enough that a page still spans several sources — which is what a
+grounded answer needs in order to cite more than one.
+
+`/search/chunks` does this with an OpenSearch `collapse` on `arxiv_id`, so the grouping and
+the cap happen in one server-side query and `matching_passages` reports how many passages
+the paper really had — 24, for that dominant paper.
+
+`/search/hybrid` groups *after* fusing instead. Fusion ranks a flat list, and collapsing
+first would mean reconciling two different choices of which passages represent each paper.
+It therefore leaves `matching_passages` unset: fusion only ever sees a bounded candidate
+pool, so a count from it would understate the truth.
+
+### Search chunks
+
+Parsed papers are split into retrievable chunks and written to the `paper-chunks`
+OpenSearch index by the `index_paper_chunks` DAG task. The rules live in
+`src/policies/chunking.py`:
+
+- **The unit is a section.** Docling already recovers the paper's own structure, so a
+  section is a real boundary rather than a blind split. A section longer than 2000
+  characters is split further at the last paragraph, line, or sentence boundary that
+  fits, with 200 characters of overlap so a passage cut mid-argument stays recoverable.
+- **Reference lists are excluded.** A bibliography is a list of other people's titles:
+  indexed as body text it matches almost any query and grounds nothing. It is the
+  largest section in the corpus — 26 of 26 parsed papers, 234k of 1.8M characters. The
+  text stays in `papers.sections` for whoever extracts citations later.
+- **Sections under 100 characters are dropped.** Measured on the live corpus, all 48 of
+  them were arXiv stamp lines, author affiliation blocks, or bare link captions.
+- **Chunk ids are positional** (`{arxiv_id}:{section_index}:{chunk_index}`), so
+  re-indexing a paper overwrites its chunks instead of duplicating them.
+
+Each pass rewrites the whole corpus, then deletes any chunk it did not rewrite — which
+covers both a paper re-parsed into fewer sections and a paper purged from the database.
+That cleanup is skipped when any paper failed to index, so a transient failure cannot
+delete chunks that are still good.
+
+Writes and reads both go through the `paper-chunks` alias, which points at
+`paper-chunks-v1`. An OpenSearch mapping cannot be changed in place, so a field-type
+change means building the next index and repointing the alias — and an alias cannot
+share a name with an existing index, so it has to exist from the first write.
+
 ## How the application works today
 
 1. The API starts, connects to PostgreSQL, and brings the schema to the latest migration.
@@ -115,7 +263,26 @@ To check the stored corpus against the allowlist, see [Corpus scope audit](#corp
 4. The DAG fetches metadata from arXiv across the eight allowlisted AI categories.
 5. PDFs are downloaded and cached, then parsed with Docling inside the Airflow image.
 6. Paper metadata and parsed content are upserted into PostgreSQL.
-7. OpenSearch indexing and RAG answering are reserved for later phases.
+7. The DAG rewrites every stored paper into both OpenSearch indices.
+8. Passages are embedded with `nomic-embed-text`, reusing stored vectors for text that
+   has not changed.
+9. `/api/v1/search/` ranks papers with BM25; `/search/chunks` ranks passages; `/search/hybrid`
+   fuses keyword and vector rankings.
+10. Retrieval evaluation and grounded RAG answering are implemented; see the [evaluation report](evaluation/REPORT.md) for measured coverage, abstention, and reliability limitations.
+
+The [pre-Week-6 quality pass](evaluation/quality_fixes/REPORT.md) measured sentence
+expansion on separate development and fresh corpus questions. Both answer endpoints
+now share buffered selection validation and a bounded retry. Candidate expansion
+remains opt-in (`RAG_SENTENCE_CANDIDATES_PER_PASSAGE=2` or `3`, default `1`) because
+it reduced excerpt relevance. The 60% lexical gate, exact attribution, frozen v1
+benchmark, repaired corpus and both indexes are preserved. Phase 6 remains planned.
+
+The [selector-reliability continuation](evaluation/selector_reliability/REPORT.md)
+tests a grammar-constrained ID string: up to three known IDs in increasing numeric
+order, or `NONE`. The server independently validates that contract and rejects
+duplicate JSON keys. The sparse keyed-object experiment is retained as rejected
+evaluation data. Selection validity does not establish semantic relevance or
+complete fact coverage; the continuation report records those measurements.
 
 The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
 
@@ -135,6 +302,16 @@ Start the stack from the repository root:
 ~~~powershell
 docker compose up --build -d
 ~~~
+
+Pull both configured models explicitly; startup never downloads models automatically:
+
+~~~powershell
+docker compose exec ollama ollama pull llama3.2:1b
+docker compose exec ollama ollama pull nomic-embed-text
+~~~
+
+The health endpoint returns 503 until the default generation model is installed. A missing
+embedding or other optional configured model reports `degraded` with HTTP 200.
 
 If host port 8080 is already in use, select another Airflow host port:
 
@@ -157,7 +334,15 @@ Airflow creates new DAGs in a paused state. Unpause the ingestion DAG before exp
 docker compose exec airflow airflow dags unpause arxiv_paper_ingestion
 ~~~
 
-The API documentation is available at http://localhost:8000/docs. Airflow is available at http://localhost:8080, or at the configured AIRFLOW_PORT. The default Airflow credentials are admin/admin.
+Launch the Week 5 interface separately:
+
+~~~powershell
+uv run python gradio_launcher.py
+~~~
+
+Gradio is available at http://localhost:7861. The API documentation is available at
+http://localhost:8000/docs. Airflow is available at http://localhost:8080, or at the
+configured AIRFLOW_PORT. The default Airflow credentials are admin/admin.
 
 ## API endpoints
 
@@ -167,6 +352,11 @@ The API documentation is available at http://localhost:8000/docs. Airflow is ava
 | GET | /api/v1/health | API, database, and Ollama health information |
 | GET | /api/v1/papers/ | List stored papers with pagination |
 | GET | /api/v1/papers/{arxiv_id} | Retrieve one stored paper |
+| POST | /api/v1/search/ | BM25 keyword search over papers |
+| POST | /api/v1/search/chunks | BM25 keyword search over passages |
+| POST | /api/v1/search/hybrid | Keyword and vector search, fused with RRF |
+| POST | /api/v1/ask | Grounded answer with ordered sources and exact passage citations |
+| POST | /api/v1/stream | The same pipeline as typed Server-Sent Events |
 | GET | /docs | Interactive OpenAPI documentation |
 
 Example:
@@ -175,7 +365,45 @@ Example:
 Invoke-RestMethod http://localhost:8000/api/v1/ping
 Invoke-RestMethod http://localhost:8000/api/v1/health
 Invoke-RestMethod http://localhost:8000/api/v1/papers/
+
+# Relevance-ranked search
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
+  -Body '{"query": "retrieval augmented generation", "size": 5}'
+
+# The newest cs.CL papers, no query term
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
+  -Body '{"query": "", "categories": ["cs.CL"], "newest_first": true}'
+
+# The passages that answer a question, not the papers that mention it
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -ContentType application/json `
+  -Body '{"query": "how are the benchmarks constructed", "size": 5}'
+
+# The same, ranked by meaning as well as wording
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid -ContentType application/json `
+  -Body '{"query": "how do they stop the model making things up", "size": 5}'
+
+# Standard grounded answer; top_k counts paper groups, not chunks
+Invoke-RestMethod -Method Post http://localhost:8000/api/v1/ask -ContentType application/json `
+  -Body '{"query": "how do they ground factual claims", "top_k": 3, "use_hybrid": true}'
+
+# Streaming answer: named sources, delta, and done/error SSE events
+curl.exe -N -X POST http://localhost:8000/api/v1/stream `
+  -H "Content-Type: application/json" `
+  -d '{"query":"how do they ground factual claims","top_k":3,"use_hybrid":true}'
 ~~~
+
+`size` is 1-50, `offset` 0-1000, and `categories` must be inside the ingested AI
+allowlist — a filter on `hep-th` is a 422 rather than a silent zero-result page, because
+the corpus can never contain one. `/search/` accepts an empty query and browses;
+`/search/chunks` requires one, because a passage is only meaningful as an answer to
+something. `/ask` and `/stream` accept `top_k` from 1-10, an allowlisted configured
+generation model, the same category filter, and either hybrid or grouped BM25 retrieval.
+Every generated marker resolves to an exact returned `section_index` and `chunk_index`.
+Answers quote up to three server-owned evidence sentences selected by the model, with
+source-exact attribution and a server-enforced 200-word limit including citation markers.
+A conservative lexical relevance guard can abstain on unrelated or paraphrased questions.
+Streams emit complete excerpts after the internal selection is validated. See
+[TESTING.md](TESTING.md) for the acceptance evidence and limitations of this extractive mode.
 
 ## Testing
 
@@ -222,16 +450,24 @@ AI-ScholarLens/
 │   ├── config.py                # Settings loaded from environment
 │   ├── dependencies.py          # FastAPI dependency injection
 │   ├── exceptions.py            # Domain exception hierarchy
-│   ├── routers/                 # FastAPI endpoints
+│   ├── gradio_app.py            # Streaming Gradio client and rendering
+│   ├── routers/                 # FastAPI endpoints, including ask + stream
 │   ├── services/
 │   │   ├── arxiv/               # arXiv client
-│   │   ├── ollama/              # Ollama client
+│   │   ├── ollama/              # Reusable Ollama client and RAG prompt
+│   │   ├── rag/                 # Evidence budgeting, citations, generation
 │   │   ├── pdf_parser/          # Docling parser
-│   │   └── metadata_fetcher.py  # Ingestion orchestration
+│   │   ├── embeddings/          # Ollama embedding client
+│   │   ├── metadata_fetcher.py  # Ingestion orchestration
+│   │   ├── reindex.py           # Idempotent full-corpus reindex, shared
+│   │   ├── paper_indexer.py     # Corpus -> arxiv-papers index
+│   │   ├── chunk_indexer.py     # Corpus -> paper-chunks index
+│   │   └── paper_search.py      # BM25 search over arxiv-papers
 │   ├── repositories/            # Query logic (PaperRepository)
 │   ├── models/                  # SQLAlchemy models
 │   ├── schemas/                 # Pydantic contracts
-│   ├── policies/                # AI category allowlist and scope predicate
+│   ├── policies/                # AI category allowlist, chunk boundaries
+│   ├── search/                  # Index mappings, query builder, RRF, client
 │   ├── commands/                # Operational CLIs (python -m src.commands.*)
 │   └── db/                      # Database interface, PostgreSQL impl, factory
 │       ├── migrations.py        # Startup migration runner
@@ -242,6 +478,7 @@ AI-ScholarLens/
 │   └── unit/
 ├── compose.yml
 ├── Dockerfile
+├── gradio_launcher.py
 ├── pyproject.toml
 ├── uv.lock
 ├── TESTING.md

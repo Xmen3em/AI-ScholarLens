@@ -1,0 +1,395 @@
+{
+  "_meta": {
+    "records_sha256": "cd2b200ff77397fb17109f05a3104a6b5a21201ceb649fe9e40c44a49d3df24d",
+    "reviewer": "Codex semantic source review",
+    "method": "Same complete-fact and excerpt-relevance criteria as baseline; no independent human labels."
+  },
+  "prime-method:bm25:ask:3": {
+    "answer_digest": "fe465e20bdecf9c232fe6457b59ae29ffc4be1e54ef2a60ab056cf790d66fac9",
+    "covered_facts": [
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Selected-loss rule is answered; numeric evaluation gains are outside the screening-method request."
+  },
+  "prime-method:bm25:stream:3": {
+    "answer_digest": "fe465e20bdecf9c232fe6457b59ae29ffc4be1e54ef2a60ab056cf790d66fac9",
+    "covered_facts": [
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Selected-loss rule is answered; numeric evaluation gains are outside the screening-method request."
+  },
+  "prime-method:hybrid:ask:3": {
+    "answer_digest": "6e6da23ee338cf37b60b2d6f51fa85eecc56fc68cc91be77115bfcc40402a391",
+    "covered_facts": [
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Selected-loss rule only. A trajectory-budget result and an unrelated Kandinsky teacher-rollout statement do not cover screening criteria."
+  },
+  "prime-method:hybrid:stream:3": {
+    "answer_digest": "6e6da23ee338cf37b60b2d6f51fa85eecc56fc68cc91be77115bfcc40402a391",
+    "covered_facts": [
+      "prime-method-f3"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Selected-loss rule only. A trajectory-budget result and an unrelated Kandinsky teacher-rollout statement do not cover screening criteria."
+  },
+  "prime-paraphrase:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-paraphrase:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-paraphrase:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-paraphrase:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Supported paraphrase rejected; no facts answered."
+  },
+  "prime-results:bm25:ask:3": {
+    "answer_digest": "b343c4033cf8a6ecccc10d5b43814354b0f02b1f9086d360d79fc98525b693ba",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The numeric abstract quotation covers subset and paired gains. General quality discussion and Random-10% comparison supply no additional requested fact."
+  },
+  "prime-results:bm25:stream:3": {
+    "answer_digest": "b343c4033cf8a6ecccc10d5b43814354b0f02b1f9086d360d79fc98525b693ba",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The numeric abstract quotation covers subset and paired gains. General quality discussion and Random-10% comparison supply no additional requested fact."
+  },
+  "prime-results:hybrid:ask:3": {
+    "answer_digest": "d308951a7156787c23ce431201c2c32332158a5b69b6ca6ed22d2fbd5f91fa60",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The numeric abstract quotation covers both facts; benchmark names and generic method description do not answer requested sizes or gains."
+  },
+  "prime-results:hybrid:stream:3": {
+    "answer_digest": "d308951a7156787c23ce431201c2c32332158a5b69b6ca6ed22d2fbd5f91fa60",
+    "covered_facts": [
+      "prime-results-f1",
+      "prime-results-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "The numeric abstract quotation covers both facts; benchmark names and generic method description do not answer requested sizes or gains."
+  },
+  "sea-training:bm25:ask:3": {
+    "answer_digest": "a7206b08738f55a69296668a05c04a97df80499fe46b4a1d6b7d0465e342408d",
+    "covered_facts": [
+      "sea-training-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Two-stage/six-task curriculum is explicit. Missing-target rejection and one task definition do not state the weighted-loss solution."
+  },
+  "sea-training:bm25:stream:3": {
+    "answer_digest": "a7206b08738f55a69296668a05c04a97df80499fe46b4a1d6b7d0465e342408d",
+    "covered_facts": [
+      "sea-training-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Two-stage/six-task curriculum is explicit. Missing-target rejection and one task definition do not state the weighted-loss solution."
+  },
+  "sea-training:hybrid:ask:3": {
+    "answer_digest": "ddf8ba44b4e11c81365176b59276bced9354862b62f9809768e90d89966b9c05",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Evaluation gains, missing-target rejection and targeted transcription omit the primary curriculum and weighted loss."
+  },
+  "sea-training:hybrid:stream:3": {
+    "answer_digest": "ddf8ba44b4e11c81365176b59276bced9354862b62f9809768e90d89966b9c05",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 3,
+    "rationale": "Evaluation gains, missing-target rejection and targeted transcription omit the primary curriculum and weighted loss."
+  },
+  "sea-paraphrase:bm25:ask:3": {
+    "answer_digest": "1f5d7af0cb4e5f96072a4b92f41ce1df72665d501245a1b94d8ba8f73ebcd164",
+    "covered_facts": [
+      "sea-paraphrase-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Curriculum fact is complete. Token dilution names the problem but not the objective that solves it. Scene complexity adds no requested detail."
+  },
+  "sea-paraphrase:bm25:stream:3": {
+    "answer_digest": "1f5d7af0cb4e5f96072a4b92f41ce1df72665d501245a1b94d8ba8f73ebcd164",
+    "covered_facts": [
+      "sea-paraphrase-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Curriculum fact is complete. Token dilution names the problem but not the objective that solves it. Scene complexity adds no requested detail."
+  },
+  "sea-paraphrase:hybrid:ask:3": {
+    "answer_digest": "bd317349ce6a8ae8740f95369c2838c93bdb3f575f72ef10411028d48ea3f8b9",
+    "covered_facts": [
+      "sea-paraphrase-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Curriculum fact is complete; problem description does not supply the loss or how it prevents imbalance."
+  },
+  "sea-paraphrase:hybrid:stream:3": {
+    "answer_digest": "bd317349ce6a8ae8740f95369c2838c93bdb3f575f72ef10411028d48ea3f8b9",
+    "covered_facts": [
+      "sea-paraphrase-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 2,
+    "rationale": "Curriculum fact is complete; problem description does not supply the loss or how it prevents imbalance."
+  },
+  "sea-arrays:bm25:ask:3": {
+    "answer_digest": "16836837ff7ce9bb64f439d1fc577f403dcabefecaa11b3833bb526de468febd",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "First two quotations give counts and range; capabilities add no requested sizing detail."
+  },
+  "sea-arrays:bm25:stream:3": {
+    "answer_digest": "16836837ff7ce9bb64f439d1fc577f403dcabefecaa11b3833bb526de468febd",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "First two quotations give counts and range; capabilities add no requested sizing detail."
+  },
+  "sea-arrays:hybrid:ask:3": {
+    "answer_digest": "31b5de94a4a6c67025032d04d165dc9aa530c829fff6a830592bf500b4b5e85b",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "First quotation gives both counts. Capabilities and an appendix pointer do not give requested numeric results."
+  },
+  "sea-arrays:hybrid:stream:3": {
+    "answer_digest": "31b5de94a4a6c67025032d04d165dc9aa530c829fff6a830592bf500b4b5e85b",
+    "covered_facts": [
+      "sea-arrays-f1",
+      "sea-arrays-f2"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "First quotation gives both counts. Capabilities and an appendix pointer do not give requested numeric results."
+  },
+  "mcr-size:bm25:ask:3": {
+    "answer_digest": "89029cce173d404e5fdc7db67b78b98cf9c4647992fd1dc339ea2ce66eccabce",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Task count answered. Metadata and figure-caption descriptions omit language identities."
+  },
+  "mcr-size:bm25:stream:3": {
+    "answer_digest": "89029cce173d404e5fdc7db67b78b98cf9c4647992fd1dc339ea2ce66eccabce",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "Task count answered. Metadata and figure-caption descriptions omit language identities."
+  },
+  "mcr-size:hybrid:ask:3": {
+    "answer_digest": "f94de164ed378f3598ebaac216bbb11eec84804aa71fa031039df6938b648c88",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "First and third quotations repeat the task count. Motivation does not name the languages."
+  },
+  "mcr-size:hybrid:stream:3": {
+    "answer_digest": "f94de164ed378f3598ebaac216bbb11eec84804aa71fa031039df6938b648c88",
+    "covered_facts": [
+      "mcr-size-f1"
+    ],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "First and third quotations repeat the task count. Motivation does not name the languages."
+  },
+  "multi-audio:bm25:ask:3": {
+    "answer_digest": "bd73e13973d6d3fe5ccf45e1db9e6250cd7f626f150b4b2f62fec07c1891ea17",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "SURE unsupported-rejection rates are relevant partial limitation evidence but omit the unidentifiable-source condition. SEA-LM robustness and admission-question setup do not answer the requested limitations."
+  },
+  "multi-audio:bm25:stream:3": {
+    "answer_digest": "bd73e13973d6d3fe5ccf45e1db9e6250cd7f626f150b4b2f62fec07c1891ea17",
+    "covered_facts": [],
+    "relevant_excerpts": 1,
+    "total_excerpts": 3,
+    "rationale": "SURE unsupported-rejection rates are relevant partial limitation evidence but omit the unidentifiable-source condition. SEA-LM robustness and admission-question setup do not answer the requested limitations."
+  },
+  "multi-audio:hybrid:ask:3": {
+    "answer_digest": "18f3398fb67cca2fe0aff4f003e1d99ecd93cc29ed9dc04aec2a73030ca35e14",
+    "covered_facts": [],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "SURE rejection rates and source-attribution requirement are relevant partial limitations, but no quotation explains intelligibility with missing speaker identity. SEA-LM quote is about robustness, not spatial-awareness loss."
+  },
+  "multi-audio:hybrid:stream:3": {
+    "answer_digest": "18f3398fb67cca2fe0aff4f003e1d99ecd93cc29ed9dc04aec2a73030ca35e14",
+    "covered_facts": [],
+    "relevant_excerpts": 2,
+    "total_excerpts": 3,
+    "rationale": "SURE rejection rates and source-attribution requirement are relevant partial limitations, but no quotation explains intelligibility with missing speaker identity. SEA-LM quote is about robustness, not spatial-awareness loss."
+  },
+  "unsupported-prime:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-prime:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-prime:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-prime:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-sea:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unsupported-mcr:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:bm25:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:bm25:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:hybrid:ask:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  },
+  "unrelated-transit:hybrid:stream:3": {
+    "answer_digest": "7fde872f433c92a1017757ab6f6ce18dc0be5a46bfafa33bbb5cd3c27c57f86d",
+    "covered_facts": [],
+    "relevant_excerpts": 0,
+    "total_excerpts": 0,
+    "rationale": "Correct unsupported abstention."
+  }
+}

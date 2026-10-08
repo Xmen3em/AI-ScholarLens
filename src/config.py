@@ -63,7 +63,14 @@ class Settings(DefaultSettings):
     # .env and raises before parse_ollama_models ever sees the comma-separated string.
     ollama_models: Annotated[List[str], NoDecode] = Field(default=["llama3.2:1b"])
     ollama_default_model: str = "llama3.2:1b"
+    # Pull with `docker compose exec ollama ollama pull nomic-embed-text`. Changing this
+    # to a model of a different width means rebuilding the chunk index, because the
+    # knn_vector mapping fixes the dimension.
+    ollama_embedding_model: str = "nomic-embed-text"
     ollama_timeout: int = 300
+    # Expansion improves evidence coverage but regressed relevance in the holdout.
+    # Keep conservative production behavior until selector quality is justified.
+    rag_sentence_candidates_per_passage: int = Field(default=1, ge=1, le=3)
     
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)

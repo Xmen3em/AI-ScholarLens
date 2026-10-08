@@ -1,0 +1,178 @@
+{
+  "version": "selector-reliability-final-fresh-v1",
+  "reviewed_on": "2026-10-08",
+  "reviewer": "Codex stored-source review",
+  "split": "Second fresh convenience holdout; fixed after map rejection and before final collection. No paired quality-improvement estimate.",
+  "corpus": {
+    "papers": 58,
+    "chunks": 2775,
+    "alias_target": "paper-chunks-v2",
+    "preserved_v1_chunks": 1221
+  },
+  "cases": [
+    {
+      "id": "diff-access",
+      "kind": "literal",
+      "answerable": true,
+      "query": "What model access does Diff Mining need?",
+      "facts": [
+        {
+          "id": "diff-access-f1",
+          "text": "Diff Mining needs only output logits, without access to model internals."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26462v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Finetuning has become the gold standard for refining existing behaviors and inducing new ones in language models, yet it often remains unclear exactly which behaviors emerge during this process. As models grow ever more capable, understanding finetuning better becomes increasingly important, particularly since unwanted behaviors may arise during finetuning. In this paper, we introduce Diff Mining , a simple yet effective framework for identifying what a finetuned model has learned by comparing its logits to those of its base model. Diff Mining effectively surfaces salient tokens that are amplified in the finetuned model, serving as a fingerprint of its training-even on text unrelated to the finetuning domain. Unlike many existing model diffing methods which require model internals, Diff Mining only needs access to output logits and scales to large models. The framework consists of two modular stages: (i) extracting per-context logit differences between the finetuned and base models on a reference corpus, and (ii) aggregating the resulting signals to construct an interpretable token set representing the finetune. For aggregation, we explore both a simple Top-K frequency method and a Non-negative Matrix Factorization (NMF)-based approach for disentangling multiple finetuning objectives into distinct token clusters. Empirically, Diff Mining succeeds across diverse settings: on finetune domain detection, it significantly outperforms state-of-the-art model diffing methods both in identifying relevant tokens and in downstream performance when an interpretability agent is given access to the extracted token set; on models with injected biases, it identifies more than one third of the biases without targeted probing. Overall, our framework shows promise in developing auditing tools to detect finetuning objectives."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diff-stages",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "How does Diff Mining turn base and finetuned model outputs into interpretable tokens?",
+      "facts": [
+        {
+          "id": "diff-stages-f1",
+          "text": "It extracts per-context logit differences between finetuned and base models on a reference corpus."
+        },
+        {
+          "id": "diff-stages-f2",
+          "text": "It aggregates the signals into an interpretable token set representing the finetune."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26462v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Finetuning has become the gold standard for refining existing behaviors and inducing new ones in language models, yet it often remains unclear exactly which behaviors emerge during this process. As models grow ever more capable, understanding finetuning better becomes increasingly important, particularly since unwanted behaviors may arise during finetuning. In this paper, we introduce Diff Mining , a simple yet effective framework for identifying what a finetuned model has learned by comparing its logits to those of its base model. Diff Mining effectively surfaces salient tokens that are amplified in the finetuned model, serving as a fingerprint of its training-even on text unrelated to the finetuning domain. Unlike many existing model diffing methods which require model internals, Diff Mining only needs access to output logits and scales to large models. The framework consists of two modular stages: (i) extracting per-context logit differences between the finetuned and base models on a reference corpus, and (ii) aggregating the resulting signals to construct an interpretable token set representing the finetune. For aggregation, we explore both a simple Top-K frequency method and a Non-negative Matrix Factorization (NMF)-based approach for disentangling multiple finetuning objectives into distinct token clusters. Empirically, Diff Mining succeeds across diverse settings: on finetune domain detection, it significantly outperforms state-of-the-art model diffing methods both in identifying relevant tokens and in downstream performance when an interpretability agent is given access to the extracted token set; on models with injected biases, it identifies more than one third of the biases without targeted probing. Overall, our framework shows promise in developing auditing tools to detect finetuning objectives."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sf-edges",
+      "kind": "literal",
+      "answerable": true,
+      "query": "Which signals identify bias-prone edges in SF-GNN, and how are those edges filtered during message passing?",
+      "facts": [
+        {
+          "id": "sf-edges-f1",
+          "text": "It combines sensitive homophily with hub participation and triadic closure."
+        },
+        {
+          "id": "sf-edges-f2",
+          "text": "Stochastic filtering at each message-passing step downweights or removes those edges while preserving the remaining graph structure."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26437v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "Subgraph Filtering for Fair Graph Neural Networks",
+              "source_excerpt": "Haohui Lu 1[0000 - 0002 - 5338 - 156 X ] , Jiyuan Tian 2 , Fangyu Zhou 3[0000 - 0001 - 8499 - 9920] , and Shahadat Uddin 3[0000 - 0003 - 0091 - 6919]\n1 Molly Wardaguga Institute for First Nations Birth Rights, Charles Darwin University, Darwin, Australia\nhaohui.lu@cdu.edu.au\n2 Discipline of Business Analytics, The University of Sydney, Sydney, Australia\njiyuan.tian@sydney.edu.au\n3 School of Electrical and Computer Engineering, The University of Sydney, Sydney,\nAustralia\n{fangyu.zhou, shahadat.uddin}@sydney.edu.au\nAbstract. Graph neural networks (GNNs) can exhibit unfair behavior even when sensitive attributes are excluded from node features, because graph topology and message passing propagate group-correlated signals under sensitive homophily. Existing fairness-aware GNN methods mainly constrain representations or prediction distributions at a global level, without explicitly controlling the local structural pathways through which biased information propagates during aggregation. We propose Subgraph Filtering for Fair Graph Neural Networks (SF-GNN), a lightweight and architecture-agnostic framework that mitigates structural bias at its source. SF-GNN identifies bias-prone edges by combining sensitive homophily with structural propagation amplifiers, including hub participation and triadic closure. It then incorporates stochastic edge filtering into each message-passing step to selectively downweight or remove these edges while preserving the remaining graph structure. Training further incorporates a statistical-parity regularizer with a warmup schedule to stabilize optimization. Experiments on five benchmark datasets show that SF-GNN achieves consistent fairness improvements while maintaining competitive predictive performance, leading to a better fairness-accuracy trade-off than recent fairness-aware GNN baselines.\nKeywords: Graph neural networks · Fairness-aware learning · Algorithmic fairness · Graph representation learning"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sf-penalty",
+      "kind": "paraphrase",
+      "answerable": true,
+      "query": "What penalty and warm-up schedule stabilize training in SF-GNN?",
+      "facts": [
+        {
+          "id": "sf-penalty-f1",
+          "text": "Training uses a statistical-parity regularizer with a linear warm-up schedule."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26437v1",
+              "section_index": 2,
+              "chunk_index": 1,
+              "section_title": "1 Introduction",
+              "source_excerpt": "hese limitations motivate fairness mechanisms that explicitly intervene along aggregation pathways, controlling information flow through bias-prone subgraphs while preserving predictive utility [16].\nTo address this gap, we introduce Subgraph Filtering for Fair Graph Neural Networks (SF-GNN), a framework that targets structural bias at its source by identifying and attenuating edges most likely to amplify sensitive-group information during aggregation. SF-GNN identifies bias-prone edges using a conjunction of sensitive homophily with structural amplifiers, including hub participation and triadic closure, and integrates stochastic edge-dependent filtering into each message-passing step. Specifically, SF-GNN selectively drops or downweights bias-prone edges while preserving the remaining graph structure, thereby weakening feedback loops that reinforce sensitive information without substantially disrupting informative connectivity. The framework is architecture-agnostic and introduces minimal computational overhead, requiring only a lightweight preprocessing stage. To stabilize optimization, the training objective further incorporates a statistical-parity regularizer with a linear warm-up schedule, reducing the risk of over-penalization during early training.\nWe evaluate SF-GNN on five widely used benchmark datasets and compare against standard GNNs, graph transformers, and recent fairness-aware baselines. Across datasets, SF-GNN achieves favorable fairness-accuracy trade-offs, consistently reducing statistical parity disparities while maintaining competitive predictive performance. These results highlight the effectiveness of fine-grained structural control over bias propagation in fairness-aware graph learning.\nOur main contributions are summarized as follows:\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi-access-edges",
+      "kind": "multi",
+      "answerable": true,
+      "query": "What model access is needed by Diff Mining, and which bias-prone edge signals are used in SF-GNN?",
+      "facts": [
+        {
+          "id": "multi-access-edges-f1",
+          "text": "Diff Mining needs only output logits without model internals."
+        },
+        {
+          "id": "multi-access-edges-f2",
+          "text": "SF-GNN combines sensitive homophily with hub participation and triadic closure."
+        }
+      ],
+      "support": [
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26462v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Finetuning has become the gold standard for refining existing behaviors and inducing new ones in language models, yet it often remains unclear exactly which behaviors emerge during this process. As models grow ever more capable, understanding finetuning better becomes increasingly important, particularly since unwanted behaviors may arise during finetuning. In this paper, we introduce Diff Mining , a simple yet effective framework for identifying what a finetuned model has learned by comparing its logits to those of its base model. Diff Mining effectively surfaces salient tokens that are amplified in the finetuned model, serving as a fingerprint of its training-even on text unrelated to the finetuning domain. Unlike many existing model diffing methods which require model internals, Diff Mining only needs access to output logits and scales to large models. The framework consists of two modular stages: (i) extracting per-context logit differences between the finetuned and base models on a reference corpus, and (ii) aggregating the resulting signals to construct an interpretable token set representing the finetune. For aggregation, we explore both a simple Top-K frequency method and a Non-negative Matrix Factorization (NMF)-based approach for disentangling multiple finetuning objectives into distinct token clusters. Empirically, Diff Mining succeeds across diverse settings: on finetune domain detection, it significantly outperforms state-of-the-art model diffing methods both in identifying relevant tokens and in downstream performance when an interpretability agent is given access to the extracted token set; on models with injected biases, it identifies more than one third of the biases without targeted probing. Overall, our framework shows promise in developing auditing tools to detect finetuning objectives."
+            }
+          ]
+        },
+        {
+          "locators": [
+            {
+              "arxiv_id": "2608.26437v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "Subgraph Filtering for Fair Graph Neural Networks",
+              "source_excerpt": "Haohui Lu 1[0000 - 0002 - 5338 - 156 X ] , Jiyuan Tian 2 , Fangyu Zhou 3[0000 - 0001 - 8499 - 9920] , and Shahadat Uddin 3[0000 - 0003 - 0091 - 6919]\n1 Molly Wardaguga Institute for First Nations Birth Rights, Charles Darwin University, Darwin, Australia\nhaohui.lu@cdu.edu.au\n2 Discipline of Business Analytics, The University of Sydney, Sydney, Australia\njiyuan.tian@sydney.edu.au\n3 School of Electrical and Computer Engineering, The University of Sydney, Sydney,\nAustralia\n{fangyu.zhou, shahadat.uddin}@sydney.edu.au\nAbstract. Graph neural networks (GNNs) can exhibit unfair behavior even when sensitive attributes are excluded from node features, because graph topology and message passing propagate group-correlated signals under sensitive homophily. Existing fairness-aware GNN methods mainly constrain representations or prediction distributions at a global level, without explicitly controlling the local structural pathways through which biased information propagates during aggregation. We propose Subgraph Filtering for Fair Graph Neural Networks (SF-GNN), a lightweight and architecture-agnostic framework that mitigates structural bias at its source. SF-GNN identifies bias-prone edges by combining sensitive homophily with structural propagation amplifiers, including hub participation and triadic closure. It then incorporates stochastic edge filtering into each message-passing step to selectively downweight or remove these edges while preserving the remaining graph structure. Training further incorporates a statistical-parity regularizer with a warmup schedule to stabilize optimization. Experiments on five benchmark datasets show that SF-GNN achieves consistent fairness improvements while maintaining competitive predictive performance, leading to a better fairness-accuracy trade-off than recent fairness-aware GNN baselines.\nKeywords: Graph neural networks · Fairness-aware learning · Algorithmic fairness · Graph representation learning"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unsupported-diff-price",
+      "kind": "unsupported_related",
+      "answerable": false,
+      "query": "What monthly subscription price is charged for Diff Mining?",
+      "facts": [],
+      "support": []
+    },
+    {
+      "id": "unsupported-sf-energy",
+      "kind": "unsupported_related",
+      "answerable": false,
+      "query": "What kilowatt-hour energy cost does SF-GNN report for its five benchmark datasets?",
+      "facts": [],
+      "support": []
+    }
+  ]
+}

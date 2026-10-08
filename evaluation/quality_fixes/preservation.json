@@ -1,0 +1,94 @@
+{
+  "all_initial_files_preserved": true,
+  "initial_file_count": 113,
+  "scoped_changes": [
+    "src\\config.py",
+    "src\\commands\\evaluate_retrieval.py",
+    "src\\services\\rag\\excerpts.py",
+    "src\\services\\rag\\service.py",
+    "tests\\unit\\test_rag_excerpts.py",
+    "tests\\unit\\test_rag_service.py",
+    "tests\\unit\\test_retrieval_evaluation.py",
+    "README.md",
+    "TESTING.md"
+  ],
+  "unchanged_initial_files": 104,
+  "frozen_files_sha256": {
+    "evaluation\\benchmark.json": "2abd4cb38a47fc77619f34b221ac9fc190ea85355ee9ec1e4631a045095b9489",
+    "evaluation\\diagnoses.v1.json": "908fbae32e69b53bfbb9d565ea26fb4609498020b2638df24f065eaec0240ed2",
+    "evaluation\\ERRATA.md": "bceb092adcf6f59349efdb78838af5f3127950d744a5c5c930dc1129db13a43f",
+    "evaluation\\PROTOCOL.md": "37bd5d18f9b874ef873468d89b3f77464be73abcf481c067a10e380f292cf92d",
+    "evaluation\\REPORT.md": "0cd58899c41d07cf8e5a37b334b1bc4cb6bac1ec11d2f6351017464985fc15b0",
+    "evaluation\\results.v1.json": "3f02a53dad346523feb1d0f2d824e6428a8e3065f03866fd433640d8af96d39f",
+    "evaluation\\retrieval_adjudications.v1.json": "b6a2f19fcab8da4d27ffaa72959275836e070fdde523d66a7ef4eb21e1880f0e",
+    "evaluation\\semantic_reviews.v1.json": "fff7609eec5bece1b04645640597f80b1fe2d369d544644002010e1405c39a6c"
+  },
+  "corpus_state": {
+    "paper_count": 58,
+    "chunk_count": 2775,
+    "alias": {
+      "paper-chunks-v2": {
+        "aliases": {
+          "paper-chunks": {}
+        }
+      }
+    },
+    "v1_count": 1221,
+    "paper_digest": "fe1188f2bcf0a15b87585ddcc53824e909319683cf99e4c6ae4705a2f1f47c0d",
+    "chunk_digest": "240d4fbab63f8fe58447859b488c3e0379d1a8c896b6bf9c30c90f634cfe5068"
+  },
+  "all_eight_corpus_snapshots_equal": true,
+  "models": {
+    "nomic-embed-text:latest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+    "llama3.2:1b": "baf6a787fdffd633537aa2eb51cfd54cb93ff08e28040095462bb63daf552878"
+  },
+  "finalized_source_unchanged": true,
+  "final_source_sha256": {
+    "src/services/rag/excerpts.py": "a2c767adb54f945c59e773e5919ed5841619f954c7d2c5fe8017c3414bb693cb",
+    "src/services/rag/service.py": "04c9e4b01aca2a2aae4f04117f9833e721e1b8ec2468d3a03f97458011f4e470",
+    "src/config.py": "e5baf85386999ebe7ba9e4e57075b5a15bc2aadda74fdac7f52381ced1ab8d05",
+    "src/commands/evaluate_retrieval.py": "d06e7290fd57a5b0d6eeeb9353a9a9b7cc103fd61b73afefa2fb75efacbfd80f",
+    "evaluation/quality_fixes/final_holdout.json": "c286e1225acedfedaf9f81b7309b897744f330b55dabd1213a76f1a08ff3b8cd"
+  },
+  "runs": [
+    {
+      "run": "before",
+      "calls": 96,
+      "successful_answers": 46,
+      "failures": 2,
+      "citation_checks": 356,
+      "max_words": 106
+    },
+    {
+      "run": "after",
+      "calls": 96,
+      "successful_answers": 48,
+      "failures": 0,
+      "citation_checks": 370,
+      "max_words": 97
+    },
+    {
+      "run": "final",
+      "calls": 56,
+      "successful_answers": 28,
+      "failures": 0,
+      "citation_checks": 206,
+      "max_words": 88
+    },
+    {
+      "run": "regression",
+      "calls": 32,
+      "successful_answers": 12,
+      "failures": 4,
+      "citation_checks": 96,
+      "max_words": 95
+    }
+  ],
+  "checks": {
+    "pytest_passed": 377,
+    "existing_integration_skips": 32,
+    "ruff": "passed",
+    "mypy": "passed",
+    "mutation": "7 failures when overlap filter inverted; source restored byte-for-byte"
+  }
+}
