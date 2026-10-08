@@ -9,6 +9,7 @@ from opensearchpy.exceptions import OpenSearchException
 from src.config import get_settings
 from src.db.factory import make_database
 from src.exceptions import GroundingError, OllamaException, OllamaResponseError, OllamaTimeoutError, UnsupportedModelError
+from src.middlewares import OperationalMiddleware
 from src.routers import ask, papers, ping, search
 from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
@@ -63,6 +64,7 @@ app = FastAPI(
     version=os.getenv("APP_VERSION", "0.1.0"),
     lifespan=lifespan,
 )
+app.add_middleware(OperationalMiddleware)
 
 @app.exception_handler(OpenSearchException)
 async def search_backend_unavailable(request: Request, exc: Exception) -> JSONResponse:
@@ -72,7 +74,7 @@ async def search_backend_unavailable(request: Request, exc: Exception) -> JSONRe
     property of the dependency, not of any one endpoint. A missing index does not
     arrive here — the search service answers that with an empty result.
     """
-    logger.error("Search backend failed for %s: %s", request.url.path, exc)
+    logger.error("Search backend failed: %s", type(exc).__name__)
     return JSONResponse(status_code=503, content={"detail": "Search is unavailable"})
 
 
@@ -114,4 +116,4 @@ app.include_router(ask.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, port=8000, host="0.0.0.0")
+    uvicorn.run(app, port=8000, host="127.0.0.1", access_log=False)

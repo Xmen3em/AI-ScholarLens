@@ -1,6 +1,6 @@
 from typing import Annotated, List, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -50,6 +50,21 @@ class Settings(DefaultSettings):
     debug: bool = True
     environment: str = "development"
     service_name: str = "AI-ScholarLens"
+    api_key: SecretStr | None = Field(default=None, min_length=32)
+    api_requests_per_minute: int = Field(default=60, ge=1)
+    api_generations_per_minute: int = Field(default=6, ge=1)
+    api_rate_limit_path: str = "./data/rate_limits.sqlite3"
+
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def empty_key(cls, value):
+        return None if value == "" else value
+
+    @model_validator(mode="after")
+    def require_access_key(self):
+        if self.environment not in {"development", "test"} and self.api_key is None:
+            raise ValueError("API_KEY is required outside development/test")
+        return self
     
     postgres_database_url: str = "postgresql://rag_user:rag_password@localhost:5432/rag_db"
     postgres_echo_sql: bool = False

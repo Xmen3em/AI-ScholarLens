@@ -1,7 +1,8 @@
 import json
+import logging
 
 import pytest
-from src.dependencies import get_ollama, get_rag
+from src.dependencies import get_ollama, get_rag, get_search
 from src.exceptions import GroundingError, OllamaConnectionError, OllamaTimeoutError, UnsupportedModelError
 from src.main import app
 from src.schemas.api.rag import AskRequest, AskResponse
@@ -165,7 +166,8 @@ async def test_stream_orders_sources_deltas_and_done(client, rag_service):
 
 
 @pytest.mark.anyio
-async def test_stream_emits_generic_error_instead_of_done_when_grounding_fails(client):
+async def test_stream_emits_generic_error_instead_of_done_when_grounding_fails(client, caplog):
+    caplog.set_level(logging.INFO, logger="src.operations")
     app.dependency_overrides[get_rag] = lambda: StubRAG(invalid_stream=True)
     try:
         response = await client.post("/api/v1/stream", json={"query": "grounded rag"})
@@ -177,6 +179,12 @@ async def test_stream_emits_generic_error_instead_of_done_when_grounding_fails(c
     assert all(name != "done" for name, _ in events)
     assert events[-1][1] == {"error": "Answer generation failed. Discard partial output."}
     assert "details must not leak" not in response.text
+    telemetry = [json.loads(r.message) for r in caplog.records if r.name == "src.operations"]
+    stream_error = next(e for e in telemetry if e["event"] == "rag_stream_error")
+    complete = next(e for e in telemetry if e["event"] == "http_request_completed")
+    assert stream_error["request_id"] == complete["request_id"] == response.headers["X-Request-ID"]
+    assert complete["outcome"] == "stream_error"
+    assert "details must not leak" not in json.dumps(telemetry)
 
 
 @pytest.mark.anyio
@@ -243,6 +251,8 @@ class HealthyDatabase:
 
 @pytest.mark.anyio
 async def test_health_is_503_when_default_generation_model_is_missing(client):
+    from tests.api.test_operational_health import SearchHealth
+    app.dependency_overrides[get_search] = lambda: SearchHealth()
     result = OllamaReadiness(
         status="unhealthy", installed=["nomic-embed-text:latest"], missing_required=["llama3.2:1b"], missing_optional=[]
     )
@@ -255,6 +265,7 @@ async def test_health_is_503_when_default_generation_model_is_missing(client):
     finally:
         app.dependency_overrides.pop(get_ollama, None)
         app.dependency_overrides.pop(get_database, None)
+        app.dependency_overrides.pop(get_search, None)
 
     assert response.status_code == 503
     assert response.json()["status"] == "unhealthy"
@@ -263,6 +274,8 @@ async def test_health_is_503_when_default_generation_model_is_missing(client):
 
 @pytest.mark.anyio
 async def test_health_is_200_and_degraded_when_only_optional_model_is_missing(client):
+    from tests.api.test_operational_health import SearchHealth
+    app.dependency_overrides[get_search] = lambda: SearchHealth()
     result = OllamaReadiness(
         status="degraded", installed=["llama3.2:1b"], missing_required=[], missing_optional=["nomic-embed-text:latest"]
     )
@@ -275,6 +288,7 @@ async def test_health_is_200_and_degraded_when_only_optional_model_is_missing(cl
     finally:
         app.dependency_overrides.pop(get_ollama, None)
         app.dependency_overrides.pop(get_database, None)
+        app.dependency_overrides.pop(get_search, None)
 
     assert response.status_code == 200
     assert response.json()["status"] == "degraded"

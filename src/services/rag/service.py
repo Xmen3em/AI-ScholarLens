@@ -14,6 +14,7 @@ import anyio
 from pydantic import ValidationError
 from src.config import Settings
 from src.exceptions import GroundingError, OllamaResponseError, UnsupportedModelError
+from src.operations import emit_event
 from src.schemas.api.rag import AskRequest, AskResponse, GeneratedAnswer, SourcesEvent
 from src.schemas.api.search import ChunkSearchResponse, HybridSearchResponse
 from src.schemas.ollama import OllamaGenerateResponse
@@ -120,13 +121,8 @@ class RAGService:
         mode: Literal["hybrid", "bm25"] = (
             "hybrid" if isinstance(result, HybridSearchResponse) and result.mode == "hybrid" else "bm25"
         )
-        logger.info(
-            "rag_retrieval duration_ms=%s paper_groups=%s passages=%s mode=%s",
-            elapsed_ms,
-            len(result.hits),
-            sum(len(paper.passages) for paper in result.hits),
-            mode,
-        )
+        emit_event("rag_retrieval", duration_ms=elapsed_ms, paper_groups=len(result.hits),
+                   passages=sum(len(paper.passages) for paper in result.hits), mode=mode)
         context = build_context(result.hits, character_budget=EVIDENCE_CHARACTER_BUDGET)
         return PreparedRAG(request=request, context=context, search_mode=mode, model=model,
                            candidates_per_passage=self.settings.rag_sentence_candidates_per_passage)
@@ -153,7 +149,8 @@ class RAGService:
         try:
             answer = self._selected_answer(prepared, generated.response, structured=True)
             self.validate_answer(prepared, answer)
-        except (GroundingError, OllamaResponseError):
+        except (GroundingError, OllamaResponseError) as exc:
+            emit_event("rag_selector_retry", level=logging.WARNING, reason=type(exc).__name__, attempt=1)
             # Retry invalid selections once as plain IDs against the same evidence.
             # Never rewrite model claims or invent citations.
             generated = await self.ollama.generate(
@@ -179,12 +176,8 @@ class RAGService:
         try:
             validate_answer_evidence(answer, prepared.context.citations)
         except ValueError as exc:
-            logger.warning(
-                "rag_answer_validation_failed model=%s mode=%s reason=%s",
-                prepared.model,
-                prepared.search_mode,
-                exc,
-            )
+            emit_event("rag_answer_validation_failed", level=logging.WARNING, model=prepared.model,
+                       mode=prepared.search_mode, reason=str(exc).split(":")[0])
             raise GroundingError("Generated answer failed grounding validation") from exc
 
     @staticmethod
@@ -242,6 +235,7 @@ class RAGService:
                     raise ValueError("invalid evidence selection")
                 selection = [] if value == "NONE" else value.split()
             except (ValidationError, ValueError):
+                emit_event("rag_selection_validation_failed", level=logging.WARNING, reason="invalid structured output")
                 raise OllamaResponseError("Ollama returned invalid structured output") from None
         else:
             selection = [] if raw.strip() == "NONE" else raw.split()
@@ -249,7 +243,7 @@ class RAGService:
             return render_selection(selection, build_excerpts(prepared.context.citations, prepared.request.query,
                                                              candidates_per_passage=prepared.candidates_per_passage))
         except ValueError as exc:
-            logger.warning("rag_selection_validation_failed reason=%s", exc)
+            emit_event("rag_selection_validation_failed", level=logging.WARNING, reason=str(exc))
             raise GroundingError("Generated answer failed grounding validation") from exc
 
     @staticmethod
@@ -271,12 +265,7 @@ class RAGService:
 
     @staticmethod
     def _log_generation(result: OllamaGenerateResponse) -> None:
-        logger.info(
-            "rag_generation load_ns=%s prompt_eval_ns=%s generation_ns=%s prompt_tokens=%s output_tokens=%s done_reason=%s",
-            result.load_duration,
-            result.prompt_eval_duration,
-            result.eval_duration,
-            result.prompt_eval_count,
-            result.eval_count,
-            result.done_reason,
-        )
+        emit_event("rag_generation", load_ns=result.load_duration, prompt_eval_ns=result.prompt_eval_duration,
+                   generation_ns=result.eval_duration, prompt_tokens=result.prompt_eval_count,
+                   output_tokens=result.eval_count,
+                   done_reason=result.done_reason if result.done_reason in {"stop", "length", "load", "unload", None} else "unknown")

@@ -121,7 +121,8 @@ async def stream_answer(
     try:
         timeout = httpx.Timeout(300.0, connect=10.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
-            async with client.stream("POST", url, json=payload) as response:
+            key = os.getenv("API_KEY", "")
+            async with client.stream("POST", url, json=payload, headers={"X-API-Key": key} if key else {}) as response:
                 if response.is_error:
                     raw = await response.aread()
                     state.error = _api_error(response.status_code, raw)

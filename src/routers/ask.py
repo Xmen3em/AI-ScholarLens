@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from src.dependencies import RAGDep
+from src.operations import emit_event, request_context
 from src.schemas.api.rag import AskRequest, AskResponse, DeltaEvent, DoneEvent, ErrorEvent
 from src.services.rag.context import validate_answer_length
 from src.services.rag.service import INSUFFICIENT_EVIDENCE_ANSWER, PreparedRAG
@@ -45,8 +46,11 @@ async def _events(prepared: PreparedRAG, rag: RAGDep) -> AsyncIterator[str]:
                 yield _event("delta", DeltaEvent(delta=chunk.response))
         rag.validate_answer(prepared, answer)
         yield _event("done", DoneEvent(answer=answer))
-    except Exception:
-        logger.exception("RAG stream failed after response started")
+    except Exception as exc:
+        context = request_context.get()
+        if context is not None:
+            context["stream_failed"] = True
+        emit_event("rag_stream_error", level=logging.ERROR, reason=type(exc).__name__)
         yield _event("error", ErrorEvent(error="Answer generation failed. Discard partial output."))
 
 

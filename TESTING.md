@@ -632,3 +632,30 @@ retrieving or writing corpus data. It compares original, expanded and conservati
 default selection behavior. Saved corpus runs must receive **new semantic
 reviews** before `--score`; never copy reviews to changed answers. Preserve the
 frozen v1 dataset and its original judgments.
+
+## Week 6 local operational controls
+
+Read [the audit](tasks/plan.md) and [operations guide](docs/operations.md).
+The approved scope is local controls and verification; deployment and further
+selector tuning remain outside this pass.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_operational_controls.py tests/unit/test_backup.py tests/api/test_operational_health.py tests/api/test_rag_routes.py -q
+.venv-win/Scripts/python.exe -m pytest -q
+.venv-win/Scripts/python.exe -m ruff check src tests
+.venv-win/Scripts/python.exe -m mypy src
+```
+
+The new checks cover authentication before work, shared/concurrent budgets,
+rate-store failure, stream duration/correlation and safe diagnostics, dependency
+readiness, archive integrity and isolated restore targeting. API tests use
+isolated temporary budget files and high limits so unrelated test requests do
+not exhaust the real development budget. Dedicated control tests exercise the
+actual configured limits.
+
+With Docker available, `docker compose config --quiet` validates configuration
+without launching anything. Use a new backup directory for the actual restore
+drill; commands and limitations are in the operations guide. Do not point any
+restore at the live database or replace existing search/PDF/model volumes.
+The local evidence lives in `test_output/week6/`; existing evaluation datasets
+and judgments remain unchanged.
