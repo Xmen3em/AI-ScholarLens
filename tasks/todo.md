@@ -1,5 +1,19 @@
 # Week 6 local verification
 
+Local activation approved on 2026-10-12: rebuild only the API, configure a key,
+and verify access, limits, logs, readiness and the normal Gradio client. See
+`test_output/week6-activation/` for acceptance/preservation evidence.
+
+- [x] Activate the API with a saved local key and localhost binding.
+- [x] Verify 401/429 behavior, healthy readiness under exhausted budgets and window reset.
+- [x] Verify correlated request/retrieval/generation logs and active source parity.
+- [x] Verify the normal Gradio UI renders a completed answer and paper links.
+- [x] Confirm corpus/index/model/evaluation preservation and unchanged dependency containers.
+
+Activation checks: 476 tests passed including Docker integration tests, Ruff and
+mypy passed, 72 source files match the active image, and the Gradio client is
+available at `http://127.0.0.1:7861`. No external deployment or selector tuning.
+
 - [x] Audit four areas and compare the course reference before implementation.
 - [x] Request IDs, total latency and safe selector/stream JSON events; verify success, HTTP failure and SSE failure.
 - [x] API key and shared budgets; verify rejection before work, window reset, concurrent workers and store failure.

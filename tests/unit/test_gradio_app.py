@@ -1,3 +1,4 @@
+import pytest
 from src.gradio_app import StreamState, apply_event, build_demo, build_payload, parse_sse_text, render_output
 
 
@@ -65,3 +66,27 @@ def test_gradio_interface_constructs_with_configured_controls(settings):
     demo = build_demo(settings)
 
     assert demo is not None
+
+
+@pytest.mark.anyio
+async def test_stream_client_uses_key_from_dotenv_without_exposing_it(tmp_path, monkeypatch, stub_httpx):
+    import httpx
+    from src import gradio_app
+    from src.config import Settings
+
+    key = "development-key-from-dotenv-file-12345"
+    env_file = tmp_path / ".env"
+    env_file.write_text(f"API_KEY={key}\n")
+    monkeypatch.delenv("API_KEY", raising=False)
+    monkeypatch.setattr(gradio_app, "get_settings", lambda: Settings(_env_file=env_file))
+
+    def respond(request):
+        assert request.headers["X-API-Key"] == key
+        return httpx.Response(200, text='event: done\ndata: {"answer":"Verified answer"}\n\n',
+                              headers={"Content-Type": "text/event-stream"})
+
+    calls = stub_httpx(respond)
+    updates = [update async for update in gradio_app.stream_answer("test", 3, False, "llama3.2:1b", [])]
+    assert len(calls) == 1
+    assert "Verified answer" in updates[-1]
+    assert all(key not in update for update in updates)

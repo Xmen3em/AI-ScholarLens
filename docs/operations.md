@@ -35,7 +35,8 @@ Set `API_KEY` to a random secret of at least 32 characters; send it as `X-API-Ke
 The key is optional only when `ENVIRONMENT` is exactly `development` or `test`.
 All other environments refuse startup without it. With a key configured, every
 route including docs and readiness requires it except `/api/v1/ping`.
-The Gradio client forwards its server-side `API_KEY` environment variable.
+The Gradio client reads the key through application settings, including `.env`,
+and forwards it server-side. The normal launcher binds to `127.0.0.1:7861`.
 
 Defaults are **60 requests per minute**, plus **6 generation requests per minute**
 shared by `/api/v1/ask` and `/api/v1/stream`. These are global instance budgets,
@@ -54,9 +55,9 @@ Neither forwarded IP headers nor a spoofable request ID determine identity.
 The Compose file publishes all service ports on `127.0.0.1`. It still uses
 development PostgreSQL credentials, disabled OpenSearch security, and local HTTP;
 it is not a production deployment configuration. Existing running containers
-retain their previous bindings until recreated. This pass verified a temporary
-loopback-only API and left the existing stack untouched. Non-API port binding
-changes were validated as configuration, not applied to running services.
+retain their previous bindings until recreated. The local API was rebuilt and
+activated on 2026-10-12, with a configured key and localhost binding. Other
+services retain their previous bindings; those services were not recreated.
 
 ## Liveness and readiness
 
@@ -153,6 +154,22 @@ Artifacts are under ignored `test_output/week6/`: `runtime.json`,
 `runtime-docker.log`, `database-backup/manifest.json`,
 `database-backup/restore-drill.json` and `preservation.json`. The original runtime
 was not rebuilt or restarted, and no production deployment occurred.
+
+On 2026-10-12, the user approved local activation. Only the API was rebuilt and
+recreated, with its previous image retained as `scholarlens-api:pre-week6-activation`.
+A generated key was saved in the ignored `.env` file. Gradio's dotenv key handling
+was fixed with a regression test, and its launcher was bound to localhost.
+All 476 tests passed, including Docker integration tests; Ruff and mypy passed.
+Active-container acceptance evidence is under `test_output/week6-activation/`.
+The normal Gradio UI rendered a complete answer and source links in isolated
+Chrome, with zero uncaught browser errors. The activated API rejects missing or
+wrong keys, enforces both budgets, preserves readiness during quota exhaustion
+and resumes ordinary traffic after the window reset. Source parity matched 72
+files, and dependency container IDs/corpus/index/model/evaluation fingerprints
+were preserved. A new empty-alias OpenSearch query-telemetry inventory entry was
+recorded separately; all existing alias entries and actual targets were unchanged.
+Deployment, full-volume recovery and answer-quality tuning remain outside this
+activation pass; the previously measured answer-quality defects remain open.
 
 Preservation checks matched all 58 full paper rows, 58 paper-index documents,
 1,221 v1 chunks, 2,775 v2 chunks including embeddings, all alias targets,
