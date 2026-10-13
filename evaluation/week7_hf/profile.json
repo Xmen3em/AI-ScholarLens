@@ -1,0 +1,33 @@
+{
+  "version": "hosted-agent-v1",
+  "local_manifest_sha256": "58b099eead49d8fd22d96be7a7ceba3142de9524ce6f80846e2e8ddee884b0db",
+  "model_pairs": ["openai/gpt-oss-120b:groq", "openai/gpt-oss-120b:fireworks-ai"],
+  "prices_per_million": {
+    "openai/gpt-oss-120b:groq": {"input": 0.15, "output": 0.75},
+    "openai/gpt-oss-120b:fireworks-ai": {"input": 0.15, "output": 0.60}
+  },
+  "qualification_calls": 5,
+  "maximum_outbound_attempts": 773,
+  "development_jobs": 64,
+  "holdout_jobs": 192,
+  "admission_mib": {"bm25": 1024, "hybrid": 1536},
+  "live_margin_mib": 600,
+  "emergency_floor_mib": 384,
+  "generations_per_minute": 6,
+  "window_seconds": 61,
+  "baseline_p95_ms": 10000,
+  "agent_p95_ms": 20000,
+  "deadline_seconds": 90,
+  "node_timeout_seconds": 30,
+  "hf_timeout_seconds": 30,
+  "candidates_per_passage": 1,
+  "embedding_model": "nomic-embed-text",
+  "temperature": 0,
+  "reasoning_effort": "low",
+  "context_limit": 8192,
+  "template_reserve": 512,
+  "controller_output_limit": 256,
+  "selector_output_limit": 512,
+  "maximum_response_bytes": 65536,
+  "maximum_content_characters": 8192
+}

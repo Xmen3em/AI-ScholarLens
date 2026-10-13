@@ -1,0 +1,1395 @@
+{
+  "version": "week7-agent-holdout-v2",
+  "split": "holdout",
+  "reviewed_on": "2026-10-13",
+  "reviewer": "Codex stored-section and indexed-passage review; no model outputs",
+  "corpus": {
+    "paper_count": 58,
+    "chunk_count": 2775,
+    "paper_digest": "fe1188f2bcf0a15b87585ddcc53824e909319683cf99e4c6ae4705a2f1f47c0d",
+    "chunk_digest": "240d4fbab63f8fe58447859b488c3e0379d1a8c896b6bf9c30c90f634cfe5068",
+    "v1_count": 1221,
+    "alias": {
+      "paper-chunks-v2": {
+        "aliases": {
+          "paper-chunks": {}
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "week7-holdout-credit-dataset-literal",
+      "kind": "literal",
+      "query": "Which dataset is used in When Does a Classifier Help an LLM?",
+      "pair_id": "holdout-credit-dataset",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "credit-dataset-f1",
+          "text": "The experiments use the Default of Credit Card Clients dataset."
+        }
+      ],
+      "support": [
+        {
+          "id": "credit-dataset",
+          "fact_ids": [
+            "credit-dataset-f1"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30086v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "When Does a Classifier Help an LLM? Classifier-Guided Prompting and Hybrid Classifier-LLM Models for Credit-Default Prediction",
+              "source_excerpt": "We experiment on the Default of Credit Card Clients dataset, and report recall, F1, and the area under the ROC and precision-recall curves, with bootstrap confidence intervals.",
+              "chunk_sha256": "374ae73e8bf5865a7d519558ffc26bfcb5fdcf3241745e8efb1d6f7bbd8baecf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-credit-dataset-paraphrase",
+      "kind": "paraphrase",
+      "query": "What collection of borrowers supplies the experiments in the classifier-guided credit-default prompting paper?",
+      "pair_id": "holdout-credit-dataset",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "credit-dataset-f1",
+          "text": "The experiments use the Default of Credit Card Clients dataset."
+        }
+      ],
+      "support": [
+        {
+          "id": "credit-dataset",
+          "fact_ids": [
+            "credit-dataset-f1"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30086v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "When Does a Classifier Help an LLM? Classifier-Guided Prompting and Hybrid Classifier-LLM Models for Credit-Default Prediction",
+              "source_excerpt": "We experiment on the Default of Credit Card Clients dataset, and report recall, F1, and the area under the ROC and precision-recall curves, with bootstrap confidence intervals.",
+              "chunk_sha256": "374ae73e8bf5865a7d519558ffc26bfcb5fdcf3241745e8efb1d6f7bbd8baecf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-flow-validation-literal",
+      "kind": "literal",
+      "query": "How are attribution scores evaluated in Tracing Generated Samples to Training-Data Clusters in Flow-Matching Models?",
+      "pair_id": "holdout-flow-validation",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "flow-validation-f1",
+          "text": "Attribution is evaluated using independently retrained leave-one-cluster-out (LOCO) models."
+        }
+      ],
+      "support": [
+        {
+          "id": "flow-validation",
+          "fact_ids": [
+            "flow-validation-f1"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30081v2",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We evaluate these attribution scores using independently retrained leave-one-cluster-out (LOCO) models, and compare with several attribution baselines using two different flow-matching latent spaces.",
+              "chunk_sha256": "a800b2dbadc84bdb630cb4ece6582a907b1ad5a10b7089be00fee1c4a1bf2cc3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-flow-validation-paraphrase",
+      "kind": "paraphrase",
+      "query": "What counterfactual reference models are used to check whether a training-data cluster influenced a flow-matched generated sample?",
+      "pair_id": "holdout-flow-validation",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "flow-validation-f1",
+          "text": "Attribution is evaluated using independently retrained leave-one-cluster-out (LOCO) models."
+        }
+      ],
+      "support": [
+        {
+          "id": "flow-validation",
+          "fact_ids": [
+            "flow-validation-f1"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30081v2",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We evaluate these attribution scores using independently retrained leave-one-cluster-out (LOCO) models, and compare with several attribution baselines using two different flow-matching latent spaces.",
+              "chunk_sha256": "a800b2dbadc84bdb630cb4ece6582a907b1ad5a10b7089be00fee1c4a1bf2cc3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-alignment-bias-literal",
+      "kind": "literal",
+      "query": "What does stronger temporal alignment change in Compositional Failure in Audio-Visual LLMs, and does it improve conflict resolution?",
+      "pair_id": "holdout-alignment-bias",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "alignment-bias-f1",
+          "text": "Stronger temporal alignment changes answer bias."
+        },
+        {
+          "id": "alignment-bias-f2",
+          "text": "It does not improve compositional conflict resolution in the reported study."
+        }
+      ],
+      "support": [
+        {
+          "id": "alignment-bias",
+          "fact_ids": [
+            "alignment-bias-f1",
+            "alignment-bias-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.27785v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We show that stronger temporal alignment changes answer bias, but do not improve compositional conflict resolution.",
+              "chunk_sha256": "6ffced4fde5ddf3257fa92db1b93a4d53ffacc3bace7d5760100262871f8be1a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-alignment-bias-paraphrase",
+      "kind": "paraphrase",
+      "query": "In the audio-visual cross-modal-conflict study, does tighter timing fix contradictory-input reasoning or mainly shift the model's answer preference?",
+      "pair_id": "holdout-alignment-bias",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "alignment-bias-f1",
+          "text": "Stronger temporal alignment changes answer bias."
+        },
+        {
+          "id": "alignment-bias-f2",
+          "text": "It does not improve compositional conflict resolution in the reported study."
+        }
+      ],
+      "support": [
+        {
+          "id": "alignment-bias",
+          "fact_ids": [
+            "alignment-bias-f1",
+            "alignment-bias-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.27785v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We show that stronger temporal alignment changes answer bias, but do not improve compositional conflict resolution.",
+              "chunk_sha256": "6ffced4fde5ddf3257fa92db1b93a4d53ffacc3bace7d5760100262871f8be1a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-speech-failure-literal",
+      "kind": "literal",
+      "query": "What perceptual and behavioural failures does SpeechGym identify in voice-agent tool use?",
+      "pair_id": "holdout-speech-failure",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "speech-failure-f1",
+          "text": "A misheard waveform value is placed in the correct tool argument slot, causing a failed call and wasted retries/steps."
+        },
+        {
+          "id": "speech-failure-f2",
+          "text": "An insistent caller can induce an unauthorised write that the agent believes is helpful."
+        }
+      ],
+      "support": [
+        {
+          "id": "speech-failure",
+          "fact_ids": [
+            "speech-failure-f1",
+            "speech-failure-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.26432v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "The failures speech introduces are perceptual rather than reasoning deficits: the agent picks the right tool and the right argument slot but fills it with a value misheard from the waveform, and that single error cascades into a failed call, a retry of the same call, and a wasted step budget. A second failure is behavioural: under an insistent caller the agent performs an unauthorised write and ends the episode believing it helped.",
+              "chunk_sha256": "9757105ca113504b92398411b9709fb899747576d1132ab4076a59d6f5dd912b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-speech-failure-paraphrase",
+      "kind": "paraphrase",
+      "query": "In SpeechGym, how can a voice agent fail even after choosing the right tool, and how can pressure from a caller lead to an improper database change?",
+      "pair_id": "holdout-speech-failure",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "speech-failure-f1",
+          "text": "A misheard waveform value is placed in the correct tool argument slot, causing a failed call and wasted retries/steps."
+        },
+        {
+          "id": "speech-failure-f2",
+          "text": "An insistent caller can induce an unauthorised write that the agent believes is helpful."
+        }
+      ],
+      "support": [
+        {
+          "id": "speech-failure",
+          "fact_ids": [
+            "speech-failure-f1",
+            "speech-failure-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.26432v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "The failures speech introduces are perceptual rather than reasoning deficits: the agent picks the right tool and the right argument slot but fills it with a value misheard from the waveform, and that single error cascades into a failed call, a retry of the same call, and a wasted step budget. A second failure is behavioural: under an insistent caller the agent performs an unauthorised write and ends the episode believing it helped.",
+              "chunk_sha256": "9757105ca113504b92398411b9709fb899747576d1132ab4076a59d6f5dd912b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-ttpo-branches-literal",
+      "kind": "literal",
+      "query": "How does TTPO update agreeing and disagreeing rollouts?",
+      "pair_id": "holdout-ttpo-branches",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "ttpo-branches-f1",
+          "text": "Agreeing rollouts are distilled via on-policy self-distillation (OPSD)."
+        },
+        {
+          "id": "ttpo-branches-f2",
+          "text": "Disagreeing rollouts are penalized with Grouped RL."
+        }
+      ],
+      "support": [
+        {
+          "id": "ttpo-branches",
+          "fact_ids": [
+            "ttpo-branches-f1",
+            "ttpo-branches-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.27448v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "Building on this observation, we propose Test-Time Policy Optimization (TTPO) , an asymmetric objective that distills agreeing rollouts via OPSD and penalizes disagreeing rollouts with Grouped RL.",
+              "chunk_sha256": "d4c5a6a2a7731bd4160470fc87a1fc0969f1c65c6d233c3a8686550d7944b569"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-ttpo-branches-paraphrase",
+      "kind": "paraphrase",
+      "query": "Which learning signals does Test-Time Policy Optimization apply to solutions that match the majority answer and to those that differ from it?",
+      "pair_id": "holdout-ttpo-branches",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "ttpo-branches-f1",
+          "text": "Agreeing rollouts are distilled via on-policy self-distillation (OPSD)."
+        },
+        {
+          "id": "ttpo-branches-f2",
+          "text": "Disagreeing rollouts are penalized with Grouped RL."
+        }
+      ],
+      "support": [
+        {
+          "id": "ttpo-branches",
+          "fact_ids": [
+            "ttpo-branches-f1",
+            "ttpo-branches-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.27448v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "Building on this observation, we propose Test-Time Policy Optimization (TTPO) , an asymmetric objective that distills agreeing rollouts via OPSD and penalizes disagreeing rollouts with Grouped RL.",
+              "chunk_sha256": "d4c5a6a2a7731bd4160470fc87a1fc0969f1c65c6d233c3a8686550d7944b569"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-reasoning-benchmarks-literal",
+      "kind": "literal",
+      "query": "Which benchmarks evaluate over-reasoning and under-reasoning in Don't Overthink, Don't Underthink?",
+      "pair_id": "holdout-reasoning-benchmarks",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "reasoning-benchmarks-f1",
+          "text": "The study evaluates on MATH-500."
+        },
+        {
+          "id": "reasoning-benchmarks-f2",
+          "text": "The study evaluates on the GAIA public validation benchmark."
+        }
+      ],
+      "support": [
+        {
+          "id": "reasoning-benchmarks",
+          "fact_ids": [
+            "reasoning-benchmarks-f1",
+            "reasoning-benchmarks-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.26442v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We characterize over-reasoning and underreasoning as recurring failure modes of misallocated reasoning and evaluate them on MATH-500 and the GAIA public validation benchmark.",
+              "chunk_sha256": "3557e76b2c5eb60f170143397dab8b422845553948c3110e8b7cf7955b129a76"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-reasoning-benchmarks-paraphrase",
+      "kind": "paraphrase",
+      "query": "Where does the adaptive-reasoning study test excessive and insufficient deliberation in agentic AI?",
+      "pair_id": "holdout-reasoning-benchmarks",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "reasoning-benchmarks-f1",
+          "text": "The study evaluates on MATH-500."
+        },
+        {
+          "id": "reasoning-benchmarks-f2",
+          "text": "The study evaluates on the GAIA public validation benchmark."
+        }
+      ],
+      "support": [
+        {
+          "id": "reasoning-benchmarks",
+          "fact_ids": [
+            "reasoning-benchmarks-f1",
+            "reasoning-benchmarks-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.26442v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We characterize over-reasoning and underreasoning as recurring failure modes of misallocated reasoning and evaluate them on MATH-500 and the GAIA public validation benchmark.",
+              "chunk_sha256": "3557e76b2c5eb60f170143397dab8b422845553948c3110e8b7cf7955b129a76"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-cross-training",
+      "kind": "multi_paper",
+      "query": "What training signal does SpeechGym use for successful tool calls, and how does TTPO train agreeing versus disagreeing rollouts?",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "cross-training-speech",
+          "text": "SpeechGym uses a per-turn process reward crediting each successful tool call to restore rollout-group variance."
+        },
+        {
+          "id": "ttpo-branches-f1",
+          "text": "Agreeing rollouts are distilled via on-policy self-distillation (OPSD)."
+        },
+        {
+          "id": "ttpo-branches-f2",
+          "text": "Disagreeing rollouts are penalized with Grouped RL."
+        }
+      ],
+      "support": [
+        {
+          "id": "speech-reward",
+          "fact_ids": [
+            "cross-training-speech"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.26432v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "Outcome-only GRPO is gradient-starved here, since almost every rollout group fails identically, while a per-turn process reward crediting each successful tool call restores variance to nearly every group.",
+              "chunk_sha256": "9757105ca113504b92398411b9709fb899747576d1132ab4076a59d6f5dd912b"
+            }
+          ]
+        },
+        {
+          "id": "ttpo-branches",
+          "fact_ids": [
+            "ttpo-branches-f1",
+            "ttpo-branches-f2"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.27448v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "Building on this observation, we propose Test-Time Policy Optimization (TTPO) , an asymmetric objective that distills agreeing rollouts via OPSD and penalizes disagreeing rollouts with Grouped RL.",
+              "chunk_sha256": "d4c5a6a2a7731bd4160470fc87a1fc0969f1c65c6d233c3a8686550d7944b569"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-cross-evaluation",
+      "kind": "multi_paper",
+      "query": "How does the flow-matching training-data attribution study validate counterfactual influence, and how does When Does a Classifier Help an LLM quantify metric uncertainty?",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "cross-evaluation-flow",
+          "text": "The flow-matching attribution paper uses independently retrained LOCO models as counterfactual references."
+        },
+        {
+          "id": "cross-evaluation-credit",
+          "text": "The classifier-guided credit-default paper reports bootstrap confidence intervals for its prediction metrics."
+        }
+      ],
+      "support": [
+        {
+          "id": "cross-flow",
+          "fact_ids": [
+            "cross-evaluation-flow"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30081v2",
+              "section_index": 3,
+              "chunk_index": 0,
+              "section_title": "Abstract",
+              "source_excerpt": "We evaluate these attribution scores using independently retrained leave-one-cluster-out (LOCO) models, and compare with several attribution baselines using two different flow-matching latent spaces.",
+              "chunk_sha256": "a800b2dbadc84bdb630cb4ece6582a907b1ad5a10b7089be00fee1c4a1bf2cc3"
+            }
+          ]
+        },
+        {
+          "id": "cross-credit",
+          "fact_ids": [
+            "cross-evaluation-credit"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30086v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "When Does a Classifier Help an LLM? Classifier-Guided Prompting and Hybrid Classifier-LLM Models for Credit-Default Prediction",
+              "source_excerpt": "We experiment on the Default of Credit Card Clients dataset, and report recall, F1, and the area under the ROC and precision-recall curves, with bootstrap confidence intervals.",
+              "chunk_sha256": "374ae73e8bf5865a7d519558ffc26bfcb5fdcf3241745e8efb1d6f7bbd8baecf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-credit-auc",
+      "kind": "numeric",
+      "query": "According to the abstract of When Does a Classifier Help an LLM, from what AUC-ROC value to what value does adding the classifier's predicted probability raise the LLM?",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "credit-auc-start",
+          "text": "The abstract reports initial LLM AUC-ROC of 0.72 (rounded)."
+        },
+        {
+          "id": "credit-auc-end",
+          "text": "Adding the classifier's predicted probability raises the abstract-reported LLM AUC-ROC to 0.78 (rounded)."
+        }
+      ],
+      "support": [
+        {
+          "id": "credit-auc",
+          "fact_ids": [
+            "credit-auc-start",
+            "credit-auc-end"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.30086v1",
+              "section_index": 1,
+              "chunk_index": 0,
+              "section_title": "When Does a Classifier Help an LLM? Classifier-Guided Prompting and Hybrid Classifier-LLM Models for Credit-Default Prediction",
+              "source_excerpt": "Adding the classifier's predicted probability to the prompt raises the LLM's AUC-ROC from 0.72 to 0.78, matching the random forest, while keeping 0.118 higher recall than it.",
+              "chunk_sha256": "374ae73e8bf5865a7d519558ffc26bfcb5fdcf3241745e8efb1d6f7bbd8baecf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-ttpo-accuracy",
+      "kind": "numeric",
+      "query": "From what percentage to what percentage does TTPO raise Qwen3-1.7B's reported average accuracy in test-time training?",
+      "answerable": true,
+      "expected_scope": "in",
+      "facts": [
+        {
+          "id": "ttpo-accuracy-start",
+          "text": "The reported Qwen3-1.7B average TTT accuracy starts at 38.0%."
+        },
+        {
+          "id": "ttpo-accuracy-end",
+          "text": "With TTPO the reported Qwen3-1.7B average TTT accuracy reaches 45.2%."
+        }
+      ],
+      "support": [
+        {
+          "id": "ttpo-accuracy",
+          "fact_ids": [
+            "ttpo-accuracy-start",
+            "ttpo-accuracy-end"
+          ],
+          "locators": [
+            {
+              "arxiv_id": "2608.27448v1",
+              "section_index": 2,
+              "chunk_index": 0,
+              "section_title": "ABSTRACT",
+              "source_excerpt": "competition-level benchmarks, raises Qwen3-1.7B from 38.0% to 45.2% in TTT,",
+              "chunk_sha256": "d4c5a6a2a7731bd4160470fc87a1fc0969f1c65c6d233c3a8686550d7944b569"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "week7-holdout-credit-ethnicity",
+      "kind": "unsupported",
+      "query": "In When Does a Classifier Help an LLM, what ethnicity-wise demographic-parity gap does classifier-guided prompting report?",
+      "answerable": false,
+      "expected_scope": "in",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [
+          "2608.30086v1"
+        ],
+        "rationale": "The paper reports credit-prediction discrimination/recall metrics and sampling uncertainty, not ethnicity-specific demographic-parity gaps. Dataset, metrics, result tables and limitations reviewed; the requested subgroup measure is absent from the stored paper.",
+        "section_inventory": [
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 0,
+            "title": "Content"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 1,
+            "title": "When Does a Classifier Help an LLM? Classifier-Guided Prompting and Hybrid Classifier-LLM Models for Credit-Default Prediction"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 2,
+            "title": "I. INTRODUCTION"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 3,
+            "title": "II. DATABASE USED IN THIS STUDY"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 4,
+            "title": "A. Fitted baselines"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 5,
+            "title": "B. LLM prediction"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 6,
+            "title": "Imitation prompting:"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 7,
+            "title": "Hybrid classifier-LLM composition:"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 8,
+            "title": "C. Metrics and uncertainty"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 9,
+            "title": "IV. RESULTS"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 10,
+            "title": "A. LLM vs. fitted models, and imitation prompting"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 11,
+            "title": "B. Classifier-guided prompt construction"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 12,
+            "title": "C. Hybrid classifier-LLM composition"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 13,
+            "title": "D. Diffusion-based minority augmentation"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 14,
+            "title": "V. ANALYSIS OF RESULTS"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 15,
+            "title": "ROC (AUC in legend)"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 16,
+            "title": "Precision-Recall (AP in legend)"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 17,
+            "title": "VI. LIMITATIONS"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 18,
+            "title": "VII. CONCLUSIONS"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 19,
+            "title": "REFERENCES"
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 20,
+            "title": "APPENDIX A PROMPTS, MODEL DETAILS, AND REPRODUCIBILITY"
+          }
+        ],
+        "reviewed_sections": [
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 1
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 3
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 8
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 9
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 14
+          },
+          {
+            "arxiv_id": "2608.30086v1",
+            "section_index": 17
+          }
+        ],
+        "scans": [
+          {
+            "term": "ethnic",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 0
+          },
+          {
+            "term": "ethnicity",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 0
+          },
+          {
+            "term": "demographic parity",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 1
+          },
+          {
+            "term": "fairness",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 87
+          }
+        ]
+      }
+    },
+    {
+      "id": "week7-holdout-flow-apple-runtime",
+      "kind": "unsupported",
+      "query": "What attribution runtime in milliseconds on an Apple M2 GPU is reported in Tracing Generated Samples to Training-Data Clusters in Flow-Matching Models?",
+      "answerable": false,
+      "expected_scope": "in",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [
+          "2608.30081v2"
+        ],
+        "rationale": "The paper evaluates counterfactual attribution metrics and training-seed sensitivity in RAE/VAE representations. It does not report Apple M2 GPU attribution timing; methodology, experiments, results and discussion reviewed.",
+        "section_inventory": [
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 0,
+            "title": "Content"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 1,
+            "title": "Rania Briq"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 2,
+            "title": "Michael Kamp"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 3,
+            "title": "Abstract"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 4,
+            "title": "1 Introduction"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 5,
+            "title": "Ohad Fried"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 6,
+            "title": "Stefan Kesselheim"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 7,
+            "title": "2 Methodology"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 8,
+            "title": "3 Experiments"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 9,
+            "title": "3.1 Results and Analysis"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 10,
+            "title": "4 CLIP-defined clusters"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 11,
+            "title": "5 Discussion"
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 12,
+            "title": "References"
+          }
+        ],
+        "reviewed_sections": [
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 3
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 7
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 8
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 9
+          },
+          {
+            "arxiv_id": "2608.30081v2",
+            "section_index": 11
+          }
+        ],
+        "scans": [
+          {
+            "term": "Apple",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 5
+          },
+          {
+            "term": "M2",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 34
+          },
+          {
+            "term": "millisecond",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 7
+          },
+          {
+            "term": "runtime",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 41
+          }
+        ]
+      }
+    },
+    {
+      "id": "week7-holdout-ttpo-energy",
+      "kind": "unsupported",
+      "query": "How many kWh per training step does TTPO report consuming during Qwen3-1.7B test-time training?",
+      "answerable": false,
+      "expected_scope": "in",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [
+          "2608.27448v1"
+        ],
+        "rationale": "The paper specifies models, LoRA, rollout counts, optimization steps and accuracy, without per-step electrical-energy measurements. Experimental setup, main results, implementation details and limitations reviewed.",
+        "section_inventory": [
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 0,
+            "title": "Content"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 1,
+            "title": "TTPO: TEST-TIME POLICY OPTIMIZATION"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 2,
+            "title": "ABSTRACT"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 3,
+            "title": "1 INTRODUCTION"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 4,
+            "title": "2.1 TEST-TIME TRAINING FOR REASONING"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 5,
+            "title": "2.2 ON-POLICY SELF-DISTILLATION"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 6,
+            "title": "2.3 TOKEN-LEVEL WEIGHTING AND MASKING"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 7,
+            "title": "3.1 PRELIMINARIES AND PROBLEM SETUP"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 8,
+            "title": "3.2 MOTIVATION: WHY ASYMMETRIC?"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 9,
+            "title": "3.3 POSITIVE SAMPLES: OPSD BRANCH"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 10,
+            "title": "Algorithm 1 TTPO Training"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 11,
+            "title": "3.4 NEGATIVE SAMPLES: GRPO BRANCH"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 12,
+            "title": "3.5 UNIFIED OBJECTIVE"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 13,
+            "title": "4.1 EXPERIMENTAL SETUP"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 14,
+            "title": "4.2 MAIN RESULTS"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 15,
+            "title": "4.3 ABLATION STUDIES"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 16,
+            "title": "4.4 ANALYSIS"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 17,
+            "title": "5 CONCLUSION"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 18,
+            "title": "REFERENCES"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 19,
+            "title": "A IMPLEMENTATION DETAILS"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 20,
+            "title": "B PROMPT TEMPLATES"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 21,
+            "title": "Student Prompt (thinking mode off)"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 22,
+            "title": "Teacher Prompt (thinking mode on, privilege = answer)"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 23,
+            "title": "C CASE STUDY: TOKEN-LEVEL SELECTION VISUALIZATION"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 24,
+            "title": "C.1 TOKEN WEIGHTING"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 25,
+            "title": "C.2 TOKEN MASKING"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 26,
+            "title": "C.3 COMPLEMENTARITY"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 27,
+            "title": "D.1 TRAINING DYNAMICS"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 28,
+            "title": "D.2 NON-THINKING EVALUATION"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 29,
+            "title": "D.3 ADDITIONAL ABLATIONS"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 30,
+            "title": "E.1 SETUP"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 31,
+            "title": "E.2 FKL SIGNAL ANALYSIS"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 32,
+            "title": "E.3 MAJORITY-VOTE VS. GROUND-TRUTH ROUTING"
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 33,
+            "title": "F LIMITATIONS AND FUTURE WORK"
+          }
+        ],
+        "reviewed_sections": [
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 2
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 13
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 14
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 19
+          },
+          {
+            "arxiv_id": "2608.27448v1",
+            "section_index": 33
+          }
+        ],
+        "scans": [
+          {
+            "term": "kWh",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 0
+          },
+          {
+            "term": "watt",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 6
+          },
+          {
+            "term": "energy consumption",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 1
+          },
+          {
+            "term": "power consumption",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "week7-holdout-alignment-french-sign",
+      "kind": "unsupported",
+      "query": "What French Sign Language recognition accuracy does Compositional Failure in Audio-Visual LLMs report after stronger temporal alignment?",
+      "answerable": false,
+      "expected_scope": "in",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [
+          "2608.27785v1"
+        ],
+        "rationale": "The study measures audio-video match/conflict decisions and answer bias, not French Sign Language recognition. Dataset, evaluation protocol, alignment findings, limitations and conclusion reviewed.",
+        "section_inventory": [
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 0,
+            "title": "Content"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 1,
+            "title": "Compositional Failure in Audio-Visual LLMs: Late-Layer Prior Dominance Under Cross-modal Conflict"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 2,
+            "title": "Abstract"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 3,
+            "title": "1. Introduction"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 4,
+            "title": "2. Conflict-Based Evaluation and Notation"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 5,
+            "title": "3. Methodology"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 6,
+            "title": "3.1. Evaluation Dataset"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 7,
+            "title": "3.2. Three-Stage Alignment Pipeline"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 8,
+            "title": "3.2.1. AUDIO-CONDITIONED TOKEN CONCATENATION (ACTC)"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 9,
+            "title": "3.2.2. TIMESTAMP-AWARE TOKEN INTERLEAVING (TATI)"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 10,
+            "title": "3.2.3. ASYMMETRIC MODALITY DROPOUT (AMD)"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 11,
+            "title": "3.3. Evaluation Protocol"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 12,
+            "title": "3.4. Mechanistic Audit"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 13,
+            "title": "3.5. Logit Lens Capture Protocol"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 14,
+            "title": "4.1. Baseline Compositional Failure Under Conflict"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 15,
+            "title": "4.2. Bias shifts without compositional gains"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 16,
+            "title": "4.3. Prior dominance appears in both captions and layer-wise traces"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 17,
+            "title": "5. Limitations"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 18,
+            "title": "6. Conclusion"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 19,
+            "title": "References"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 20,
+            "title": "A. Appendix"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 21,
+            "title": "B. Training Setup"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 22,
+            "title": "C. Expanded Related Works"
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 23,
+            "title": "D. Discussion & Future Mitigation Strategies"
+          }
+        ],
+        "reviewed_sections": [
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 2
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 6
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 11
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 14
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 15
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 17
+          },
+          {
+            "arxiv_id": "2608.27785v1",
+            "section_index": 18
+          }
+        ],
+        "scans": [
+          {
+            "term": "French",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 2
+          },
+          {
+            "term": "sign language",
+            "scope_section_hits": 0,
+            "corpus_chunk_hits": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "week7-holdout-origami",
+      "kind": "out_of_scope",
+      "query": "Give step-by-step instructions for folding an origami crane.",
+      "answerable": false,
+      "expected_scope": "out",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [],
+        "rationale": "Paper-folding instructions are an external hobby task, not an AI research-paper question.",
+        "section_inventory": [],
+        "reviewed_sections": [],
+        "scans": []
+      }
+    },
+    {
+      "id": "week7-holdout-poem",
+      "kind": "out_of_scope",
+      "query": "Write a short birthday poem for my sister.",
+      "answerable": false,
+      "expected_scope": "out",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [],
+        "rationale": "Creative composition is not a question seeking evidence from AI research papers.",
+        "section_inventory": [],
+        "reviewed_sections": [],
+        "scans": []
+      }
+    },
+    {
+      "id": "week7-holdout-translation",
+      "kind": "out_of_scope",
+      "query": "Translate 'good morning' into Italian.",
+      "answerable": false,
+      "expected_scope": "out",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [],
+        "rationale": "Direct phrase translation is an external task, not a research-paper question.",
+        "section_inventory": [],
+        "reviewed_sections": [],
+        "scans": []
+      }
+    },
+    {
+      "id": "week7-holdout-geography",
+      "kind": "out_of_scope",
+      "query": "What is the capital city of Peru?",
+      "answerable": false,
+      "expected_scope": "out",
+      "facts": [],
+      "support": [],
+      "negative_review": {
+        "scope_papers": [],
+        "rationale": "A general geography fact is outside the AI research-paper domain.",
+        "section_inventory": [],
+        "reviewed_sections": [],
+        "scans": []
+      }
+    }
+  ]
+}

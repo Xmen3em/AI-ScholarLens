@@ -1,5 +1,157 @@
 # Week 6 local verification
 
+## Hosted generation continuation — adapter source complete, acceptance pending
+
+Current2026-10-14: [structural diagnostic](../docs/hf-structure-diagnostic.md)
+complete; one syntheticHTTP400 reports empty failed_generation. No rejected
+JSON to inspect,root cause unresolved. **835 passing tests,zero skips**,48 new
+tests,mypy96 and preservation checks pass. **8/13 used,5 remain**. Next local
+minimal reproduction and separately frozen compatibility/limit experiment.
+Existing source/guards/defaults/runtime/data/models/prior trials retained.
+Remaining5 cannot fund complete qualification plus the paired paper pilot.
+
+Current: [two-route comparison](../docs/hf-route-comparison.md) complete; both
+scheduled HF/Groq arms returnHTTP400/json_validate_failed with identical request
+content hashes. No paper cases,usage unknown. **787 passing tests,zero skips**,
+17 new tests,mypy94 and preservation checks pass. **7/13 calls used,6 remain**.
+Next bounded structural diagnostics before another frozen paid experiment.
+Earlier checkpoints below retain their historical attempt balances/test counts.
+
+Latest:[qualification revision/diagnosis](../docs/hf-qualification-v2.md).
+770 tests pass,zero skips,mypy92. Trial05+one diagnostic:3 new synthetic calls;
+relevanceHTTP400 reportsjson_validate_failed. No paper cases. Total5/13 used,
+8 remain in fixed SQLite allowance. Preserve all failed trials/guards/freezes.
+
+Latest [retry04](../docs/hf-pilot04.md): RAM passed,two real synthetic HF/Groq
+calls. Scope passed;relevance schema passed but expected decision failed. Stop
+before paper cases;no retry/failover.741 tests pass,zero skips;3 new semantic
+regressions/mutation and preservation checks. Only11 approved calls remain.
+Next additive frozen qualification revision with production-format JSON markers
+and bounded mismatch diagnostics; no selector tuning or v1 overwrite.
+
+Latest HF-5: [hosted evaluation checkpoint](../docs/hf-evaluation.md),40 new
+isolated tests; full suite738 passed,zero skips,mypy88 files. Additive protocol,
+collector/scorer/development lock complete. User explicitly approved the exact
+one-case13-attempt HF/Groq transfer/pilot. Approved admission02/03 were
+not_started at932.93/738.29MiB free versus unchanged1024MiB; one clean WSL cache
+reclaim did not meet host admission. Zero hosted requests. Existing runtime/
+frozen local v2 retained. Retry same approved pilot after additional RAM is free.
+
+Read the [HF research/architecture plan](../docs/hf-inference-research-plan.md).
+This extends the current Week 7 work; it does not replace pending local acceptance
+or recovery tasks. Read the [adapter checkpoint](../docs/hf-inference-adapter.md).
+HF-1 through HF-4: 91 new focused tests; 698 full-suite passes, zero skips. No real
+HF inference or runtime activation. Initial registry: Groq/Fireworks GPT-OSS;
+Qwen/richer profiles await qualification. Conservative admission rejects the
+original 30-ID schema before inference, without weakening its constraints.
+
+- [x] Research current official HF billing, public provider/model capabilities,
+  model cards and LangChain behavior; retain a dated public metadata snapshot.
+- [x] HF-1: Specify a provider-neutral generation result, additive disabled HF
+  settings and explicit model/provider registry. Acceptance: old local names and
+  defaults unchanged; credential/endpoint/allowlist validation fails closed;
+  missing usage/duration fields stay unknown. Verify offline contract/config
+  tests. Depends on none. Likely files: new generation contracts, config, focused
+  config/contract tests (small/medium slice).
+- [x] HF-2: Implement standalone async HF chat adapter using existing httpx.
+  Acceptance: fixed HTTPS router, pinned pair, original schemas/explicit token
+  limits; every attempt counted with no hidden retries; sanitized 401/402/429/5xx,
+  malformed/truncated/empty/oversize response handling. Verify synthetic HTTP
+  transport tests with no token/network/inference. Depends on HF-1. Likely files:
+  new HF client/factory and adapter tests (small/medium slice).
+- [x] HF-3: Verify exact schemas and cancellation. Acceptance: retained controller
+  bool/array/length and selector regex boundaries; all adversarial IDs/fields and
+  reasoning-only outputs rejected; disconnect/deadline closes local work and
+  never starts a fallback call. Verify focused boundary/mutation tests and compare
+  unchanged canonical policy/prompt bytes. Depends on HF-2. Likely files: adapter
+  tests, capability profile and acceptance notes (small/medium slice).
+- [x] Checkpoint HF foundation: focused tests/type/lint pass, no network/model
+  calls, canonical guard/prompt preservation verified. Rejected schema pairs stay
+  unqualified; no JSON-mode downgrade to obtain green tests.
+- [x] HF-4: Wire one opt-in isolated path through the existing API/workflow.
+  Acceptance: default local API/model behavior unchanged; existing key/quotas and
+  validated SSE retained; hosted trials uncached and readiness never performs
+  paid generation. Verify offline ASGI/regression/lifespan tests. Depends on
+  HF-3. Likely files: service dependency boundary/main, readiness, route/lifespan
+  tests (split any slice exceeding five files).
+- [x] HF-5: Freeze a separate hosted collection protocol and memory profile.
+  Acceptance: unchanged local v2 files; holdout cases referenced by digest with
+  no model selection on holdout; same pinned hosted model for baseline/agent,
+  explicit attempt/token/deadline/concurrency/headroom and quality/latency gates.
+  Verify offline protocol/collector/score validation. Depends on HF-4. Likely
+  files: new hosted evaluation profile/protocol and runner tests (medium slice).
+- [x] Checkpoint hosted path: full isolated regression/type/lint pass; resource
+  profile and quality/latency targets fixed before live collection; original
+  runtime, local models, corpus/indexes and all old evaluations remain intact.
+- [ ] HF-6: After requested execution and locally configured HF credentials,
+  qualify schemas with synthetic smoke calls, compare Groq gpt-oss and DeepInfra
+  Qwen on development cases, then lock the chosen pair. Acceptance: exact-schema
+  admission plus real task quality/latency/usage/memory evidence; budgeted read-only
+  tool smoke with no new production tools; record failures and billed estimates.
+  Verify complete collection records and development review. Depends on HF-5.
+  Likely files: test-owned run evidence and development report (small slice).
+- [x] Execute the explicitly approved initial Groq pilot once RAM admits it;
+  retain failed qualification and known usage/cost. Scope passes, relevance
+  expected decision fails after2 synthetic calls; no case/context transfer.
+- [x] Freeze exact production-format synthetic qualification fixtures in a new
+  additive revision with bounded private mismatch diagnostics. Keep original
+  schemas/prompts/guards and v1 failure; enforce remaining11 approved calls before
+  any new paid trial. No retry in place or automatic provider failover.
+- [x] Add bounded allowlisted error-code/type diagnostics and a separately frozen
+  one-attempt reproduction; discard messages/failed generations and retain
+  unknown usage. Provider-reported JSON validation failure confirmed; total5 calls.
+- [x] Specify/pin/test and execute the explicit provider-specific HF relay
+  comparison against the unified route. Same frozen synthetic schema/controls;
+  two scheduled one-attempt arms both fail400/json_validate_failed. No paper
+  cases or qualification. Cumulative allowance7/13 used,6 remain; evidence kept.
+- [x] Add isolated bounded structural failed-generation diagnostics with
+  synthetic privacy/error-boundary tests. Persist only fixed booleans/counts;
+  retain no error/generated text and do not tune schemas/prompts/guards. Freeze
+  the one-call experiment and reserve its ceiling before paid work. Observed
+  complete error envelope with empty failed_generation; total8/13 used,5 remain.
+- [ ] Prepare a local minimal reproduction and separately freeze a compatibility/
+  generation-limit experiment with fixed privacy-safe failure categories.
+  Preserve original schemas/prompts/limits/defaults; any diagnostic control
+  variant must be explicit. No unchanged paid repetition or support publication.
+  Use cumulative remaining5 only within approved scope; complete qualification
+  before paper collection and account for additional complete-pilot budget.
+- [ ] HF-7: Collect/review same-model hosted baseline and agent against the
+  referenced frozen holdout without tuning. Acceptance: existing semantic and
+  preservation gates pass; no accepted grounding/schema/work-bound violation;
+  report measured latency distribution and limits. Verify offline scorer and
+  before/after preservation audit. Depends on HF-6. Likely files: test-owned
+  evidence/reviews and hosted acceptance report (small slice).
+- [ ] HF-8: Resume the research interface after hosted acceptance; separately
+  specify a richer read-only tool workflow if development evidence requires it.
+  Acceptance: source inspection/browse/search precede history; ownership precedes
+  persistence; LangGraph/wrappers preserve bounded execution and reasoning history
+  if introduced. Verify future UI/tool contract tests. Depends on HF-7. Detailed
+  interface/server tasks remain in the existing roadmap below.
+
+## Week 7 bounded agent source work
+
+- [x] Audit pinned course Week 7 graph/nodes/routes and current official LangGraph docs; write [acceptance spec](../docs/week7-agent-spec.md) before code.
+- [x] Add strict scope/grading/rewrite contracts and a disabled-by-default finite workflow; retain original-question identity and all evidence guards.
+- [x] Bound retrievals/rewrite/generation/stages, input/output sizes and deadlines; test cancellation and abandoned-search occupancy.
+- [x] Add authenticated JSON/SSE agent routes to the same global generation budget before work; verify cache bypass and validated-output ordering.
+- [x] Extend allowlisted monitoring/tracing metadata; verify content privacy and scope-routing mutation detection.
+- [x] Run full isolated regression suite, type/lint/Compose/diff checks and verify retained runtime identities.
+- [x] Freeze eight new development and 24 holdout cases with source-reviewed facts, negative scope and disjoint source papers; preserve first-freeze novelty correction and all old evaluations.
+- [x] Fix comparison/scoring/resource gates before collection; verify offline provenance, frozen hashes and novelty guard tests.
+- [x] Prepare/test an isolated uncached comparison runner, fixed 192-job holdout plan, source/model/memory admission, measured budgets and response integrity checks.
+- [x] Attempt guarded development-pilot admission; retain no-start evidence at 1,638 MiB free versus required 3,072 MiB, with zero inference and unchanged runtime.
+- [ ] Run the development pilot once headroom meets the unchanged protocol, then compare/review the frozen holdout with baseline before enabling.
+- [x] Add offline response/quotation-bound semantic review templates and fixed coverage/relevance/abstention/failure/latency scoring; reject partial or regressing holdout acceptance.
+- [x] Retry resource admission after the previously documented clean WSL read-cache reclaim; retain retry02 no-start evidence at 1,354.54 MiB host RAM, zero inference.
+- [ ] Measure live cold/sustained memory, latency and concurrency before activation; preserve Week 6 runtime and rollback until separately authorized.
+- [ ] Build research browsing/detail/search and citation/source inspection, then define ownership before history/feedback.
+- [ ] Prepare reproducible server config, HTTPS/secret injection, user/replica quotas, release/rollback and measured resource sizing.
+
+Week 7 source checks: 552 passed, zero skips, including disposable PostgreSQL;
+mypy (76 files), changed-file Ruff and Compose/diff checks passed. No live agent
+evaluation or answer-quality improvement is claimed. Earlier Week 6 checks below
+remain historical records.
+
 - [x] Review and checkpoint Week 6 source, configuration, tests and local evidence; prepare [Week 7 continuation context](../docs/week7-continuation.md) for the next session.
 
 - [x] Prepare the recommended encrypted USB transfer, pinned receiving verifier and separate-machine instructions; verify no-copy mode, internal-drive rejection, restrictive ACL and checksum boundaries on local fixtures.

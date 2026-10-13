@@ -77,6 +77,11 @@ async def health_check(
         services["opensearch"] = ServiceStatus(status="unhealthy", message="Search is unavailable or read aliases are missing")
         overall_status = "unhealthy"
 
+    if settings.hf_inference_enabled:
+        services["hf_generation"] = ServiceStatus(status="degraded", message="Hosted generation configured; live qualification pending")
+        if overall_status == "healthy":
+            overall_status = "degraded"
+
     if overall_status == "unhealthy":
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 

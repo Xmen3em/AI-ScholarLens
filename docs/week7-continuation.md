@@ -1,5 +1,274 @@
 # Continue application development after Week 6
 
+## Local commit and next-session entry point — 2026-10-14
+
+Read [the committed session checkpoint](session-checkpoint.md). The accumulated
+implementation is checkpointed on `codex/week7-agent-hf-checkpoint` from
+Week6 a597f23. Continue in this workspace to retain ignored snapshots, trial
+evidence and the fixed allowance: eight approved attempts used, five remaining.
+Private settings, runtime data/models and recovery are retained locally. No
+push, merge, deployment or activation. Current acceptance and next diagnostic
+scope are recorded in that checkpoint; historical evidence follows below.
+
+## Structural diagnostic complete; failed-generation detail is empty — 2026-10-14
+
+Read [the bounded diagnostic report](hf-structure-diagnostic.md). The new isolated
+observer/command preserve the original request, cap decoded error buffering and
+retain fixed booleans/counts only. One synthetic call returnedHTTP400 with
+json_validate_failed; failed_generation is an empty string. No rejected JSON
+object or root cause can be inferred; no paper collection or qualification.
+
+**835 tests pass,zero skips**,48 new tests,mypy96. All203 pre-turn protected
+hashes,run source hashes,64 prior checks,15 containers and recovery match.
+One attempt settled: **8/13 used,5 remain**. Keep fixed allowance/prior trials.
+Next local minimal reproduction and a separately frozen compatibility/limit
+experiment before further paid work. Original source/defaults/guards/data/models
+and runtime are intact; existing acceptance/interface/server roadmap retained.
+The five remaining calls cannot cover qualification plus the paired paper pilot.
+Missing backup hardware does not block source work. Historical checkpoints follow.
+
+## HF route comparison implemented; no observed fix — 2026-10-13
+
+Read [the paired comparison and next diagnostic slice](hf-route-comparison.md).
+The isolated command is offline by default, pins official SDK/public mappings,
+and preserves the exact synthetic fixture, schema and controls. Both scheduled
+HF/Groq routes returnedHTTP400/json_validate_failed; identical content hashes,
+unknown usage. No paper data sent, no qualification or application collection.
+
+Two new attempts settled in the fixed allowance: **7/13 used,6 remain**.
+**787 tests pass,zero skips**,17 new isolated checks,mypy94,lint/diff pass.
+All193 pre-turn protected hashes,64 prior checks,15 containers and recovery
+manifest match. Existing source/defaults/guards/data/models/runtime intact.
+
+Next implement bounded structural failed-generation diagnostics with synthetic
+privacy tests, then separately freeze any new experiment before paid work.
+Preserve all prior trials and allowance. Exact-schema qualification, reviewed
+development, locked holdout and interface/server roadmap remain pending.
+Missing backup hardware does not block source work. Earlier balances below
+describe historical checkpoints.
+
+## Exact qualification fixtures and Groq error diagnosis — 2026-10-13
+
+Read [versioned qualification/allowance and observed result](hf-qualification-v2.md).
+Frozen exact inputs,production JSON marker/system,bounded mismatch/error-code
+diagnostics,review bindings and atomic cumulative allowance are implemented.
+Original canonical guards/schemas/limits/defaults and runtime remain intact.
+
+Trial05: scope passed,relevanceHTTP400; a separate one-call diagnostic reports
+`json_validate_failed`/`invalid_request_error`. Stop before paper cases. Three
+new synthetic calls this turn; total5/13 used,8 remain in fixed SQLite allowance.
+Failed usage/cost unknown. No inference paper data or application-quality claim.
+Both runs'preservation flags true.770 tests pass,zero skips,mypy92,lint/diff and
+173/177 protected hashes(4 approved source changes),15 containers and64 prior
+freeze checks pass. Do not overwrite v1/v2 trial records or reset allowance.
+
+Next separately specify/test a provider-specific HF relay comparison for the
+same frozen synthetic schema; official SDK docs support the route but it has
+not been called. Verify whether routing changes strict handling before switching
+models or providers. Qualification/development/holdout and interface/server
+roadmap remain pending; no deployment/push/merge/tuning.
+
+## First live HF/Groq qualification rejected — 2026-10-13
+
+Read the [live trial report](hf-pilot04.md). Retry04 passed RAM admission and made
+two approved synthetic HF/Groq calls. Scope passed; relevance returned valid
+structured JSON but differed from the required expected decision. Qualification
+stopped before any paper question/passages or evaluation app. No schema/native
+HTTP/memory error; raw decision text was not retained. Observed usage296input/
+81output tokens,known-cost estimate$0.00010515,zero unknown-usage attempts.
+
+**741 tests passed,zero skips**,three new semantic-mismatch regressions and a
+detected/restored expected-answer mutation. No application source/guard/profile
+change. All162 protected hashes,64 frozen/prior checks and15 original container
+identities/images/states match. Defaults remain off; current runtime is retained.
+
+Next prepare a separately frozen qualification fixture matching production JSON
+marker/controller formatting, with private bounded mismatch diagnostics. Preserve
+the rejected v1 trial; fixture ambiguity is unproven. Only11 of the approved13
+outbound attempts remain,and any new trial must enforce that cumulative cap.
+Reviewed development,locked holdout and interface/server work remain pending.
+
+## HF/Groq transfer approved; current pilot blocked by host RAM — 2026-10-13
+
+The user explicitly approved this one-case BM25/JSON pilot, including public
+question/passages transfer to HF/Groq and a13-attempt ceiling. No further transfer
+confirmation is needed for that same pilot. Approved admission02 measured
+932.93MiB free; retry03 after the previously documented one-time clean WSL
+read-cache reclaim measured738.29MiB. Both are **not_started**, below unchanged
+1024MiB. Subsequent30-second samples were840.59–907.67MiB. Zero HF calls/no live
+qualification or evaluation app. Guest RAM did not replace the host criterion.
+
+No source/threshold/runtime changes; all162 protected fingerprints, freezes and
+15 container identities/images/states match. The prior738 passing tests remain
+the verified implementation checkpoint; no tests were rerun for this evidence/
+documentation-only turn. Read the [updated hosted checkpoint](hf-evaluation.md).
+Free additional RAM by closing unused apps/tabs, then retry the same approved
+bounded pilot in a fresh output directory. Keep active services/default flags,
+local protocol/guards/models/data and recovery bundle intact. Reviewed development,
+locked holdout and research-interface/server work remain in the existing roadmap.
+
+## Hosted evaluation source complete; pilot transfer approval pending — 2026-10-13
+
+Read the [hosted checkpoint and commands](hf-evaluation.md). HF-5 adds a separately
+frozen protocol/resource profile, isolated collector, usage/schema ledgers and
+hosted-bound reviews/development locks. Original local v2/cases/3GiB gate are
+unchanged. Same explicit pair baseline/agent,64 development/192 holdout jobs;
+holdout requires reviewed accepted development. Defaults remain disabled and
+the running Week 6 API/key/containers/data/models/recovery bundle are retained.
+
+**738 tests passed, zero skips**,40 new hosted checks, mypy88files, lint/diff and
+64 frozen/prior-file checks pass. A missing-usage acceptance mutation was detected
+and restored. All162 prior protected files match. No selector/source policy edits
+or production runtime changes occurred in this slice.
+
+The bounded one-case BM25/JSON Groq pilot was rejected before process start by
+automatic approval review because it sends a specific project-derived question
+and public-paper passages to HF/Groq. Explicit data-transfer approval is pending;
+zero HF calls/live answers/usage or quality claims. An offline2-job/13-attempt plan
+is retained; use a fresh output directory after approval. Then qualify/pilot,
+complete reviewed development, lock one pair, collect/review holdout and follow
+research-interface/server preparation. Missing backup hardware does not block
+source development.
+
+## Disabled HF adapter source verified — 2026-10-13
+
+Read the [adapter checkpoint](hf-inference-adapter.md). HF-1 through HF-4 add
+neutral results, fixed/pinned async HF generation, disabled settings and opt-in
+RAG/agent wiring with unchanged guards/key/quotas/embeddings. 91 new focused tests;
+full suite **698 passed, zero skips**, mypy85 files, changed-file lint/diff and
+frozen/preservation checks pass. Original containers/runtime remain unchanged.
+
+No real HF inference/activation. Conservative admission rejects large schemas,
+including the 30-ID selector, before paid work without schema removal/downgrade.
+Initial registry: Groq/Fireworks GPT-OSS. Hosted readiness is explicitly degraded
+pending qualification. Next HF-5: separate hosted protocol/collector/resource
+profile, then requested smoke/development/locked holdout. Preserve all local v2
+files and continue the interface/server roadmap afterward.
+
+## HF-hosted generation research and plan — 2026-10-13
+
+The user's next direction is hosted generation for speed and future agent features
+in a low-traffic resume project, using HF credits. Read the
+[recommendation and implementation plan](hf-inference-research-plan.md) and the
+[public provider snapshot](research/hf-inference-models-20261013.json). First
+qualify Groq-hosted gpt-oss-120b against the exact existing schemas; compare Qwen
+3.8 27B on development data. Kimi K3 and GLM 5.3 are richer-agent candidates.
+Cerebras schema limitations and LangChain reasoning/schema compatibility are
+explicitly documented. Start with an isolated async adapter and additive hosted
+protocol; preserve the frozen local v2 protocol and all guards/embedding vectors.
+
+Research/planning only: no source/dependency/runtime changes or paid inference.
+The local pilot remains `not_started`; current hosted availability/probe signals
+are not application-quality or latency results. Tasks HF-1 through HF-8 extend
+the existing roadmap; missing backup hardware does not block source development.
+
+## Offline scoring ready; retry 02 still withheld — 2026-10-13
+
+Read [scoring and resource-attempt evidence](week7-scoring.md). The user requested
+the next pilot; current host RAM was below the frozen criterion. The handoff's
+previously used clean Docker/WSL read-cache reclaim was applied once without
+changing files/settings/services/apps/models. Guest cache was reclaimed, but
+Windows headroom remained insufficient. Fresh guarded retry02 measured
+**1,354.54 MiB**, below **3,072 MiB**: **not_started**, zero inference/no live app.
+`tests/test_output/week7-development-pilot-20261013-02/metadata.json` is retained.
+Guest RAM was not used to bypass the frozen host criterion.
+
+Memory-independent progress: `src.commands.score_agent` now exports deliberately
+unset review templates and scores source-reviewed, response/quotation-bound
+judgments with fixed coverage/relevance/abstention/failure/latency/work metrics.
+It rejects stale/incomplete/inconsistent reviews and partial/regressing holdout
+acceptance, and checks collection preservation completion. No live reviews/scores
+were fabricated. Full suite **607 passed, zero skips**, mypy **80 files**, changed-
+file Ruff/diff pass; **18 focused scoring tests** and a detected stale-review
+mutation. Source restored exactly. Frozen v2 and all prior evaluations intact.
+Actual containers/model-loaded state checked unchanged; agent remains disabled.
+
+## Collector implemented; pilot withheld by memory admission — 2026-10-13
+
+Read [collector evidence and commands](week7-collector.md). The isolated uncached
+runner is complete, with fixed counterbalanced jobs, loopback-only temporary app,
+original model/selector controls, same key/quotas in test-owned files, no production
+lifespan/cache/DB, measured failed/successful work and strict SSE/source validation.
+Pinned v2 freeze and all earlier evaluation files remain unchanged.
+
+Full suite **589 passed, zero skips**, mypy **79 files**, final collector checks
+**19 passed**, including a real loopback server with mocked providers. Memory-
+admission mutation caught and exact source restored; Ruff/diff checks pass.
+The guarded live-development admission recorded **not started**: **1,638.32 MiB**
+free versus **3,072 MiB** required. No inference or evaluation server started;
+no model was loaded. Frozen thresholds were preserved. Corpus/model fingerprints
+matched in read-only preflight; runtime/rollback states remain unchanged.
+
+Evidence: `tests/test_output/week7-holdout-plan-20261013-01/` (192-job offline
+plan), `week7-development-pilot-20261013-01/` (no-start metadata), and
+`week7-collector-final-20261013-01/` (test-only base directory). Next retry a
+development pilot with a new output directory only when actual RAM admits it,
+then review outputs and collect/review the frozen holdout. No tuning/activation,
+deployment, push/merge or data/model replacement occurred.
+
+## Evaluation preparation complete — 2026-10-13
+
+The [Week 7 evaluation protocol and freeze](../evaluation/week7_agent/README.md)
+now contain eight development and 24 evaluation-only holdout cases. New source
+papers are outside the prior saved support set and disjoint across splits. All
+positive support excerpts were checked against indexed chunks and stored sections;
+negatives record bounded review and recomputed scoped/whole-corpus lexical scans.
+The read-only snapshot confirms 58 papers, 2,775 current chunks, 1,221 v1 chunks
+and the unchanged v2 alias. All 60 prior evaluation files match their fingerprints.
+
+The initial weather negative was too close to an older question; it was replaced
+with origami instructions before any model run. Exact v1 freeze files are retained
+in `evaluation/week7_agent/frozen-v1/`; ERRATA documents the change. Current v2
+manifest SHA-256: `58b099eead49d8fd22d96be7a7ceba3142de9524ce6f80846e2e8ddee884b0db`.
+
+New offline command `src.commands.validate_agent_evaluation` validates provenance,
+case/pair counts, source/query separation, negative scans and frozen hashes. New
+18 focused tests and a detected novelty-guard mutation verify failure boundaries.
+Full suite: **570 passed, zero skips**; mypy **77 source files**, changed-file Ruff
+and diff checks pass. Exact validator bytes restored after mutation. Two existing
+dependency deprecations remain. Protected source/model/index/runtime/rollback/key
+resources and all earlier uncommitted implementation changes were preserved.
+
+Next prepare an isolated uncached collector against both unchanged baseline and
+optional agent, without changing old evaluation runners. Then memory-checked
+development pilot and frozen holdout collection/review under the fixed protocol.
+No live inference or agent activation occurred; no quality results are claimed.
+Research-interface and server preparation follow verified evaluation/resource work.
+
+## Week 7 source progress — 2026-10-13
+
+The requested reference audit and [acceptance specification](week7-agent-spec.md)
+are complete. Source implementation adds `/api/v1/agent/ask` and
+`/api/v1/agent/stream`, disabled by `AGENT_ENABLED=false`, uncached, authenticated
+and charged to the same generation budget before work. The finite async workflow
+uses existing dependencies and validation helpers, with two retrievals, one rewrite,
+six generation calls, eight stages and bounded sizes/deadlines. Hybrid adds at
+most two existing query-embedding calls. No LangGraph dependency was added; the
+audit explains the finite-control-flow decision. Original selector files are intact.
+
+Isolated full suite: **552 passed, zero skips**, including disposable PostgreSQL;
+mypy checks 76 source files, changed-file Ruff, Compose and diff checks pass. New
+tests use synthetic fixtures, actual validation/ASGI and temporary quota stores.
+Scope-routing mutation was caught and exact source restored. Deadline and metadata
+allowlist gaps found by added tests were fixed. Windows sandbox socketpair setup
+required escalated test execution; a new project-local pytest base directory avoided
+an existing system Temp ACL issue. No test was weakened/skipped to accommodate it.
+
+The existing five running containers and stopped rollback/heavy containers retain
+their IDs/states/images. No restart, build, deployment, push, merge, ingestion,
+reindex, model download/replacement or key change occurred. Working source changes
+are uncommitted on `master`; HEAD remains `a597f23`. The running API uses the retained
+Week 6 image, so workspace/source and active image now intentionally differ.
+Do not claim this feature is active or refresh the frozen recovery bundle.
+The read-only receiving verifier rechecked all 233 bundle files / 8,970,337,129
+bytes against the pinned manifest; all passed. Git checks confirm existing
+selectors, search/embedding/model clients, evaluations, lockfile and Compose
+remain unchanged.
+
+Next follow the evaluation, research-interface and server-preparation order below.
+Live quality/resource acceptance is pending; saved evaluations remain inspected
+regression data. Missing off-machine hardware still does not block feature work.
+
 Prepared 2026-10-13, Africa/Cairo. The user requested local commits for completed
 Week 6 application work and context for another session to continue implementation.
 They want further application development toward a future server release. Missing

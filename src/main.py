@@ -13,10 +13,13 @@ from src.db.factory import make_database
 from src.exceptions import GroundingError, OllamaException, OllamaResponseError, OllamaTimeoutError, UnsupportedModelError
 from src.middlewares import OperationalMiddleware
 from src.monitoring import attach_monitoring
-from src.routers import ask, papers, ping, search
+from src.routers import agent, ask, papers, ping, search
 from src.search.factory import make_search_client
+from src.services.agent import AgentService
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.embeddings.factory import make_embedder
+from src.services.hf.client import HFClient
+from src.services.hf.rag import HostedRAGService
 from src.services.ollama import make_ollama_client
 from src.services.rag import RAGService
 from src.services.search import SearchService
@@ -60,24 +63,33 @@ async def lifespan(app: FastAPI):
     # pool, and rebuilding it on every search would throw that pool away each time.
     app.state.search = SearchService(make_search_client(), make_embedder())
     app.state.ollama = make_ollama_client(settings)
-    app.state.rag = RAGService(app.state.search, app.state.ollama, settings)
-    app.state.rag.cache = make_answer_cache(settings)
-    logger.info("Services initialized: arXiv API client, search, Ollama, RAG")
+    app.state.hf = None
+    if settings.hf_inference_enabled:
+        app.state.hf = HFClient(settings)
+        app.state.rag = HostedRAGService(app.state.search, app.state.hf, settings)
+    else:
+        app.state.rag = RAGService(app.state.search, app.state.ollama, settings)
+        app.state.rag.cache = make_answer_cache(settings)
+    app.state.agent = AgentService(app.state.rag, settings) if settings.agent_enabled else None
+    logger.info("Services initialized: arXiv API client, search, %s, RAG",
+                "HF generation and local embeddings" if settings.hf_inference_enabled else "Ollama")
 
     logger.info("API ready")
-    yield
-
-    # Cleanup
-    await app.state.ollama.aclose()
-    if app.state.rag.cache:
-        await app.state.rag.cache.close()
-    if app.state.tracing:
-        await anyio.to_thread.run_sync(app.state.tracing.close)
-    if app.state.monitoring:
-        logging.getLogger("src.operations").removeHandler(app.state.monitoring)
-        app.state.monitoring.close()
-    database.teardown()
-    logger.info("API shutdown complete")
+    try:
+        yield
+    finally:
+        if app.state.hf is not None:
+            await app.state.hf.aclose()
+        await app.state.ollama.aclose()
+        if app.state.rag.cache:
+            await app.state.rag.cache.close()
+        if app.state.tracing:
+            await anyio.to_thread.run_sync(app.state.tracing.close)
+        if app.state.monitoring:
+            logging.getLogger("src.operations").removeHandler(app.state.monitoring)
+            app.state.monitoring.close()
+        database.teardown()
+        logger.info("API shutdown complete")
 
 
 app = FastAPI(
@@ -120,13 +132,13 @@ async def invalid_generation_response(request: Request, exc: Exception) -> JSONR
 
 @app.exception_handler(OllamaTimeoutError)
 async def generation_timeout(request: Request, exc: Exception) -> JSONResponse:
-    logger.error("Ollama timeout on %s", request.url.path)
+    logger.error("Generation timeout on %s", request.url.path)
     return JSONResponse(status_code=504, content={"detail": "Answer generation timed out"})
 
 
 @app.exception_handler(OllamaException)
 async def generation_unavailable(request: Request, exc: Exception) -> JSONResponse:
-    logger.error("Ollama unavailable on %s", request.url.path)
+    logger.error("Generation unavailable on %s", request.url.path)
     return JSONResponse(status_code=503, content={"detail": "Answer generation is unavailable"})
 
 
@@ -135,6 +147,7 @@ app.include_router(ping.router, prefix="/api/v1")
 app.include_router(papers.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(ask.router, prefix="/api/v1")
+app.include_router(agent.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+{
+  "version": "qualification-v2",
+  "parent_manifest_sha256": "3b42fccb34bc542e91ccdd3df0d8acb85c0bc86f7237eebdb214e6e9dbfc37a1",
+  "sha256": {
+    "fixtures.json": "e23f2b3e2721f12ef0ed3b504452f1f4e55b48a92a6639b88b76f7e0010f9f6c",
+    "PROTOCOL.md": "f37e8e4d0a8772cc9aa02bcb2ce8b8bb8f3310f68d82212f481ccb733b7ee19f"
+  }
+}

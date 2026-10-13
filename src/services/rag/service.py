@@ -17,8 +17,8 @@ from src.exceptions import GroundingError, OllamaResponseError, UnsupportedModel
 from src.operations import emit_event
 from src.schemas.api.rag import AskRequest, AskResponse, GeneratedAnswer, SourcesEvent
 from src.schemas.api.search import ChunkSearchResponse, HybridSearchResponse
+from src.schemas.generation import GenerationPort
 from src.schemas.ollama import OllamaGenerateResponse
-from src.services.ollama.client import OllamaClient
 from src.services.rag.context import INSUFFICIENT_EVIDENCE_ANSWER, RAGContext, build_context, validate_answer_evidence
 from src.services.rag.excerpts import build_excerpts, render_selection
 from src.services.search import SearchService
@@ -94,7 +94,7 @@ class PreparedRAG:
 
 
 class RAGService:
-    def __init__(self, search: SearchService, ollama: OllamaClient, settings: Settings):
+    def __init__(self, search: SearchService, ollama: GenerationPort, settings: Settings):
         self.search = search
         self.ollama = ollama
         self.settings = settings

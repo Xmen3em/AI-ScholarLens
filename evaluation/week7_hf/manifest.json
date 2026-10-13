@@ -1,0 +1,10 @@
+{
+  "version": "hosted-agent-v1",
+  "frozen_on": "2026-10-13",
+  "local_manifest_sha256": "58b099eead49d8fd22d96be7a7ceba3142de9524ce6f80846e2e8ddee884b0db",
+  "sha256": {
+    "PROTOCOL.md": "17e8ec219689ed51c5d5061180a319c42f57fdad2f867b8da0ec31a905c198bd",
+    "profile.json": "2ac3badb903d555105fc7072de4c2caced2a093ca00ae0e2487ceec605b21d4e"
+  },
+  "research_catalog_sha256": "ac9726a02295313dbb44a355315cecb5b6c26b5f2ab0593792d4709d6d3b71b7"
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "error_structure_diagnostic_only",
+  "maximum_outbound_attempts": 1,
+  "qualification_accepted": false,
+  "case_id": "relevance",
+  "model": "openai/gpt-oss-120b:groq",
+  "endpoint": "https://router.huggingface.co/v1/chat/completions",
+  "maximum_error_bytes": 8192,
+  "maximum_count": 31,
+  "diagnostic_fields": [
+    "body_complete", "body_json_valid", "error_object",
+    "failed_generation_present", "failed_generation_string",
+    "generated_char_count", "starts_object", "ends_object",
+    "code_fence_prefix", "reasoning_prefix", "generation_json_valid",
+    "generation_object", "property_count", "required_fields_present",
+    "additional_fields_present", "markers_array", "markers_strings",
+    "marker_count", "schema_valid", "expected_match",
+    "supplied_marker_membership", "duplicate_markers"
+  ]
+}

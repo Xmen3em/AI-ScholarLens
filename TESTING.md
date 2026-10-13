@@ -1,6 +1,160 @@
 # Testing AI-ScholarLens
 
+Current structural-diagnostic checkpoint: **835 passed, zero skips**,48 new
+isolated tests; mypy96 source files and changed-file Ruff/diff pass. Read
+[the diagnostic implementation/evidence](docs/hf-structure-diagnostic.md).
+Tests cover parser/privacy/type/schema bounds,compressed replay,upstream cleanup,
+oversize/timeout/cancellation,one-attempt caps,unavailable memory,offline planning,
+frozen integrity and cumulative settlement/exhaustion. An arbitrary-content leak
+mutation failed its privacy regression; exact bytes restored before full checks.
+All203 pre-turn protected hashes,run source hashes,64 prior frozen checks,
+15 retained containers and recovery match. Two existing Typer/Click warnings.
+Full base:`tests/test_output/hf-structure-full-20261014-01`.
+The actual one-call synthetic trial is separate evidence:HTTP400,empty reported
+failed_generation,unknown usage,no paper cases or qualification.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_hf_error_structure.py tests/unit/test_hf_structure_transport.py tests/unit/test_hf_structure_command.py -q --basetemp tests/test_output/hf-structure-focused-new -o cache_dir=tests/test_output/week7-pytest
+```
+
+Current route-comparison checkpoint: **787 passed, zero skips**,17 new isolated
+tests; mypy94 source files,changed-file Ruff/diff and preservation checks pass.
+Read [the comparison report](docs/hf-route-comparison.md). Tests exercise pinned
+routes/native IDs,identical schema/controls,shared quotas,one-attempt arms,
+scheduled failures,timeout/memory stops,offline planning and insufficient
+cumulative allowance. A native-ID mapping mutation failed its regression;
+exact bytes restored before the full suite. All193 pre-turn protected hashes,
+64 prior checks,15 retained containers and recovery manifest match.
+Full base:`tests/test_output/hf-route-compare-full-20261013-01`.
+The two live synthetic paid attempts are separate evidence: both return400,
+usage unknown,no paper cases. Historical checkpoints follow.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_hf_route_comparison.py tests/unit/test_hf_route_command.py -q --basetemp tests/test_output/hf-route-focused-new -o cache_dir=tests/test_output/week7-pytest
+```
+
+Latest hosted diagnostics checkpoint: **770 passed,zero skips**,29 new tests;
+mypy92 files,changed-file lint/diff and preservation checks pass. Read
+[fixture/budget/error diagnostic evidence](docs/hf-qualification-v2.md).
+Tests cover frozen inputs,scope/review binding,atomic concurrent/pending budgets,
+eleven-call ceiling,TCP cleanup,one-call diagnostics and error privacy. Mutations
+omitting two prior attempts or admitting arbitrary error strings were detected
+and restored before passing full checks. Providers in tests are synthetic; the
+three actual paid synthetic attempts are reported separately. No paper cases ran.
+Full base:`tests/test_output/hf-revision-final-full-20261013-01`.
+
+Latest qualification regression checkpoint: **741 passed,zero skips**;
+three new synthetic tests catch schema-valid wrong expected-marker decisions.
+Disabling the expected-answer comparison fails all3; exact source restored
+before the full suite at`tests/test_output/hf-qualification-full-20261013-01`.
+Changed-test Ruff/diff pass; application source untouched,prior mypy88 applies.
+Read the [actual two-call live qualification failure](docs/hf-pilot04.md),which
+is separate from mocked test evidence. No paper cases/app/quality benchmark ran.
+
+Hosted evaluation checkpoint: **738 passed, zero skips**, **40 new hosted
+protocol/collector/scorer tests**, mypy88 files, changed-file lint/diff and
+preservation checks. Read [hosted commands/evidence](docs/hf-evaluation.md).
+Synthetic providers and an owned TCP/SSE app exercise isolation, qualification
+stops, unknown usage, immutable reviews and full-matrix acceptance/rejection.
+An unknown-usage acceptance mutation was detected; source restored before the
+full suite. Original64 frozen/prior checks and162 protected file hashes pass.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_hf_evaluation.py tests/unit/test_hf_collector.py tests/unit/test_hf_collector_tcp.py tests/unit/test_hf_scoring.py -q --basetemp tests/test_output/hf-protocol-focused-new -o cache_dir=tests/test_output/week7-pytest
+```
+
+Full suite base: `tests/test_output/hf-protocol-full-20261013-01`. Zero HF calls:
+the user approved the exact data transfer/pilot, but approved admissions02/03
+stopped before inference at932.93/738.29MiB free versus required1024MiB.
+Protocol/source verification establishes no
+hosted task-quality or latency result. Earlier checkpoints below are historical.
+
+HF generation source checkpoint: **698 passed, zero skips**, **91 new HF tests**,
+mypy85 source files, changed-file Ruff/diff and preservation checks. Read the
+[adapter checkpoint](docs/hf-inference-adapter.md). HF tests use only synthetic
+HTTPX transports/search, in-process ASGI/lifespan and test-owned quota files;
+no real HF token/inference or production resources. Defaults remain disabled.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_hf_configuration.py tests/unit/test_hf_client.py tests/unit/test_hf_rag.py tests/api/test_hf_generation.py -q --basetemp tests/test_output/hf-focused-new -o cache_dir=tests/test_output/week7-pytest
+```
+
+Token-limit mutation detected/restored before full verification. Large original
+schemas can fail conservative admission before outbound work; live compatibility
+is unproven. Hosted collection needs a separate protocol; local v2 stays frozen.
+
 This guide covers the automated tests and Docker-backed checks through the Week 5 RAG implementation.
+
+## Week 7 isolated agent checks
+
+Offline semantic-scoring continuation: **607 passed, zero skips**, mypy for 80
+source files, changed-file Ruff/diff pass. **18 scoring tests** cover response and
+quotation binding, required facts and explicit relevance, incomplete reviews,
+failure denominators and partial/full synthetic acceptance/regression boundaries.
+A stale-response-review bypass mutation was detected and source restored.
+No actual inference or semantic outputs exist. See [scoring report](docs/week7-scoring.md).
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_agent_scoring.py -q
+```
+
+Full test base: `tests/test_output/week7-scoring-full-20261013-01`; two existing
+dependency deprecations remain. Earlier counts below are historical checkpoints.
+
+Collector continuation: **589 passed, zero skips**, mypy for 79 files, changed-file
+Ruff/diff pass. **19 collector checks** cover fixed jobs, default/source/policy/RAM
+guards, status-aware SSE, citation/budget identity, uncached app auth/quotas,
+attempt counting/privacy, emergency/failed-monitor cancellation and one-shot HTTP
+failure recording. A real loopback temporary-server test uses mocked provider/search
+responses; no actual inference. Memory-admission bypass mutation was detected.
+See [collector report](docs/week7-collector.md) for the actual no-start pilot.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_agent_collection.py tests/unit/test_agent_collector_runtime.py -q
+```
+
+Full test base: `tests/test_output/week7-collector-final-20261013-01`. Earlier
+counts below describe preceding preparation and implementation checkpoints.
+
+Evaluation-preparation continuation (2026-10-13): **570 passed, zero skips**,
+mypy for 77 source files, changed-file Ruff and diff checks pass. The new offline
+validator has 18 tests for quote/locator/hash/corpus corruption, matched-pair facts,
+scope/count errors, prior/split leakage, negative scan recomputation and freeze/path
+integrity. A bypassed novelty guard was detected by mutation and exact source restored.
+Source validation passed 32 reviewed cases and 64 frozen/prior files. No inference.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_agent_evaluation.py -q
+.venv-win/Scripts/python.exe -m src.commands.validate_agent_evaluation --snapshot tests/test_output/week7-source-review-20261013-01
+```
+
+The protocol, reviewed labels, v2 manifest and retained pre-run correction are in
+[evaluation/week7_agent](evaluation/week7_agent/README.md). Full verification used
+new base directory `tests/test_output/week7-eval-full-20261013-01` and the separate
+Week 7 pytest cache. Older checks below describe the agent implementation checkpoint.
+
+The [bounded-agent spec](docs/week7-agent-spec.md) defines source acceptance.
+`tests/unit/test_agent_service.py` tests strict decisions, budgets, rewrite/original
+identity, selector guards, evidence ownership, fallback mode, timeouts/cancellation,
+search occupancy and private metadata. `tests/api/test_agent_routes.py` tests default
+503, authentication, shared quotas, request validation, error mappings, SSE parity
+and actual ASGI disconnect cancellation. Model/search boundaries use synthetic
+fixtures; no live inference, corpus access or old evaluation reuse.
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_agent_service.py tests/api/test_agent_routes.py -q
+.venv-win/Scripts/python.exe -m pytest -q
+.venv-win/Scripts/python.exe -m mypy src
+```
+
+2026-10-13: **552 passed, zero skips** including disposable PostgreSQL, mypy for
+76 source files, changed-file Ruff, base Compose and diff checks. Two existing
+dependency deprecations remain. On this workstation the Windows sandbox blocks
+asyncio's loopback socketpair; tests ran with execution escalation. The existing
+system pytest Temp directory has an ACL failure; full verification used the new
+`--basetemp tests/test_output/week7-full-20261013-02` and
+`-o cache_dir=tests/test_output/week7-pytest`. Use a new base directory on subsequent
+runs to retain evidence. Agent live acceptance and quality improvement are pending.
 
 ## 1. Fast automated tests
 

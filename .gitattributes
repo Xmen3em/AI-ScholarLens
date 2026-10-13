@@ -12,3 +12,9 @@ entrypoint.sh text eol=lf
 *.gif binary
 *.ico binary
 *.pdf binary
+
+# Frozen evaluation and provider metadata are verified by exact byte hashes.
+# Preserve their existing bytes in commits and subsequent checkouts.
+evaluation/week7_agent/** -text -eol whitespace=trailing-space,space-before-tab,cr-at-eol
+evaluation/week7_hf/** -text -eol whitespace=trailing-space,space-before-tab,cr-at-eol
+docs/research/hf-inference-models-20261013.json -text -eol whitespace=trailing-space,space-before-tab,cr-at-eol

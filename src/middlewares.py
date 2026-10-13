@@ -98,7 +98,9 @@ class OperationalMiddleware:
                     return
                 try:
                     retry = await anyio.to_thread.run_sync(
-                        lambda: RateLimiter(settings).reserve(generation=scope["path"] in {"/api/v1/ask", "/api/v1/stream"})
+                        lambda: RateLimiter(settings).reserve(generation=scope["path"] in {
+                            "/api/v1/ask", "/api/v1/stream", "/api/v1/agent/ask", "/api/v1/agent/stream"
+                        })
                     )
                 except (OSError, sqlite3.Error):
                     emit_event("rate_limit_store_unavailable", level=logging.ERROR)

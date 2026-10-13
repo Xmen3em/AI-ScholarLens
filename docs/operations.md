@@ -1,5 +1,25 @@
 # Local operational controls
 
+## Week 7 optional agent source
+
+The [bounded-agent spec](week7-agent-spec.md) records the audited implementation.
+`AGENT_ENABLED=false` remains the source default; disabled authenticated agent
+requests return 503. Optional `/api/v1/agent/ask` and `/api/v1/agent/stream` use
+the same global request/generation quota before work and always bypass Redis
+answer caching. One request reserves one generation slot and makes at most six
+generation calls plus, in hybrid mode, two query embeddings. Workflow defaults
+are 90 seconds total and 30 seconds per stage, controlled by bounded
+`AGENT_DEADLINE_SECONDS` and `AGENT_NODE_TIMEOUT_SECONDS` settings.
+
+No Week 7 activation occurred. The retained one-worker Week 6 API/image/key/cache,
+rollback container and all dependency resources remain in their prior state.
+Do not rebuild/recreate them to try the source feature as routine setup. Agent
+scope/grading/rewrite/selection and status delivery pass isolated tests; live
+quality, cold/sustained resource acceptance and deployment remain future gates.
+Cancelled synchronous retrieval can finish a bounded read under existing backend
+timeouts; its agent worker slot remains occupied until it ends. Cancelling HTTP
+does not guarantee that remote model computation terminates.
+
 For the user's recommended next step, see the prepared
 [off-machine transfer and receiving procedure](week6-off-machine-transfer.md).
 The encrypted USB route and separate-machine targets are documented; no transfer

@@ -3,6 +3,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from src.services.hf.registry import REGISTERED_HF_MODELS
 
 
 class DefaultSettings(BaseSettings):
@@ -46,6 +47,7 @@ class PDFParserSettings(DefaultSettings):
     do_table_structure: bool = False
     
 class Settings(DefaultSettings):
+    model_config = SettingsConfigDict(hide_input_in_errors=True)
     
     app_version: str = "0.1.0"
     debug: bool = True
@@ -63,6 +65,38 @@ class Settings(DefaultSettings):
     answer_cache_enabled: bool = False
     answer_cache_url: SecretStr = SecretStr("redis://127.0.0.1:6380/0")
     answer_cache_ttl_seconds: int = Field(default=3600, ge=1, le=86400)
+    agent_enabled: bool = False
+    agent_deadline_seconds: int = Field(default=90, ge=1, le=120)
+    agent_node_timeout_seconds: int = Field(default=30, ge=1, le=60)
+    hf_inference_enabled: bool = False
+    hf_token: SecretStr | None = None
+    hf_models: Annotated[list[str], NoDecode] = Field(default=["openai/gpt-oss-120b:groq"], min_length=1, max_length=2)
+    hf_default_model: str = "openai/gpt-oss-120b:groq"
+    hf_timeout_seconds: float = Field(default=30, ge=1, le=30)
+
+    @field_validator("hf_models", mode="before")
+    @classmethod
+    def parse_hf_models(cls, value):
+        if isinstance(value, str):
+            return [model.strip() for model in value.split(",") if model.strip()]
+        return value
+
+    @model_validator(mode="after")
+    def hosted_configuration(self):
+        if (len(set(self.hf_models)) != len(self.hf_models)
+                or not set(self.hf_models) <= REGISTERED_HF_MODELS
+                or self.hf_default_model not in self.hf_models):
+            raise ValueError("HF requires explicit registered model/provider pairs and an allowed default")
+        if self.hf_inference_enabled:
+            token = self.hf_token.get_secret_value() if self.hf_token else ""
+            if (not token.startswith("hf_") or len(token) < 16 or len(token) > 512
+                    or not token[3:].isascii() or not token[3:].isalnum()):
+                raise ValueError("HF inference requires a valid server-side HF token")
+            if self.api_key is None:
+                raise ValueError("HF inference requires the existing API key protection")
+            if self.answer_cache_enabled:
+                raise ValueError("HF inference requires an uncached profile")
+        return self
 
     @model_validator(mode="after")
     def local_trace_destination(self):
@@ -84,7 +118,7 @@ class Settings(DefaultSettings):
                     raise ValueError("Cache revision probes must remain local")
         return self
 
-    @field_validator("api_key", mode="before")
+    @field_validator("api_key", "hf_token", mode="before")
     @classmethod
     def empty_key(cls, value):
         return None if value == "" else value

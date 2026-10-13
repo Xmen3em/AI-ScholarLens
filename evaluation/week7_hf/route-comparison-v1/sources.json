@@ -1,0 +1,32 @@
+{
+  "retrieved_on": "2026-10-13",
+  "sdk_commit": "a704b8488c6ec78f719c576ba77a6035095dae77",
+  "sdk_files": {
+    "inference/_providers/groq.py": {
+      "url": "https://raw.githubusercontent.com/huggingface/huggingface_hub/a704b8488c6ec78f719c576ba77a6035095dae77/src/huggingface_hub/inference/_providers/groq.py",
+      "sha256": "253936255e193a56a8861a3bccb00542d93dda4195b0f98b275866cdcc2caaf4"
+    },
+    "inference/_providers/_common.py": {
+      "url": "https://raw.githubusercontent.com/huggingface/huggingface_hub/a704b8488c6ec78f719c576ba77a6035095dae77/src/huggingface_hub/inference/_providers/_common.py",
+      "sha256": "4f788a4fa31c36cec67957cadeafa5ec205bba287699315caa4465b909fb1a74"
+    },
+    "constants.py": {
+      "url": "https://raw.githubusercontent.com/huggingface/huggingface_hub/a704b8488c6ec78f719c576ba77a6035095dae77/src/huggingface_hub/constants.py",
+      "sha256": "f90d57aa46457e8f7efddc0b3cb1fdfd8d04b4be65657cd69001f600316935c6"
+    }
+  },
+  "hub_model": "openai/gpt-oss-120b",
+  "groq_mapping": {
+    "status": "live",
+    "providerId": "openai/gpt-oss-120b",
+    "task": "conversational",
+    "isModelAuthor": false
+  },
+  "mapping_url": "https://huggingface.co/api/models/openai/gpt-oss-120b?expand=inferenceProviderMapping",
+  "installed_dependencies": {
+    "httpx": "0.28.1",
+    "pydantic": "2.11.7"
+  },
+  "inference_requests": 0,
+  "authentication_headers_used": false
+}

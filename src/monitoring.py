@@ -69,7 +69,7 @@ def summarize(events):
     lookups = cache["hit"] + cache["miss"]
     return {"requests": requests, "failures": counts["failures"], "quota_rejections": counts["quota_rejections"],
             "auth_rejections": counts["auth_rejections"], "failure_rate": counts["failures"] / requests if requests else None,
-            "retries": counts["rag_selector_retry"],
+            "retries": counts["rag_selector_retry"] + counts["agent_selector_retry"],
             "validation_failures": counts["rag_selection_validation_failed"] + counts["rag_answer_validation_failed"],
             "latency": {route: percentiles(values) for route, values in sorted(latencies.items())},
             "usage": dict(usage), "cache": dict(cache), "cache_hit_rate": cache["hit"] / lookups if lookups else None,

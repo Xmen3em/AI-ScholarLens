@@ -14,7 +14,7 @@ The project is intentionally split into small replaceable components. The arXiv 
 | Phase 4 | Chunking and retrieval evaluation | Initial evaluation and pre-Week-6 quality pass complete; candidate expansion remains opt-in after relevance regressed. See [quality results](evaluation/quality_fixes/REPORT.md). |
 | Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
 | Phase 6 | Local operations, monitoring and caching | Implemented and locally activated: signed revision-aware Redis answers, bounded metadata tracing, file monitoring, access/quotas and recovery verification. Full Langfuse backend/UI verified separately; sustained combined operation remains unverified. [Activation](docs/week6-local-activation.md), [observation](docs/week6-observation.md), [operations](docs/operations.md). |
-| Phase 7 | Agentic RAG and application development | Planned: optional bounded agent workflow, fresh evaluation, research interface and future server preparation. [Continuation context](docs/week7-continuation.md). |
+| Phase 7 | Agentic RAG and application development | In progress: disabled bounded agent and HF adapter, separate hosted collector/scorer and isolated tests implemented. Live hosted acceptance, research interface and server preparation remain. [Specification](docs/week7-agent-spec.md), [hosted evaluation](docs/hf-evaluation.md), [continuation](docs/week7-continuation.md). |
 
 Update this table and the diagrams when a phase is accepted. Keep unfinished work in the “Planned” or “In progress” rows instead of presenting it as an active runtime dependency.
 
@@ -418,6 +418,20 @@ source-exact attribution and a server-enforced 200-word limit including citation
 A conservative lexical relevance guard can abstain on unrelated or paraphrased questions.
 Streams emit complete excerpts after the internal selection is validated. See
 [TESTING.md](TESTING.md) for the acceptance evidence and limitations of this extractive mode.
+
+Week 7 adds optional `/api/v1/agent/ask` and `/api/v1/agent/stream` using the same
+request controls, authentication and shared generation budget. `AGENT_ENABLED=false`
+by default; disabled requests return 503. The workflow validates AI research scope,
+retrieves and grades evidence, rewrites retrieval once if needed, and returns
+validated quotations or abstention. It allows two retrievals and six generation
+calls, with 90-second total and 30-second stage defaults. Hybrid retrieval may
+also embed up to two queries. Agent results are uncached; fixed operation status
+events precede validated sources/deltas/done in SSE. See the
+[audit and acceptance specification](docs/week7-agent-spec.md).
+This source feature has not been activated in the retained Week 6 runtime.
+The [evaluation protocol and frozen v2 labels](evaluation/week7_agent/README.md)
+are prepared: eight development and 24 holdout questions, reviewed against preserved
+sources with disjoint source papers. Offline checks pass; live comparison is pending.
 
 ## Testing
 

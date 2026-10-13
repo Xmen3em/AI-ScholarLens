@@ -1,0 +1,9 @@
+{
+  "version": "route-comparison-v1",
+  "parent_fixture_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "sha256": {
+    "profile.json": "f006d8c30f13dc57aa68b5fd22317edcb5df9861b13cf11405c2f151cddd7c10",
+    "PROTOCOL.md": "6072b6995ecc88a37c0266cca79b6daec05fe0ac9b9167bc3a3b499373997c9e",
+    "sources.json": "20ce61c88281ff293b5d6acea4e6146623d428a6731deead1f7121c92299fd27"
+  }
+}

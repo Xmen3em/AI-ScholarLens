@@ -1,0 +1,22 @@
+{
+  "version": "route-comparison-v1",
+  "parent_fixture_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "model": "openai/gpt-oss-120b:groq",
+  "maximum_outbound_attempts": 2,
+  "case": "relevance",
+  "route_order": [
+    "unified",
+    "provider-relay"
+  ],
+  "routes": {
+    "unified": {
+      "base_url": "https://router.huggingface.co/v1/",
+      "wire_model": "openai/gpt-oss-120b:groq"
+    },
+    "provider-relay": {
+      "base_url": "https://router.huggingface.co/groq/openai/v1/",
+      "wire_model": "openai/gpt-oss-120b"
+    }
+  },
+  "qualification_accepted": false
+}

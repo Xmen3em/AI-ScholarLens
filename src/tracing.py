@@ -8,6 +8,7 @@ from contextvars import ContextVar
 
 import httpx
 from src.operations import request_context
+from src.services.hf.registry import REGISTERED_HF_MODELS
 
 logger = logging.getLogger(__name__)
 parent_span: ContextVar = ContextVar("operational_parent_span", default=None)
@@ -16,17 +17,24 @@ EVENTS = {
     "rag_retrieval", "rag_generation", "rag_selector_retry", "rag_selection_validation_failed",
     "rag_answer_validation_failed", "rag_stream_error", "rag_stream_completed", "rag_stream_interrupted",
     "rag_cache", "rate_limit_store_unavailable", "readiness_failed",
+    "agent_stage", "agent_completed", "agent_error", "agent_selector_retry",
+    "agent_stream_error", "agent_stream_completed", "agent_stream_interrupted",
+    "hf_generation_attempt",
 }
 NUMBERS = {"duration_ms", "paper_groups", "passages", "load_ns", "prompt_eval_ns", "generation_ns",
-           "total_ns", "prompt_tokens", "output_tokens", "attempt", "status"}
+           "total_ns", "prompt_tokens", "output_tokens", "attempt", "status", "model_calls", "retrieval_attempts", "stages", "status_code"}
 REASONS = {"GroundingError", "OllamaResponseError", "OllamaTimeoutError", "OllamaConnectionError", "ValueError",
            "invalid structured output", "answer selection must contain at most three distinct IDs",
            "answer selection contains an unknown evidence ID", "answer is missing a citation marker",
            "answer contains unknown citation markers", "answer exceeds the 200-word limit",
            "answer must contain only cited evidence excerpts", "answer excerpt does not match its cited passage"}
+REASONS |= {"TimeoutError", "AgentBusyError"}
+REASONS |= {"HFGenerationError", "HFResponseError", "HFTimeoutError"}
 ENUMS = {
+    "provider": {"groq", "fireworks-ai"}, "model": REGISTERED_HF_MODELS,
     "mode": {"bm25", "hybrid"}, "method": {"GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"},
-    "outcome": {"completed", "failed", "stream_error", "interrupted"},
+    "outcome": {"completed", "failed", "stream_error", "interrupted", "answered", "abstained", "out_of_scope"},
+    "operation": {"validate", "retrieve", "grade", "rewrite", "answer", "abstain"},
     "result": {"hit", "miss", "stored", "unavailable", "invalid", "bypass", "revision_changed"},
     "done_reason": {"stop", "length", "load", "unload", "unknown"},
 }
@@ -35,6 +43,8 @@ ENUMS = {
 def safe_fields(fields):
     result = {k: v for k, v in fields.items() if k in NUMBERS and isinstance(v, (int, float))}
     result.update({k: v for k, v in fields.items() if k in ENUMS and isinstance(v, str) and v in ENUMS[k]})
+    if isinstance(fields.get("rewritten"), bool):
+        result["rewritten"] = fields["rewritten"]
     # Failure names are bounded classifications; never serialize exception messages.
     if "reason" in fields:
         result["failure"] = True
