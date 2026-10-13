@@ -19,8 +19,18 @@ dependencies = [
 ]
 readme = "README.md"
 
+[project.optional-dependencies]
+week6 = [
+    "opentelemetry-exporter-otlp-proto-http==1.45.1",
+    "opentelemetry-sdk==1.45.1",
+    "redis>=6,<8",
+]
+
 [dependency-groups]
 dev = [
+    "opentelemetry-sdk==1.45.1",
+    "opentelemetry-exporter-otlp-proto-http==1.45.1",
+    "redis>=6,<8",
     "anyio[trio]>=4.9.0",
     "asgi-lifespan>=2.1.0",
     "jupyter>=1.1.1",

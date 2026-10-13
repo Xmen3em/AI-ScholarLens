@@ -1,4 +1,5 @@
 from typing import Annotated, List, Union
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -54,6 +55,34 @@ class Settings(DefaultSettings):
     api_requests_per_minute: int = Field(default=60, ge=1)
     api_generations_per_minute: int = Field(default=6, ge=1)
     api_rate_limit_path: str = "./data/rate_limits.sqlite3"
+    local_tracing_enabled: bool = False
+    local_tracing_url: str = "http://127.0.0.1:3000"
+    local_tracing_public_key: SecretStr | None = None
+    local_tracing_secret_key: SecretStr | None = None
+    monitoring_directory: str | None = None
+    answer_cache_enabled: bool = False
+    answer_cache_url: SecretStr = SecretStr("redis://127.0.0.1:6380/0")
+    answer_cache_ttl_seconds: int = Field(default=3600, ge=1, le=86400)
+
+    @model_validator(mode="after")
+    def local_trace_destination(self):
+        if self.local_tracing_enabled:
+            url = urlsplit(self.local_tracing_url)
+            if (url.scheme != "http" or url.hostname not in {"127.0.0.1", "localhost", "::1", "langfuse-web", "host.docker.internal"}
+                    or url.username or url.password or url.query or url.fragment or url.path not in {"", "/"}):
+                raise ValueError("Tracing requires a local HTTP origin")
+            if not self.local_tracing_public_key or not self.local_tracing_secret_key:
+                raise ValueError("Local tracing requires project credentials")
+        if self.answer_cache_enabled:
+            url = urlsplit(self.answer_cache_url.get_secret_value())
+            if url.scheme != "redis" or url.hostname not in {"localhost", "127.0.0.1", "::1", "redis-cache"} or url.query:
+                raise ValueError("Answer caching requires local Redis")
+            if self.api_key is None:
+                raise ValueError("Answer caching requires the configured API key for signing")
+            for origin, allowed in [(self.opensearch_host, "opensearch"), (self.ollama_host, "ollama")]:
+                if urlsplit(origin).hostname not in {"localhost", "127.0.0.1", "::1", allowed}:
+                    raise ValueError("Cache revision probes must remain local")
+        return self
 
     @field_validator("api_key", mode="before")
     @classmethod
