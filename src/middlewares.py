@@ -6,6 +6,7 @@ import math
 import sqlite3
 import time
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 import anyio
@@ -63,8 +64,15 @@ class OperationalMiddleware:
             await self.app(scope, receive, send)
             return
         settings = self.settings or getattr(scope["app"].state, "settings", None) or get_settings()
-        context = {"request_id": uuid4().hex}
+        context: dict[str, Any] = {"request_id": uuid4().hex}
         token = request_context.set(context)
+        tracing = getattr(scope["app"].state, "tracing", None)
+        try:
+            if tracing:
+                context["tracing"] = tracing
+                context["trace_root"] = tracing.start(context["request_id"])
+        except Exception:
+            context.pop("tracing", None)
         started = time.perf_counter()
         status, completed, response_started = 500, False, False
 
@@ -101,13 +109,23 @@ class OperationalMiddleware:
                                        headers={"Retry-After": str(retry)})(scope, receive, observe)
                     return
             await self.app(scope, receive, observe)
+            if completed and status == 200 and not context.get("stream_failed") and not context.get("stream_interrupted"):
+                if commit := context.get("cache_commit"):
+                    await commit[0].store(commit[1], commit[2])
         except Exception:
             if response_started:
                 raise
             await JSONResponse({"detail": "Internal server error"}, status_code=500)(scope, receive, observe)
         finally:
             route = scope.get("route")
-            outcome = "stream_error" if context.get("stream_failed") else "completed" if completed and status < 500 else "failed"
-            emit_event("http_request_completed", method=scope["method"], route=getattr(route, "path", "unmatched"),
-                       status=status, duration_ms=round((time.perf_counter() - started) * 1000, 2), outcome=outcome)
+            outcome = ("stream_error" if context.get("stream_failed") else "interrupted" if context.get("stream_interrupted")
+                       else "completed" if completed and status < 500 else "failed")
+            fields = dict(method=scope["method"], route=getattr(route, "path", "unmatched"),
+                          status=status, duration_ms=round((time.perf_counter() - started) * 1000, 2), outcome=outcome)
+            emit_event("http_request_completed", **fields)
+            try:
+                if tracing and context.get("trace_root"):
+                    tracing.finish(context["trace_root"], fields)
+            except Exception:
+                pass
             request_context.reset(token)

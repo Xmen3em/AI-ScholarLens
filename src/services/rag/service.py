@@ -8,7 +8,7 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import anyio
 from pydantic import ValidationError
@@ -22,6 +22,10 @@ from src.services.ollama.client import OllamaClient
 from src.services.rag.context import INSUFFICIENT_EVIDENCE_ANSWER, RAGContext, build_context, validate_answer_evidence
 from src.services.rag.excerpts import build_excerpts, render_selection
 from src.services.search import SearchService
+from src.tracing import traced
+
+if TYPE_CHECKING:
+    from src.answer_cache import AnswerCache
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +98,10 @@ class RAGService:
         self.search = search
         self.ollama = ollama
         self.settings = settings
+        self.cache: AnswerCache | None = None
         self.system_prompt = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8").strip()
 
+    @traced("retrieval")
     async def prepare(self, request: AskRequest) -> PreparedRAG:
         model = self._model_for(request)
         started = time.perf_counter()
@@ -128,10 +134,17 @@ class RAGService:
                            candidates_per_passage=self.settings.rag_sentence_candidates_per_passage)
 
     async def ask(self, request: AskRequest) -> AskResponse:
+        ticket = await self.cache.lookup(request) if self.cache else None
+        if ticket and ticket.response:
+            return ticket.response
         prepared = await self.prepare(request)
         answer = await self._generate_answer(prepared)
-        return self._response(prepared, answer)
+        response = self._response(prepared, answer)
+        if ticket and self.cache:
+            await self.cache.store(ticket, response)
+        return response
 
+    @traced("generation_and_validation")
     async def _generate_answer(self, prepared: PreparedRAG) -> str:
         """Use one selection transport and bounded validation policy for both routes."""
         if not build_excerpts(prepared.context.citations, prepared.request.query,
@@ -265,7 +278,7 @@ class RAGService:
 
     @staticmethod
     def _log_generation(result: OllamaGenerateResponse) -> None:
-        emit_event("rag_generation", load_ns=result.load_duration, prompt_eval_ns=result.prompt_eval_duration,
+        emit_event("rag_generation", total_ns=result.total_duration, load_ns=result.load_duration, prompt_eval_ns=result.prompt_eval_duration,
                    generation_ns=result.eval_duration, prompt_tokens=result.prompt_eval_count,
                    output_tokens=result.eval_count,
                    done_reason=result.done_reason if result.done_reason in {"stop", "length", "load", "unload", None} else "unknown")

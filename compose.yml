@@ -1,7 +1,10 @@
 services:
   # API service
   api:
-    build: .
+    build:
+      context: .
+      args:
+        WEEK6_EXTRAS: ${WEEK6_EXTRAS:-}
     container_name: rag-api
     ports:
       - "127.0.0.1:8000:8000"
@@ -25,8 +28,34 @@ services:
       - API_REQUESTS_PER_MINUTE=${API_REQUESTS_PER_MINUTE:-60}
       - API_GENERATIONS_PER_MINUTE=${API_GENERATIONS_PER_MINUTE:-6}
       - API_RATE_LIMIT_PATH=/tmp/scholarlens-rate-limits.sqlite3
+      - LOCAL_TRACING_ENABLED=${LOCAL_TRACING_ENABLED:-false}
+      - LOCAL_TRACING_URL=${LOCAL_TRACING_URL:-http://host.docker.internal:3000}
+      - LOCAL_TRACING_PUBLIC_KEY=${LOCAL_TRACING_PUBLIC_KEY:-}
+      - LOCAL_TRACING_SECRET_KEY=${LOCAL_TRACING_SECRET_KEY:-}
+      - ANSWER_CACHE_ENABLED=${ANSWER_CACHE_ENABLED:-false}
+      - ANSWER_CACHE_URL=${ANSWER_CACHE_URL:-redis://redis-cache:6379/0}
+      - ANSWER_CACHE_TTL_SECONDS=${ANSWER_CACHE_TTL_SECONDS:-3600}
+      - MONITORING_DIRECTORY=${MONITORING_DIRECTORY:-}
     networks:
       - rag-network
+
+  redis-cache:
+    profiles: ["week6-cache"]
+    image: redis@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
+    ports:
+      - "127.0.0.1:6380:6379"
+    environment:
+      REDIS_CACHE_PASSWORD: ${REDIS_CACHE_PASSWORD:-}
+    command:
+      - sh
+      - -c
+      - 'test -n "$$REDIS_CACHE_PASSWORD" || exit 1; exec redis-server --requirepass "$$REDIS_CACHE_PASSWORD" --save "" --appendonly no --maxmemory 64mb --maxmemory-policy allkeys-lru'
+    mem_limit: 128m
+    cpus: 0.5
+    networks: [rag-network]
+    logging:
+      driver: json-file
+      options: {max-size: "1m", max-file: "2"}
 
   opensearch:
     image: opensearchproject/opensearch:2.19.0

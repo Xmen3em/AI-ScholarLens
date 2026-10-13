@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import anyio
@@ -126,7 +127,11 @@ async def test_stream_latency_includes_body_and_context_is_isolated(tmp_path, ca
     @app.get("/slow-stream")
     async def stream():
         async def body():
-            await anyio.sleep(0.04)
+            # Windows event-loop timers can wake early relative to perf_counter.
+            # Hold the body for a measured 40 ms without weakening the assertion.
+            body_started = time.perf_counter()
+            while time.perf_counter() - body_started < 0.04:
+                await anyio.sleep(0.005)
             emit_event("test_stream_body")
             yield b"done"
         return StreamingResponse(body())

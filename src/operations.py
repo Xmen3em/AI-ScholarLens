@@ -11,3 +11,8 @@ logger = logging.getLogger(__name__)
 def emit_event(event: str, *, level: int = logging.INFO, **fields) -> None:
     context = request_context.get() or {}
     logger.log(level, json.dumps({"event": event, "entry_point": "api", "request_id": context.get("request_id"), **fields}))
+    try:
+        if context.get("tracing"):
+            context["tracing"].event(event, fields)
+    except Exception:
+        pass  # Optional diagnostics never change request behavior.

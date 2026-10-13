@@ -2,14 +2,17 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
+import anyio
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from opensearchpy.exceptions import OpenSearchException
+from src.answer_cache import make_answer_cache
 from src.config import get_settings
 from src.db.factory import make_database
 from src.exceptions import GroundingError, OllamaException, OllamaResponseError, OllamaTimeoutError, UnsupportedModelError
 from src.middlewares import OperationalMiddleware
+from src.monitoring import attach_monitoring
 from src.routers import ask, papers, ping, search
 from src.search.factory import make_search_client
 from src.services.arxiv.factory import make_arxiv_client
@@ -17,6 +20,7 @@ from src.services.embeddings.factory import make_embedder
 from src.services.ollama import make_ollama_client
 from src.services.rag import RAGService
 from src.services.search import SearchService
+from src.tracing import LocalTracing
 
 # Setup logging
 logging.basicConfig(
@@ -35,6 +39,16 @@ async def lifespan(app: FastAPI):
 
     settings = get_settings()
     app.state.settings = settings
+    try:
+        app.state.monitoring = attach_monitoring(settings.monitoring_directory)
+    except Exception:
+        app.state.monitoring = None
+        logger.warning("Local monitoring initialization unavailable")
+    try:
+        app.state.tracing = LocalTracing.create(settings)
+    except Exception:
+        app.state.tracing = None
+        logger.warning("Local tracing initialization unavailable")
 
     database = make_database()
     app.state.database = database
@@ -47,6 +61,7 @@ async def lifespan(app: FastAPI):
     app.state.search = SearchService(make_search_client(), make_embedder())
     app.state.ollama = make_ollama_client(settings)
     app.state.rag = RAGService(app.state.search, app.state.ollama, settings)
+    app.state.rag.cache = make_answer_cache(settings)
     logger.info("Services initialized: arXiv API client, search, Ollama, RAG")
 
     logger.info("API ready")
@@ -54,6 +69,13 @@ async def lifespan(app: FastAPI):
 
     # Cleanup
     await app.state.ollama.aclose()
+    if app.state.rag.cache:
+        await app.state.rag.cache.close()
+    if app.state.tracing:
+        await anyio.to_thread.run_sync(app.state.tracing.close)
+    if app.state.monitoring:
+        logging.getLogger("src.operations").removeHandler(app.state.monitoring)
+        app.state.monitoring.close()
     database.teardown()
     logger.info("API shutdown complete")
 
