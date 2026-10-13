@@ -1,4 +1,26 @@
-# Local implementation checkpoint — 2026-10-14
+# Current local reproduction checkpoint — 2026-10-14
+
+Read [the minimal reproduction and results](hf-reproduction.md). The four
+separately frozen synthetic arms are complete: minimal boolean passed; exact
+relevance at512 and relevance without outbound maxItems at256/512 all returned
+HTTP400/json_validate_failed with empty reported failed_generation. Root cause
+unresolved, no qualification or paper work. Application controls remain intact.
+
+**12 of13 approved attempts are used; one remains**, in the same fixed retained
+allowance. Never reset or reconstruct it. Preserve the final slot for a new
+separately frozen minimal array/prompt control; no unchanged paid repetition.
+
+865 tests pass, zero skips; mypy98,30 focused checks,lint/diff and two detected,
+restored mutations. All1034 protected hashes matched before documentation
+updates;15 retained containers/images/states,64 prior checks,corpus/models,
+private settings and recovery match. All four live preservation flags true.
+Continue on the same local checkpoint branch; no push/merge/deployment/activation.
+Original acceptance and interface/server roadmap remain pending.
+
+The implementation checkpoint below is historical; its eight-used/five-remaining
+balance is superseded by the current12-used/one-remaining balance above.
+
+# Previous local implementation checkpoint — 2026-10-14
 
 The accumulated Week7 agent, disabled HF adapter, evaluation tooling and bounded
 diagnostics are saved on local branch `codex/week7-agent-hf-checkpoint`, based on

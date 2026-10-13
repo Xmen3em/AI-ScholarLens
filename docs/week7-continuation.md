@@ -1,5 +1,22 @@
 # Continue application development after Week 6
 
+## Minimal reproduction complete; one approved call remains — 2026-10-14
+
+Read [the frozen reproduction/results](hf-reproduction.md). Minimal boolean
+passed; exact relevance512 and without-maxItems relevance256/512 all failed
+HTTP400/json_validate_failed with empty reported failed_generation. The tested
+limit/keyword changes did not fix the observations; root cause remains unproven.
+No qualification, paper collection or application control/default change.
+
+**12/13 attempts used,one remains** in the same fixed retained allowance.
+865 tests pass,zero skips;mypy98;30 new focused tests;privacy and expected-answer
+mutations caught/restored. Protected source/prior evidence/private settings,
+15 retained containers,64 prior checks,corpus/models/recovery preserved.
+Next offline minimal array/prompt control and separate freeze before using the
+final slot. No unchanged repetition,allowance reset,push/merge/deployment/activation.
+Exact qualification/development/holdout and interface/server roadmap remain;
+missing backup hardware does not block source work. Earlier balances are historical.
+
 ## Local commit and next-session entry point — 2026-10-14
 
 Read [the committed session checkpoint](session-checkpoint.md). The accumulated
