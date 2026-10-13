@@ -1,8 +1,17 @@
 # Week 6: local operational controls
 
-Approved scope: audit existing controls, implement gaps, and verify locally.
-Deployment, selector tuning, ingestion, corpus/index changes, model changes,
-commits and pushes are excluded. Existing source/evaluation artifacts are retained.
+Week 6 implementation and local evidence are now checkpointed for the user's
+requested continuation. Next-session context:
+[Week 7 application development](../docs/week7-continuation.md). Start with an
+isolated, disabled-by-default agent workflow and explicit evaluation criteria.
+Missing off-machine hardware does not block local feature work; deployment and
+existing selector-policy changes remain outside this checkpoint's scope.
+
+Original scope (2026-10-08): audit existing controls, implement gaps and verify
+locally; deployment, tuning, data/model changes, commits and pushes were excluded.
+The user subsequently authorized local Week 6 commits on 2026-10-13. Pushes,
+deployment and existing selector-policy changes remain excluded. Existing source,
+evaluation and runtime artifacts are retained.
 
 ## Audit before implementation (2026-10-08, Africa/Cairo)
 
@@ -43,9 +52,18 @@ on 2026-10-08. Its Week 6 teaches Langfuse traces, Redis exact-match caching,
 TTL/key design, latency/token/cost monitoring and graceful cache fallback.
 This repository already logs retrieval/generation timings and token counts.
 This pass fills the user's four operational gaps with local controls. Langfuse,
-Redis caching, dashboards and distributed tracing remain optional future work;
-they are not claimed as implemented or required for these controls. Caching needs
-corpus/model/policy-aware invalidation and separate quality verification.
+Redis caching, dashboards and distributed tracing were deferred in that first
+pass. The 2026-10-13 [continuation plan](../docs/week6-monitoring-plan.md) now
+implements opt-in metadata-only Langfuse OTLP export, signed revision-aware Redis
+answers and offline monitoring reports. Full Langfuse backend/UI and live
+revision probes subsequently passed in the approved
+[staged local continuation](../docs/week6-live-acceptance.md). The subsequent
+[local activation](../docs/week6-local-activation.md) passed a simultaneous real
+RAG cache miss with measured headroom, then activated one API worker, Redis and
+file monitoring. The original API/key are retained for rollback; the normal
+Gradio client passed. Langfuse, Airflow and Dashboards stay stopped. Sustained
+load and simultaneous RAG/Langfuse operation remain unverified. Caching preserves
+answer-quality defects.
 
 ## Answer-quality work remains open
 

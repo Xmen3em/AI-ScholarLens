@@ -13,7 +13,8 @@ The project is intentionally split into small replaceable components. The arXiv 
 | Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
 | Phase 4 | Chunking and retrieval evaluation | Initial evaluation and pre-Week-6 quality pass complete; candidate expansion remains opt-in after relevance regressed. See [quality results](evaluation/quality_fixes/REPORT.md). |
 | Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
-| Phase 6 | Local operational hardening | Audited and locally verified: correlated request/RAG logs, access controls, shared rate limits, dependency readiness, database restore drill. [Week 6 audit](tasks/plan.md), [operations guide](docs/operations.md). Deployment remains outside approved scope. |
+| Phase 6 | Local operations, monitoring and caching | Implemented and locally activated: signed revision-aware Redis answers, bounded metadata tracing, file monitoring, access/quotas and recovery verification. Full Langfuse backend/UI verified separately; sustained combined operation remains unverified. [Activation](docs/week6-local-activation.md), [observation](docs/week6-observation.md), [operations](docs/operations.md). |
+| Phase 7 | Agentic RAG and application development | Planned: optional bounded agent workflow, fresh evaluation, research interface and future server preparation. [Continuation context](docs/week7-continuation.md). |
 
 Update this table and the diagrams when a phase is accepted. Keep unfinished work in the “Planned” or “In progress” rows instead of presenting it as an active runtime dependency.
 
@@ -37,6 +38,8 @@ flowchart LR
     subgraph Runtime[Docker Compose runtime]
         API[FastAPI API<br/>:8000]
         Budgets[(SQLite request budgets<br/>shared by local API workers)]
+        Cache[(Redis<br/>opt-in signed answer cache)]
+        Events[(Local metadata event files)]
         Airflow[Airflow Scheduler + DAG<br/>:8080 or AIRFLOW_PORT]
         DB[(PostgreSQL<br/>papers + parsed content)]
         Search[(OpenSearch<br/>arxiv-papers + paper-chunks)]
@@ -50,6 +53,8 @@ flowchart LR
 
     User --> API
     API --> Budgets
+    API -- after authentication and quotas --> Cache
+    API -- metadata only --> Events
     API --> DB
     API -- BM25 search --> Search
     API -- health check --> Ollama
