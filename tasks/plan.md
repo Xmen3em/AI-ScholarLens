@@ -1,5 +1,20 @@
 # Week 6: local operational controls
 
+## LangGraph/private PC bot — 2026-10-14
+
+User choices fix current scope: actual LangGraph, own account only, current PC.
+[Integration contract and setup](../docs/telegram-langgraph.md). Graph and private
+polling client source implemented; original work/grounding/identity/API guards
+preserved. Source1,011tests/zero skips,128focused,mypy105 passes. Owner and replay
+mutations caught; caller tracing isolation, stream cancellation and template
+reader/isolation regressions verified. Live corpus/index/models,15containers,
+privateAPI/settings,old freezes/evidence and both exhausted ledgers preserved.
+
+No inference/live Telegram/runtime activation. Next BotFather setup/private
+token/verified owner ID; independently freeze/approve new HF study and exact
+qualification/task acceptance; then reviewed candidate API8002 and owner end-to-end
+test. Original8000 stays intact. Existing UI/evaluation/server/recovery tasks remain.
+
 ## Offline fixture clarity and bounded success diagnostics — 2026-10-14
 
 [Review and implementation](../docs/hf-fixture-review.md) complete. Preserve old

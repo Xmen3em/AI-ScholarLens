@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from pydantic_settings import BaseSettings
 from src.config import Settings
+from src.services.telegram_bot import TelegramSettings
 
 PROJECT_ROOT = Path(__file__).parents[2]
 ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
@@ -61,6 +62,12 @@ def declared_names(env_file: Path) -> set[str]:
     return names
 
 
+def application_env_names() -> set[str]:
+    # The standalone bot reads its own prefixed settings. Keep both consumers
+    # covered so private .env values cannot leak into tests through missing keys.
+    return settings_env_names(Settings) | settings_env_names(TelegramSettings, TelegramSettings.model_config["env_prefix"])
+
+
 @pytest.mark.parametrize("env_file", [ENV_EXAMPLE, ENV_TEST], ids=["env.example", "env.test"])
 def test_env_file_documents_every_setting(env_file):
     """.env.example is the template developers copy; .env.test is what shields the suite.
@@ -68,7 +75,7 @@ def test_env_file_documents_every_setting(env_file):
     A setting missing from .env.test falls through to whatever the developer has in
     their own .env, which is the isolation hole this file exists to close.
     """
-    missing = settings_env_names(Settings) - declared_names(env_file)
+    missing = application_env_names() - declared_names(env_file)
 
     assert not missing, f"{env_file.name} is missing: {sorted(missing)}"
 
@@ -76,14 +83,14 @@ def test_env_file_documents_every_setting(env_file):
 @pytest.mark.parametrize("env_file", [ENV_EXAMPLE, ENV_TEST], ids=["env.example", "env.test"])
 def test_env_file_declares_nothing_the_settings_do_not_read(env_file):
     """Catches names left behind after a setting is renamed or retired."""
-    unknown = declared_names(env_file) - settings_env_names(Settings) - NOT_ENV_CONFIGURABLE
+    unknown = declared_names(env_file) - application_env_names() - NOT_ENV_CONFIGURABLE
 
     assert not unknown, f"{env_file.name} sets variables nothing reads: {sorted(unknown)}"
 
 
 def test_env_example_values_produce_working_settings(monkeypatch):
     """`cp .env.example .env` has to yield a config that actually loads."""
-    for name in settings_env_names(Settings):
+    for name in application_env_names():
         monkeypatch.delenv(name, raising=False)  # otherwise .env.test would mask the file
 
     configured = Settings(_env_file=ENV_EXAMPLE)
@@ -91,3 +98,5 @@ def test_env_example_values_produce_working_settings(monkeypatch):
     assert configured.environment == "development"
     assert configured.arxiv.max_results == 10
     assert configured.ollama_models == ["llama3.2:1b"]
+    bot = TelegramSettings(_env_file=ENV_EXAMPLE)
+    assert bot.enabled is False and bot.bot_token is None and bot.owner_id is None

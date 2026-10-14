@@ -1,4 +1,40 @@
-# Current offline fixture review and success diagnostics — 2026-10-14
+# Current LangGraph and private Telegram source checkpoint — 2026-10-14
+
+The user chose LangGraph like the course, a bot private to their own Telegram
+account, and initial use on their PC. [Integration and setup](telegram-langgraph.md).
+The real StateGraph now runs scope/retrieve/grade/rewrite/answer/abstain nodes with
+unchanged controller prompts, evidence guards, public contracts and work limits.
+Graph status preserves backpressure; cancellation joins background work; external
+tracing stays off without changing the caller's tracing context.
+
+The separate disabled-by-default private polling bot supports /start,/help,/ask
+and plain questions, exact owner/private-chat checks, validated cited replies,
+bounded Unicode splitting, API-key/token isolation and generic errors. A durable
+offset/registration and OS lock prevent concurrent/replayed admitted requests.
+No question/answer history, automatic startup, API retry or provider fallback.
+Both configuration templates and their strict reader/isolation tests are updated.
+
+**1,011 tests pass,zero skips**,62new since432c5d6,128focused,mypy105,Ruff. Owner
+and durable-admission mutations caught/restored. 953-test LangGraph checkpoint
+7308a56 precedes the final bot/context/compatibility fixes. Installed dependencies
+pass uv checks; only old jsonpointer version changes. Added optional zstandard
+exposed a local HTTPX audit negotiation failure; identity encoding fixes only the
+snapshot helper. The original application search driver still works. Actual full
+corpus/index/model state and64 frozen checks match;15 retained containers and
+private settings/API key,all old trials/freezes/recovery and both ledgers preserved.
+
+**No paid HF calls or live Telegram calls. Original13/13 +extension6/6 exhausted,
+zero remaining,19total approved attempts used.** Original running Week6 API/rollback
+and HF/agent defaults remain unchanged. Old source fingerprints stay historical.
+
+User has not created the bot. Next create it with BotFather, save token privately
+and configure a verified owner ID. Prepare/review a separately bounded HF live
+study and qualify the chosen model before activation. Then prepare isolated
+candidate API on8002, keeping original8000 intact, and run the owner acceptance
+test. These source checks do not complete live HF/app acceptance. Research UI,
+quality evaluation and later server/recovery work remain. No push/merge/deployment.
+
+# Previous offline fixture review and success diagnostics — 2026-10-14
 
 Read [the fixture review and verified implementation](hf-fixture-review.md).
 The old positive label remains plausible; "which passages" has a possible

@@ -1,5 +1,23 @@
 # Week 6 local verification
 
+## LangGraph/private Telegram completion scope — 2026-10-14
+
+- [x] Record user selection: LangGraph, private owner-only bot, current PC.
+- [x] Run actual conditional LangGraph nodes with original guards/prompts/limits.
+- [x] Preserve status backpressure, joined cancellation and caller tracing context.
+- [x] Add private polling/commands, authenticated API forwarding and validated replies.
+- [x] Add durable offset/registration, single-instance lock and no uncertain API replay.
+- [x] Shield private credentials/logs/history and cover both settings templates/readers.
+- [x] Complete1,011full/zero skips,128focused,mypy105,lint,owner/replay mutation checks.
+- [x] Fix optional-codec local audit regression; verify full retained state and closed ledgers.
+- [ ] Create Telegram bot through BotFather; configure private token and verified owner ID.
+- [ ] Obtain new separately scoped HF budget; complete live qualification and task acceptance.
+- [ ] Prepare reviewed isolated candidate API8002; activate/test private owner's bot locally.
+
+[Setup and source evidence](../docs/telegram-langgraph.md). No live Telegram/HF calls;
+13/13 +6/6 allowances exhausted,zero remaining. Running original API/rollback unchanged.
+Old tasks/records remain; older optional-Telegram/no-LangGraph choices are superseded.
+
 ## Offline fixture clarity and successful-response diagnostics — 2026-10-14
 
 - [x] Review positive-label ambiguity without rewriting past labels/results.

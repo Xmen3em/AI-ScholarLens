@@ -1,5 +1,25 @@
 # Continue application development after Week 6
 
+## LangGraph/private Telegram source ready — 2026-10-14
+
+User selected LangGraph, private owner-only Telegram, and their current PC.
+[Source/setup contract](telegram-langgraph.md) supersedes earlier optional-bot/
+no-LangGraph plans. Real graph migration and private polling client are implemented
+with original guards, exact evidence validation and disabled runtime defaults.
+1,011tests pass,zero skips;62new,128focused,mypy105;owner/replay mutations caught.
+Strict template tests cover both settings consumers and prevent private-env leaks.
+New optional codec negotiation was reproduced and fixed in the localhost snapshot
+helper; original search driver and live corpus/index/model hashes remain valid.
+
+No actual Telegram or HF calls,API/image activation,replacement or data changes.
+Both exhausted ledgers retain13/13 +6/6 =19used,zero remain. User has not created
+bot: BotFather/private token/verified owner ID needed for setup. New explicitly
+bounded HF study and exact-schema/task acceptance needed before enabling HF.
+Prepare isolated candidate API8002 only for reviewed local rollout, preserving
+original8000 and rollback; then perform private owner's real end-to-end test.
+Remaining research interface/quality/server/backup tasks stay pending. Missing
+backup hardware does not block source work. Same local branch,no push/merge.
+
 ## Offline fixture review and success diagnostics complete — 2026-10-14
 
 Read [the reviewed fixtures and verified implementation](hf-fixture-review.md).
