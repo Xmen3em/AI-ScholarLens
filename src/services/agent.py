@@ -1,19 +1,23 @@
-"""Finite, uncached workflow over existing retrieval and evidence validation.
+"""Bounded LangGraph workflow over existing retrieval and evidence validation.
 
 Only the retrieval query may be rewritten. All relevance and answer decisions
 remain tied to the original request. Counters are request-local, never graph state
 provided by a caller. There are no arbitrary tools or controller retries.
 """
 
+import asyncio
 import json
 import logging
 import threading
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Literal, TypeVar
+from typing import Literal, TypedDict, TypeVar, cast
 
 import anyio
+from langgraph.graph import END, START, StateGraph
+from langgraph.runtime import Runtime
+from langsmith import tracing_context
 from pydantic import BaseModel, ValidationError
 from src.config import Settings
 from src.exceptions import GroundingError, OllamaResponseError
@@ -64,6 +68,19 @@ class _Run:
         return AgentStatus(operation=operation, attempt=self.retrievals + 1 if operation == "retrieve" else self.retrievals)
 
 
+class _GraphState(TypedDict):
+    route: Operation
+
+
+@dataclass
+class _GraphContext:
+    run: _Run
+    retrieval_query: str
+    resume: asyncio.Event = field(default_factory=asyncio.Event)
+    outcome: AgentOutcome = "abstained"
+    node_task: asyncio.Task | None = None
+
+
 class AgentService:
     def __init__(self, rag: RAGService, settings: Settings):
         self.rag = rag
@@ -71,6 +88,20 @@ class AgentService:
         # Held by the synchronous worker until its read actually ends, including
         # after caller cancellation. Repeated cancellation cannot spawn more reads.
         self._search_slot = threading.BoundedSemaphore(1)
+        graph = StateGraph(_GraphState, context_schema=_GraphContext, input_schema=_GraphState, output_schema=_GraphState)
+        for name, node in (("validate", self._scope_node), ("retrieve", self._retrieve_node),
+                           ("grade", self._grade_node), ("rewrite", self._rewrite_node),
+                           ("answer", self._answer_node), ("abstain", self._abstain_node)):
+            graph.add_node(name, node)
+        graph.add_edge(START, "validate")
+        graph.add_edge("retrieve", "grade")
+        for name, routes in (("validate", ("retrieve", "abstain")),
+                             ("grade", ("answer", "rewrite", "abstain")),
+                             ("rewrite", ("retrieve", "abstain"))):
+            graph.add_conditional_edges(name, lambda state: state["route"], {route: route for route in routes})
+        graph.add_edge("answer", END)
+        graph.add_edge("abstain", END)
+        self._graph = graph.compile()
 
     async def ask(self, request: AskRequest) -> AgentResponse:
         async for event in self.events(request):
@@ -82,55 +113,101 @@ class AgentService:
         if not self.settings.agent_enabled:
             raise RuntimeError("agent disabled")
         run = _Run(request, self.rag._model_for(request), time.monotonic() + self.settings.agent_deadline_seconds)
-        yield run.status("validate")
+        context = _GraphContext(run, request.query)
+        # Framework streams and ambient tracing must not expose private graph
+        # context. Only our typed status and validated response reach callers.
+        with tracing_context(enabled=False):
+            # The pinned astream implementation is an async generator; its SDK
+            # annotation exposes only AsyncIterator, omitting explicit close.
+            stream = cast(AsyncGenerator[object, None], self._graph.astream(_GraphState(route="validate"), context=context,
+                          config={"recursion_limit": 9}, stream_mode="custom"))
+            try:
+                async for event in stream:
+                    if not isinstance(event, (AgentStatus, AgentResponse)):
+                        raise RuntimeError("Unexpected agent graph event")
+                    yield event
+                    context.resume.set()
+            finally:
+                # Starlette cancels an AnyIO scope on disconnect. Shield only
+                # cleanup so its repeated cancellation cannot skip joining the
+                # framework's background node and leave model work running.
+                with anyio.CancelScope(shield=True):
+                    try:
+                        await stream.aclose()
+                    finally:
+                        task = context.node_task
+                        if task is not None and not task.done():
+                            task.cancel()
+                            await asyncio.gather(task, return_exceptions=True)
+
+    async def _begin_node(self, runtime: Runtime[_GraphContext], operation: Operation) -> _Run:
+        context = runtime.context
+        context.node_task = asyncio.current_task()
+        runtime.stream_writer(context.run.status(operation))
+        # Preserve the original generator's backpressure: no stage work can run
+        # while a caller is paused after receiving its operation status.
+        await context.resume.wait()
+        context.resume.clear()
+        return context.run
+
+    async def _scope_node(self, state: _GraphState, runtime: Runtime[_GraphContext]) -> _GraphState:
+        run = await self._begin_node(runtime, "validate")
         scope = await self._decision(run, ScopeDecision,
                                      "Is this a question about AI/ML research papers? Return in_scope boolean.",
-                                     {"question": request.query})
+                                     {"question": run.request.query})
         if not scope.in_scope:
-            yield run.status("abstain")
-            yield self._response(run, INSUFFICIENT_EVIDENCE_ANSWER, "out_of_scope")
-            return
+            runtime.context.outcome = "out_of_scope"
+        return {"route": "retrieve" if scope.in_scope else "abstain"}
 
-        retrieval_query = request.query
-        for attempt in range(2):
-            yield run.status("retrieve")
-            run.prepared = await self._timed(run, lambda: self._retrieve(run, retrieval_query))
-            yield run.status("grade")
-            citations = run.prepared.context.citations
-            if len(citations) > 30:
-                raise OllamaResponseError("Agent evidence exceeds limit")
-            relevant: list[str] = []
-            if citations:
-                grade = await self._decision(run, RelevanceDecision,
-                                            "Return relevant_markers for passages that directly answer the ORIGINAL question. "
-                                            "Return an empty list if none answer it. Use only supplied markers.",
-                                            {"question": request.query,
-                                             "passages": [{"marker": c.marker, "evidence": c.evidence} for c in citations]})
-                relevant = grade.relevant_markers
-                if len(set(relevant)) != len(relevant) or set(relevant) - {c.marker for c in citations}:
-                    raise OllamaResponseError("Agent returned invalid relevance markers")
-            selected = [c for c in citations if c.marker in relevant]
-            context = RAGContext(selected, list(dict.fromkeys(_pdf_url(c.arxiv_id) for c in selected)), "")
-            run.prepared = PreparedRAG(request, context, run.prepared.search_mode, run.model,
-                                       run.prepared.candidates_per_passage)
-            if selected:
-                yield run.status("answer")
-                result = await self._timed(run, lambda: self._select(run))
-                yield self._response(run, result, "abstained" if result == INSUFFICIENT_EVIDENCE_ANSWER else "answered")
-                return
-            if attempt == 1:
-                break
-            yield run.status("rewrite")
-            rewrite = await self._decision(run, RewriteDecision,
-                                          "Return query: a concise retrieval rewrite preserving the original question's "
-                                          "entities and intent. Do not answer the question or add unsupported facts.",
-                                          {"question": request.query})
-            if rewrite.query.casefold() == request.query.casefold():
-                break
-            run.rewritten = True
-            retrieval_query = rewrite.query
-        yield run.status("abstain")
-        yield self._response(run, INSUFFICIENT_EVIDENCE_ANSWER, "abstained")
+    async def _retrieve_node(self, state: _GraphState, runtime: Runtime[_GraphContext]) -> _GraphState:
+        run = await self._begin_node(runtime, "retrieve")
+        run.prepared = await self._timed(run, lambda: self._retrieve(run, runtime.context.retrieval_query))
+        return {"route": "grade"}
+
+    async def _grade_node(self, state: _GraphState, runtime: Runtime[_GraphContext]) -> _GraphState:
+        run = await self._begin_node(runtime, "grade")
+        assert run.prepared is not None
+        citations = run.prepared.context.citations
+        if len(citations) > 30:
+            raise OllamaResponseError("Agent evidence exceeds limit")
+        relevant: list[str] = []
+        if citations:
+            grade = await self._decision(run, RelevanceDecision,
+                                        "Return relevant_markers for passages that directly answer the ORIGINAL question. "
+                                        "Return an empty list if none answer it. Use only supplied markers.",
+                                        {"question": run.request.query,
+                                         "passages": [{"marker": c.marker, "evidence": c.evidence} for c in citations]})
+            relevant = grade.relevant_markers
+            if len(set(relevant)) != len(relevant) or set(relevant) - {c.marker for c in citations}:
+                raise OllamaResponseError("Agent returned invalid relevance markers")
+        selected = [c for c in citations if c.marker in relevant]
+        context = RAGContext(selected, list(dict.fromkeys(_pdf_url(c.arxiv_id) for c in selected)), "")
+        run.prepared = PreparedRAG(run.request, context, run.prepared.search_mode, run.model,
+                                   run.prepared.candidates_per_passage)
+        return {"route": "answer" if selected else "rewrite" if run.retrievals == 1 else "abstain"}
+
+    async def _rewrite_node(self, state: _GraphState, runtime: Runtime[_GraphContext]) -> _GraphState:
+        run = await self._begin_node(runtime, "rewrite")
+        rewrite = await self._decision(run, RewriteDecision,
+                                      "Return query: a concise retrieval rewrite preserving the original question's "
+                                      "entities and intent. Do not answer the question or add unsupported facts.",
+                                      {"question": run.request.query})
+        if rewrite.query.casefold() == run.request.query.casefold():
+            return {"route": "abstain"}
+        run.rewritten = True
+        runtime.context.retrieval_query = rewrite.query
+        return {"route": "retrieve"}
+
+    async def _answer_node(self, state: _GraphState, runtime: Runtime[_GraphContext]) -> _GraphState:
+        run = await self._begin_node(runtime, "answer")
+        result = await self._timed(run, lambda: self._select(run))
+        runtime.stream_writer(self._response(run, result, "abstained" if result == INSUFFICIENT_EVIDENCE_ANSWER else "answered"))
+        return {"route": "answer"}
+
+    async def _abstain_node(self, state: _GraphState, runtime: Runtime[_GraphContext]) -> _GraphState:
+        run = await self._begin_node(runtime, "abstain")
+        runtime.stream_writer(self._response(run, INSUFFICIENT_EVIDENCE_ANSWER, runtime.context.outcome))
+        return {"route": "abstain"}
 
     async def _timed(self, run: _Run, work: Callable[[], Awaitable[T]]) -> T:
         remaining = run.deadline - time.monotonic()

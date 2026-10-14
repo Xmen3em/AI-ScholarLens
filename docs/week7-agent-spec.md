@@ -1,5 +1,12 @@
 # Week 7 bounded agent: audit and acceptance specification
 
+2026-10-14 amendment: the user explicitly chose LangGraph, a Telegram bot private
+to their account, and initial operation on their current PC. The LangGraph
+orchestration is now implemented with unchanged public policy/prompts/counters
+and evidence guards. See [the current integration contract](telegram-langgraph.md).
+953 tests pass,zero skips. Older no-LangGraph/no-dependency planning below is
+historical; live HF qualification and bot implementation/activation remain pending.
+
 2026-10-13, Africa/Cairo. Baseline: `a597f23`. Source-only development is
 authorized; activation, deployment, push, merge and selector tuning are excluded.
 
