@@ -54,3 +54,15 @@ async def test_each_graph_invocation_has_independent_counters():
     first, second = await answer(agent), await answer(agent)
     assert first.model_calls == second.model_calls == 1
     assert first.steps == second.steps == ['validate', 'abstain']
+
+
+@pytest.mark.anyio
+async def test_public_event_yield_does_not_change_callers_tracing_context():
+    from langsmith import get_tracing_context, tracing_context
+
+    agent=service([{'in_scope':False}])
+    with tracing_context(enabled=True):
+        async with aclosing(agent.events(AskRequest(query=QUESTION))) as stream:
+            assert isinstance(await anext(stream),AgentStatus)
+            assert get_tracing_context()['enabled'] is True
+        assert get_tracing_context()['enabled'] is True

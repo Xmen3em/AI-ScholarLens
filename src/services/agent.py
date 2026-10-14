@@ -116,29 +116,35 @@ class AgentService:
         context = _GraphContext(run, request.query)
         # Framework streams and ambient tracing must not expose private graph
         # context. Only our typed status and validated response reach callers.
-        with tracing_context(enabled=False):
-            # The pinned astream implementation is an async generator; its SDK
-            # annotation exposes only AsyncIterator, omitting explicit close.
-            stream = cast(AsyncGenerator[object, None], self._graph.astream(_GraphState(route="validate"), context=context,
-                          config={"recursion_limit": 9}, stream_mode="custom"))
-            try:
-                async for event in stream:
-                    if not isinstance(event, (AgentStatus, AgentResponse)):
-                        raise RuntimeError("Unexpected agent graph event")
-                    yield event
-                    context.resume.set()
-            finally:
-                # Starlette cancels an AnyIO scope on disconnect. Shield only
-                # cleanup so its repeated cancellation cannot skip joining the
-                # framework's background node and leave model work running.
-                with anyio.CancelScope(shield=True):
+        # The pinned astream implementation is an async generator; its SDK
+        # annotation exposes only AsyncIterator, omitting explicit close.
+        stream = cast(AsyncGenerator[object, None], self._graph.astream(_GraphState(route="validate"), context=context,
+                      config={"recursion_limit": 9}, stream_mode="custom"))
+        try:
+            while True:
+                # Scope tracing to graph advancement, never across public yield:
+                # consumers may resume/close our generator from another task.
+                with tracing_context(enabled=False):
                     try:
-                        await stream.aclose()
-                    finally:
-                        task = context.node_task
-                        if task is not None and not task.done():
-                            task.cancel()
-                            await asyncio.gather(task, return_exceptions=True)
+                        event = await anext(stream)
+                    except StopAsyncIteration:
+                        break
+                if not isinstance(event, (AgentStatus, AgentResponse)):
+                    raise RuntimeError("Unexpected agent graph event")
+                yield event
+                context.resume.set()
+        finally:
+            # Starlette cancels an AnyIO scope on disconnect. Shield only
+            # cleanup so its repeated cancellation cannot skip joining the
+            # framework's background node and leave model work running.
+            with tracing_context(enabled=False), anyio.CancelScope(shield=True):
+                try:
+                    await stream.aclose()
+                finally:
+                    task = context.node_task
+                    if task is not None and not task.done():
+                        task.cancel()
+                        await asyncio.gather(task, return_exceptions=True)
 
     async def _begin_node(self, runtime: Runtime[_GraphContext], operation: Operation) -> _Run:
         context = runtime.context
