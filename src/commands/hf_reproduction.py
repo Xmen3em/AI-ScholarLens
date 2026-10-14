@@ -22,6 +22,7 @@ from src.services.rag.service import _selection_pattern
 
 REPRODUCTION_SHA256 = "7e5768ae0713b9d91d19d5faf0f5a62c6941ac25deef55b43ae014c31566a4cf"
 ARRAY_PROMPT_SHA256 = "d445f845434f469a39e3e06715ae7fc4d92333f08b691293ccfab4ba64b6e7d9"
+PROMPT_COMPARISON_SHA256 = "9dd2a1e2ad2c9cb678c683a4285208b6857fd07bce1a763be5bb36f371fbd3dd"
 
 
 def load_reproduction(root=Path("evaluation/week7_hf/reproduction-v1")) -> dict:
@@ -56,11 +57,29 @@ def load_array_prompt(root=Path("evaluation/week7_hf/array-prompt-v1")) -> dict:
     return json.loads((root / "requests.json").read_text(encoding="utf-8"))
 
 
+def load_prompt_comparison(root=Path("evaluation/week7_hf/prompt-comparison-v1")) -> dict:
+    manifest = root / "manifest.json"
+    if hashlib.sha256(manifest.read_bytes()).hexdigest() != PROMPT_COMPARISON_SHA256:
+        raise ValueError("Prompt comparison manifest differs")
+    binding = json.loads(manifest.read_text(encoding="utf-8"))
+    load_array_prompt()
+    if (binding["parent_fixture_manifest_sha256"] != load_revision()["manifest_sha256"]
+            or binding["parent_array_manifest_sha256"] != ARRAY_PROMPT_SHA256
+            or set(binding["sha256"]) != {"PROTOCOL.md", "requests.json"}):
+        raise ValueError("Prompt comparison parent differs")
+    for name, expected in binding["sha256"].items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Prompt comparison input differs")
+    return json.loads((root / "requests.json").read_text(encoding="utf-8"))
+
+
 def load_experiment(experiment: str) -> dict:
     if experiment == "reproduction-v1":
         return {**load_reproduction(), "manifest_sha256": REPRODUCTION_SHA256}
     if experiment == "array-prompt-v1":
         return {**load_array_prompt(), "manifest_sha256": ARRAY_PROMPT_SHA256}
+    if experiment == "prompt-comparison-v1":
+        return {**load_prompt_comparison(), "manifest_sha256": PROMPT_COMPARISON_SHA256}
     raise ValueError("Unknown frozen experiment")
 
 
