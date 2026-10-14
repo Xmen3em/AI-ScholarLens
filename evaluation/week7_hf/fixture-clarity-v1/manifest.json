@@ -1,0 +1,9 @@
+{
+  "parent_fixture_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "parent_prompt_manifest_sha256": "9dd2a1e2ad2c9cb678c683a4285208b6857fd07bce1a763be5bb36f371fbd3dd",
+  "measurement_manifest_sha256": "48b46935a42a5dd7931c8a36c5b7bcfefe5f405c62791667d14ba251190169b7",
+  "sha256": {
+    "PROTOCOL.md": "0ae34cd32d298f1c75a13b9fc202109cd9da7c7329d3448a91efb6a0f3c44ea1",
+    "requests.json": "329fd51b37e41b56c2af54f287f7538dec44de7f11698d99ad3348258b01f47d"
+  }
+}

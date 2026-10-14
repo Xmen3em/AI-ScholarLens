@@ -1,0 +1,7 @@
+{
+  "parent_prompt_manifest_sha256": "9dd2a1e2ad2c9cb678c683a4285208b6857fd07bce1a763be5bb36f371fbd3dd",
+  "sha256": {
+    "PROTOCOL.md": "d92b83069877dbd9df2d6de07db7bf0b52b3760b7aaeaac7dde4eb8e944f7cb7",
+    "profile.json": "94c7568d637751c61732b3cbce9aa3997d91cccd9a43d0312c3112bc46720be4"
+  }
+}

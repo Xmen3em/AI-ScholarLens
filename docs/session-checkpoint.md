@@ -1,4 +1,35 @@
-# Current completed semantic prompt comparison — 2026-10-14
+# Current offline fixture review and success diagnostics — 2026-10-14
+
+Read [the fixture review and verified implementation](hf-fixture-review.md).
+The old positive label remains plausible; "which passages" has a possible
+interpretation ambiguity. It does not explain the negative-case HTTP400. Original
+fixtures, labels and discarded-output results remain intact. Two separately frozen
+prospective controls use "what kind of passages" with original instruction/schema/
+system/limits and unchanged positive/negative evidence. No target object in prompts.
+
+Bounded success diagnostics now retain nine fixed flags/counts after canonical
+relevance validation. Requests, expected-answer guards and application controls
+are unchanged. Invalid/error/non-relevance responses keep null diagnostics; no
+generated strings/reasoning are saved or old records backfilled. Separate hashed
+measurement contract binds future records. The fixture planner is offline-only,
+reads no settings/credentials/allowances, and cannot execute inference.
+
+**949 tests pass, zero skips**, 34 new/114 focused checks; mypy102; lint passes.
+Privacy/expected-answer mutations caught and exact bytes restored. 2,622 of2,623
+protected pre-documentation hashes match, with one intentional diagnostic source
+change. All15 retained containers, actual corpus/index/model state,64 existing
+frozen checks,private API/settings,prior evidence/freezes/recovery remain intact.
+
+**No new paid calls. Original13/13 and extension6/6 exhausted,zero remain,19total
+authorized attempts used. Both ledgers remain byte-unchanged.** No new budget or
+receipt. HF/agent disabled and HF unqualified. Saved prior source hashes remain
+historical; they are not rewritten for the new diagnostic source. Existing exact
+qualification/development/holdout/interface/server roadmap remains pending.
+Further live study requires a new concrete explicit budget and guarded runner;
+the new fixtures are unavailable to existing live experiment selection.
+Same local checkpoint branch; no push/merge/deployment/activation/replacement.
+
+# Previous completed semantic prompt comparison — 2026-10-14
 
 Read [the audited live results](hf-prompt-results.md). User explicitly approved
 six additional synthetic HF/Groq calls;all six frozen arms completed. Three

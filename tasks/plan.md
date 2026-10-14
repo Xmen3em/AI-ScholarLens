@@ -1,5 +1,22 @@
 # Week 6: local operational controls
 
+## Offline fixture clarity and bounded success diagnostics — 2026-10-14
+
+[Review and implementation](../docs/hf-fixture-review.md) complete. Preserve old
+labels/results; original positive label remains plausible and wording ambiguity
+does not explain negative400s. Separate clearer-question controls are frozen with
+original schema/system/instruction/limits and positive/negative evidence. Add only
+fixed flags/counts after original relevance validation; no generated strings or
+old-output reconstruction. Offline planner cannot execute or read credentials/
+allowances. Existing live experiment registration does not include these fixtures.
+
+949 full tests pass,zero skips;34 new/114 focused,mypy102;privacy/equality mutations
+caught/restored. Ledgers/private settings/old evidence/freezes/runtime/corpus/models/
+recovery preserved. No new paid calls,grant or receipt;13/13 +6/6 exhausted,zero
+remaining. Next concrete separately approved live scope and bounded guarded runner
+if pursuing provider work. Qualification/development/holdout/interface/server tasks
+remain pending; no application prompt promotion or activation.
+
 ## Semantic comparison live result — 2026-10-14
 
 User approved6additional calls;[all6 executed and audited](../docs/hf-prompt-results.md).

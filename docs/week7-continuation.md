@@ -1,5 +1,30 @@
 # Continue application development after Week 6
 
+## Offline fixture review and success diagnostics complete — 2026-10-14
+
+Read [the reviewed fixtures and verified implementation](hf-fixture-review.md).
+Original positive label remains plausible; the question can be interpreted in
+two ways. This does not explain the negative400s or recover discarded responses.
+Old inputs/labels/results stay intact. Two separately frozen clearer-question
+controls retain original relevance instruction/schema/system/limits and evidence.
+
+New diagnostic-only success measurements retain fixed flags/counts after original
+validation. Outbound payloads and mandatory equality guards stay unchanged. The
+new planner has no execute option or live experiment registration. No raw generated
+text retained, old records backfilled, calls made or additional grant created.
+
+949 tests pass,zero skips;34 new/114 focused,mypy102,lint and two caught/restored
+mutations. Both exhausted ledgers/private settings/prior freezes/evidence/recovery,
+15 retained containers,actual corpus/index/model state and64 frozen checks match.
+Original13/13 +extension6/6 =19authorized attempts used,zero remaining. Defaults off.
+
+Next define and guard a separately approved live diagnostic scope if continuing
+provider work. The two new candidates are prospective,unfunded and not executable.
+No production prompt promotion or qualification follows from offline preparation.
+Exact qualification/development/holdout and interface/server tasks below remain.
+Missing backup hardware does not block offline/source work. Older states below
+are historical. Same local branch,no push/merge/deployment/activation/replacement.
+
 ## Six-call semantic comparison complete; no candidate pair passed — 2026-10-14
 
 Read [the audited comparison](hf-prompt-results.md). Explicit additional approval

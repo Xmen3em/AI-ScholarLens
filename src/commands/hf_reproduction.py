@@ -13,6 +13,7 @@ from src.commands.hf_allowance import PILOT_MODEL
 from src.commands.hf_error_structure import STRUCTURE_SHA256, BoundedErrorTransport, load_structure_protocol, strict_json
 from src.commands.hf_evaluation import MeasuredHF, hosted_work, load_protocol, validate_structured
 from src.commands.hf_qualification import load_revision
+from src.commands.hf_success_diagnostics import inspect_relevance, load_success_contract
 from src.config import Settings
 from src.middlewares import RateLimiter
 from src.operations import request_context
@@ -103,6 +104,7 @@ class ReproductionHF(MeasuredHF):
 async def reproduce(settings: Settings, arm: str, *, memory=free_memory_mib, experiment="reproduction-v1") -> dict:
     profile = load_protocol()
     experiment_profile = load_experiment(experiment)
+    measurement = load_success_contract()
     hf = ReproductionHF(settings, arm, experiment=experiment)
     case = hf.arm["case"]
     limit = hf.arm["payload"]["max_tokens"]
@@ -113,7 +115,8 @@ async def reproduce(settings: Settings, arm: str, *, memory=free_memory_mib, exp
     token = request_context.set({"request_id": hashlib.sha256(arm.encode()).hexdigest()[:32]})
     result = {"kind": experiment_profile["kind"], "arm": arm,
               "qualification_accepted": False, "reproduction_manifest_sha256": experiment_profile["manifest_sha256"],
-              "payload_sha256": digest(hf.arm["payload"]), "schema_valid": None, "expected_match": None}
+              "payload_sha256": digest(hf.arm["payload"]), "schema_valid": None, "expected_match": None,
+              "success_diagnostic_manifest_sha256": measurement["manifest_sha256"], "decision_diagnostics": None}
 
     def checked_memory():
         value = memory()
@@ -150,6 +153,8 @@ async def reproduce(settings: Settings, arm: str, *, memory=free_memory_mib, exp
                 raw = strict_json(generated.response)
                 # Even arms omitting outbound maxItems retain original local checks.
                 validate_structured(generated.response, case["schema"])
+                if set(case["schema"]["properties"]) == {"relevant_markers"}:
+                    result["decision_diagnostics"] = inspect_relevance(raw, case)
                 result.update(schema_valid=True, expected_match=raw == case["expected"])
                 result["category"] = "passed" if result["expected_match"] else "expected_mismatch"
             except (ValueError, TypeError, KeyError, RecursionError):

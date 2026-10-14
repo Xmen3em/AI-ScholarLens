@@ -1,5 +1,21 @@
 # Week 6 local verification
 
+## Offline fixture clarity and successful-response diagnostics — 2026-10-14
+
+- [x] Review positive-label ambiguity without rewriting past labels/results.
+- [x] Freeze separate clearer-question positive/negative controls with original contracts.
+- [x] Add bounded flags/counts after canonical validation without generated-text retention.
+- [x] Prepare offline-only planner with no execute option or live fixture registration.
+- [x] Verify malformed/over-cap/duplicate/unknown marker handling and measurement binding.
+- [x] Complete949-test/zero-skip,mypy102,114focused,lint and privacy/equality mutation checks.
+- [x] Preserve both exhausted ledgers,old evidence/private settings,15containers,corpus/models/recovery.
+
+See [review and evidence](../docs/hf-fixture-review.md). No new paid calls or budget;
+original13/13 +extension6/6 exhausted,zero remain,19authorized attempts used.
+HF/agent remain disabled and HF unqualified. Further live study needs a separate
+explicit budget and guarded runner;prospective fixtures alone cannot execute it.
+Earlier records and all unfinished acceptance/interface/server tasks remain.
+
 ## Semantic prompt comparison continuation — 2026-10-14
 
 Current original allowance:13/13 used,zero remain. See

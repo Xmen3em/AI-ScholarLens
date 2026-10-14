@@ -1,0 +1,17 @@
+{
+  "kind": "bounded_relevance_decision_measurements",
+  "boolean_fields": [
+    "expected_match",
+    "expected_empty",
+    "returned_empty",
+    "supplied_marker_membership",
+    "duplicate_markers"
+  ],
+  "count_fields": [
+    "marker_count",
+    "expected_marker_count",
+    "missing_expected_marker_count",
+    "unexpected_marker_count"
+  ],
+  "count_limit": 30
+}
