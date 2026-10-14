@@ -1,5 +1,16 @@
 # Week 6: local operational controls
 
+## Semantic comparison live result — 2026-10-14
+
+User approved6additional calls;[all6 executed and audited](../docs/hf-prompt-results.md).
+3expected passes,1schema-valid mismatch,2HTTP400/json_validate_failed. No instruction
+passes its positive/negative pair;no winner or production prompt change.
+Original13/13 and extension6/6 exhausted,zero remain;all counters/evidence intact.
+Source unchanged from915-test/zero-skip/mypy100 checkpoint;runtime/data/models
+preserved. Continue offline fixture clarity/mismatch diagnostic specification;
+later provider/transport comparison requires separate frozen,explicit budget.
+All qualification/development/holdout/interface/server tasks below retained.
+
 ## Semantic HF relevance prompt comparison — 2026-10-14
 
 Continue the same hosted-generation work from7fd9bc7. The minimal original-schema

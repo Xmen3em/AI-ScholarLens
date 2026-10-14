@@ -1,5 +1,12 @@
 # Semantic relevance prompt comparison
 
+Current result: [all six approved calls completed](hf-prompt-results.md).
+Three arms passed,one returned schema-valid unexpected JSON,and two returned
+HTTP400/json_validate_failed. **No positive/negative pair passed.** Extension6/6
+and original13/13 are exhausted;zero remain. No candidate promoted,qualification
+false,application/defaults preserved. Preparation/pending-approval notes below
+are historical;the explicit new approval is retained in the live audit.
+
 The last minimal array prompt copied an explicitly requested object successfully.
 The next comparison tests selection and abstention without supplying the answer
 in the instruction. Three diagnostic instructions share the original relevance
@@ -39,8 +46,8 @@ Implementation tasks extend the existing HF plan:
 - [x] Test immutable approval binding, unique arms, unknown completion and budgets.
 - [x] Run privacy/expected-decision mutations and full regression/type/lint checks.
 - [x] Complete concrete review; the six-attempt additional allowance is ready for review.
-- [ ] Obtain explicit approval of the six-attempt additional allowance.
-- [ ] After explicit approval, execute and audit the comparison; retain all results.
+- [x] Obtain explicit approval of the six-attempt additional allowance.
+- [x] Execute and audit the approved comparison; retain all results without promotion.
 
 Source remains in src/commands; synthetic tests in tests/unit; protocol/requests
 in evaluation/week7_hf/prompt-comparison-v1; local evidence in ignored

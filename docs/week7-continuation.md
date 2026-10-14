@@ -1,5 +1,25 @@
 # Continue application development after Week 6
 
+## Six-call semantic comparison complete; no candidate pair passed — 2026-10-14
+
+Read [the audited comparison](hf-prompt-results.md). Explicit additional approval
+recorded and6 exact synthetic arms executed:3expected passes,1schema-valid
+mismatch,2HTTP400/json_validate_failed with empty reportedfailed_generation.
+No instruction passes both answering/unrelated checks;no winner/application
+prompt change,qualification or paper collection.
+
+Original13/13 exhausted/byte-unchanged;extension6/6 exhausted;zero remain. Total19
+authorized attempts used;all6unique newarm reservations settled1. No repeats or
+allowance resets. Source staysc6e4f8f,verified915tests/zero skips,mypy100;execution
+changed no source.2604protected pre-doc hashes,15containers,private settings,
+corpus/models/prior evidence/recovery and4livepreservation flags match. Defaults off.
+
+Next offline semantic fixture review and bounded mismatch diagnostic spec;later
+provider/transport work needs separate freeze/concrete approval/budget. No prompt
+promotion supported here. Existing exact qualification/development/holdout and
+interface/server roadmap retained;backup hardware does not block source work.
+Older pending proposals/balances below are historical.
+
 ## Semantic prompt comparison prepared; new budget pending — 2026-10-14
 
 Read [the ready comparison](hf-prompt-comparison.md). Six semantic public synthetic

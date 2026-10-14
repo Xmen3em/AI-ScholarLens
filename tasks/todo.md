@@ -12,8 +12,13 @@ are historical. This extends the same HF work and retains every earlier task.
 - [x] Add separately bound extension ledger and guarded diagnostic execution.
 - [x] Verify unique arms,unknown completion,privacy and unchanged exhausted ledger.
 - [x] Finish regression/type/lint/mutation/preservation checks and concrete review.
-- [ ] Obtain explicit additional six-attempt approval before any new paid call.
-- [ ] Execute/audit the approved comparison; keep qualification/application off.
+- [x] Obtain explicit additional six-attempt approval before any new paid call.
+- [x] Execute/audit all6 approved calls;no pair passed,qualification/application off.
+
+Live outcome:[audited results](../docs/hf-prompt-results.md). Original13/13 and
+extension6/6 exhausted;zero remain,19totalauthorized used. No candidate promotion.
+Source unchanged;next offline fixture clarity/mismatch diagnostic review. Separate
+provider/transport study and new budget needed before any further paid work.
 
 Preparation checkpoint:915 full tests,zero skips;mypy100;80 combined focused
 checks. No new inference/funded extension;original13/13 stays byte-unchanged.

@@ -1,4 +1,33 @@
-# Current semantic prompt preparation checkpoint — 2026-10-14
+# Current completed semantic prompt comparison — 2026-10-14
+
+Read [the audited live results](hf-prompt-results.md). User explicitly approved
+six additional synthetic HF/Groq calls;all six frozen arms completed. Three
+expected decisions passed,one schema-valid decision mismatched,twoHTTP400
+json_validate_failed errors reported empty failed_generation. **No instruction
+passed both its positive/negative case.** No winner,prompt replacement or
+qualification. Root cause remains unresolved;no paper data sent.
+
+**Original13/13 exhausted and byte-unchanged;extension6/6 exhausted;zero remain.
+Total19 explicitly authorized attempts used.** All six unique extension arm
+reservations settled at one. Do not reset/reconstruct or repeat paid arms. The
+approved receipt binds the same manifest/endpoint/model and original complete
+allowance;older pending records remain historical. Further paid work needs a
+new concrete,explicitly approved scope and budget.
+
+All2604 pre-documentation protected hashes,15 container identities/images/states,
+private settings/old API key,prior trials/freezes,recovery and all four live
+preservation flags match. Actual RAM1179.73MiB admission/minimumlive1084.97MiB
+passed original1024/600 gates. Current source unchanged fromc6e4f8f:verified915
+tests/zero skips,mypy100,80 focused;no test rerun/source edits this execution.
+Original app/controller/selector guards/prompts/limits,corpus/index/models/defaults
+intact. Known cumulative estimate$0.00064710 plus10unknown-cost failures,not invoice.
+
+Next offline fixture clarity review and bounded mismatch diagnostic specification,
+then separately frozen/budgeted provider/transport comparison if requested.
+No prompt promotion supported. Exact qualification/development/holdout and
+interface/server work remain pending. Same local branch,no push/merge/deployment.
+
+# Previous semantic prompt preparation checkpoint — 2026-10-14
 
 Read [the prepared semantic comparison](hf-prompt-comparison.md). Three diagnostic
 relevance instructions each have answering/unrelated public synthetic passage
