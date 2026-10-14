@@ -216,7 +216,11 @@ def live_snapshot(settings: Settings):
         if (value.scheme != "http" or value.hostname not in {"localhost", "127.0.0.1", "::1"} or value.port != port
                 or value.username or value.password or value.query or value.fragment or value.path not in {"", "/"}):
             raise ValueError("Hosted local resources require the preserved loopback origins")
-    headers = {"X-API-Key": settings.api_key.get_secret_value()} if settings.api_key else {}
+    # Optional codecs installed by LangGraph change HTTPX's default negotiation.
+    # The preserved local index does not complete zstd responses; audit plain JSON.
+    headers = {"Accept-Encoding": "identity"}
+    if settings.api_key:
+        headers["X-API-Key"] = settings.api_key.get_secret_value()
     with httpx.Client(timeout=30, headers=headers, trust_env=False, follow_redirects=False) as client:
         state, papers, chunks = snapshot(client, "http://127.0.0.1:8000/api/v1", settings.opensearch_host)
         response = client.get(settings.ollama_host.rstrip("/") + "/api/tags")
