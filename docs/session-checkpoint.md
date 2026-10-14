@@ -1,4 +1,28 @@
-# Current completed reproduction checkpoint — 2026-10-14
+# Current semantic prompt preparation checkpoint — 2026-10-14
+
+Read [the prepared semantic comparison](hf-prompt-comparison.md). Three diagnostic
+relevance instructions each have answering/unrelated public synthetic passage
+pairs. Six exact requests frozen with original schema/system/strict/256-token
+controls. Expected targets are local labels,not supplied answers in messages.
+
+**Original allowance13/13 used,zero remain,byte-unchanged.** No new live call or
+funded extension. A pending proposal requests **at most six additional synthetic
+HF/Groq attempts**,one per arm. Explicit approval of that new scope is required.
+The prepared fixed extension ledger binds the original complete exhausted state
+and this manifest;unique arms/unknown work/durable registration prevent resetting
+in fresh folders or recreating a missing funded counter. Pending execution blocks
+before private settings/service work. No approval receipt has been created.
+
+915 tests pass,zero skips;mypy100;39 new tests/80 focused;privacy and expected-
+decision mutations caught/restored. Original application/guards/private settings,
+prior trial evidence/freezes,15 containers,actual live corpus/models and recovery
+intact;64 prior checks pass. Only isolated diagnostic tooling and current planning
+notes change. All older source-bound records stay historical. Default HF/agent off.
+Next approve/execute/audit the six-call comparison,then separately prepare any
+production prompt change and exact qualification/development/holdout work.
+Same local checkpoint branch,no push/merge/deployment/activation/replacement.
+
+# Previous completed reproduction checkpoint — 2026-10-14
 
 Read [the final minimal array control](hf-array-prompt.md). The prompt-only control
 passed the original relevance schema/expected marker array at256 tokens; earlier

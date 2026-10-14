@@ -1,5 +1,26 @@
 # Continue application development after Week 6
 
+## Semantic prompt comparison prepared; new budget pending — 2026-10-14
+
+Read [the ready comparison](hf-prompt-comparison.md). Six semantic public synthetic
+arms test three instructions on answering/unrelated evidence with original schema,
+system and limits. Exact-output copying is no longer the semantic test. Frozen
+requests,offline planner,pending proposal,separate guarded extension ledger/runner
+and39 new tests complete.915 tests pass,zero skips;mypy100;80 focused;two mutations
+caught/restored. No original app/runtime/guard/private setting/data/model changes.
+
+Original13/13 exhausted allowance bytes are unchanged. No new inference or funded
+extension. A concrete **six additional synthetic HF/Groq attempts** proposal is
+pending explicit approval;no paper,qualification or pilot calls included. Unique
+arms,uncertain work and durable registration prevent resets/repeats. Pending
+execution rejects before credentials/network.15 containers,live corpus/models,
+prior evidence/frozen artifacts/recovery and64 prior checks preserved.
+
+Next explicit new-budget approval,then guarded collection/audit. A diagnostic
+pair cannot qualify or replace the production prompt. Exact qualification,
+reviewed development,locked holdout and interface/server roadmap remain.
+Older balances/checkpoints below are historical.
+
 ## Authorized minimal reproduction complete; allowance exhausted — 2026-10-14
 
 Read [the final array prompt control](hf-array-prompt.md). A short exact-output

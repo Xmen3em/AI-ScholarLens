@@ -1,5 +1,25 @@
 # Week 6: local operational controls
 
+## Semantic HF relevance prompt comparison — 2026-10-14
+
+Continue the same hosted-generation work from7fd9bc7. The minimal original-schema
+array prompt passed; exact grading prompts remain failed. The original allowance
+is exhausted at13/13; all older balances below are historical.
+
+Read [the concrete comparison specification](../docs/hf-prompt-comparison.md).
+Order: freeze three instructions with answering/unrelated synthetic passage pairs
+-> offline request/label validation -> separate additional-approval ledger and
+guarded diagnostic command -> privacy/allowance/mutation/full checks -> concrete
+six-attempt approval request -> approved execution/audit. No paid calls or new
+grant before explicit additional approval. Existing application prompts and all
+unfinished qualification/development/holdout/interface/server tasks remain.
+
+Preparation complete:915 tests pass,zero skips;mypy100;39 new tests/80 combined
+focused checks;two caught/restored mutations. Public requests/protocol frozen;
+offline/pending-approval paths verified with no real inference or funded extension.
+Original allowance bytes,prior evidence,15 containers,live corpus/models/recovery
+preserved. Next explicit six-attempt approval,then guarded execution/audit.
+
 ## Hosted generation continuation plan — 2026-10-13
 
 Current2026-10-14: [bounded structural diagnostics](../docs/hf-structure-diagnostic.md)

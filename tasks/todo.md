@@ -1,5 +1,23 @@
 # Week 6 local verification
 
+## Semantic prompt comparison continuation — 2026-10-14
+
+Current original allowance:13/13 used,zero remain. See
+[comparison specification](../docs/hf-prompt-comparison.md); prior balances below
+are historical. This extends the same HF work and retains every earlier task.
+
+- [x] Freeze six synthetic semantic arms with original schema/system/limits.
+- [x] Verify answering/unrelated labels and absence of target objects in messages.
+- [x] Prepare offline plan and pending six-attempt approval proposal.
+- [x] Add separately bound extension ledger and guarded diagnostic execution.
+- [x] Verify unique arms,unknown completion,privacy and unchanged exhausted ledger.
+- [x] Finish regression/type/lint/mutation/preservation checks and concrete review.
+- [ ] Obtain explicit additional six-attempt approval before any new paid call.
+- [ ] Execute/audit the approved comparison; keep qualification/application off.
+
+Preparation checkpoint:915 full tests,zero skips;mypy100;80 combined focused
+checks. No new inference/funded extension;original13/13 stays byte-unchanged.
+
 ## Hosted generation continuation — adapter source complete, acceptance pending
 
 Current2026-10-14: [structural diagnostic](../docs/hf-structure-diagnostic.md)
