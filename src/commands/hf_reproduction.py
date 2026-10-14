@@ -21,6 +21,7 @@ from src.services.hf.client import HFGenerationError, HFTimeoutError
 from src.services.rag.service import _selection_pattern
 
 REPRODUCTION_SHA256 = "7e5768ae0713b9d91d19d5faf0f5a62c6941ac25deef55b43ae014c31566a4cf"
+ARRAY_PROMPT_SHA256 = "d445f845434f469a39e3e06715ae7fc4d92333f08b691293ccfab4ba64b6e7d9"
 
 
 def load_reproduction(root=Path("evaluation/week7_hf/reproduction-v1")) -> dict:
@@ -39,9 +40,33 @@ def load_reproduction(root=Path("evaluation/week7_hf/reproduction-v1")) -> dict:
     return json.loads((root / "requests.json").read_text(encoding="utf-8"))
 
 
+def load_array_prompt(root=Path("evaluation/week7_hf/array-prompt-v1")) -> dict:
+    manifest = root / "manifest.json"
+    if hashlib.sha256(manifest.read_bytes()).hexdigest() != ARRAY_PROMPT_SHA256:
+        raise ValueError("Array prompt manifest differs")
+    binding = json.loads(manifest.read_text(encoding="utf-8"))
+    load_reproduction()
+    if (binding["parent_fixture_manifest_sha256"] != load_revision()["manifest_sha256"]
+            or binding["parent_reproduction_manifest_sha256"] != REPRODUCTION_SHA256
+            or set(binding["sha256"]) != {"PROTOCOL.md", "requests.json"}):
+        raise ValueError("Array prompt parent differs")
+    for name, expected in binding["sha256"].items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Array prompt input differs")
+    return json.loads((root / "requests.json").read_text(encoding="utf-8"))
+
+
+def load_experiment(experiment: str) -> dict:
+    if experiment == "reproduction-v1":
+        return {**load_reproduction(), "manifest_sha256": REPRODUCTION_SHA256}
+    if experiment == "array-prompt-v1":
+        return {**load_array_prompt(), "manifest_sha256": ARRAY_PROMPT_SHA256}
+    raise ValueError("Unknown frozen experiment")
+
+
 class ReproductionHF(MeasuredHF):
-    def __init__(self, settings: Settings, arm: str):
-        arms = load_reproduction()["arms"]
+    def __init__(self, settings: Settings, arm: str, *, experiment="reproduction-v1"):
+        arms = load_experiment(experiment)["arms"]
         if arm not in arms or settings.hf_models != [PILOT_MODEL] or settings.hf_default_model != PILOT_MODEL:
             raise ValueError("Reproduction requires a frozen approved arm")
         self.arm = arms[arm]
@@ -56,9 +81,10 @@ class ReproductionHF(MeasuredHF):
         return payload
 
 
-async def reproduce(settings: Settings, arm: str, *, memory=free_memory_mib) -> dict:
+async def reproduce(settings: Settings, arm: str, *, memory=free_memory_mib, experiment="reproduction-v1") -> dict:
     profile = load_protocol()
-    hf = ReproductionHF(settings, arm)
+    experiment_profile = load_experiment(experiment)
+    hf = ReproductionHF(settings, arm, experiment=experiment)
     case = hf.arm["case"]
     limit = hf.arm["payload"]["max_tokens"]
     options = {"temperature": 0, "num_predict": limit, "num_ctx": 8192}
@@ -66,8 +92,8 @@ async def reproduce(settings: Settings, arm: str, *, memory=free_memory_mib) -> 
     samples: list[dict] = []
     watcher = None
     token = request_context.set({"request_id": hashlib.sha256(arm.encode()).hexdigest()[:32]})
-    result = {"kind": "minimal_compatibility_limit_diagnostic", "arm": arm,
-              "qualification_accepted": False, "reproduction_manifest_sha256": REPRODUCTION_SHA256,
+    result = {"kind": experiment_profile["kind"], "arm": arm,
+              "qualification_accepted": False, "reproduction_manifest_sha256": experiment_profile["manifest_sha256"],
               "payload_sha256": digest(hf.arm["payload"]), "schema_valid": None, "expected_match": None}
 
     def checked_memory():

@@ -1,5 +1,24 @@
 # Continue application development after Week 6
 
+## Authorized minimal reproduction complete; allowance exhausted — 2026-10-14
+
+Read [the final array prompt control](hf-array-prompt.md). A short exact-output
+prompt passed the unchanged relevance schema including maxItems:30 at256 tokens.
+Earlier exact prompts remain failed;this is a successful minimal case,not causal
+proof or application qualification. Original application behavior/defaults intact.
+
+**13/13 approved attempts used,zero remain** in the retained fixed allowance.
+876 tests pass,zero skips;mypy98;41 focused checks;expected-answer mutation caught
+and restored. Protected prior evidence/private settings,frozen artifacts,15 retained
+containers,64 prior checks,corpus/index/models/recovery preserved. Two isolated
+diagnostic files extend explicit experiment selection;historical source bindings
+remain historical. No paper inference,push/merge/deployment/activation/tuning.
+
+No further paid calls under the exhausted approval. Offline/source work can
+continue;additional live diagnosis/qualification requires a separately approved
+bounded budget. Exact qualification/development/holdout and interface/server
+roadmap remain;backup hardware does not block source work. Older balances follow.
+
 ## Minimal reproduction complete; one approved call remains — 2026-10-14
 
 Read [the frozen reproduction/results](hf-reproduction.md). Minimal boolean

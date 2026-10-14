@@ -1,5 +1,11 @@
 # Minimal HF/Groq reproduction — 2026-10-14
 
+Current continuation: [the final minimal array prompt control](hf-array-prompt.md)
+passed with the original relevance schema at256 tokens. The diagnostic is complete;
+**13/13 approved attempts used,zero remain**. Current verification:876 tests,
+zero skips,mypy98. The four-arm report and its12-used/one-remaining balance below
+are historical. Root cause and exact application qualification remain unresolved.
+
 The minimal required-boolean request passed. All three synthetic relevance
 variants failed with HTTP400 / `json_validate_failed` / `invalid_request_error`
 and empty reported `failed_generation`. Neither the tested output-limit increase

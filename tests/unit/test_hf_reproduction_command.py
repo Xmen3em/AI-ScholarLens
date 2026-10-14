@@ -44,7 +44,7 @@ def test_actual_or_uncertain_settlement_cannot_reset_allowance(tmp_path, monkeyp
     monkeypatch.setattr(command, "ALLOWANCE_PATH", grant.path)
     monkeypatch.setattr(command, "PilotAllowance", lambda: PilotAllowance(grant.path, prior=prior))
 
-    async def synthetic(settings, arm):
+    async def synthetic(settings, arm, *, experiment="reproduction-v1"):
         if outbound is None:
             raise RuntimeError("private exception message")
         return {"category": "passed", "qualification_accepted": False, "outbound_attempts": outbound}

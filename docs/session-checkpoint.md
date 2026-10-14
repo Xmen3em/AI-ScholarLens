@@ -1,4 +1,27 @@
-# Current local reproduction checkpoint — 2026-10-14
+# Current completed reproduction checkpoint — 2026-10-14
+
+Read [the final minimal array control](hf-array-prompt.md). The prompt-only control
+passed the original relevance schema/expected marker array at256 tokens; earlier
+exact relevance requests remain failed. A successful minimal case is retained;
+prompt interaction is a hypothesis,root cause unresolved,application unqualified.
+
+**13 of13 approved attempts used; zero remain** in the same fixed allowance.
+Never reset/reconstruct. No further inference under this approval. Source/offline
+work can continue; additional live work needs a separately approved bounded budget.
+
+876 tests pass,zero skips;mypy98;41 focused checks. Frozen array-prompt-v1 request,
+protocol and manifest,explicit experiment selector,local marker cap,privacy and
+allowance gates verified.1318 protected pre-documentation hashes unchanged,three
+intentional diagnostic source/test changes.15 retained containers,64 prior checks,
+private API/settings,corpus/index/models/recovery intact. Final-run source hashes
+and all four preservation flags match; older run source bindings remain historical.
+Default agent/HF remain off. Same local checkpoint branch,no push/merge/deployment.
+Minimal reproduction complete;exact qualification/development/holdout and
+interface/server work remain pending.
+
+The prior checkpoints below retain their historical balances.
+
+# Previous local reproduction checkpoint — 2026-10-14
 
 Read [the minimal reproduction and results](hf-reproduction.md). The four
 separately frozen synthetic arms are complete: minimal boolean passed; exact

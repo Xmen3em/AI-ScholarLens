@@ -9,13 +9,17 @@ from src.commands.evaluate_agent import free_memory_mib, write_json
 from src.commands.evaluate_hf_agent import live_snapshot, plan_collection, provider_available, source_hashes
 from src.commands.hf_allowance import ALLOWANCE_PATH, PILOT_CASE, PILOT_MODEL, PilotAllowance
 from src.commands.hf_evaluation import hosted_admission, load_protocol
-from src.commands.hf_reproduction import REPRODUCTION_SHA256, load_reproduction, reproduce
+from src.commands.hf_reproduction import load_experiment, reproduce
 from src.config import Settings
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    profile = load_reproduction()
+    parser.add_argument("--experiment", choices=("reproduction-v1", "array-prompt-v1"), default="reproduction-v1")
+    probe = argparse.ArgumentParser(add_help=False)
+    probe.add_argument("--experiment", choices=("reproduction-v1", "array-prompt-v1"), default="reproduction-v1")
+    preliminary, _ = probe.parse_known_args()
+    profile = load_experiment(preliminary.experiment)
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--arm", choices=tuple(profile["arms"]), required=True)
@@ -27,7 +31,8 @@ def main() -> None:
         parser.error("Output must be fresh local ignored evidence")
     metadata = plan_collection(args.snapshot, split="development", model=PILOT_MODEL,
                                case_ids=[PILOT_CASE], modes=["bm25"], transports=["json"], qualification_v2=True)
-    metadata.update(kind=profile["kind"], arm=args.arm, reproduction_manifest_sha256=REPRODUCTION_SHA256,
+    metadata.update(kind=profile["kind"], arm=args.arm, experiment=args.experiment,
+                    reproduction_manifest_sha256=profile["manifest_sha256"],
                     planned_outbound_budget=1, outbound_budget=1, qualification_accepted=False)
     output.mkdir(parents=True, exist_ok=False)
     write_json(output / "metadata.json", metadata)
@@ -66,7 +71,7 @@ def main() -> None:
                     allowance={"prior_evidence_sha256": grant.signature, "reserved_for_run": 1, "total_ceiling": 13})
     write_json(output / "metadata.json", metadata)
     try:
-        result = asyncio.run(reproduce(local, args.arm))
+        result = asyncio.run(reproduce(local, args.arm, experiment=args.experiment))
     except Exception:
         result = {"arm": args.arm, "qualification_accepted": False,
                   "category": "transport_or_response_error", "outbound_attempts": None}
@@ -74,7 +79,7 @@ def main() -> None:
     preservation = {"source_unchanged": source_hashes() == metadata["source_sha256"],
                     "frozen_labels_unchanged": False, "corpus_unchanged": False, "models_unchanged": False}
     try:
-        load_reproduction()
+        load_experiment(args.experiment)
         load_protocol()
         plan_collection(args.snapshot, split="development", model=PILOT_MODEL,
                         case_ids=[PILOT_CASE], modes=["bm25"], transports=["json"], qualification_v2=True)

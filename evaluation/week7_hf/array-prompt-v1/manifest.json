@@ -1,0 +1,8 @@
+{
+  "parent_fixture_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "parent_reproduction_manifest_sha256": "7e5768ae0713b9d91d19d5faf0f5a62c6941ac25deef55b43ae014c31566a4cf",
+  "sha256": {
+    "PROTOCOL.md": "21f36e34af44e5359092eb81a59379b07cb9d31a27204740f24aea0d17cf08f5",
+    "requests.json": "6f3f0eae487b393820f8fb90e409e312342d4d56e46fc4f711d92bbd05daedd5"
+  }
+}
