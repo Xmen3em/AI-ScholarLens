@@ -3,6 +3,7 @@
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 from src.commands.evaluate_retrieval import digest
@@ -21,7 +22,7 @@ def original_binding(path=ALLOWANCE_PATH, *, prior=PRIOR_RUN) -> str:
               for name in ("metadata.json", "completion.json", "qualification.json", "records.jsonl")}
     signature = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()
     validate_pilot_scope(json.loads((prior / "metadata.json").read_text(encoding="utf-8")))
-    with sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True) as db:
+    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as db:
         seeds = db.execute("SELECT signature FROM seed").fetchall()
         rows = db.execute("SELECT run,budget,used FROM reservations ORDER BY run").fetchall()
     if (seeds != [(signature,)] or any(type(budget) is not int or type(used) is not int
@@ -81,7 +82,7 @@ class PromptAllowance:
     @property
     def used(self) -> int:
         self._validate()
-        with sqlite3.connect(self.path.resolve().as_uri() + "?mode=ro", uri=True) as db:
+        with closing(sqlite3.connect(self.path.resolve().as_uri() + "?mode=ro", uri=True)) as db:
             return db.execute("SELECT COALESCE(SUM(COALESCE(used,1)),0) FROM arms").fetchone()[0]
 
     def reserve(self, run: str, arm: str) -> None:
