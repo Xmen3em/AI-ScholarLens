@@ -12,17 +12,18 @@ from src.commands.evaluate_retrieval import digest
 from src.commands.hf_evaluation import HF_MANIFEST_SHA256, load_protocol
 from src.commands.hf_schema_execution import load_cerebras, load_selectors
 
-CEREBRAS_TASK_SHA256 = "e871096c69e83dc6d1a29cdf100a4505e613ab8014e22727c8be13e613d855f5"
-CEREBRAS_PROFILE = "hosted-cerebras-v1"
+LEGACY_CEREBRAS_TASK_SHA256 = "e871096c69e83dc6d1a29cdf100a4505e613ab8014e22727c8be13e613d855f5"
+CEREBRAS_TASK_SHA256 = "92ec9996534e5a958d4ead38fa9224b83ce6c3a318ca3919d886decaeba2558d"
+CEREBRAS_PROFILE = "hosted-cerebras-tokenized-v2"
 
 
-def load_profile(root=Path("evaluation/week7_hf/cerebras-evaluation-v1")) -> dict:
+def load_legacy_profile(root=Path("evaluation/week7_hf/cerebras-evaluation-v1")) -> dict:
     manifest_path = root / "manifest.json"
-    if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != CEREBRAS_TASK_SHA256:
+    if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != LEGACY_CEREBRAS_TASK_SHA256:
         raise ValueError("Cerebras task profile manifest differs")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     original, controller, selectors = load_protocol(), load_cerebras(), load_selectors()
-    if (manifest["version"] != CEREBRAS_PROFILE or manifest["parent_hosted_manifest_sha256"] != HF_MANIFEST_SHA256
+    if (manifest["version"] != "hosted-cerebras-v1" or manifest["parent_hosted_manifest_sha256"] != HF_MANIFEST_SHA256
             or manifest["local_manifest_sha256"] != MANIFEST_SHA256
             or manifest["qualification_manifest_sha256"] != controller["qualification_manifest_sha256"]
             or manifest["controller_manifest_sha256"] != controller["manifest_sha256"]
@@ -33,16 +34,45 @@ def load_profile(root=Path("evaluation/week7_hf/cerebras-evaluation-v1")) -> dic
         if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
             raise ValueError("Frozen Cerebras task input differs")
     profile = json.loads((root / "profile.json").read_text(encoding="utf-8"))
-    expected = {**original, "version": CEREBRAS_PROFILE, "model_pairs": [controller["model"]],
+    expected = {**original, "version": "hosted-cerebras-v1", "model_pairs": [controller["model"]],
                 "prices_per_million": {controller["model"]: controller["prices_per_million"]}}
     if digest(profile) != digest(expected):
         raise ValueError("Cerebras task profile changes an inherited gate")
     return profile
 
 
+def load_profile(root=Path("evaluation/week7_hf/cerebras-tokenized-v2")) -> dict:
+    manifest_path = root / "manifest.json"
+    if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != CEREBRAS_TASK_SHA256:
+        raise ValueError("Tokenized Cerebras manifest differs")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (manifest.get("version") != CEREBRAS_PROFILE
+            or manifest.get("parent_cerebras_manifest_sha256") != LEGACY_CEREBRAS_TASK_SHA256
+            or manifest.get("parent_hosted_manifest_sha256") != HF_MANIFEST_SHA256
+            or manifest.get("local_manifest_sha256") != MANIFEST_SHA256
+            or manifest.get("qualification_manifest_sha256") != load_cerebras()["qualification_manifest_sha256"]
+            or manifest.get("controller_manifest_sha256") != load_cerebras()["manifest_sha256"]
+            or manifest.get("selector_manifest_sha256") != load_selectors()["manifest_sha256"]
+            or set(manifest.get("sha256", {})) != {"PROTOCOL.md", "profile.json"}):
+        raise ValueError("Tokenized Cerebras parent differs")
+    for name, expected in manifest["sha256"].items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Frozen tokenized Cerebras input differs")
+    profile = json.loads((root / "profile.json").read_text(encoding="utf-8"))
+    expected = {**load_legacy_profile(), "version": CEREBRAS_PROFILE, "input_admission": {
+        "method": "o200k_ordinary_schema_inclusive_v1", "encoding": "o200k_harmony",
+        "vocabulary_sha256": "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d",
+        "maximum_payload_bytes": 65536, "maximum_schema_bytes": 7168}}
+    if digest(profile) != digest(expected):
+        raise ValueError("Tokenized Cerebras profile changes an inherited gate")
+    return profile
+
+
 def get_profile(name="hosted-agent-v1") -> tuple[dict, str]:
     if name == "hosted-agent-v1":
         return load_protocol(), HF_MANIFEST_SHA256
+    if name == "hosted-cerebras-v1":
+        return load_legacy_profile(), LEGACY_CEREBRAS_TASK_SHA256
     if name == CEREBRAS_PROFILE:
         return load_profile(), CEREBRAS_TASK_SHA256
     raise ValueError("Unknown frozen hosted profile")

@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 from src.commands import hf_paper_allowance as funding
 from src.commands.agent_collection import build_jobs
-from src.commands.hf_paper_profile import CEREBRAS_TASK_SHA256
+from src.commands.hf_paper_profile import CEREBRAS_PROFILE, CEREBRAS_TASK_SHA256
 
 
 def setup(tmp_path, monkeypatch, *, approved=True):
     metadata = {"split": "development", "hosted_manifest_sha256": CEREBRAS_TASK_SHA256,
-                "configuration": {"model": "openai/gpt-oss-120b:cerebras", "policy": "hosted-cerebras-v1"},
+                "configuration": {"model": "openai/gpt-oss-120b:cerebras", "policy": CEREBRAS_PROFILE},
                 "source_sha256": {"src/client.py": "source"}, "source_snapshot_sha256": "snapshot",
                 "fixture_manifest_sha256": funding.load_cerebras()["qualification_manifest_sha256"],
                 "jobs": [{k: v for k, v in job.items() if k != "query"} for job in
@@ -183,7 +183,7 @@ def test_holdout_requires_recalculated_cerebras_selection_and_stops_on_later_art
         assert not path.exists() and not path.with_suffix(".registered").exists()
         return
     grant = funding.TaskAllowance(approval, metadata, snapshot=tmp_path, path=path)
-    assert grant.ceiling == 773 and checked[0][1:] == ("openai/gpt-oss-120b:cerebras", "hosted-cerebras-v1")
+    assert grant.ceiling == 773 and checked[0][1:] == ("openai/gpt-oss-120b:cerebras", CEREBRAS_PROFILE)
     grant.reserve("holdout-run", 1, "request-1"); grant.settle(1, 1)
     (dev / "reviews.json").write_text("changed")
     with pytest.raises(ValueError): grant.reserve("holdout-run", 2, "request-2")

@@ -11,6 +11,12 @@ from src.services.hf.client import HFGenerationError, HFResponseError
 
 from tests.unit.test_hf_client import envelope, settings
 from tests.unit.test_hf_paper_client import arguments
+from tests.unit.test_hf_tokenizer import install_vocabulary
+
+
+@pytest.fixture(autouse=True)
+def local_vocabulary(tmp_path, monkeypatch):
+    install_vocabulary(tmp_path, monkeypatch)
 
 
 def config(tmp_path, **updates):

@@ -14,10 +14,11 @@ from src.config import Settings
 from src.operations import request_context
 from src.schemas.api.rag import GeneratedAnswer
 from src.services.hf.client import HFGenerationError
+from src.services.hf.tokenizer import CerebrasInputAdmission, verify_vocabulary
 from src.services.rag.service import _selection_pattern
 
 
-class FundedHF(MeasuredHF):
+class FundedHF(CerebrasInputAdmission, MeasuredHF):
     def __init__(self, settings: Settings, *, grant: TaskAllowance, output: Path, source: dict,
                  outbound_budget: int, memory=free_memory_mib):
         profile, controller, selectors = load_profile(), load_cerebras(), load_selectors()
@@ -33,6 +34,7 @@ class FundedHF(MeasuredHF):
                 or grant.receipt["model"] != controller["model"] or grant.receipt["source_sha256"] != digest(source)
                 or source_hashes() != source or grant.started):
             raise ValueError("Funded evaluation requires the unchanged approved source, pair and policy")
+        verify_vocabulary()
         self.source, self.grant, self.output, self.memory = dict(source), grant, output.resolve(), memory
         self.qualification = controller["cases"] + selectors["cases"]
         self.payloads = controller["payloads"] + selectors["payloads"]

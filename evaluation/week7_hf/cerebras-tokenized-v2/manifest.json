@@ -1,0 +1,16 @@
+{
+  "version": "hosted-cerebras-tokenized-v2",
+  "frozen_on": "2026-10-16",
+  "implementation_status": "pending_tokenized_context_integration",
+  "authorization_status": "no_execution_funding",
+  "parent_hosted_manifest_sha256": "3b42fccb34bc542e91ccdd3df0d8acb85c0bc86f7237eebdb214e6e9dbfc37a1",
+  "local_manifest_sha256": "58b099eead49d8fd22d96be7a7ceba3142de9524ce6f80846e2e8ddee884b0db",
+  "qualification_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "controller_manifest_sha256": "7513c590330757c45c023c7c202c94e4b03b7c35af7c1126e0390044b02aeb0a",
+  "selector_manifest_sha256": "b633c44720e1d4cc0820529bf1eafe38a7be63671b79103a0515b18872a85630",
+  "sha256": {
+    "PROTOCOL.md": "98156389bb7d77cc10752621eecc14d6c07dd3ff4c039b69eab6251bc78fa683",
+    "profile.json": "43a543cbc02cba21f7b133ff216f00e0263a1bfdda670f68f13fb50a38a7d5bf"
+  },
+  "parent_cerebras_manifest_sha256": "e871096c69e83dc6d1a29cdf100a4505e613ab8014e22727c8be13e613d855f5"
+}

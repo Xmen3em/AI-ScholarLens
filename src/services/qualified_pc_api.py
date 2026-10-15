@@ -20,6 +20,7 @@ from src.schemas.api.rag import GeneratedAnswer
 from src.services.agent import AgentService
 from src.services.hf.client import HFClient, HFGenerationError, HFResponseError
 from src.services.hf.rag import HostedRAGService
+from src.services.hf.tokenizer import CerebrasInputAdmission, verify_vocabulary
 from src.services.pc_api import ReadOnlyDatabase, create_local_app, make_embedder, make_ollama_client, make_search_client
 from src.services.rag.service import _selection_pattern
 from src.services.search import SearchService
@@ -36,10 +37,11 @@ def validate_policy(settings: Settings) -> dict:
     return profile
 
 
-class QualifiedHF(HFClient):
+class QualifiedHF(CerebrasInputAdmission, HFClient):
     def __init__(self, settings: Settings, acceptance: Path, *, memory=free_memory_mib):
         validate_policy(settings)
         proof = validate_acceptance(acceptance)
+        verify_vocabulary()
         self.acceptance, self.proof, self.memory = acceptance.resolve(), proof, memory
         self.schemas = {digest(case["schema"]): 256 for case in load_cerebras()["cases"]}
         for count in range(31):

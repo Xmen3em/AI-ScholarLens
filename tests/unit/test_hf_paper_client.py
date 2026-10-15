@@ -10,9 +10,11 @@ from src.services.hf.client import HFGenerationError, HFTimeoutError
 
 from tests.unit.test_hf_client import envelope, settings
 from tests.unit.test_hf_paper_allowance import setup
+from tests.unit.test_hf_tokenizer import install_vocabulary
 
 
 def client(tmp_path, monkeypatch, *, memory=lambda: 4096):
+    install_vocabulary(tmp_path, monkeypatch)
     metadata, approval, path = setup(tmp_path, monkeypatch)
     grant = TaskAllowance(approval, metadata, snapshot=tmp_path, path=path)
     source = metadata["source_sha256"]

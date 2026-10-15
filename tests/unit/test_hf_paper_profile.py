@@ -4,7 +4,15 @@ from pathlib import Path
 import pytest
 from src.commands.agent_collection import build_jobs
 from src.commands.hf_evaluation import HF_MANIFEST_SHA256, load_protocol
-from src.commands.hf_paper_profile import CEREBRAS_TASK_SHA256, get_profile, load_profile, plan_collection
+from src.commands.hf_paper_profile import (
+    CEREBRAS_PROFILE,
+    CEREBRAS_TASK_SHA256,
+    LEGACY_CEREBRAS_TASK_SHA256,
+    get_profile,
+    load_legacy_profile,
+    load_profile,
+    plan_collection,
+)
 from src.commands.hf_qualification import REVISION_SHA256
 
 
@@ -15,18 +23,24 @@ def test_selected_profile_keeps_every_quality_and_resource_limit():
     assert selected["prices_per_million"] == {"openai/gpt-oss-120b:cerebras": {"input": .35, "output": .75}}
     assert selected["qualification_calls"] == 5
     assert selected["admission_mib"] == {"bm25": 1024, "hybrid": 1536}
-    assert get_profile("hosted-cerebras-v1") == (selected, CEREBRAS_TASK_SHA256)
+    assert get_profile("hosted-cerebras-v1") == (load_legacy_profile(), LEGACY_CEREBRAS_TASK_SHA256)
+    assert get_profile(CEREBRAS_PROFILE) == (selected, CEREBRAS_TASK_SHA256)
+    assert {key for key in selected if key not in load_legacy_profile()} == {"input_admission"}
+    assert selected["input_admission"]["method"] == "o200k_ordinary_schema_inclusive_v1"
+    assert selected["context_limit"] == 8192 and selected["template_reserve"] == 512
     assert get_profile() == (original, HF_MANIFEST_SHA256)
 
 
 @pytest.mark.parametrize("name", ["manifest.json", "profile.json", "PROTOCOL.md"])
-def test_tampered_profile_is_rejected(tmp_path, name):
-    for path in Path("evaluation/week7_hf/cerebras-evaluation-v1").iterdir():
+@pytest.mark.parametrize("loader,directory", [(load_legacy_profile, "cerebras-evaluation-v1"),
+                                            (load_profile, "cerebras-tokenized-v2")])
+def test_tampered_profile_is_rejected(tmp_path, name, loader, directory):
+    for path in (Path("evaluation/week7_hf") / directory).iterdir():
         (tmp_path / path.name).write_bytes(path.read_bytes())
     path = tmp_path / name
     path.write_bytes(path.read_bytes() + b" ")
     with pytest.raises(ValueError):
-        load_profile(tmp_path)
+        loader(tmp_path)
 
 
 @pytest.mark.parametrize("name", ["unregistered", "openai/gpt-oss-120b:cerebras"])
@@ -54,7 +68,7 @@ def test_offline_plan_contains_complete_matrix_with_zero_spending(tmp_path, monk
     assert metadata["app_accepted"] is metadata["inference_started"] is False
     assert metadata["hosted_manifest_sha256"] == CEREBRAS_TASK_SHA256
     assert metadata["fixture_manifest_sha256"] == REVISION_SHA256
-    assert metadata["configuration"] == {"model": "openai/gpt-oss-120b:cerebras", "policy": "hosted-cerebras-v1"}
+    assert metadata["configuration"] == {"model": "openai/gpt-oss-120b:cerebras", "policy": CEREBRAS_PROFILE}
     assert "private fixture question" not in json.dumps(metadata)
     assert before == {path: path.read_bytes() for path in tmp_path.iterdir()}
 
