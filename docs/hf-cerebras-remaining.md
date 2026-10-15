@@ -59,3 +59,27 @@ first full run exposed the old expected rejection of this newly selected model;
 that case now rejects the unreviewed 20B model and keeps its assertion. Explicit
 120B acceptance and safe Cerebras labels have positive coverage. No tests skipped,
 removed or weakened. Defaults and unregistered-provider rejection remain intact.
+
+## Executed result
+
+The user's provider instruction and existing three-slot remainder were recorded
+under `tests/test_output/hf-cerebras-execution-20261015-01/`. The fixed new ledger
+settled all three cases at one attempt each. Old Groq reserve was independently
+confirmed blocked, with its original two used rows and receipt unchanged.
+
+Run `tests/test_output/hf-cerebras-live-20261015-01/` **passed scope, relevance and
+rewrite**, including exact expected relevance, supplied-marker membership and no
+duplicates. All usage is complete, with no schema violation. Source, frozen input,
+corpus and model preservation all pass. Initial RAM was 1,907.91 MiB and minimum
+live RAM 1,545.66 MiB. Client durations were about 2.16–2.21 seconds per request.
+
+**All 26 approved attempts are used; zero active slots remain.** The allocation
+reused the three old slots and did not increase that ceiling. Known added usage
+estimate is $0.00046240; cumulative known estimate $0.00137020 plus 11 older
+unknown-cost failures. Estimates are not invoices. No paper data or Telegram
+request was sent, and no app process or runtime flag was activated.
+
+This is a passing three-case diagnostic, not full five-case or app acceptance.
+The next bounded scope is the original selector-1 and selector-10 cases on the
+same Cerebras route, with separate additional-call approval. Then complete the
+retained reviewed task/holdout and private owner acceptance gates.

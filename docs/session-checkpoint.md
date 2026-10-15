@@ -1,4 +1,25 @@
-# User selected Cerebras; existing three-call remainder retained — 2026-10-15
+# Cerebras passes three controller checks; all 26 slots used — 2026-10-15
+
+User-selected `openai/gpt-oss-120b:cerebras` passed the unchanged scope, relevance
+and rewrite fixtures. The reallocated three-slot counter settled exactly one
+attempt per case. All expected/schema/usage checks and four preservation flags
+pass; no raw generation or reasoning retained. Old Groq remainder cannot reserve
+again, and all its original bytes remain intact. **26 actual attempts used, zero
+active slots remaining; original approved ceiling retained.**
+
+Source checkpoint **ee6dd58**, 1,184 tests/zero skips, mypy 116 and Ruff.
+Admission RAM 1,907.91 MiB; minimum live 1,545.66 MiB. Added known usage estimate
+$0.00046240; cumulative $0.00137020 plus 11 unknown-cost failures, not an invoice.
+[Audited result](hf-cerebras-remaining.md). Receipts/confirmation/allocation under
+`hf-cerebras-execution-20261015-01`; result under `hf-cerebras-live-20261015-01`.
+No paper data, Telegram traffic, runtime flag change or app startup.
+
+The three-case diagnostic cannot meet full five-case qualification. Next prepare
+the original two Cerebras selector cases and obtain additional-call approval,
+then retained development/holdout and private PC/owner acceptance. Goal ACTIVE;
+model/app acceptance still pending. No Fireworks inference or approval request.
+
+# Previous Cerebras source preparation — 2026-10-15
 
 Preparation passes **1,184 full tests, zero skips**, 17 new, mypy 116 and Ruff.
 All 329 protected files match and actual-private-value staged scans pass. The

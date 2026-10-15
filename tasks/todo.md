@@ -20,7 +20,8 @@
 - [x] Prepare guarded Fireworks candidate with unchanged payloads except provider.
 - [x] Preserve unapproved Fireworks candidate when user selected Cerebras instead.
 - [x] Prepare Cerebras first-three-case diagnostic within existing three-slot remainder.
-- [ ] Execute/audit the user-selected Cerebras diagnostic after verification;ceiling26.
+- [x] Execute/audit user-selected Cerebras:3cases pass,all26used,zero active slots.
+- [ ] Prepare two Cerebras selector checks and obtain additional-call approval.
 - [ ] Add qualified generation rollout after actual model/task acceptance.
 - [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
 
