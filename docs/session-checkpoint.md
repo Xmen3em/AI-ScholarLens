@@ -1,4 +1,33 @@
-# Active PC app goal; guarded two-call HF study prepared — 2026-10-15
+# Active PC app goal; clarity pair passed, preview prepared — 2026-10-15
+
+User explicitly approved two new public synthetic HF/Groq calls. The first run
+stopped below1024MiB before provider/corpus/inference requests; user could not free
+RAM. It recovered naturally; the same receipt/counter resumed in a fresh output.
+Both clearer-question polarity cases passed with expected/schema checks,complete
+usage and unchanged source/corpus/models/frozen labels. Only bounded counts/flags
+were retained. [Audited scope/result](hf-clarity-execution.md).
+
+**All21 approved attempts used,zero remaining:** original13+prompt6+clarity2.
+No paper transfer,retry,prompt replacement or model/app qualification. Root cause
+of prior400s remains unresolved. App/HF/agent/Telegram remain off; owner is verified.
+Receipt under `tests/test_output/hf-clarity-execution-20261015-01/`; successful run
+`tests/test_output/hf-clarity-live-20261015-02/`. Preserve first stopped run and all
+three fixed counters/registrations. Known added usage estimate$0.00018495; cumulative
+$0.00083205 plus10prior unknown-cost failures,not an invoice.
+
+[PC API preview](pc-api-preview.md) is prepared forloopback8002,one worker and
+separate persistent quotas. Reuses authenticated paper browse/detail/search while
+blocking all generation routes. Owns read-only PostgreSQL connections and skips
+production migrations; validated settings/loopback endpoints and cleanup preserve
+original8000/runtime/data. Default check creates no server/network/state. Preview
+and bot were not started. Qualified generation rollout remains pending.
+
+**1,108 tests pass,zero skips**,18new preview tests,mypy111,Ruff. Goal active,
+app acceptance incomplete. Next concrete guarded five-case exact-schema qualification
+and explicit additional-call approval,then reviewed development/locked holdout and
+qualified local/private owner acceptance. Existing roadmap remains required.
+
+# Previous guarded two-call HF study preparation — 2026-10-15
 
 User requested an active goal to finish the private PC HF/LangGraph/Telegram app.
 Owner pairing is already complete. [New two-call study](hf-clarity-execution.md)

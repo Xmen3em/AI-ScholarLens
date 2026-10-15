@@ -9,13 +9,17 @@
 - [x] Reproduce/fix Windows read-only SQLite handle leak without counter changes.
 - [x] Verify1090full/zero skips,56focused,mypy109,Ruff and303 protected hashes.
 - [x] Prepare pending proposal and verify it cannot execute/fund/read credentials.
-- [ ] Obtain explicit approval of at most two new public synthetic HF/Groq attempts.
-- [ ] Execute/audit the bounded study; qualify no model from this pair alone.
-- [ ] Prepare isolated candidate API8002; keep original8000/rollback/data intact.
+- [x] Obtain explicit approval of at most two new public synthetic HF/Groq attempts.
+- [x] Execute/audit the bounded study; both cases pass,model/app stay unqualified.
+- [x] Prepare read-only API preview8002 without migrations;preserve original8000/data.
+- [ ] Prepare guarded five-case exact-schema qualification and new bounded approval.
+- [ ] Add qualified generation rollout after actual model/task acceptance.
 - [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
 
-[Ready scope](../docs/hf-clarity-execution.md). Goal active; no new calls/receipt/grant,
-old13+6 exhausted. Telegram/HF/agent remain off. Existing roadmap below retained.
+[Audited scope](../docs/hf-clarity-execution.md). Goal active; original13+prompt6+
+clarity2 =21approved attempts used,zero remain. Both clarity cases pass; no paper
+data or model/app qualification.1108full/zero skips,mypy111,Ruff. Preview/bot not
+started. Telegram/HF/agent remain off; existing roadmap below retained.
 
 ## Private Telegram owner pairing — 2026-10-15
 

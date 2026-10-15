@@ -86,3 +86,18 @@ receipt/snapshot/recovery files match. Both old allowances are exhausted unchang
 the new fixed funded ledger is absent. Source secret scans pass. Full suite191.18s,
 with only two existing Typer/Click deprecation warnings. The pending execution
 probe blocks as designed. Original running API/rollback are untouched.
+
+The user subsequently approved **two additional calls**. Receipt/confirmation are
+in `tests/test_output/hf-clarity-execution-20261015-01/`; its fixed ledger stays
+at `tests/test_output/hf-clarity-allowance-20261015/allowance.sqlite3`.
+First run `hf-clarity-live-20261015-01` stopped below1024MiB before any provider/
+corpus/inference request. User could not free RAM. After it recovered naturally,
+run `hf-clarity-live-20261015-02` used the same receipt/counter, and both answering
+and unrelated cases passed. Complete usage,original expected/schema checks and
+all four live preservation flags passed; only bounded successful diagnostics saved.
+
+**Two new attempts used,zero remaining;21 cumulative attempts used.** No retries
+or paper data. The pair establishes a small diagnostic observation for the clearer
+question,not a fix for old400s,provider strict enforcement or model/app qualification.
+HF/agent/Telegram remain disabled. Next prepare the full exact-schema qualification
+with a separate new approval. Keep all old fixtures/labels/results and counter bytes.

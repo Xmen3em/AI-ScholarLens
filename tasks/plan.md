@@ -16,6 +16,14 @@ read-only/exhausted; new funded ledger absent. Pending execution blocks before
 credentials/network. SQLite handle cleanup is independently checkpointed770943a.
 No paid HF/Telegram traffic or activation. Existing remaining roadmap retained.
 
+Subsequent execution: user approved2calls; initialRAMgate stopped without provider
+work,then RAM recovered and the same pair passed both cases. All21totalapproved
+attempts used,zero remain. Source/corpus/models/labels and usage guards passed.
+No model qualification/paper/activation. Native authenticated read-only preview8002
+is implemented without production migrations,with separate quotas/owned clients.
+1108full tests/zero skips,18new preview tests,mypy111,Ruff. No preview process or
+bot startup. Next guarded exact five-schema qualification and new bounded approval.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and
