@@ -76,8 +76,13 @@ def plan_collection(source: Path, *, split: str, model: str, case_ids=None, mode
     return metadata
 
 
-def validate_selection(selection: dict, model: str, source: Path | None = None) -> None:
-    if (selection.get("hosted_manifest_sha256") != HF_MANIFEST_SHA256 or selection.get("model") != model
+def validate_selection(selection: dict, model: str, source: Path | None = None, *, profile_name=None) -> None:
+    manifest_sha = HF_MANIFEST_SHA256
+    if profile_name not in {None, "hosted-agent-v1"}:
+        from src.commands.hf_paper_profile import get_profile
+
+        _, manifest_sha = get_profile(profile_name)
+    if (selection.get("hosted_manifest_sha256") != manifest_sha or selection.get("model") != model
             or selection.get("development_accepted") is not True or selection.get("development_jobs") != 64):
         raise ValueError("Holdout requires a reviewed development selection lock")
     run = Path(selection["development_run"]).resolve()
@@ -89,7 +94,7 @@ def validate_selection(selection: dict, model: str, source: Path | None = None) 
         raise ValueError("Development selection evidence changed")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     if (report.get("development_accepted") is not True or report.get("model") != model
-            or report.get("hosted_manifest_sha256") != HF_MANIFEST_SHA256):
+            or report.get("hosted_manifest_sha256") != manifest_sha):
         raise ValueError("Development selection report differs")
     for name, expected in selection.get("evidence_sha256", {}).items():
         if name not in {"metadata.json", "completion.json", "qualification.json", "records.jsonl", "reviews.json"}:
@@ -102,7 +107,8 @@ def validate_selection(selection: dict, model: str, source: Path | None = None) 
         raise ValueError("Selection validation requires the preserved source snapshot")
     from src.commands.score_hf_agent import score_run
 
-    recalculated = score_run(run, source, json.loads((run / "reviews.json").read_text(encoding="utf-8")))
+    extra = {"profile_name": profile_name} if profile_name else {}
+    recalculated = score_run(run, source, json.loads((run / "reviews.json").read_text(encoding="utf-8")), **extra)
     if recalculated != report or recalculated.get("development_accepted") is not True:
         raise ValueError("Development selection no longer validates")
 
@@ -123,8 +129,9 @@ async def wait_window(start: float, seconds: int) -> None:
         await asyncio.sleep(min(1, seconds - (time.monotonic() - start)))
 
 
-async def run_collection(settings: Settings, jobs: list, papers: list, chunks: list, output: Path, profile: dict, budget: int, *, revision=None) -> dict:
-    hf = MeasuredHF(settings, outbound_budget=budget)
+async def run_collection(settings: Settings, jobs: list, papers: list, chunks: list, output: Path, profile: dict, budget: int, *,
+                         revision=None, hf_factory=None) -> dict:
+    hf = (MeasuredHF if hf_factory is None else hf_factory)(settings, outbound_budget=budget)
     qualification = None
     search_client = listener = server = server_task = None
     handler = Measurements()
@@ -175,7 +182,8 @@ async def run_collection(settings: Settings, jobs: list, papers: list, chunks: l
                 print(json.dumps({"completed": len(records), "planned": len(jobs), "path": job["path"],
                     "case_id": job["case_id"], "ok": record["ok"], "outbound_attempts": record["hosted"]["outbound_attempts"],
                     "unknown_usage_attempts": record["hosted"]["unknown_usage_attempts"], "error_type": record.get("error_type")}), flush=True)
-                if record["integrity_breach"] or not record["resource_passed"] or not record["hosted"]["usage_complete"]:
+                if (record["integrity_breach"] or not record["resource_passed"] or not record["hosted"]["usage_complete"]
+                        or getattr(hf, "halted", False) is True):
                     stop = "integrity_resource_or_usage_failure"
                     break
                 if record.get("error_type") in {"TimeoutError", "ReadTimeout"}:
