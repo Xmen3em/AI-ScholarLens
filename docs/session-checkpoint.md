@@ -1,3 +1,57 @@
+# Current Cerebras token-admission correction — 2026-10-16
+
+Source checkpoint **005651b** (tokenizer foundation `bb85d8d`, tokenized profile
+`8bb7a7b`, funded stop-on-failure guard `005651b`). The local native
+prompt rehearsal found that the first full relevance prompt cannot pass the old
+schema-inclusive UTF-8 byte limit. The separate immutable
+`evaluation/week7_hf/cerebras-tokenized-v2/` profile corrects counting with the
+published GPT-OSS BPE vocabulary; old profiles and defaults retain byte admission.
+Full passage text, schemas, questions, 8,192-token context, output/template reserves,
+quality gates, work bounds and RAM thresholds remain intact. The 30-candidate
+schema still rejects locally under an explicit schema byte cap.
+
+The local first-pass development rehearsal passes 32 BM25/hybrid cells and 60
+native payloads, maximum 4,573 conservative input tokens/13,651 bytes, no fallback,
+with source/corpus/model preservation. It uses synthetic model decisions and no
+HF transport; it does not qualify semantics, real model decisions or rewrites.
+**All 1,323 current-source tests pass, zero skips**, in 865.49 seconds, with two
+existing Typer warnings. Ruff and mypy for 126 source files pass. Full JUnit:
+`tests/test_output/cerebras-tokenized-full-20261016-03.xml`.
+All 367 protected files match, including the original 352. All 15 retained
+container IDs/images/states match, five running and no extras. Original API8000,
+58 papers/2,775 chunks and installed model digests match the frozen snapshot.
+The tokenizer reference matches the pinned package on five synthetic Unicode/control-looking examples. Its 3.6 MB public table
+is prepared explicitly in ignored storage; no model weights or implicit downloads.
+
+The current pending proposal is
+`tests/test_output/hf-cerebras-tokenized-development-proposal-20261016-02/proposed-approval.json`,
+byte SHA256 `f324be5d4444af0c0ff970926f51e5def71e0256edf09bfb34cfcce7897206d1`.
+Source-map digest `41fc2932e58fc53ecacd9bcabd83374bd92fa989ca0c5eb3704b4f04192d65c0`.
+This supersedes the old unapproved proposal; maximum 261 remains a single proposed
+allowance. All 28 old attempts remain exhausted. No new approved receipt, task
+ledger/registration, HF attempt, paper transfer to HF, app startup or Telegram.
+
+One initial regression run was stopped because the task dependency cache under
+`tests/test_output` exposed 102 third-party regex test methods to discovery. The
+cache was moved within the workspace to ignored `.cache/uv-tokenizer-20261016`;
+no tests, quality thresholds or skip rules were removed. The project suite completed
+with its intended discovery; no exclusions or skip rules were added. The final
+read-only preflight measured 1,597.38 MiB free and passed the preserved 1,536 MiB
+hybrid admission; recheck immediately before any execution. No current user RAM
+action is needed. Global HF/agent/Telegram flags remain false. Verification and
+expanded preservation baseline are saved under the pending proposal directory.
+
+The funded collector now stops after any failed paper response. A fault-injected
+unknown relevance marker previously allowed advancement to a queued job; the new
+regression proves immediate stop, exactly seven mocked attempts and one record.
+All 13 collector regression tests pass. Prompt-generation files are unchanged from
+the successful local rehearsal. The final current-source full suite passed. No test process remains running.
+The new allowance is still unapproved and both task ledgers/registrations are absent.
+Next: explicit 261-call development approval, admitted execution, honest semantic
+review/score and development lock; separately funded holdout of up to 773 calls follows, then
+accepted source lock and actual private PC/owner Telegram activation/acceptance.
+Goal ACTIVE; source preparation is not model-task or app acceptance.
+
 # Cerebras paper evaluation and private runtime prepared — 2026-10-16
 
 Source checkpoint **16af44a** on `codex/week7-agent-hf-checkpoint` prepares the

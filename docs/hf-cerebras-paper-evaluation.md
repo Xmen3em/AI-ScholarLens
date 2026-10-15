@@ -1,11 +1,12 @@
 # Cerebras paper evaluation and private PC runtime
 
-The selected provider is absent from the original frozen Groq/Fireworks evaluation
-profile. `evaluation/week7_hf/cerebras-evaluation-v1/` adds a separate data-only
-profile. Original profile bytes, labels, quality gates and resource limits stay
-unchanged. Only version, explicit model/provider registration and dated token rates
-differ. Collector, scoring, call accounting and acceptance integration are prepared.
-Execution still requires a new explicit approval; no paper run is funded.
+The selected provider is absent from the original frozen Groq/Fireworks profile.
+The retained `cerebras-evaluation-v1` adds only the model/provider and dated rates.
+Current execution uses the separate `evaluation/week7_hf/cerebras-tokenized-v2/`
+profile to correct one input-admission algorithm. Both old profiles and all original
+labels, quality gates, resource/work limits and payload controls remain immutable.
+Collector, scoring, call accounting and acceptance integration are prepared.
+Execution still requires new explicit approval; no paper run is funded.
 
 The implementation binds profile identity through planning,
 collection, per-run qualification, semantic reviews, scoring, development selection
@@ -30,7 +31,7 @@ Telegram identifiers, provider reasoning or unrelated documents. Admission stays
 1,024 MiB for BM25 and 1,536 MiB for the full comparison containing hybrid jobs;
 live margin is 600 MiB, emergency floor 384 MiB. The model runs remotely.
 
-Scoring uses the explicit `--profile hosted-cerebras-v1`. Semantic reviews bind
+Scoring uses the explicit `--profile hosted-cerebras-tokenized-v2`. Semantic reviews bind
 each response and its supported facts to the records. `lock` requires accepted
 64-job development evidence; holdout revalidates that lock before spending. After
 the separately approved 192-job holdout passes, `accept` creates an application
@@ -80,20 +81,69 @@ services; Ollama's read-only loaded-model list was empty during the schema audit
 Model task and app acceptance remain incomplete; the private bot is paired and
 disabled. Current verification results are recorded in `session-checkpoint.md`.
 
-Prepared source checkpoint: `16af44a`. All **1,307 unique tests** have passed:
-the full run passed 1,275 and initially skipped 32 database cases while Docker was
-stopped; all 33 database integration tests then passed after restoring the retained
-services. No skips remain unresolved. Ruff and mypy (124 source files) pass. All
-352 protected files match, as do all 15 retained container IDs/images/states, with
-five running. The original 58-paper/2,775-chunk corpus and installed model digests
-match the frozen snapshot. No new inference or Telegram traffic occurred.
+The previous source checkpoint `16af44a` passed 1,307 unique tests, Ruff and mypy
+for 124 files. A later local prompt rehearsal found a real pre-wire failure in the
+first development relevance prompt: 12,276 characters cannot pass the old byte
+admission. Synthetic schema success had not proved task prompt compatibility.
+This was found with zero HF calls and no new funded ledger.
 
-The exact pending development proposal is stored locally at
-`tests/test_output/hf-cerebras-development-proposal-20261016-01/proposed-approval.json`,
-byte SHA-256 `b73ec5c5a9d5176b64262d03cac1d7b4821d956a385281c503c7950ef499f357`.
+Tokenizer source checkpoint **8bb7a7b** fixes admission with a new explicit profile,
+manifest SHA-256 `92ec9996534e5a958d4ead38fa9224b83ce6c3a318ca3919d886decaeba2558d`.
+It uses the published GPT-OSS ordinary BPE vocabulary to count the entire serialized
+schema-inclusive request. The 8,192-token context, 512-token template reserve and
+256/512 output limits stay fixed. Request JSON additionally has a 65,536-byte cap
+and schema JSON a 7,168-byte cap. The original 30-candidate grammar still rejects
+locally. Full passages, question text, markers and original schemas are preserved.
+Old native clients continue to enforce the old byte gate.
+
+Tokenizer data is prepared explicitly, then only read and hash-checked at runtime:
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.prepare_hf_tokenizer
+.venv-win/Scripts/python.exe -m src.commands.prepare_hf_tokenizer --download
+```
+
+The second command fetches a single 3,613,922-byte public vocabulary into ignored
+`data/pc-app/tokenizer/` storage. It verifies the published SHA-256 before writing
+and never silently overwrites an existing file. Runtime never downloads or repairs
+the table; missing, changed, oversized or wrongly versioned tokenizer data stops
+before inference. `tiktoken==0.14.0` is pinned, with no changes to existing locked
+package versions. No model weights are downloaded. The task dependency cache is
+under `.cache/uv-tokenizer-20261016`, outside pytest discovery.
+
+Primary tokenizer definitions:
+[GPT-OSS](https://github.com/openai/gpt-oss/blob/main/gpt_oss/tokenizer.py) and
+[tiktoken 0.14.0](https://github.com/openai/tiktoken/blob/0.14.0/tiktoken_ext/openai_public.py).
+The local splitting expression and ordinary token counts match the pinned package
+on five synthetic Unicode/special-looking-text samples. The local first-pass
+rehearsal checks 32 real BM25/hybrid development cells and 60 native payloads;
+all fit, with maximum 4,573 conservative input tokens and 13,651 payload bytes,
+zero hybrid fallbacks and preserved source/corpus/model digests. It uses synthetic
+model decisions and verifies neither semantics nor real model decisions/rewrites.
+It makes no HF requests and does not replace the full paper benchmark.
+
+The current exact pending development proposal is
+`tests/test_output/hf-cerebras-tokenized-development-proposal-20261016-02/proposed-approval.json`,
+byte SHA-256 `f324be5d4444af0c0ff970926f51e5def71e0256edf09bfb34cfcce7897206d1`.
 Its source-map digest is
-`708210a9f1e64942020b3972bfd279d75adc2ee0a0088e1b5bb615ca82ae7a78`.
-Both proposed task ledgers and registrations remain absent. The final read-only
-preflight measured 1,905.8 MiB free RAM after Docker restoration; admission must
-be rechecked immediately before any future execution. No user RAM action is
-currently needed.
+`41fc2932e58fc53ecacd9bcabd83374bd92fa989ca0c5eb3704b4f04192d65c0`.
+It supersedes the earlier **unapproved** v1 proposal; the ceiling remains 261,
+with no second allowance or reset. Both actual task ledgers and registrations
+remain absent. Current verification results are in `session-checkpoint.md`.
+
+Source checkpoint **005651b** additionally enforces the promised stop on any
+failed funded paper response, including HTTP/SSE failures after an invalid
+context-specific controller decision. A real-loopback fault-injection regression
+qualifies five checks, rejects an unknown relevance marker, records exactly seven
+mocked attempts and leaves the next job unattempted. All 13 collector regression
+tests pass. Original collector behavior outside the funded run is unchanged.
+The input-generation files are byte-identical to the successful local rehearsal;
+only the collector and funded client's stop policy changed afterward. Final full
+regression passes **1,323 tests, zero skips**, in 865.49 seconds (two existing
+Typer warnings). Ruff and mypy for 126 source files pass. All 367 protected files
+match, as do all 15 retained container identities/images/states, five running and
+no extras. The 58-paper/2,775-chunk corpus and installed model digests are preserved.
+Final free RAM was 1,597.38 MiB, above the 1,536 MiB hybrid admission; check again
+at execution. No current user RAM action is needed. Global flags stay disabled.
+No new inference or Telegram request has been made. Exact audit and JUnit evidence
+are recorded in the current session checkpoint and pending proposal directory.
