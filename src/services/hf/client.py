@@ -169,13 +169,16 @@ class HFClient:
                 raise ValueError("Hosted generation requires the original JSON schema")
             payload["response_format"] = {"type": "json_schema", "json_schema": {
                 "name": "bounded_generation", "strict": True, "schema": dict(response_format)}}
-        # Conservative admission for the registered byte-tokenized model, including
-        # schema/message overhead and 512 reserved tokens for provider templates.
+        # Original profiles use conservative UTF-8 byte admission. Explicit task
+        # clients can count tokens, with the same schema/template/output reserves.
         # Provider-reported usage is checked too; absent usage remains unknown.
-        wire_bytes = len(json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8"))
-        if wire_bytes > controls["num_ctx"] - controls["num_predict"] - 512:
+        serialized = json.dumps(payload, ensure_ascii=False, allow_nan=False)
+        if self._input_units(payload, serialized) > controls["num_ctx"] - controls["num_predict"] - 512:
             raise HFGenerationError("Hosted input exceeds conservative context admission")
         return payload
+
+    def _input_units(self, payload: dict, serialized: str) -> int:
+        return len(serialized.encode("utf-8"))
 
     @staticmethod
     def _result(body: bytes, model: str, max_tokens: int, elapsed_ms: float) -> GenerationResult:
