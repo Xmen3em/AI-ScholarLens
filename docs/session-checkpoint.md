@@ -1,4 +1,27 @@
-# Five-case HF schema check prepared; approval pending — 2026-10-15
+# Five-case HF check stopped at provider failure — 2026-10-15
+
+User explicitly approved five synthetic HF/Groq calls. Scope passed; relevance
+returned HTTP 400 / `json_validate_failed` / `invalid_request_error`. The frozen
+stop rule held: **2 new calls used, 3 unspent; 23 cumulative attempts used out of
+26 approved**. Remaining calls cannot fund retries, changed prompts/providers or
+continuation past the failed check. Preserve the fixed new ledger/registration,
+receipt/confirmation and both result files under `hf-schema-live-20261015-01`.
+
+Admission at 1,302.12 MiB and minimum live RAM 1,253.19 MiB passed. This is a provider
+validation failure, not a memory stop. Source/frozen input/corpus/model checks all
+passed; generation data was discarded. Known cumulative usage estimate $0.00090780
+plus 11 unknown-cost failures, not an invoice. Model and app remain unqualified.
+No runtime flags changed, app/preview/bot started or Telegram requests sent.
+
+[Exact scope and audit](hf-schema-execution.md) and a
+[public synthetic reproduction](research/hf-groq-synthetic-reproduction-20261015/README.md)
+are saved. The passing control and failing relevance body differ only in embedded
+question wording; a root cause is not established. Public catalog metadata advertises
+the existing Fireworks candidate as live/structured. Next prepare a distinct guarded
+candidate scope before requesting its explicit approval. Existing qualification,
+development/holdout and owner acceptance remain required; goal ACTIVE.
+
+# Previous five-case HF check preparation — 2026-10-15
 
 All **21 approved attempts are used; zero remain**. The next guarded runner checks
 the five unchanged qualification-v2 synthetic cases with their exact prompts,

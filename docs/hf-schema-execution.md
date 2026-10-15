@@ -63,3 +63,35 @@ clarity run and recovery evidence. All 15 retained container IDs/images/states
 match, with five running and no extras. The full live snapshot still matches:
 58 papers, 2,775 chunks and unchanged model fingerprints. No additional HF or
 Telegram calls, new funded ledger, server startup or application activation.
+
+## Approved execution result
+
+The user explicitly approved five calls. The separate receipt and confirmation
+are in `tests/test_output/hf-schema-execution-20261015-01/`; the fixed new ledger
+and registration were created without changing the three exhausted old grants.
+Run `tests/test_output/hf-schema-live-20261015-01/` passed admission at 1,302.12 MiB.
+
+Scope passed with complete usage. Relevance returned HTTP 400,
+`json_validate_failed` / `invalid_request_error`, with unknown usage. The runner
+stopped as frozen: rewriting and both selector cases did not run. **Two new calls
+used; three remain unspent and held by the stop rule. Total 23 attempts used out
+of the approved ceiling of 26.** No failed case may repeat, and the remaining
+calls do not authorize another provider, a changed prompt or bypassing that stop.
+
+Minimum live RAM was 1,253.19 MiB; this was a provider validation failure. All four
+preservation flags passed and source still matched its collection checkpoint.
+Known added usage estimate is $0.00007575; cumulative known estimate $0.00090780
+plus 11 failed attempts with unknown cost. Estimates are not invoices.
+Schema qualification and app acceptance remain false; runtime flags remain off.
+
+A [public synthetic reproduction bundle](research/hf-groq-synthetic-reproduction-20261015/README.md)
+compares the exact failing body with the earlier passing positive control. Only
+the embedded question differs; the schema and all other controls are identical.
+This does not establish the cause. No response text or reasoning was retained or
+reconstructed, and the bundle was not submitted to a provider.
+
+Read-only public HF catalog checks advertise the already registered Fireworks
+alternative as live with structured output. That is a possible next candidate,
+not a qualified model. It would need a distinct tested scope and explicit approval;
+no inference was sent to it. Preparation, proposal and preserved old results above
+remain historical, including the original absence of a funded new ledger.

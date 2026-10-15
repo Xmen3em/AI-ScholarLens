@@ -1,0 +1,23 @@
+{
+  "endpoint": "https://router.huggingface.co/v1/",
+  "model": "openai/gpt-oss-120b:groq",
+  "request_bodies_are_public_synthetic_fixtures": true,
+  "authorization_headers_included": false,
+  "schema_sha256": "c7ccaa511b3ebbe4262fe59f9e86cefc9528b9189a47715a6be68aaeede58efd",
+  "failing_observation": {
+    "status": 400,
+    "error_code": "json_validate_failed",
+    "error_type": "invalid_request_error",
+    "outbound_attempts": 1,
+    "usage_unknown": true
+  },
+  "passing_control_observation": {
+    "schema_valid": true,
+    "expected_match": true,
+    "outbound_attempts": 1
+  },
+  "only_payload_difference": "messages[1].content; the embedded question wording changes",
+  "provider_response_content_retained": false,
+  "root_cause_established": false,
+  "submitted_to_provider": false
+}

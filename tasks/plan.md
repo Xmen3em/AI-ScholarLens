@@ -37,6 +37,13 @@ and Ruff pass. All 316 protected files, 15 retained containers and live 58-paper
 2,775-chunk corpus/model fingerprints match. No additional funded ledger, paid
 call, Telegram request or runtime activation. All 21 approved attempts stay used.
 
+User subsequently approved five calls. Scope passed, relevance returned provider
+HTTP400/json_validate_failed, and the frozen run stopped after2calls.23total used,
+3unspent held by the stop rule; no continued/repeated/changed-provider spending.
+RAM and all preservation gates passed. Public synthetic failing/control request
+bodies and bounded observations are saved without submitting anything. Next a
+distinct guarded HF provider candidate scope and explicit approval; app stays off.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and
