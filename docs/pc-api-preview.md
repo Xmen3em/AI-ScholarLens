@@ -1,5 +1,11 @@
 # Isolated private PC API preview — 2026-10-15
 
+Update 2026-10-16: a separate qualified generation mode is now implemented.
+`--check-app --acceptance PATH` validates offline; `--execute-app --acceptance PATH`
+requires accepted full Cerebras holdout evidence. The default preview remains as
+described below. See [Cerebras evaluation and runtime](hf-cerebras-paper-evaluation.md).
+No accepted holdout or runtime activation exists yet.
+
 The next local API is prepared at `127.0.0.1:8002`, separate from the retained
 API on8000. It reuses the installed Windows environment and existing local
 PostgreSQL/OpenSearch/Ollama services. No image rebuild, new model, broad Compose

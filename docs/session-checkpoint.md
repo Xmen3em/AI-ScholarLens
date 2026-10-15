@@ -1,3 +1,57 @@
+# Cerebras paper evaluation and private runtime prepared — 2026-10-16
+
+Source checkpoint **16af44a** on `codex/week7-agent-hf-checkpoint` prepares the
+selected `openai/gpt-oss-120b:cerebras` route for full paper development/holdout,
+reviewed acceptance and isolated private PC/Telegram activation. The source-map
+digest is `708210a9f1e64942020b3972bfd279d75adc2ee0a0088e1b5bb615ca82ae7a78`.
+Local commits: `92be5d4` profile/funding; `189583e` guarded collector; `c731d63`
+scoring/acceptance; `16af44a` qualified runtime. No merge, push or deployment.
+
+**All 1,307 unique tests verified; no unresolved skips.** The full suite passed
+1,275 and skipped 32 PostgreSQL cases while Docker Desktop was stopped. After
+restoring Docker and the exact three previously running containers, all 33
+integration tests passed (one was already included in the full run). Two existing
+Typer/Click warnings remain. Ruff and mypy for 124 source files pass. Full evidence:
+`tests/test_output/cerebras-paper-full-20261016-01.xml` and
+`tests/test_output/cerebras-paper-database-20261016-01.xml`.
+All 352 protected files match. All 15 retained IDs/images/states match, five running,
+zero extras. Original API8000, 58 papers/2,775 chunks and installed model digests
+verify against the frozen source. Private configuration and recovery are intact.
+
+The frozen Cerebras profile preserves every original quality/resource gate.
+Development is 64 jobs/up to261 attempts; holdout192/up to773. Each run starts with
+five fresh unchanged schema qualifications. Persistent split grants reserve before
+every wire; failed/uncertain work counts. Registered missing state fails closed;
+started grants cannot replay. Source/profile/usage/schema/resource failures stop
+spending. Semantic reviews and a recalculated accepted development lock precede
+holdout; full accepted holdout is required to create an app acceptance lock.
+
+The new PC app source uses real LangGraph, the accepted HF pair, read-only DB,
+loopback8002/one worker, separate quotas, owned cleanup and per-request six-call
+bounds. Acceptance is revalidated before each model call. Telegram's qualified
+launcher uses the paired owner and checks API acceptance before polling. Defaults
+and `.env` remain disabled; no candidate API, bot or live owner message has run.
+
+**All28 approved inference attempts remain used; zero active calls.** No new paper
+transfer/inference or Telegram traffic. The exact pending development proposal is
+`tests/test_output/hf-cerebras-development-proposal-20261016-01/proposed-approval.json`,
+SHA256 `b73ec5c5a9d5176b64262d03cac1d7b4821d956a385281c503c7950ef499f357`.
+It proposes up to261 additional calls, including fresh5 qualifications plus full64
+comparison, sending only bounded questions/public paper contexts. Failures and
+uncertainty count; no retry/fallback, holdout spending or activation. No approved
+receipt, development/holdout ledger or registration exists. Actual unapproved
+execution stops before credentials/services/funding; unaccepted holdout stops
+before spending; both launchers reject missing app acceptance evidence.
+
+Docker Desktop had stopped between sessions. It was reopened and only the three
+verified existing cache/Ollama/API containers restored; IDs/images are unchanged.
+Final free RAM was1,905.8MiB, above1,536MiB hybrid admission. Recheck at execution;
+do not lower limits or repeatedly ask the user to close apps. No user RAM action
+is currently needed. Goal ACTIVE. Next obtain explicit approval of the prepared261
+scope, then execute only when admission passes, review/score development, and
+prepare the separate holdout authorization. Full app/owner acceptance remains.
+See [execution scope and commands](hf-cerebras-paper-evaluation.md).
+
 # All five Cerebras schema cases verified — 2026-10-15
 
 The approved selector-1 and selector-10 checks both passed on source checkpoint
