@@ -1,10 +1,11 @@
 # Cerebras selector checks
 
 The selected `openai/gpt-oss-120b:cerebras` route passed the original scope,
-relevance and rewrite cases. All **26 approved attempts are used; none remain**.
+relevance and rewrite cases. All **26 previous attempts are used**; the user has
+now approved **two additional selector attempts, both unused**.
 Those results and every old grant, receipt and allocation remain immutable.
 
-The next scope proposes **two additional public synthetic calls**, for the original
+The user approved **two additional public synthetic calls**, for the original
 selector-1 and selector-10 fixtures. It uses the same Cerebras route and HF token,
 strict canonical JSON schemas, expected selections, patterns, 512 output tokens,
 temperature 0, low reasoning, context 8,192, deadlines, quotas and RAM gates.
@@ -24,7 +25,10 @@ or restart. Missing registered evidence requires recovery.
 Default and proposal modes are offline: no credentials, service access, allowance
 initialization or inference. Pending proposal:
 `tests/test_output/hf-cerebras-selectors-proposal-20261015-01/proposed-approval.json`.
-Execution still needs explicit additional-call approval. Saved diagnostics contain
+The approved receipt and exact user confirmation are preserved under
+`tests/test_output/hf-cerebras-selectors-execution-20261015-01/`.
+Both calls remain unused; no selector counter or registration exists. Approval
+review is available again and offline verification passes. Saved diagnostics contain
 bounded flags/counts, hashes, usage, latency, memory and safe error labels; provider
 generated text and reasoning are discarded. All four preservation checks apply.
 
@@ -45,3 +49,16 @@ CLI checks, which the full suite covers. All 340 protected files match; private
 value scans and diff checks pass. The actual pending proposal was rejected before
 Settings, funding or network. No selector ledger or registration was created.
 No new inference, paper transfer, Telegram traffic or runtime activation.
+
+The offline verifier, `src.commands.hf_schema_evidence`, now checks
+both retained runs, exact five-case order and fixture/schema hashes, approved
+read-only counters, complete recomputed token/cost accounting, semantic flags,
+memory margins and preservation. It compares all runtime and canonical measurement
+source files with the current tree; four explicitly named diagnostic orchestration
+files may differ between runs. It always leaves task and app acceptance false.
+**1,219 full tests pass, zero skips**, including 26 new verifier checks; Ruff and
+mypy (118 source files) pass. The retained controller evidence revalidates, missing
+selectors fail closed, and all 340 protected files match. The suite uses a verified
+fresh workspace fixture directory; the default Windows temp directory is inaccessible.
+Current evidence is under `tests/test_output/hf-schema-evidence-prep-20261015-01/`
+and the full JUnit result is `tests/test_output/hf-schema-evidence-full-results-20261015-01.xml`.

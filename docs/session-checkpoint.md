@@ -1,4 +1,28 @@
-# Two Cerebras selector checks prepared; additional approval pending — 2026-10-15
+# Two Cerebras selector calls approved; execution not started — 2026-10-15
+
+The user answered **“Approve two additional calls”** for the exact scope in
+`docs/hf-cerebras-selectors.md`. The separate approved receipt and confirmation
+are saved under `tests/test_output/hf-cerebras-selectors-execution-20261015-01/`;
+their contents match the frozen proposal and completed controller history.
+**26 attempts used, two newly approved attempts unused.** No selector counter,
+registration, live run, inference or application activation has been created.
+
+The offline five-case evidence verifier passes **1,219 full tests, zero skips**,
+including 26 new fixture checks; Ruff and mypy (118 source files) pass. Full run
+706.05 seconds, with two existing Typer/Click deprecation warnings. Approval review
+is available again. Tests use a fresh workspace fixture directory because the
+default Windows temporary directory is inaccessible.
+
+The verifier revalidates original case/schema hashes, semantic flags, recomputed
+usage/costs, memory margins, all four preservation flags and approved read-only
+accounting across the separate controller and selector runs. Runtime and canonical
+measurement sources must match; four named diagnostic orchestration files may
+differ. The real three-case controller evidence validates, missing selectors fail
+closed, and app/task acceptance always remains false. All 340 protected files
+match. Next execute the approved pair using its fixed new counter, then validate
+the combined evidence. Paper evaluation and private PC/Telegram acceptance remain.
+
+# Previous selector preparation — 2026-10-15
 
 **1,193 full tests pass, zero skips**, nine new; mypy 117, Ruff. All 340 protected
 files match, including the successful Cerebras run and all prior counters/receipts/
