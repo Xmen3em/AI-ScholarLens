@@ -1,0 +1,9 @@
+{
+  "qualification_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "hosted_manifest_sha256": "3b42fccb34bc542e91ccdd3df0d8acb85c0bc86f7237eebdb214e6e9dbfc37a1",
+  "clarity_execution_manifest_sha256": "aef8ff44f41dc662dcbe032755d0af014c4c590f98f9b54be79514d206190672",
+  "sha256": {
+    "PROTOCOL.md": "45a054c92aead56f285cf96c84c59bdcd7addff9f0298f42e62b3c0b62cf157d",
+    "requests.json": "6d4b2725ae438f06094e07bc317ae62817965d273d6eb7ca46648434e1277434"
+  }
+}

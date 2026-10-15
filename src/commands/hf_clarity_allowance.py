@@ -81,6 +81,11 @@ def approval_proposal(
 
 
 class ClarityAllowance:
+    maximum_arms = 2
+
+    def _proposal(self) -> dict:
+        return approval_proposal(**self.parents)
+
     def __init__(
         self,
         approval: Path,
@@ -93,7 +98,7 @@ class ClarityAllowance:
     ):
         self.approval, self.path = Path(approval), Path(path)
         self.parents = {"original": original, "prior": prior, "prompt_path": prompt_path, "prompt_approval": prompt_approval}
-        expected = approval_proposal(**self.parents)
+        expected = self._proposal()
         expected.update(status="approved", authorization_source="explicit_user_approval")
         receipt = json.loads(self.approval.read_text(encoding="utf-8"))
         if (
@@ -101,7 +106,7 @@ class ClarityAllowance:
             or type(receipt.get("maximum_outbound_attempts")) is not int
             or receipt.get("paper_data_sent") is not False
         ):
-            raise ValueError("Explicit approval of the exact two-attempt scope is required")
+            raise ValueError("Explicit approval of the exact arm scope is required")
         self.receipt, self.signature = receipt, digest(receipt)
         self.marker = self.path.with_suffix(".registered")
         bootstrap = not self.path.exists()
@@ -127,7 +132,7 @@ class ClarityAllowance:
         rows = db.execute("SELECT arm,run,used FROM arms").fetchall()
         if (
             seeds != [(self.signature,)]
-            or len(rows) > 2
+            or len(rows) > self.maximum_arms
             or any(
                 arm not in self.receipt["arms"]
                 or type(run) is not str
@@ -147,7 +152,7 @@ class ClarityAllowance:
             or digest(json.loads(self.approval.read_text(encoding="utf-8"))) != self.signature
         ):
             raise ValueError("Retained clarity approval or registration differs")
-        expected = approval_proposal(**self.parents)
+        expected = self._proposal()
         expected.update(status="approved", authorization_source="explicit_user_approval")
         if expected != self.receipt:
             raise ValueError("Complete parent evidence differs")
@@ -164,7 +169,7 @@ class ClarityAllowance:
             raise ValueError("Unapproved arm or run")
         with transaction(self.path) as db:
             rows = self._rows(db)
-            if len(rows) >= 2 or any(row[0] == arm for row in rows):
+            if len(rows) >= self.maximum_arms or any(row[0] == arm for row in rows):
                 raise ValueError("Clarity arm is exhausted or already reserved")
             db.execute("INSERT INTO arms VALUES (?,?,NULL)", (arm, run))
 

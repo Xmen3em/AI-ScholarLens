@@ -12,7 +12,10 @@
 - [x] Obtain explicit approval of at most two new public synthetic HF/Groq attempts.
 - [x] Execute/audit the bounded study; both cases pass,model/app stay unqualified.
 - [x] Prepare read-only API preview8002 without migrations;preserve original8000/data.
-- [ ] Prepare guarded five-case exact-schema qualification and new bounded approval.
+- [x] Prepare guarded five-case exact-schema qualification and pending bounded proposal.
+- [x] Verify 1,146 full/zero skips,80focused,mypy114,Ruff and316 protected files.
+- [ ] Obtain explicit approval of up to five new synthetic HF/Groq attempts.
+- [ ] Execute/audit the five original schema cases; leave application disabled.
 - [ ] Add qualified generation rollout after actual model/task acceptance.
 - [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
 

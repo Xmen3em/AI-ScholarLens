@@ -24,6 +24,19 @@ is implemented without production migrations,with separate quotas/owned clients.
 1108full tests/zero skips,18new preview tests,mypy111,Ruff. No preview process or
 bot startup. Next guarded exact five-schema qualification and new bounded approval.
 
+The five-case runner and exact payload freeze are now prepared in
+[the reviewable scope](../docs/hf-schema-execution.md). It reuses the unchanged
+qualification-v2 cases, binds all three completed grants and the successful clarity
+result, reserves each case before either generation method, and stops at the first
+failed check. Actual offline proposal and pending-receipt rejection passed; no new
+funding or inference. 80 focused checks pass. Next explicit up-to-five-call approval,
+schema execution/audit, then the retained development/holdout and owner gates.
+
+Final preparation verification: 1,146 full tests pass, zero skips, 38 new; mypy 114
+and Ruff pass. All 316 protected files, 15 retained containers and live 58-paper /
+2,775-chunk corpus/model fingerprints match. No additional funded ledger, paid
+call, Telegram request or runtime activation. All 21 approved attempts stay used.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and

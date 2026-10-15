@@ -1,4 +1,30 @@
-# Active PC app goal; clarity pair passed, preview prepared — 2026-10-15
+# Five-case HF schema check prepared; approval pending — 2026-10-15
+
+All **21 approved attempts are used; zero remain**. The next guarded runner checks
+the five unchanged qualification-v2 synthetic cases with their exact prompts,
+schemas and outgoing payloads. [Reviewable scope](hf-schema-execution.md) requests
+up to five additional calls; there is no approval or funded new ledger yet.
+
+Its fixed counter binds the original 13, prompt 6 and clarity 2 allowances plus
+the successful clarity result. Both generation methods reserve before outbound
+work, reject changed payloads and enforce five named arms without repeats. Failed
+or uncertain attempts count; the first failed check stops the run. Missing
+registered evidence requires recovery. Old frozen files and receipts stay intact.
+
+Actual offline plan/proposal paths made no inference or credential reads. Execution
+with the pending proposal was rejected before Settings, funding or service access.
+Successful execution would establish schema compatibility only; it sends no paper
+data and does not activate HF, agent, API preview or Telegram. The active app goal
+still requires reviewed development, locked holdout and private owner acceptance.
+
+**1,146 tests pass, zero skips**, 38 new and 80 focused; mypy 114, Ruff. All 316
+protected private/frozen/receipt/counter/snapshot/recovery files match. All 15
+retained container IDs/images/states and the full live corpus/model snapshot match:
+58 papers and 2,775 chunks. No extra containers, new paid calls, Telegram traffic,
+funded ledger or runtime activation. Preparation evidence is under
+`tests/test_output/hf-schema-qualification-prep-20261015-01/`.
+
+# Previous PC preview checkpoint; clarity pair passed — 2026-10-15
 
 User explicitly approved two new public synthetic HF/Groq calls. The first run
 stopped below1024MiB before provider/corpus/inference requests; user could not free
