@@ -1,0 +1,8 @@
+{
+  "parent_schema_execution_sha256": "51a6c389b97a4668439bfa2ecdf12258ecb866a164c610829d20c03ef11af32c",
+  "qualification_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "sha256": {
+    "PROTOCOL.md": "f0aff978bd4a38a63d6be6db45b63619002235d8468831d83839f006ac0aa0ef",
+    "requests.json": "69e7f3cad4404d00e8afd230e24cf02f7094826f64fde0f9b5fe69b075029da5"
+  }
+}

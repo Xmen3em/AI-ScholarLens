@@ -17,7 +17,9 @@
 - [x] Obtain explicit approval of up to five new synthetic HF/Groq attempts.
 - [x] Execute/audit until the first failure: scope passes, relevance HTTP400;2used/3unspent.
 - [x] Save public synthetic reproduction without secrets, generated text or submission.
-- [ ] Prepare a distinct guarded HF provider candidate scope before new approval.
+- [x] Prepare guarded Fireworks candidate with unchanged payloads except provider.
+- [ ] Obtain explicit approval of at most five additional HF/Fireworks synthetic calls.
+- [ ] Execute/audit candidate schema checks, keeping Groq's three unused arms intact.
 - [ ] Add qualified generation rollout after actual model/task acceptance.
 - [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
 

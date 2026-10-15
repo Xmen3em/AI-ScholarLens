@@ -1,4 +1,38 @@
-# Five-case HF check stopped at provider failure — 2026-10-15
+# User selected Cerebras; existing three-call remainder retained — 2026-10-15
+
+Latest user instruction: use `openai/gpt-oss-120b:cerebras`. Its public HF catalog
+entry advertises it live/structured. No Cerebras inference yet. Preserve the
+existing ceiling of 26 actual attempts: 23 used, three unspent. Prepare a separate
+three-call diagnostic and explicit remaining-budget allocation from that steering;
+block the old Groq remainder from duplicate spending. No budget increase, model
+qualification or application activation is inferred from the model selection.
+
+The now superseded Fireworks candidate passed **1,167 tests, zero skips**, 21 new
+tests, mypy 115 and Ruff. Its frozen artifacts and pending proposal remain preserved;
+no Fireworks call, funded ledger or approval request. Reuse its tested guard and
+budget machinery for the selected Cerebras route while retaining old model/input
+contracts, deadlines, quotas and memory gates. A partial three-case diagnostic
+cannot satisfy the existing full five-case qualification or app acceptance.
+
+# Historical Fireworks candidate preparation — 2026-10-15
+
+The Groq failure remains preserved and unqualified: 23 actual attempts used,
+three unspent under its stop rule. A separate
+[five-case Fireworks scope](hf-fireworks-schema-candidate.md) is prepared for the
+already registered alternative through the same HF token/router. Exact payloads
+change only the model/provider string; original prompts, labels, schemas, limits,
+memory and acceptance gates remain unchanged. No automatic provider fallback.
+
+Its new fixed receipt/counter binds all three exhausted grants and the stopped
+Groq receipt/counter/result. Both generation methods also bind their approval to
+the exact provider experiment. Old funding cannot authorize the candidate. The
+pending proposal cannot execute, read Settings, create a ledger or access services.
+No Fireworks inference or candidate approval/funding yet; global runtime stays off.
+
+Goal remains active. Next explicit new candidate-call approval and audited schema
+qualification, then the retained development/holdout and private owner acceptance.
+
+# Previous Groq check stopped at provider failure — 2026-10-15
 
 User explicitly approved five synthetic HF/Groq calls. Scope passed; relevance
 returned HTTP 400 / `json_validate_failed` / `invalid_request_error`. The frozen

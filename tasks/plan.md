@@ -44,6 +44,13 @@ RAM and all preservation gates passed. Public synthetic failing/control request
 bodies and bounded observations are saved without submitting anything. Next a
 distinct guarded HF provider candidate scope and explicit approval; app stays off.
 
+[Fireworks candidate](../docs/hf-fireworks-schema-candidate.md) prepared. Already
+registered model, same HF router/token, all five original cases and controls; only
+the outgoing provider string changes. Separate exact funding binds all old grants
+and the stopped Groq result. Both direct generation methods enforce provider/receipt
+identity. Pending execution blocks before private Settings/network/funding. No
+candidate inference or use of the three held Groq arms. Next explicit new approval.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and

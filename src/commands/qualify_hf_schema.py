@@ -11,19 +11,26 @@ from src.commands.evaluate_hf_agent import live_snapshot, plan_collection, provi
 from src.commands.evaluate_retrieval import digest
 from src.commands.hf_allowance import PILOT_CASE, PILOT_MODEL
 from src.commands.hf_evaluation import MeasuredHF, hosted_admission, load_protocol, qualify
+from src.commands.hf_provider_allowance import AlternativeAllowance
+from src.commands.hf_provider_allowance import approval_proposal as alternative_proposal
 from src.commands.hf_qualification import load_revision
 from src.commands.hf_schema_allowance import SchemaAllowance, approval_proposal
-from src.commands.hf_schema_execution import load_execution
+from src.commands.hf_schema_execution import load_execution, load_experiment
 from src.config import Settings
 from src.middlewares import RateLimiter
 from src.services.hf.client import HFGenerationError
 
 
 class SchemaHF(MeasuredHF):
-    def __init__(self, settings: Settings, grant: SchemaAllowance, output: Path, source: dict, *, memory=free_memory_mib):
-        self.execution = load_execution()
-        if settings.hf_models != [PILOT_MODEL] or settings.hf_default_model != PILOT_MODEL:
+    def __init__(self, settings: Settings, grant: SchemaAllowance, output: Path, source: dict, *, memory=free_memory_mib,
+                 experiment="schema-execution-v1"):
+        self.execution = load_experiment(experiment)
+        self.experiment = experiment
+        if settings.hf_models != [self.execution["model"]] or settings.hf_default_model != self.execution["model"]:
             raise ValueError("Schema execution requires the frozen model")
+        if any(grant.receipt.get(key) != self.execution[key] for key in
+               ("manifest_sha256", "model", "endpoint", "maximum_outbound_attempts", "arms")):
+            raise ValueError("Schema execution requires approval of this exact provider experiment")
         self.grant, self.output, self.source, self.memory = grant, output, source, memory
         self.position = 0
         super().__init__(settings, outbound_budget=5)
@@ -44,7 +51,7 @@ class SchemaHF(MeasuredHF):
         if source_hashes() != self.source:
             raise ValueError("Schema execution source changed")
         # Revalidates all immutable inputs and completed parents before reserving.
-        load_execution()
+        load_experiment(self.experiment)
         arm = self.execution["arms"][self.position]
         self.grant.reserve(str(self.output), arm)
         before = self.attempts
@@ -56,8 +63,9 @@ class SchemaHF(MeasuredHF):
             self.position += 1
 
 
-async def collect(settings: Settings, grant: SchemaAllowance, output: Path, source: dict, *, memory=free_memory_mib) -> dict:
-    client = SchemaHF(settings, grant, output, source, memory=memory)
+async def collect(settings: Settings, grant: SchemaAllowance, output: Path, source: dict, *, memory=free_memory_mib,
+                  experiment="schema-execution-v1") -> dict:
+    client = SchemaHF(settings, grant, output, source, memory=memory, experiment=experiment)
     try:
         result = await qualify(client, load_protocol(), limiter=RateLimiter(settings), memory=memory, revision=load_revision())
         return {"kind": "schema_qualification_only", "app_accepted": False,
@@ -67,28 +75,33 @@ async def collect(settings: Settings, grant: SchemaAllowance, output: Path, sour
 
 
 def main() -> None:
-    profile = load_execution()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--approval", type=Path)
+    parser.add_argument("--experiment", choices=["schema-execution-v1", "provider-alternative-v1"], default="schema-execution-v1")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--execute", action="store_true")
     mode.add_argument("--propose-approval", action="store_true")
     args = parser.parse_args()
+    profile = load_experiment(args.experiment)
+    alternative = args.experiment == "provider-alternative-v1"
     output = args.output.resolve()
     roots = [(Path.cwd() / name).resolve() for name in ("test_output", "tests/test_output")]
     if output.exists() or not any(output.is_relative_to(root) and output != root for root in roots):
         parser.error("Output must be fresh local ignored evidence")
     metadata = plan_collection(args.snapshot, split="development", model=PILOT_MODEL,
                                case_ids=[PILOT_CASE], modes=["bm25"], transports=["json"], qualification_v2=True)
+    # The original planner validates retained labels under its unchanged Groq-only
+    # pilot contract. This command sends no paper jobs; name the actual schema model.
+    metadata["configuration"]["model"] = profile["model"]
     metadata.update(kind=profile["kind"], jobs=[], arms=profile["arms"], planned_outbound_budget=5,
                     schema_execution_manifest_sha256=profile["manifest_sha256"], app_accepted=False,
                     proposed_outbound_budget=5, approved_outbound_budget=0, outbound_budget=0, paper_collection_planned=False)
     output.mkdir(parents=True, exist_ok=False)
     write_json(output / "metadata.json", metadata)
     if args.propose_approval:
-        write_json(output / "proposed-approval.json", approval_proposal())
+        write_json(output / "proposed-approval.json", alternative_proposal() if alternative else approval_proposal())
         print(json.dumps({"status": "pending_user_approval", "maximum_additional_attempts": 5}))
         return
     if not args.execute:
@@ -97,7 +110,7 @@ def main() -> None:
     try:
         if args.approval is None:
             raise ValueError("Additional approval required")
-        grant = SchemaAllowance(args.approval)
+        grant = AlternativeAllowance(args.approval) if alternative else SchemaAllowance(args.approval)
     except Exception:
         metadata.update(status="not_started", reason="approval_required")
         write_json(output / "metadata.json", metadata)
@@ -115,9 +128,9 @@ def main() -> None:
         before, _, _ = live_snapshot(settings)
         if before != json.loads((args.snapshot / "state.json").read_text(encoding="utf-8")):
             raise ValueError("Live source snapshot differs")
-        metadata["provider_catalog"] = provider_available(PILOT_MODEL)
+        metadata["provider_catalog"] = provider_available(profile["model"])
         local = Settings.model_validate(settings.model_copy(update={"hf_inference_enabled": True,
-            "hf_models": [PILOT_MODEL], "hf_default_model": PILOT_MODEL, "answer_cache_enabled": False,
+            "hf_models": [profile["model"]], "hf_default_model": profile["model"], "answer_cache_enabled": False,
             "local_tracing_enabled": False, "monitoring_directory": None,
             "api_rate_limit_path": str(output / "quotas.sqlite3")}).model_dump())
     except Exception:
@@ -129,14 +142,15 @@ def main() -> None:
                     outbound_budget=5, approval_sha256=grant.signature)
     write_json(output / "metadata.json", metadata)
     try:
-        result = asyncio.run(collect(local, grant, output, metadata["source_sha256"]))
+        extra = {"experiment": args.experiment} if alternative else {}
+        result = asyncio.run(collect(local, grant, output, metadata["source_sha256"], **extra))
     except Exception:
         result = {"kind": "schema_qualification_only", "app_accepted": False,
                   "qualification": {"qualified": False}, "outbound_attempts": None, "error_class": "CollectionInterrupted"}
     preservation = {"source_unchanged": source_hashes() == metadata["source_sha256"], "frozen_labels_unchanged": False,
                     "corpus_unchanged": False, "models_unchanged": False}
     try:
-        load_execution()
+        load_experiment(args.experiment)
         plan_collection(args.snapshot, split="development", model=PILOT_MODEL,
                         case_ids=[PILOT_CASE], modes=["bm25"], transports=["json"], qualification_v2=True)
         preservation["frozen_labels_unchanged"] = True
@@ -144,7 +158,7 @@ def main() -> None:
         preservation.update(corpus_unchanged=after == before, models_unchanged=True)
     except Exception:
         pass
-    result.update(preservation=preservation, extension_attempts_used=grant.used, original_attempts_used=21,
+    result.update(preservation=preservation, extension_attempts_used=grant.used, original_attempts_used=23 if alternative else 21,
                   schema_execution_manifest_sha256=profile["manifest_sha256"],
                   schema_qualified=(all(preservation.values()) and result["qualification"].get("qualified") is True
                                     and result["outbound_attempts"] == 5))

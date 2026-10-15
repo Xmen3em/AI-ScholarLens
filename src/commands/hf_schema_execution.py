@@ -12,6 +12,8 @@ from src.commands.hf_qualification import load_revision
 from src.services.hf.registry import HF_ROUTER_URL
 
 SCHEMA_EXECUTION_SHA256 = "51a6c389b97a4668439bfa2ecdf12258ecb866a164c610829d20c03ef11af32c"
+ALTERNATIVE_SHA256 = "507ed295c7b59b5bb57e1a4f87569ec129b19c1092c297a992695484d56dc820"
+ALTERNATIVE_MODEL = "openai/gpt-oss-120b:fireworks-ai"
 
 
 def load_execution(root=Path("evaluation/week7_hf/schema-execution-v1")) -> dict:
@@ -44,3 +46,34 @@ def load_execution(root=Path("evaluation/week7_hf/schema-execution-v1")) -> dict
         raise ValueError("Schema execution scope differs")
     return {**profile, "cases": revision["cases"], "manifest_sha256": SCHEMA_EXECUTION_SHA256,
             "qualification_manifest_sha256": revision["manifest_sha256"]}
+
+
+def load_alternative(root=Path("evaluation/week7_hf/provider-alternative-v1")) -> dict:
+    manifest = root / "manifest.json"
+    if hashlib.sha256(manifest.read_bytes()).hexdigest() != ALTERNATIVE_SHA256:
+        raise ValueError("Provider alternative manifest differs")
+    binding = json.loads(manifest.read_text(encoding="utf-8"))
+    original = load_execution()
+    if (binding["parent_schema_execution_sha256"] != original["manifest_sha256"]
+            or binding["qualification_manifest_sha256"] != original["qualification_manifest_sha256"]
+            or set(binding["sha256"]) != {"PROTOCOL.md", "requests.json"}):
+        raise ValueError("Provider alternative parent differs")
+    for name, expected in binding["sha256"].items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Frozen provider alternative input differs")
+    profile = json.loads((root / "requests.json").read_text(encoding="utf-8"))
+    if (profile["model"] != ALTERNATIVE_MODEL or profile["endpoint"] != original["endpoint"]
+            or type(profile["maximum_outbound_attempts"]) is not int or profile["maximum_outbound_attempts"] != 5
+            or profile["arms"] != original["arms"]
+            or profile["payloads"] != [{**payload, "model": ALTERNATIVE_MODEL} for payload in original["payloads"]]):
+        raise ValueError("Provider alternative changes more than the frozen provider")
+    return {**profile, "cases": original["cases"], "manifest_sha256": ALTERNATIVE_SHA256,
+            "qualification_manifest_sha256": original["qualification_manifest_sha256"]}
+
+
+def load_experiment(experiment: str) -> dict:
+    if experiment == "schema-execution-v1":
+        return load_execution()
+    if experiment == "provider-alternative-v1":
+        return load_alternative()
+    raise ValueError("Unknown frozen schema experiment")
