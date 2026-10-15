@@ -1,4 +1,24 @@
-# Cerebras passes three controller checks; all 26 slots used — 2026-10-15
+# Two Cerebras selector checks prepared; additional approval pending — 2026-10-15
+
+**1,193 full tests pass, zero skips**, nine new; mypy 117, Ruff. All 340 protected
+files match, including the successful Cerebras run and all prior counters/receipts/
+allocations/configuration/recovery. Actual pending execution blocks before Settings,
+funding or service access. No selector grant, approved receipt, call or activation.
+
+[Two-call selector scope](hf-cerebras-selectors.md) is prepared for the unchanged
+selector-1 and selector-10 cases on the selected Cerebras route. It binds the
+completed controller receipt, allocation, three-arm ledger and successful result
+through closed read-only SQLite readers, including all exhausted old grants.
+A separate fixed counter requires explicit new funding; pending execution rejects
+before Settings, network or initialization. Both generation APIs enforce the exact
+provider experiment receipt. No source policy, prompt, label, schema or limit changes.
+
+All 26 approved attempts remain used; no new call, receipt or funded selector ledger.
+The successful controller run remains historical and unchanged. Two selectors still
+form a diagnostic; validate both evidence sets before any full-five schema summary.
+Task/development/holdout and private owner acceptance remain required; global app off.
+
+# Previous successful Cerebras controller checks — 2026-10-15
 
 User-selected `openai/gpt-oss-120b:cerebras` passed the unchanged scope, relevance
 and rewrite fixtures. The reallocated three-slot counter settled exactly one

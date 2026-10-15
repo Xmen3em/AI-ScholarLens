@@ -12,6 +12,9 @@ from src.commands.evaluate_retrieval import digest
 from src.commands.hf_allowance import PILOT_CASE, PILOT_MODEL
 from src.commands.hf_cerebras_allowance import CerebrasAllowance
 from src.commands.hf_cerebras_allowance import approval_proposal as cerebras_proposal
+from src.commands.hf_cerebras_selectors import SelectorAllowance
+from src.commands.hf_cerebras_selectors import approval_proposal as selector_proposal
+from src.commands.hf_clarity_allowance import ClarityAllowance
 from src.commands.hf_evaluation import MeasuredHF, hosted_admission, load_protocol, qualify
 from src.commands.hf_provider_allowance import AlternativeAllowance
 from src.commands.hf_provider_allowance import approval_proposal as alternative_proposal
@@ -24,7 +27,7 @@ from src.services.hf.client import HFGenerationError
 
 
 class SchemaHF(MeasuredHF):
-    def __init__(self, settings: Settings, grant: SchemaAllowance, output: Path, source: dict, *, memory=free_memory_mib,
+    def __init__(self, settings: Settings, grant: ClarityAllowance, output: Path, source: dict, *, memory=free_memory_mib,
                  experiment="schema-execution-v1"):
         self.execution = load_experiment(experiment)
         self.experiment = experiment
@@ -66,7 +69,7 @@ class SchemaHF(MeasuredHF):
             self.position += 1
 
 
-async def collect(settings: Settings, grant: SchemaAllowance, output: Path, source: dict, *, memory=free_memory_mib,
+async def collect(settings: Settings, grant: ClarityAllowance, output: Path, source: dict, *, memory=free_memory_mib,
                   experiment="schema-execution-v1") -> dict:
     client = SchemaHF(settings, grant, output, source, memory=memory, experiment=experiment)
     try:
@@ -74,7 +77,8 @@ async def collect(settings: Settings, grant: SchemaAllowance, output: Path, sour
         result = await qualify(client, measurement_profile(experiment), limiter=RateLimiter(settings), memory=memory, revision=revision)
         return {"kind": "schema_qualification_only", "app_accepted": False,
                 "qualification": result, "outbound_attempts": client.attempts,
-                "diagnostic_passed": (experiment == "cerebras-remaining-v1" and len(result["checks"]) == 3
+                "diagnostic_passed": (experiment in {"cerebras-remaining-v1", "cerebras-selectors-v1"}
+                                      and len(result["checks"]) == client.budget
                                       and all(check["ok"] for check in result["checks"]))}
     finally:
         await client.aclose()
@@ -85,7 +89,7 @@ def main() -> None:
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--approval", type=Path)
-    parser.add_argument("--experiment", choices=["schema-execution-v1", "provider-alternative-v1", "cerebras-remaining-v1"],
+    parser.add_argument("--experiment", choices=["schema-execution-v1", "provider-alternative-v1", "cerebras-remaining-v1", "cerebras-selectors-v1"],
                         default="schema-execution-v1")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--execute", action="store_true")
@@ -94,6 +98,7 @@ def main() -> None:
     profile = load_experiment(args.experiment)
     alternative = args.experiment == "provider-alternative-v1"
     cerebras = args.experiment == "cerebras-remaining-v1"
+    selectors = args.experiment == "cerebras-selectors-v1"
     budget = profile["maximum_outbound_attempts"]
     output = args.output.resolve()
     roots = [(Path.cwd() / name).resolve() for name in ("test_output", "tests/test_output")]
@@ -110,7 +115,7 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=False)
     write_json(output / "metadata.json", metadata)
     if args.propose_approval:
-        proposal = cerebras_proposal() if cerebras else alternative_proposal() if alternative else approval_proposal()
+        proposal = selector_proposal() if selectors else cerebras_proposal() if cerebras else alternative_proposal() if alternative else approval_proposal()
         write_json(output / "proposed-approval.json", proposal)
         print(json.dumps({"status": "pending_user_approval", "maximum_attempts": budget}))
         return
@@ -120,7 +125,7 @@ def main() -> None:
     try:
         if args.approval is None:
             raise ValueError("Additional approval required")
-        grant = CerebrasAllowance(args.approval) if cerebras else AlternativeAllowance(args.approval) if alternative else SchemaAllowance(args.approval)
+        grant = SelectorAllowance(args.approval) if selectors else CerebrasAllowance(args.approval) if cerebras else AlternativeAllowance(args.approval) if alternative else SchemaAllowance(args.approval)
     except Exception:
         metadata.update(status="not_started", reason="approval_required")
         write_json(output / "metadata.json", metadata)
@@ -152,7 +157,7 @@ def main() -> None:
                     outbound_budget=budget, approval_sha256=grant.signature)
     write_json(output / "metadata.json", metadata)
     try:
-        extra = {"experiment": args.experiment} if alternative or cerebras else {}
+        extra = {"experiment": args.experiment} if alternative or cerebras or selectors else {}
         result = asyncio.run(collect(local, grant, output, metadata["source_sha256"], **extra))
     except Exception:
         result = {"kind": "schema_qualification_only", "app_accepted": False,
@@ -168,7 +173,8 @@ def main() -> None:
         preservation.update(corpus_unchanged=after == before, models_unchanged=True)
     except Exception:
         pass
-    result.update(preservation=preservation, extension_attempts_used=grant.used, original_attempts_used=23 if alternative or cerebras else 21,
+    result.update(preservation=preservation, extension_attempts_used=grant.used,
+                  original_attempts_used=26 if selectors else 23 if alternative or cerebras else 21,
                   schema_execution_manifest_sha256=profile["manifest_sha256"],
                   schema_qualified=(all(preservation.values()) and result["qualification"].get("qualified") is True
                                     and result["outbound_attempts"] == 5))

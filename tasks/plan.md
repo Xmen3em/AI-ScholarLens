@@ -58,6 +58,14 @@ record blocks the old fixed Groq counter from duplicate spending. All old receip
 rows, registrations and immutable profiles remain intact. Global defaults/runtime
 stay off. Three successful cases still cannot satisfy five-case qualification.
 
+Cerebras scope/relevance/rewrite all passed under the retained26ceiling;all26used,
+zero active slots. Complete usage,original equality/schema checks and all4 live
+preservation flags pass. App stilloff. The [two-selector scope](../docs/hf-cerebras-selectors.md)
+now freezes the original selector1/10 cases on the same model,with separate explicit
+funding and a read-only binding to the complete successful controller history.
+No new calls/grant/receipt. Next approval,execution/audit,then validate full-five
+schema evidence and retain the reviewed task/holdout/private owner gates.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and

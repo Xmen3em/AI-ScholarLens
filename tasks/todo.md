@@ -21,7 +21,10 @@
 - [x] Preserve unapproved Fireworks candidate when user selected Cerebras instead.
 - [x] Prepare Cerebras first-three-case diagnostic within existing three-slot remainder.
 - [x] Execute/audit user-selected Cerebras:3cases pass,all26used,zero active slots.
-- [ ] Prepare two Cerebras selector checks and obtain additional-call approval.
+- [x] Prepare guarded two-selector scope bound to successful Cerebras controllers.
+- [x] Verify1,193full/zero skips,mypy117,Ruff and340protected files.
+- [ ] Obtain explicit approval of two additional synthetic HF/Cerebras calls.
+- [ ] Execute/audit selectors; validate all five cases before schema summary.
 - [ ] Add qualified generation rollout after actual model/task acceptance.
 - [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
 

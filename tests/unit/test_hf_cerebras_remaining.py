@@ -71,6 +71,7 @@ def test_allocation_keeps_old_counter_readable_but_blocks_its_remaining_spending
 
 def test_reallocation_marker_does_not_close_unrelated_test_or_candidate_ledgers(tmp_path, monkeypatch):
     from src.commands import hf_schema_allowance as original
+
     from tests.unit.test_hf_schema_execution import setup as schema_setup
 
     approval, paths = schema_setup(tmp_path)

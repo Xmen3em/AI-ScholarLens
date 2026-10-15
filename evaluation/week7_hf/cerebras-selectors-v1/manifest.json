@@ -1,0 +1,9 @@
+{
+  "parent_cerebras_manifest_sha256": "7513c590330757c45c023c7c202c94e4b03b7c35af7c1126e0390044b02aeb0a",
+  "parent_schema_execution_sha256": "51a6c389b97a4668439bfa2ecdf12258ecb866a164c610829d20c03ef11af32c",
+  "qualification_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "sha256": {
+    "PROTOCOL.md": "d17152ec75d96d694ca876bb1fa0ad4646ae6534893c1cbb960e261e40e4e865",
+    "requests.json": "9bb0459282a4be0865e8578daaab4dac8aa695c4d2bc795d8770daa7aaef526f"
+  }
+}

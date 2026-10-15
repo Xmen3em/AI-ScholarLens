@@ -16,6 +16,7 @@ ALTERNATIVE_SHA256 = "507ed295c7b59b5bb57e1a4f87569ec129b19c1092c297a992695484d5
 ALTERNATIVE_MODEL = "openai/gpt-oss-120b:fireworks-ai"
 CEREBRAS_SHA256 = "7513c590330757c45c023c7c202c94e4b03b7c35af7c1126e0390044b02aeb0a"
 CEREBRAS_MODEL = "openai/gpt-oss-120b:cerebras"
+SELECTORS_SHA256 = "b633c44720e1d4cc0820529bf1eafe38a7be63671b79103a0515b18872a85630"
 
 
 def load_execution(root=Path("evaluation/week7_hf/schema-execution-v1")) -> dict:
@@ -80,6 +81,8 @@ def load_experiment(experiment: str) -> dict:
         return load_alternative()
     if experiment == "cerebras-remaining-v1":
         return load_cerebras()
+    if experiment == "cerebras-selectors-v1":
+        return load_selectors()
     raise ValueError("Unknown frozen schema experiment")
 
 
@@ -108,7 +111,32 @@ def load_cerebras(root=Path("evaluation/week7_hf/cerebras-remaining-v1")) -> dic
 
 def measurement_profile(experiment: str) -> dict:
     profile = load_protocol()
-    if experiment == "cerebras-remaining-v1":
-        candidate = load_cerebras()
+    if experiment in {"cerebras-remaining-v1", "cerebras-selectors-v1"}:
+        candidate = load_experiment(experiment)
         profile["prices_per_million"] = {**profile["prices_per_million"], candidate["model"]: candidate["prices_per_million"]}
     return profile
+
+
+def load_selectors(root=Path("evaluation/week7_hf/cerebras-selectors-v1")) -> dict:
+    manifest = root / "manifest.json"
+    if hashlib.sha256(manifest.read_bytes()).hexdigest() != SELECTORS_SHA256:
+        raise ValueError("Cerebras selector manifest differs")
+    binding = json.loads(manifest.read_text(encoding="utf-8"))
+    original, controller = load_execution(), load_cerebras()
+    if (binding["parent_cerebras_manifest_sha256"] != controller["manifest_sha256"]
+            or binding["parent_schema_execution_sha256"] != original["manifest_sha256"]
+            or binding["qualification_manifest_sha256"] != original["qualification_manifest_sha256"]
+            or set(binding["sha256"]) != {"PROTOCOL.md", "requests.json"}):
+        raise ValueError("Cerebras selector parent differs")
+    for name, expected in binding["sha256"].items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Frozen Cerebras selector input differs")
+    profile = json.loads((root / "requests.json").read_text(encoding="utf-8"))
+    if (profile["model"] != CEREBRAS_MODEL or profile["endpoint"] != original["endpoint"]
+            or type(profile["maximum_outbound_attempts"]) is not int or profile["maximum_outbound_attempts"] != 2
+            or profile["arms"] != original["arms"][3:]
+            or profile["prices_per_million"] != controller["prices_per_million"]
+            or profile["payloads"] != [{**payload, "model": CEREBRAS_MODEL} for payload in original["payloads"][3:]]):
+        raise ValueError("Cerebras selector scope differs")
+    return {**profile, "cases": original["cases"][3:], "manifest_sha256": SELECTORS_SHA256,
+            "qualification_manifest_sha256": original["qualification_manifest_sha256"]}
