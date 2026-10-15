@@ -92,22 +92,26 @@ def create_preview_app(settings: Settings) -> FastAPI:
                     finally:
                         database.teardown()
 
-    from src.main import app as production
-
-    local = FastAPI(title="ScholarLens private API preview", lifespan=lifespan)
-    local.exception_handlers = production.exception_handlers.copy()
-    local.state.settings = settings
-    local.state.hf = local.state.agent = local.state.rag = None
-    local.state.monitoring = local.state.tracing = None
-    local.dependency_overrides[get_settings] = lambda: settings
-    local.include_router(ping.router, prefix="/api/v1")
-    local.include_router(papers.router, prefix="/api/v1")
-    local.include_router(search.router, prefix="/api/v1")
+    local = create_local_app(settings, lifespan)
 
     async def unavailable(request: AskRequest):
         raise HTTPException(status_code=503, detail="The research service is not ready.")
 
     for path in ("/ask", "/stream", "/agent/ask", "/agent/stream"):
         local.add_api_route("/api/v1" + path, unavailable, methods=["POST"])
+    return local
+
+
+def create_local_app(settings: Settings, lifespan) -> FastAPI:
+    from src.main import app as production
+
+    local = FastAPI(title="ScholarLens private PC API", lifespan=lifespan)
+    local.exception_handlers = production.exception_handlers.copy()
+    local.state.settings = settings
+    local.state.hf = local.state.agent = local.state.rag = None
+    local.state.monitoring = local.state.tracing = None
+    local.dependency_overrides[get_settings] = lambda: settings
+    for router in (ping.router, papers.router, search.router):
+        local.include_router(router, prefix="/api/v1")
     local.add_middleware(OperationalMiddleware, settings=settings)
     return local
