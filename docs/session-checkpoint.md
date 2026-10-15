@@ -1,4 +1,28 @@
-# Private Telegram token and owner verified — 2026-10-15
+# Active PC app goal; guarded two-call HF study prepared — 2026-10-15
+
+User requested an active goal to finish the private PC HF/LangGraph/Telegram app.
+Owner pairing is already complete. [New two-call study](hf-clarity-execution.md)
+references unchanged clearer-question fixtures under a separate execution contract,
+with fixed payloads/schema/limits/model, content-free diagnostics and a new
+approval-bound counter referencing both completed old ledgers. Its manifest is
+`aef8ff44f41dc662dcbe032755d0af014c4c590f98f9b54be79514d206190672`.
+
+Offline/default/proposal paths make no inference or credential reads. Actual
+pending-receipt execution was rejected before settings/network/funding. Original
+13/13 and6/6 remain exhausted; no new receipt/grant/call. Proposed scope is **two
+additional public synthetic HF/Groq attempts**,one positive/one negative. Failed or
+uncertain arms cannot repeat. It sends no paper data and never qualifies/activates
+the app. Existing qualification/development/holdout gates remain mandatory.
+
+**1,090 tests pass,zero skips**,43new,56focused,mypy109,Ruff. A Windows recovery
+failure exposed unclosed SQLite read handles; `contextlib.closing` fixes only
+cleanup, independently saved as770943a. All303 audited private/config/pairing/
+evaluation/ledger/receipt/snapshot/recovery files match; secret scans pass. No
+dependency/model/data/runtime changes. Goal remains active and app acceptance
+incomplete. Next explicit exact additional-call approval; independently prepare
+isolated API8002 preserving8000,then conditional qualification and live acceptance.
+
+# Previous private Telegram token and owner verified — 2026-10-15
 
 The user created `@AIScholarLensbot` and saved the token privately. Read-only
 Telegram identity/webhook requests verified the expected bot and no webhook.

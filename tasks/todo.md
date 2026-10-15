@@ -1,5 +1,22 @@
 # Week 6 local verification
 
+## Active HF/LangGraph/private PC goal — 2026-10-15
+
+- [x] Create the user-requested app-completion goal; retain owner pairing and old state.
+- [x] Freeze separate two-call execution referencing unchanged clearer fixtures.
+- [x] Add exact-approval two-arm counter binding both exhausted parent allowances.
+- [x] Reuse guarded collector and exact-payload reproduction; retain original old runner.
+- [x] Reproduce/fix Windows read-only SQLite handle leak without counter changes.
+- [x] Verify1090full/zero skips,56focused,mypy109,Ruff and303 protected hashes.
+- [x] Prepare pending proposal and verify it cannot execute/fund/read credentials.
+- [ ] Obtain explicit approval of at most two new public synthetic HF/Groq attempts.
+- [ ] Execute/audit the bounded study; qualify no model from this pair alone.
+- [ ] Prepare isolated candidate API8002; keep original8000/rollback/data intact.
+- [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
+
+[Ready scope](../docs/hf-clarity-execution.md). Goal active; no new calls/receipt/grant,
+old13+6 exhausted. Telegram/HF/agent remain off. Existing roadmap below retained.
+
 ## Private Telegram owner pairing — 2026-10-15
 
 - [x] User created `@AIScholarLensbot` and saved its token privately.

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 from pathlib import Path
+from typing import Protocol
 
 from src.commands.evaluate_agent import free_memory_mib, write_json
 from src.commands.evaluate_hf_agent import live_snapshot, plan_collection, provider_available, source_hashes
@@ -14,7 +15,13 @@ from src.commands.hf_reproduction import PROMPT_COMPARISON_SHA256, load_prompt_c
 from src.config import Settings
 
 
-async def collect(settings: Settings, arms: list[str], grant: PromptAllowance, output: Path, expected_source: dict) -> dict:
+class ArmAllowance(Protocol):
+    def reserve(self, run: str, arm: str) -> None: ...
+    def settle(self, arm: str, used: int | None) -> None: ...
+
+
+async def collect(settings: Settings, arms: list[str], grant: ArmAllowance, output: Path, expected_source: dict,
+                  *, experiment="prompt-comparison-v1") -> dict:
     records = []
     stopped = None
     for arm in arms:
@@ -27,7 +34,7 @@ async def collect(settings: Settings, arms: list[str], grant: PromptAllowance, o
             stopped = "allowance_or_preservation_stop"
             break
         try:
-            result = await reproduce(settings, arm, experiment="prompt-comparison-v1")
+            result = await reproduce(settings, arm, experiment=experiment)
         except Exception:
             result = {"arm": arm, "category": "transport_or_response_error",
                       "qualification_accepted": False, "outbound_attempts": None}

@@ -1,5 +1,21 @@
 # Week 6: local operational controls
 
+## Active private PC app goal — 2026-10-15
+
+User explicitly requested a goal to finish HF/LangGraph/private Telegram on this
+PC. Preserve original8000/runtime/data/models/closed19-call ledgers. Ordered work:
+guarded two-call clearer-fixture diagnostic -> explicit new-budget approval ->
+audited execution -> exact qualification -> reviewed development/locked holdout ->
+isolated candidate8002 and private owner acceptance. Candidate preparation is
+independent of paid work; do it while awaiting budget. App completion requires
+actual qualified HF generation and owner success,not source tests alone.
+
+[Two-call implementation](../docs/hf-clarity-execution.md) prepared:1090full tests/
+zero skips,56focused,mypy109,all303 protected hashes match. Old13+6 allowances
+read-only/exhausted; new funded ledger absent. Pending execution blocks before
+credentials/network. SQLite handle cleanup is independently checkpointed770943a.
+No paid HF/Telegram traffic or activation. Existing remaining roadmap retained.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and
