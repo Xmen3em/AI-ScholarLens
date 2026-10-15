@@ -3,5 +3,6 @@
 REGISTERED_HF_MODELS = frozenset({
     "openai/gpt-oss-120b:groq",
     "openai/gpt-oss-120b:fireworks-ai",
+    "openai/gpt-oss-120b:cerebras",
 })
 HF_ROUTER_URL = "https://router.huggingface.co/v1/"

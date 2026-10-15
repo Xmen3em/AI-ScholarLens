@@ -17,6 +17,7 @@ from src.commands.hf_schema_execution import load_execution
 SCHEMA_ALLOWANCE_PATH = Path("tests/test_output/hf-schema-allowance-20261015/allowance.sqlite3")
 CLARITY_APPROVAL_PATH = Path("tests/test_output/hf-clarity-execution-20261015-01/approval.json")
 CLARITY_RUN = Path("tests/test_output/hf-clarity-live-20261015-02")
+REALLOCATION_PATH = Path("tests/test_output/hf-cerebras-execution-20261015-01/reallocation.json")
 
 
 def clarity_binding(
@@ -99,3 +100,9 @@ class SchemaAllowance(ClarityAllowance):
 
     def _proposal(self) -> dict:
         return approval_proposal(**self.parents, **self.clarity)
+
+    def reserve(self, run: str, arm: str) -> None:
+        if (self.receipt["kind"] == "hf_schema_execution_approval_v1"
+                and self.path.resolve() == SCHEMA_ALLOWANCE_PATH.resolve() and REALLOCATION_PATH.exists()):
+            raise ValueError("The stopped Groq remainder was reassigned; duplicate spending is blocked")
+        super().reserve(run, arm)

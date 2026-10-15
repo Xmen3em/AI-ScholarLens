@@ -31,7 +31,7 @@ REASONS = {"GroundingError", "OllamaResponseError", "OllamaTimeoutError", "Ollam
 REASONS |= {"TimeoutError", "AgentBusyError"}
 REASONS |= {"HFGenerationError", "HFResponseError", "HFTimeoutError"}
 ENUMS = {
-    "provider": {"groq", "fireworks-ai"}, "model": REGISTERED_HF_MODELS,
+    "provider": {"groq", "fireworks-ai", "cerebras"}, "model": REGISTERED_HF_MODELS,
     "mode": {"bm25", "hybrid"}, "method": {"GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"},
     "outcome": {"completed", "failed", "stream_error", "interrupted", "answered", "abstained", "out_of_scope"},
     "operation": {"validate", "retrieve", "grade", "rewrite", "answer", "abstain"},

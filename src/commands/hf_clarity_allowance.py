@@ -82,6 +82,7 @@ def approval_proposal(
 
 class ClarityAllowance:
     maximum_arms = 2
+    authorization_source = "explicit_user_approval"
 
     def _proposal(self) -> dict:
         return approval_proposal(**self.parents)
@@ -99,7 +100,7 @@ class ClarityAllowance:
         self.approval, self.path = Path(approval), Path(path)
         self.parents = {"original": original, "prior": prior, "prompt_path": prompt_path, "prompt_approval": prompt_approval}
         expected = self._proposal()
-        expected.update(status="approved", authorization_source="explicit_user_approval")
+        expected.update(status="approved", authorization_source=self.authorization_source)
         receipt = json.loads(self.approval.read_text(encoding="utf-8"))
         if (
             receipt != expected
@@ -153,7 +154,7 @@ class ClarityAllowance:
         ):
             raise ValueError("Retained clarity approval or registration differs")
         expected = self._proposal()
-        expected.update(status="approved", authorization_source="explicit_user_approval")
+        expected.update(status="approved", authorization_source=self.authorization_source)
         if expected != self.receipt:
             raise ValueError("Complete parent evidence differs")
 

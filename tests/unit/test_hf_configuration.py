@@ -34,7 +34,7 @@ def test_hosted_activation_requires_credentials_key_and_uncached_profile(values)
 
 
 @pytest.mark.parametrize("models,default", [
-    (["openai/gpt-oss-120b:cerebras"], "openai/gpt-oss-120b:cerebras"),
+    (["openai/gpt-oss-20b:cerebras"], "openai/gpt-oss-20b:cerebras"),
     (["openai/gpt-oss-120b:fastest"], "openai/gpt-oss-120b:fastest"),
     (["https://other.example/model"], "https://other.example/model"),
     ([MODEL, MODEL], MODEL), ([], MODEL), ([MODEL], "unregistered"),
@@ -51,6 +51,14 @@ def test_hosted_allowlist_and_token_are_independent_of_ollama(monkeypatch):
     assert len(settings.hf_models) == 2
     assert settings.ollama_models == ["llama3.2:1b"]
     assert TOKEN not in repr(settings)
+
+
+def test_explicit_user_selected_cerebras_configuration_keeps_original_defaults():
+    model = "openai/gpt-oss-120b:cerebras"
+    selected = config(hf_inference_enabled=True, hf_token=TOKEN, api_key=KEY,
+                      hf_models=[model], hf_default_model=model)
+    assert selected.hf_models == [model] and selected.hf_default_model == model
+    assert config().hf_default_model == MODEL and config().hf_inference_enabled is False
 
 
 def test_provider_neutral_result_projects_only_real_usage_to_existing_callers():

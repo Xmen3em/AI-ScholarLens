@@ -10,12 +10,14 @@ from src.commands.evaluate_agent import free_memory_mib, write_json
 from src.commands.evaluate_hf_agent import live_snapshot, plan_collection, provider_available, source_hashes
 from src.commands.evaluate_retrieval import digest
 from src.commands.hf_allowance import PILOT_CASE, PILOT_MODEL
+from src.commands.hf_cerebras_allowance import CerebrasAllowance
+from src.commands.hf_cerebras_allowance import approval_proposal as cerebras_proposal
 from src.commands.hf_evaluation import MeasuredHF, hosted_admission, load_protocol, qualify
 from src.commands.hf_provider_allowance import AlternativeAllowance
 from src.commands.hf_provider_allowance import approval_proposal as alternative_proposal
 from src.commands.hf_qualification import load_revision
 from src.commands.hf_schema_allowance import SchemaAllowance, approval_proposal
-from src.commands.hf_schema_execution import load_execution, load_experiment
+from src.commands.hf_schema_execution import load_execution, load_experiment, measurement_profile
 from src.config import Settings
 from src.middlewares import RateLimiter
 from src.services.hf.client import HFGenerationError
@@ -26,6 +28,7 @@ class SchemaHF(MeasuredHF):
                  experiment="schema-execution-v1"):
         self.execution = load_experiment(experiment)
         self.experiment = experiment
+        self.budget = self.execution["maximum_outbound_attempts"]
         if settings.hf_models != [self.execution["model"]] or settings.hf_default_model != self.execution["model"]:
             raise ValueError("Schema execution requires the frozen model")
         if any(grant.receipt.get(key) != self.execution[key] for key in
@@ -33,16 +36,16 @@ class SchemaHF(MeasuredHF):
             raise ValueError("Schema execution requires approval of this exact provider experiment")
         self.grant, self.output, self.source, self.memory = grant, output, source, memory
         self.position = 0
-        super().__init__(settings, outbound_budget=5)
+        super().__init__(settings, outbound_budget=self.budget)
 
     def _payload(self, model, prompt, system, response_format, options):
         payload = super()._payload(model, prompt, system, response_format, options)
-        if self.position >= 5 or digest(payload) != digest(self.execution["payloads"][self.position]):
+        if self.position >= self.budget or digest(payload) != digest(self.execution["payloads"][self.position]):
             raise ValueError("Request differs from frozen schema execution")
         return payload
 
     async def generate_result(self, model, prompt, **kwargs):
-        if self.position >= 5:
+        if self.position >= self.budget:
             raise HFGenerationError("Schema execution attempt budget exhausted")
         self._payload(model, prompt, kwargs.get("system"), kwargs.get("response_format"), kwargs.get("options"))
         free_mib = self.memory()
@@ -67,9 +70,12 @@ async def collect(settings: Settings, grant: SchemaAllowance, output: Path, sour
                   experiment="schema-execution-v1") -> dict:
     client = SchemaHF(settings, grant, output, source, memory=memory, experiment=experiment)
     try:
-        result = await qualify(client, load_protocol(), limiter=RateLimiter(settings), memory=memory, revision=load_revision())
+        revision = {**load_revision(), "cases": client.execution["cases"]}
+        result = await qualify(client, measurement_profile(experiment), limiter=RateLimiter(settings), memory=memory, revision=revision)
         return {"kind": "schema_qualification_only", "app_accepted": False,
-                "qualification": result, "outbound_attempts": client.attempts}
+                "qualification": result, "outbound_attempts": client.attempts,
+                "diagnostic_passed": (experiment == "cerebras-remaining-v1" and len(result["checks"]) == 3
+                                      and all(check["ok"] for check in result["checks"]))}
     finally:
         await client.aclose()
 
@@ -79,13 +85,16 @@ def main() -> None:
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--approval", type=Path)
-    parser.add_argument("--experiment", choices=["schema-execution-v1", "provider-alternative-v1"], default="schema-execution-v1")
+    parser.add_argument("--experiment", choices=["schema-execution-v1", "provider-alternative-v1", "cerebras-remaining-v1"],
+                        default="schema-execution-v1")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--execute", action="store_true")
     mode.add_argument("--propose-approval", action="store_true")
     args = parser.parse_args()
     profile = load_experiment(args.experiment)
     alternative = args.experiment == "provider-alternative-v1"
+    cerebras = args.experiment == "cerebras-remaining-v1"
+    budget = profile["maximum_outbound_attempts"]
     output = args.output.resolve()
     roots = [(Path.cwd() / name).resolve() for name in ("test_output", "tests/test_output")]
     if output.exists() or not any(output.is_relative_to(root) and output != root for root in roots):
@@ -95,22 +104,23 @@ def main() -> None:
     # The original planner validates retained labels under its unchanged Groq-only
     # pilot contract. This command sends no paper jobs; name the actual schema model.
     metadata["configuration"]["model"] = profile["model"]
-    metadata.update(kind=profile["kind"], jobs=[], arms=profile["arms"], planned_outbound_budget=5,
+    metadata.update(kind=profile["kind"], jobs=[], arms=profile["arms"], planned_outbound_budget=budget,
                     schema_execution_manifest_sha256=profile["manifest_sha256"], app_accepted=False,
-                    proposed_outbound_budget=5, approved_outbound_budget=0, outbound_budget=0, paper_collection_planned=False)
+                    proposed_outbound_budget=budget, approved_outbound_budget=0, outbound_budget=0, paper_collection_planned=False)
     output.mkdir(parents=True, exist_ok=False)
     write_json(output / "metadata.json", metadata)
     if args.propose_approval:
-        write_json(output / "proposed-approval.json", alternative_proposal() if alternative else approval_proposal())
-        print(json.dumps({"status": "pending_user_approval", "maximum_additional_attempts": 5}))
+        proposal = cerebras_proposal() if cerebras else alternative_proposal() if alternative else approval_proposal()
+        write_json(output / "proposed-approval.json", proposal)
+        print(json.dumps({"status": "pending_user_approval", "maximum_attempts": budget}))
         return
     if not args.execute:
-        print(json.dumps({"status": "offline_plan", "proposed_attempts": 5, "approved_attempts": 0}))
+        print(json.dumps({"status": "offline_plan", "proposed_attempts": budget, "approved_attempts": 0}))
         return
     try:
         if args.approval is None:
             raise ValueError("Additional approval required")
-        grant = AlternativeAllowance(args.approval) if alternative else SchemaAllowance(args.approval)
+        grant = CerebrasAllowance(args.approval) if cerebras else AlternativeAllowance(args.approval) if alternative else SchemaAllowance(args.approval)
     except Exception:
         metadata.update(status="not_started", reason="approval_required")
         write_json(output / "metadata.json", metadata)
@@ -138,11 +148,11 @@ def main() -> None:
         write_json(output / "metadata.json", metadata)
         print(json.dumps({"status": "not_started", "reason": "preflight_failed"}))
         return
-    metadata.update(status="qualifying_schema", inference_started=None, approved_outbound_budget=5,
-                    outbound_budget=5, approval_sha256=grant.signature)
+    metadata.update(status="qualifying_schema", inference_started=None, approved_outbound_budget=budget,
+                    outbound_budget=budget, approval_sha256=grant.signature)
     write_json(output / "metadata.json", metadata)
     try:
-        extra = {"experiment": args.experiment} if alternative else {}
+        extra = {"experiment": args.experiment} if alternative or cerebras else {}
         result = asyncio.run(collect(local, grant, output, metadata["source_sha256"], **extra))
     except Exception:
         result = {"kind": "schema_qualification_only", "app_accepted": False,
@@ -158,7 +168,7 @@ def main() -> None:
         preservation.update(corpus_unchanged=after == before, models_unchanged=True)
     except Exception:
         pass
-    result.update(preservation=preservation, extension_attempts_used=grant.used, original_attempts_used=23 if alternative else 21,
+    result.update(preservation=preservation, extension_attempts_used=grant.used, original_attempts_used=23 if alternative or cerebras else 21,
                   schema_execution_manifest_sha256=profile["manifest_sha256"],
                   schema_qualified=(all(preservation.values()) and result["qualification"].get("qualified") is True
                                     and result["outbound_attempts"] == 5))

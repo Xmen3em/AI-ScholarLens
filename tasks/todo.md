@@ -18,8 +18,9 @@
 - [x] Execute/audit until the first failure: scope passes, relevance HTTP400;2used/3unspent.
 - [x] Save public synthetic reproduction without secrets, generated text or submission.
 - [x] Prepare guarded Fireworks candidate with unchanged payloads except provider.
-- [ ] Obtain explicit approval of at most five additional HF/Fireworks synthetic calls.
-- [ ] Execute/audit candidate schema checks, keeping Groq's three unused arms intact.
+- [x] Preserve unapproved Fireworks candidate when user selected Cerebras instead.
+- [x] Prepare Cerebras first-three-case diagnostic within existing three-slot remainder.
+- [ ] Execute/audit the user-selected Cerebras diagnostic after verification;ceiling26.
 - [ ] Add qualified generation rollout after actual model/task acceptance.
 - [ ] Complete exact qualification,reviewed development/locked holdout and owner acceptance.
 

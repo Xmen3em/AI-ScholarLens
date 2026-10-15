@@ -95,6 +95,14 @@ def test_monitoring_accepts_only_registered_hosted_metadata():
         "model": MODEL, "provider": "groq", "status_code": 402, "outcome": "failed"}
 
 
+def test_cerebras_metadata_keeps_registered_provider_label_without_arbitrary_content():
+    from src.tracing import safe_fields
+
+    assert safe_fields({"model": "openai/gpt-oss-120b:cerebras", "provider": "cerebras", "content": TOKEN}) == {
+        "model": "openai/gpt-oss-120b:cerebras", "provider": "cerebras"}
+    assert safe_fields({"provider": "unknown-provider", "model": "openai/gpt-oss-20b:cerebras"}) == {}
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize("status", [301, 307, 400, 401, 402, 403, 429, 500, 503])
 async def test_http_failures_are_sanitized_and_never_retry_redirect_or_downgrade(stub_httpx, status):

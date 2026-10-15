@@ -1,5 +1,24 @@
 # User selected Cerebras; existing three-call remainder retained — 2026-10-15
 
+Preparation passes **1,184 full tests, zero skips**, 17 new, mypy 116 and Ruff.
+All 329 protected files match and actual-private-value staged scans pass. The
+initial full-run failure was the prior expected rejection of Cerebras; its test
+now rejects unreviewed 20B while explicitly covering selected 120B and safe labels.
+No assertion removed or threshold changed. Allocation and funding remain absent
+until the verified source checkpoint and user-instruction record are saved.
+
+[Cerebras diagnostic source](hf-cerebras-remaining.md) now freezes the original first
+three cases, uses a separate three-arm counter and blocks reservations from the
+fixed stopped Groq ledger once the allocation record exists. No old row, marker,
+receipt or frozen profile is rewritten. Authorization records the provider
+instruction plus remaining approved budget. Full five-case qualification remains
+false for this three-case diagnostic, including when all three cases pass.
+
+The exact selected model and safe provider label are registered; global model
+defaults and HF/agent/Telegram flags remain unchanged. Its diagnostic measurement
+copy adds only the catalog-bound Cerebras rates. Offline proposal and actual
+pending execution rejection pass without credentials, funding or service access.
+
 Latest user instruction: use `openai/gpt-oss-120b:cerebras`. Its public HF catalog
 entry advertises it live/structured. No Cerebras inference yet. Preserve the
 existing ceiling of 26 actual attempts: 23 used, three unspent. Prepare a separate

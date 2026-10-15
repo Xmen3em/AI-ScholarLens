@@ -51,6 +51,13 @@ and the stopped Groq result. Both direct generation methods enforce provider/rec
 identity. Pending execution blocks before private Settings/network/funding. No
 candidate inference or use of the three held Groq arms. Next explicit new approval.
 
+User selected openai/gpt-oss-120b:cerebras. Fireworks scope stays historical and
+unapproved. [Cerebras first-three-case diagnostic](../docs/hf-cerebras-remaining.md)
+uses the existing remainder only, retaining total ceiling26. An explicit allocation
+record blocks the old fixed Groq counter from duplicate spending. All old receipts,
+rows, registrations and immutable profiles remain intact. Global defaults/runtime
+stay off. Three successful cases still cannot satisfy five-case qualification.
+
 ## Private Telegram owner setup — 2026-10-15
 
 Bot `@AIScholarLensbot` exists; private token verified with read-only identity and

@@ -4,6 +4,7 @@ import pytest
 from src.dependencies import get_database, get_ollama, get_search
 from src.main import app
 from src.schemas.ollama import OllamaReadiness
+
 from tests.api.test_rag_routes import HealthyDatabase, StubOllamaHealth
 
 
