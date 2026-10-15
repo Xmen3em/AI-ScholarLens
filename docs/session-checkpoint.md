@@ -1,4 +1,33 @@
-# Current LangGraph and private Telegram source checkpoint — 2026-10-14
+# Private Telegram token verified; owner pairing prepared — 2026-10-15
+
+The user created `@AIScholarLensbot` and saved the token privately. Read-only
+Telegram identity/webhook requests verified the expected bot and no webhook.
+The new `setup_telegram` command provides an offline check, a one-hour random
+private start link and explicit verification/renewal. No first-sender adoption:
+only the fresh exact code from an ordinary matching private non-bot account can
+establish the owner. Forwarded/group/expired/ambiguous proofs fail closed.
+
+Verification reads one bounded batch without confirming/dropping updates or
+changing their subscriptions. It saves only the proven numeric owner ID in the
+private `.env`, preserves every other byte, consumes the ignored local challenge,
+and leaves runtime flags off. No messages, webhook changes, polling offset writes,
+HF credentials or inference in this setup command. See
+[setup and constraints](telegram-langgraph.md).
+
+**1,047 tests pass, zero skips**, 36 new setup tests, 91 focused Telegram checks,
+mypy106 and Ruff pass. Missing-module and null-state regression failures were
+reproduced before implementation/fix. All35 audited private/evaluation/ledger/
+recovery files match the pre-setup snapshot; source scan found no private secrets.
+Five read-only Telegram requests succeeded (two preparation, three verification).
+The verification found no matching proof; **owner pairing is pending**.
+
+Original13/13 +extension6/6 HF calls remain exhausted, zero remaining. No new
+budget, model qualification, runtime activation, push or deployment. Original
+running API/rollback remain untouched. Next user sends the private start code,
+then verify/safely save the owner; independently prepare the separately approved
+HF study and candidate API8002 before live app acceptance. Existing roadmap retained.
+
+# Previous LangGraph and private Telegram source checkpoint — 2026-10-14
 
 The user chose LangGraph like the course, a bot private to their own Telegram
 account, and initial use on their PC. [Integration and setup](telegram-langgraph.md).

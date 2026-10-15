@@ -89,15 +89,55 @@ source tests alone do not establish HF quality, deployment or final app acceptan
 
 ## Local setup
 
-The user has not created the bot yet. Open [BotFather](https://t.me/BotFather),
-send `/newbot`, and choose a bot name/username. Save the resulting token privately
-as `TELEGRAM_BOT_TOKEN` in local configuration. Share only the bot username when
-continuing setup. Set `TELEGRAM_OWNER_ID` to the numeric ID of your own Telegram
-account, verified locally during setup; the bot never adopts the first sender as
-its owner. Leave `TELEGRAM_ENABLED=false` until the reviewed local rollout.
+The user created `@AIScholarLensbot` and saved its token privately on 2026-10-15.
+Read-only `getMe` verified the token against that username; `getWebhookInfo`
+confirmed no webhook. Owner pairing is pending. Leave `TELEGRAM_ENABLED=false`
+until the reviewed local rollout.
+
+The setup command reads no HF credentials, sends no messages, and starts neither
+the bot nor the API. Default/`--check` performs no network calls or state writes:
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.setup_telegram --check
+.venv-win/Scripts/python.exe -m src.commands.setup_telegram --prepare --username AIScholarLensbot
+```
+
+Preparation verifies the expected bot identity and absence of a webhook, then
+prints a one-hour pairing link. Open it in your own Telegram account and press
+Start. If needed, send the exact `/start setup_...` code from the link manually.
+Keep the link private: possession of its random code proves control of the account
+that sends it. The bot does not reply during pairing.
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.setup_telegram --verify
+```
+
+Verification reads one bounded batch of pending updates without an offset or an
+`allowed_updates` change, so it neither confirms nor drops existing messages.
+Only the fresh exact code in an ordinary private message from a non-bot account
+whose chat ID matches its sender ID can supply the owner. Forwarded, old, unrelated,
+group and ambiguous-owner proofs fail closed. A full 100-update batch requires
+review rather than advancing past it. No raw update or message text is saved.
+
+Successful verification changes only `TELEGRAM_OWNER_ID` in the private `.env`,
+preserving all other bytes and leaving Telegram/HF/agent disabled. Existing owner
+replacement, changed tokens and an already enabled bot require review. The local
+challenge is consumed; state is under ignored `data/telegram/`, protected by a
+single-instance lock and path checks. Missing/corrupt state is not silently repaired.
+Expired challenges require explicit renewal:
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.setup_telegram --prepare --username AIScholarLensbot --renew
+```
+
+The setup never calls `sendMessage`, changes a webhook, or creates/advances the
+production polling offset. Follow Telegram's official
+[deep-linking mechanism](https://core.telegram.org/bots/features#deep-linking) and
+[update confirmation rules](https://core.telegram.org/bots/api#getupdates).
 
 The new fields are documented in `.env.example`; `.env.test` explicitly shields
-tests from private Telegram settings. The original private `.env` is untouched.
+tests from private Telegram settings. Source installation preserved existing
+private settings; pairing adds only the verified owner field.
 The following command performs no network calls and creates no offset or lock:
 
 ```powershell
@@ -150,3 +190,12 @@ Ignored evidence is under `tests/test_output/telegram-langgraph-prep-20261014-01
 graph/bot verification, mutation, protected-file/container snapshots, dependency
 metadata and live-preservation audits. No paid calls or actual Telegram traffic.
 This is a source checkpoint, not live HF qualification or final app activation.
+
+Owner setup added36 tests on 2026-10-15: **1,047 full tests pass, zero skips**,91
+focused Telegram checks,mypy106,Ruff. Two RED cases reproduced the missing command
+and an implicit null-state replacement; both are fixed. All35 audited private/
+evaluation/allowance/recovery files remain unchanged before owner pairing, and
+source secret scans pass. Five read-only Telegram calls verified the bot/no webhook
+and checked pending messages without a matching proof. Pairing remains pending;
+zero Telegram messages and zero HF calls. Setup evidence is under ignored
+`tests/test_output/telegram-owner-prep-20261015-01/`.

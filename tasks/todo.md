@@ -1,5 +1,19 @@
 # Week 6 local verification
 
+## Private Telegram owner pairing — 2026-10-15
+
+- [x] User created `@AIScholarLensbot` and saved its token privately.
+- [x] Verify expected bot/no webhook with read-only Telegram requests.
+- [x] Implement one-time private-code owner pairing without adopting first sender.
+- [x] Preserve pending updates, original configuration and disabled runtime flags.
+- [x] Complete1047full/zero skips,36new/91focused,mypy106,Ruff and secret/state audit.
+- [ ] User sends the private start code; verify and save only their owner ID.
+- [ ] Prepare/approve new bounded HF study; qualify model and paper tasks.
+- [ ] Prepare candidate API8002 and finish live private Telegram acceptance.
+
+[Setup](../docs/telegram-langgraph.md). Five read-only Telegram calls,zero messages,
+zero HF calls. Original13/13 +extension6/6 exhausted; no new budget or activation.
+
 ## LangGraph/private Telegram completion scope — 2026-10-14
 
 - [x] Record user selection: LangGraph, private owner-only bot, current PC.

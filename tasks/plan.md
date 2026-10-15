@@ -1,5 +1,16 @@
 # Week 6: local operational controls
 
+## Private Telegram owner setup — 2026-10-15
+
+Bot `@AIScholarLensbot` exists; private token verified with read-only identity and
+webhook checks. Explicit one-time code pairing is implemented; it preserves
+pending updates and changes only the verified owner field. Fresh private proof
+is pending. Source1047tests/zero skips,91focused,mypy106,Ruff pass. Five read-only
+Telegram calls; no messages/HF work or runtime activation. Existing closed
+13+6-call ledgers and private configuration preserved. Next user sends the code,
+then verify owner; continue separately bounded HF qualification/candidate API8002.
+[Setup](../docs/telegram-langgraph.md). Existing work below remains required.
+
 ## LangGraph/private PC bot — 2026-10-14
 
 User choices fix current scope: actual LangGraph, own account only, current PC.
