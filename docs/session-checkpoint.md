@@ -1,4 +1,4 @@
-# Private Telegram token verified; owner pairing prepared — 2026-10-15
+# Private Telegram token and owner verified — 2026-10-15
 
 The user created `@AIScholarLensbot` and saved the token privately. Read-only
 Telegram identity/webhook requests verified the expected bot and no webhook.
@@ -17,15 +17,21 @@ HF credentials or inference in this setup command. See
 **1,047 tests pass, zero skips**, 36 new setup tests, 91 focused Telegram checks,
 mypy106 and Ruff pass. Missing-module and null-state regression failures were
 reproduced before implementation/fix. All35 audited private/evaluation/ledger/
-recovery files match the pre-setup snapshot; source scan found no private secrets.
-Five read-only Telegram requests succeeded (two preparation, three verification).
-The verification found no matching proof; **owner pairing is pending**.
+recovery files matched the pre-setup snapshot; source scan found no private secrets.
+The user then sent the code and asked whether silence was expected. The second
+verification matched a fresh private proof and saved the owner ID. All other
+private `.env` bytes and34 other protected files match; the challenge is consumed.
+**Owner pairing is complete**, and the numeric ID/token remain private. Eight
+read-only Telegram requests total (two preparation, two three-call verifications);
+zero Telegram messages and zero HF calls. Evidence includes
+`tests/test_output/telegram-owner-prep-20261015-01/owner-verification.json`.
 
 Original13/13 +extension6/6 HF calls remain exhausted, zero remaining. No new
 budget, model qualification, runtime activation, push or deployment. Original
-running API/rollback remain untouched. Next user sends the private start code,
-then verify/safely save the owner; independently prepare the separately approved
-HF study and candidate API8002 before live app acceptance. Existing roadmap retained.
+running API/rollback remain untouched. Telegram/HF/agent are disabled. Next prepare
+the concrete separately bounded HF study/runner and candidate API8002 before live
+qualification and owner acceptance. User need not repeat BotFather or pairing.
+Existing roadmap retained. Pairing source checkpoint290fef7 is fully verified.
 
 # Previous LangGraph and private Telegram source checkpoint — 2026-10-14
 

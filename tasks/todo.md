@@ -7,12 +7,13 @@
 - [x] Implement one-time private-code owner pairing without adopting first sender.
 - [x] Preserve pending updates, original configuration and disabled runtime flags.
 - [x] Complete1047full/zero skips,36new/91focused,mypy106,Ruff and secret/state audit.
-- [ ] User sends the private start code; verify and save only their owner ID.
+- [x] User sends the private start code; verify and save only their owner ID.
 - [ ] Prepare/approve new bounded HF study; qualify model and paper tasks.
 - [ ] Prepare candidate API8002 and finish live private Telegram acceptance.
 
-[Setup](../docs/telegram-langgraph.md). Five read-only Telegram calls,zero messages,
-zero HF calls. Original13/13 +extension6/6 exhausted; no new budget or activation.
+[Setup](../docs/telegram-langgraph.md). Eight read-only Telegram calls,zero messages,
+zero HF calls. Exact owner-only private configuration change;challenge consumed.
+Original13/13 +extension6/6 exhausted; no new budget or activation.
 
 ## LangGraph/private Telegram completion scope — 2026-10-14
 
@@ -24,7 +25,7 @@ zero HF calls. Original13/13 +extension6/6 exhausted; no new budget or activatio
 - [x] Shield private credentials/logs/history and cover both settings templates/readers.
 - [x] Complete1,011full/zero skips,128focused,mypy105,lint,owner/replay mutation checks.
 - [x] Fix optional-codec local audit regression; verify full retained state and closed ledgers.
-- [ ] Create Telegram bot through BotFather; configure private token and verified owner ID.
+- [x] Create Telegram bot through BotFather; configure private token and verified owner ID (2026-10-15).
 - [ ] Obtain new separately scoped HF budget; complete live qualification and task acceptance.
 - [ ] Prepare reviewed isolated candidate API8002; activate/test private owner's bot locally.
 

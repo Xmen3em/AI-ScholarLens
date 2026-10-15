@@ -91,8 +91,9 @@ source tests alone do not establish HF quality, deployment or final app acceptan
 
 The user created `@AIScholarLensbot` and saved its token privately on 2026-10-15.
 Read-only `getMe` verified the token against that username; `getWebhookInfo`
-confirmed no webhook. Owner pairing is pending. Leave `TELEGRAM_ENABLED=false`
-until the reviewed local rollout.
+confirmed no webhook. A fresh private code verified the owner's account and saved
+only its numeric ID in the private `.env`. Pairing is complete and its challenge
+is consumed. Leave `TELEGRAM_ENABLED=false` until the reviewed local rollout.
 
 The setup command reads no HF credentials, sends no messages, and starts neither
 the bot nor the API. Default/`--check` performs no network calls or state writes:
@@ -195,7 +196,10 @@ Owner setup added36 tests on 2026-10-15: **1,047 full tests pass, zero skips**,9
 focused Telegram checks,mypy106,Ruff. Two RED cases reproduced the missing command
 and an implicit null-state replacement; both are fixed. All35 audited private/
 evaluation/allowance/recovery files remain unchanged before owner pairing, and
-source secret scans pass. Five read-only Telegram calls verified the bot/no webhook
-and checked pending messages without a matching proof. Pairing remains pending;
-zero Telegram messages and zero HF calls. Setup evidence is under ignored
-`tests/test_output/telegram-owner-prep-20261015-01/`.
+source secret scans pass. After the user sent the code, verification completed
+pairing with an exact owner-only `.env` change and all34 other protected files
+preserved. Eight read-only Telegram calls total;zero Telegram messages/zero HF
+calls. The bot's silence during pairing is expected; it is not running yet.
+Setup evidence, including `owner-verification.json`, is under ignored
+`tests/test_output/telegram-owner-prep-20261015-01/`. Source checkpoint290fef7;
+no source changes or repeat tests after the live owner-only configuration step.
