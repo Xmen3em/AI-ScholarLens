@@ -182,6 +182,9 @@ async def run_collection(settings: Settings, jobs: list, papers: list, chunks: l
                 print(json.dumps({"completed": len(records), "planned": len(jobs), "path": job["path"],
                     "case_id": job["case_id"], "ok": record["ok"], "outbound_attempts": record["hosted"]["outbound_attempts"],
                     "unknown_usage_attempts": record["hosted"]["unknown_usage_attempts"], "error_type": record.get("error_type")}), flush=True)
+                if getattr(hf, "stop_on_failed_record", False) is True and record["ok"] is not True:
+                    stop = "failed_paper_request"
+                    break
                 if (record["integrity_breach"] or not record["resource_passed"] or not record["hosted"]["usage_complete"]
                         or getattr(hf, "halted", False) is True):
                     stop = "integrity_resource_or_usage_failure"

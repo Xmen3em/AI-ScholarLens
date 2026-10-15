@@ -19,6 +19,8 @@ from src.services.rag.service import _selection_pattern
 
 
 class FundedHF(CerebrasInputAdmission, MeasuredHF):
+    stop_on_failed_record = True
+
     def __init__(self, settings: Settings, *, grant: TaskAllowance, output: Path, source: dict,
                  outbound_budget: int, memory=free_memory_mib):
         profile, controller, selectors = load_profile(), load_cerebras(), load_selectors()

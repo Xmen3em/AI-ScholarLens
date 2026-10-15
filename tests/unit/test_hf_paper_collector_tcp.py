@@ -20,17 +20,19 @@ from tests.unit.test_hf_paper_client import client as funded_client
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("path,transport,source_failure", [
-    ("baseline", "json", False), ("baseline", "sse", False),
-    ("agent", "json", False), ("agent", "sse", False), ("baseline", "json", True),
+@pytest.mark.parametrize("path,transport,source_failure,decision_failure", [
+    ("baseline", "json", False, False), ("baseline", "sse", False, False),
+    ("agent", "json", False, False), ("agent", "sse", False, False), ("baseline", "json", True, False),
+    pytest.param("agent", "json", False, True, id="invalid-context-decision"),
 ])
 async def test_funded_real_loopback_collection_uses_chosen_pair_and_stops_client_breaches(
-    tmp_path, monkeypatch, stub_httpx, path, transport, source_failure,
+    tmp_path, monkeypatch, stub_httpx, path, transport, source_failure, decision_failure,
 ):
     original_http = httpx.AsyncClient
     qualification = load_cerebras()["cases"] + load_selectors()["cases"]
     outputs = [case["expected"] or {"query": "neural retrieval"} for case in qualification]
-    outputs += ([{"in_scope": True}, {"relevant_markers": ["[1.1]"]}] if path == "agent" else []) + [{"answer": "E1"}]
+    outputs += ([{"in_scope": True}, {"relevant_markers": ["[9.9]" if decision_failure else "[1.1]"]}]
+                if path == "agent" else []) + [{"answer": "E1"}]
     changed = False
     count = 0
 
@@ -73,18 +75,22 @@ async def test_funded_real_loopback_collection_uses_chosen_pair_and_stops_client
     chunk = {"arxiv_id": "2609.99999", "section_index": 2, "chunk_index": 3, "section_title": "Method", "content": EVIDENCE}
     all_jobs = build_jobs([{"id": "case", "query": QUESTION}], modes=("bm25",), transports=(transport,))
     jobs = all_jobs if source_failure else [job for job in all_jobs if job["path"] == path]
+    if decision_failure:
+        jobs += [job for job in all_jobs if job["path"] == "baseline"]
     try:
         completion = await asyncio.wait_for(collector.run_collection(
             hf.settings, jobs, [paper], [chunk], tmp_path, load_profile(), 261,
             revision=load_revision(), hf_factory=lambda *args, **kwargs: hf,
         ), 20)
         assert completion["attempts"] == 1
-        assert completion["status"] == ("stopped" if source_failure else "collected")
-        assert completion["outbound_attempts"] == grant.used == len(calls) == (5 if source_failure else 8 if path == "agent" else 6)
+        failed = source_failure or decision_failure
+        assert completion["status"] == ("stopped" if failed else "collected")
+        assert completion["outbound_attempts"] == grant.used == len(calls) == (
+            5 if source_failure else 7 if decision_failure else 8 if path == "agent" else 6)
         assert all(json.loads(request.content)["model"] == "openai/gpt-oss-120b:cerebras" for request in calls)
         record = json.loads((tmp_path / "records.jsonl").read_text())
-        assert record["ok"] is (not source_failure)
-        if not source_failure:
+        assert record["ok"] is (not failed)
+        if not failed:
             assert record["response"]["model"] == "openai/gpt-oss-120b:cerebras"
         assert hf._client.is_closed
         search_client.close.assert_called_once()
