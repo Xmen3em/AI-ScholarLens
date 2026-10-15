@@ -81,6 +81,10 @@ def load_experiment(experiment: str) -> dict:
         return {**load_array_prompt(), "manifest_sha256": ARRAY_PROMPT_SHA256}
     if experiment == "prompt-comparison-v1":
         return {**load_prompt_comparison(), "manifest_sha256": PROMPT_COMPARISON_SHA256}
+    if experiment == "clarity-execution-v1":
+        from src.commands.hf_clarity_execution import load_execution
+
+        return load_execution()
     raise ValueError("Unknown frozen experiment")
 
 

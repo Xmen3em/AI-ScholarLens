@@ -1,0 +1,9 @@
+{
+  "kind": "hf_clarity_execution_v1",
+  "experiment": "clarity-execution-v1",
+  "model": "openai/gpt-oss-120b:groq",
+  "endpoint": "https://router.huggingface.co/v1/",
+  "maximum_outbound_attempts": 2,
+  "arms": ["clarity-positive", "clarity-negative"],
+  "approval_scope": "At most two additional public synthetic HF/Groq attempts, one per frozen clearer-question relevance polarity; failures and uncertainty consume their arms. No paper data, retry, provider switch, model qualification or application activation."
+}

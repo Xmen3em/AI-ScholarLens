@@ -1,0 +1,8 @@
+{
+  "candidate_manifest_sha256": "8cdf31dc0c6e2947ff9e6de2e021a3a7c15b1957d1ec9e1e85a5b2bf2f7c57d1",
+  "measurement_manifest_sha256": "48b46935a42a5dd7931c8a36c5b7bcfefe5f405c62791667d14ba251190169b7",
+  "sha256": {
+    "PROTOCOL.md": "898e68c121c2d7edd550869549074947a20c07551e68486bef840d6ee3344449",
+    "profile.json": "eaf9e63eb1bf7d95410565e927c306dbed4156428b9787a26173d56a3843fdeb"
+  }
+}
