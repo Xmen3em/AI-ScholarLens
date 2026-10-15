@@ -1,0 +1,15 @@
+{
+  "version": "hosted-cerebras-v1",
+  "frozen_on": "2026-10-15",
+  "implementation_status": "data_only_pending_collector_and_scorer",
+  "authorization_status": "no_execution_funding",
+  "parent_hosted_manifest_sha256": "3b42fccb34bc542e91ccdd3df0d8acb85c0bc86f7237eebdb214e6e9dbfc37a1",
+  "local_manifest_sha256": "58b099eead49d8fd22d96be7a7ceba3142de9524ce6f80846e2e8ddee884b0db",
+  "qualification_manifest_sha256": "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464",
+  "controller_manifest_sha256": "7513c590330757c45c023c7c202c94e4b03b7c35af7c1126e0390044b02aeb0a",
+  "selector_manifest_sha256": "b633c44720e1d4cc0820529bf1eafe38a7be63671b79103a0515b18872a85630",
+  "sha256": {
+    "PROTOCOL.md": "a3572e15d9f4657b58efd491fc373ec4e89b41b78610e8934bc888c24ecd7670",
+    "profile.json": "ad1bd164a9f2947b9ea47e25c569b37a94ab95214a7b4dc94a46e1616cabaa19"
+  }
+}

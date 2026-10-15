@@ -1,11 +1,42 @@
-# Two Cerebras selector calls approved; execution not started — 2026-10-15
+# All five Cerebras schema cases verified — 2026-10-15
+
+The approved selector-1 and selector-10 checks both passed on source checkpoint
+`1f7af96`. The first output stopped at 674.26 MiB before any attempt. RAM later
+recovered naturally; the same fixed registered allowance resumed in a fresh output
+with 1,436.60 MiB free and minimum live headroom 1,161.17 MiB. Both arms settled
+exactly one attempt. **All 28 approved attempts are used; zero remain.**
+
+Successful result: `tests/test_output/hf-cerebras-selectors-live-20261015-02/`.
+The strict combined controller/selector verifier confirms all five canonical cases,
+schema/fixture identities, expected decisions, complete usage, source alignment,
+read-only approval/accounting and preservation. Report and summary:
+`tests/test_output/hf-cerebras-five-case-summary-20261015-01/`; report SHA-256
+`3c4e2045f46c4d21ac30f50ffdec4d3da7880068498319dc9f459bd3a0caef0d`.
+New known usage estimate USD 0.00066735; all five cases USD 0.00112975. These are
+usage estimates, not invoices; earlier unknown-cost failures remain unknown.
+
+Model schema compatibility is established for these five cases; task and app
+acceptance remain false. All four live preservation flags pass. No paper data,
+Telegram messages, original API change or bot/runtime activation occurred.
+The user cannot free RAM now; no repeated app-closing request is needed.
+
+Next integrate the separate data-only Cerebras paper-evaluation profile with the
+guarded collector/scorer, preserving the original 64/192 matrices and every quality,
+resource, privacy and accounting gate. Its new profile changes only version,
+explicit pair and dated token rates. Existing profile bytes and all old grants
+remain immutable; no paper execution is funded. Full source verification remains
+**1,219 tests, zero skips**, Ruff and mypy 118. See
+`docs/hf-cerebras-paper-evaluation.md`. Goal ACTIVE; private PC/Telegram acceptance
+still follows paper evaluation.
+
+# Previous approved selector preparation — 2026-10-15
 
 The user answered **“Approve two additional calls”** for the exact scope in
 `docs/hf-cerebras-selectors.md`. The separate approved receipt and confirmation
 are saved under `tests/test_output/hf-cerebras-selectors-execution-20261015-01/`;
 their contents match the frozen proposal and completed controller history.
-**26 attempts used, two newly approved attempts unused.** No selector counter,
-registration, live run, inference or application activation has been created.
+At this preparation checkpoint, 26 attempts were used and two newly approved
+attempts were unused. The newer result above supersedes that balance.
 
 The offline five-case evidence verifier passes **1,219 full tests, zero skips**,
 including 26 new fixture checks; Ruff and mypy (118 source files) pass. Full run
