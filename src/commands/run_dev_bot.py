@@ -33,7 +33,7 @@ async def run(settings: Settings, bot: TelegramSettings) -> None:
                 await asyncio.sleep(0.05)
         print(json.dumps({"status": "development_api_ready", "port": 8002, "model": MODEL,
                           "search_mode": "bm25", "accepted": False}), flush=True)
-        bot_task = asyncio.create_task(run_bot(bot, settings))
+        bot_task = asyncio.create_task(run_bot(bot, settings, development_assistant=True))
 
         async def wait_stop():
             while not STOP_PATH.exists():

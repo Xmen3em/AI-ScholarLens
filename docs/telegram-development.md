@@ -1,5 +1,13 @@
 # Private Telegram development testing
 
+Update: the owner chose **“Explain concepts and answer paper questions.”** The
+development bot now handles both. “What is RAG?” and “understand ML systems”
+were each checked live and returned a general explanation using one HF call.
+General replies are labeled **model knowledge** and do not claim paper citations.
+Paper-specific requests still use the evidence workflow; missing paper evidence
+does not fall back to a generated general answer. The two checks went through
+the authenticated local API; no old Telegram messages were replayed.
+
 The owner explicitly requested live manual testing while changing the AI agent.
 This authorizes an opt-in development runtime with the existing paired account,
 HF token and `@AIScholarLensbot`. It does not turn the rejected holdout into an
@@ -20,9 +28,10 @@ an AI research-paper question. Only the paired owner in their private chat can
 use the bot. The PC and Docker Desktop must remain running. There is no Windows
 autostart job. A restart loads agent changes; questions are not replayed.
 
-Edit `src/services/agent.py` for graph routing and controller instructions, or
-`src/services/ollama/prompts/rag_system.txt` for the shared evidence-selection
-instruction. The same agent service runs in this mode; restart to load changes.
+Edit `src/services/development_assistant.py` for concept/paper routing and
+explanation instructions, `src/services/agent.py` for paper graph behavior, or
+`src/services/ollama/prompts/rag_system.txt` for paper evidence selection.
+Restart to load changes.
 
 The API and polling bot share **one Python process**. Generation runs remotely
 on `openai/gpt-oss-120b:cerebras`; keyword/BM25 retrieval avoids loading a local

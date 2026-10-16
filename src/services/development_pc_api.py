@@ -14,8 +14,9 @@ from src.middlewares import OperationalMiddleware
 from src.operations import request_context
 from src.routers.agent import ask as ask_agent
 from src.schemas.api.agent import AgentResponse
+from src.schemas.api.assistant import LearningDecision, LearningResponse
 from src.schemas.api.rag import AskRequest
-from src.services.agent import AgentService
+from src.services.development_assistant import DevelopmentAssistant, parse_learning_decision
 from src.services.hf.client import HFClient, HFGenerationError, HFResponseError
 from src.services.hf.rag import HostedRAGService
 from src.services.hf.tokenizer import CerebrasInputAdmission, verify_vocabulary
@@ -61,7 +62,10 @@ class DevelopmentHF(CerebrasInputAdmission, HFClient):
             if result.input_tokens is None or result.output_tokens is None:
                 raise HFResponseError("Development generation usage is incomplete")
             try:
-                validate_structured(result.content, kwargs["response_format"])
+                if kwargs["response_format"] == LearningDecision.model_json_schema():
+                    parse_learning_decision(result.content)
+                else:
+                    validate_structured(result.content, kwargs["response_format"])
             except (ValueError, TypeError):
                 raise HFResponseError("Development generation schema is invalid") from None
             return result
@@ -87,7 +91,7 @@ def create_development_app(settings: Settings):
             owned.push_async_callback(hf.aclose)
             app.state.hf = hf
             app.state.rag = HostedRAGService(app.state.search, hf, settings)
-            app.state.agent = AgentService(app.state.rag, settings)
+            app.state.agent = DevelopmentAssistant(app.state.rag, settings)
             yield
         finally:
             with anyio.CancelScope(shield=True):
@@ -101,9 +105,10 @@ def create_development_app(settings: Settings):
     @app.get("/api/v1/development")
     async def status():
         return {"mode": "development", "accepted": False, "model": MODEL, "search_mode": "bm25",
+                "answer_modes": ["general_knowledge", "paper_evidence"],
                 "generation_attempts": app.state.hf.attempts}
 
-    @app.post("/api/v1/agent/ask", response_model=AgentResponse)
+    @app.post("/api/v1/agent/ask", response_model=AgentResponse | LearningResponse)
     async def ask(request: AskRequest):
         if request.model is not None and request.model != MODEL:
             raise HTTPException(status_code=422, detail="Requested generation model is not configured")

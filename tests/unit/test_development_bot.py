@@ -146,7 +146,7 @@ async def test_stop_closes_both_development_api_and_bot(tmp_path, monkeypatch, b
             while not self.should_exit:
                 await asyncio.sleep(0.01)
             events.append("api_closed")
-    async def bot(*args):
+    async def bot(*args, **kwargs):
         try:
             if bot_failure: raise RuntimeError("Synthetic polling failure")
             await asyncio.sleep(100)

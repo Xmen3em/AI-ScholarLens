@@ -15,11 +15,17 @@ from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import SettingsConfigDict
 from src.config import DefaultSettings
 from src.schemas.api.agent import AgentResponse
+from src.schemas.api.assistant import LearningResponse
 from src.services.rag.service import _unique_object
-from src.services.telegram_policy import format_reply, parse_update
+from src.services.telegram_policy import HELP_TEXT, format_reply, parse_update
 
 API_FAILURE = "The research service is unavailable or could not validate an answer. This question was not retried."
 MAX_BODY_BYTES = 262_144
+LEARNING_HELP = (
+    "Ask me to explain AI/ML concepts or ask about the stored research papers. "
+    "Try 'What is RAG?' or 'Explain ML systems.' General explanations use model knowledge; paper answers include citations. "
+    "Send a question or /ask followed by your question (up to 500 characters)."
+)
 
 
 class BotError(RuntimeError):
@@ -149,7 +155,7 @@ def _invalid_constant(value):
 
 
 class PrivateTelegramBot:
-    def __init__(self, settings: TelegramSettings, api_key: SecretStr, store: OffsetStore):
+    def __init__(self, settings: TelegramSettings, api_key: SecretStr, store: OffsetStore, *, development_assistant=False):
         if (
             not settings.enabled
             or settings.owner_id is None
@@ -158,6 +164,7 @@ class PrivateTelegramBot:
         ):
             raise BotError("configuration_required")
         self.settings, self.store = settings, store
+        self.development_assistant = development_assistant
         self.owner_id = settings.owner_id
         self._work_lock = asyncio.Lock()
         limits = httpx.Limits(max_connections=1, max_keepalive_connections=1)
@@ -249,13 +256,25 @@ class PrivateTelegramBot:
                 return "ignored"
             status = "help"
             replies = [action.reply] if action.reply else []
+            if self.development_assistant and action.reply == HELP_TEXT:
+                replies = [LEARNING_HELP]
             if action.request is not None:
                 try:
                     raw = await self._post(
                         self._api, self.settings.api_base_url.rstrip("/") + "/agent/ask", action.request.model_dump()
                     )
-                    response = AgentResponse.model_validate(raw)
-                    replies = format_reply(response)
+                    if self.development_assistant and raw.get("kind") in {
+                        "general_explanation", "clarification", "out_of_scope"
+                    }:
+                        learning = LearningResponse.model_validate(raw)
+                        prefix = "General AI/ML explanation (model knowledge):\n\n" if learning.kind == "general_explanation" else ""
+                        text = prefix + learning.answer
+                        # Telegram measures UTF-16 units; bound each part without
+                        # splitting astral Unicode characters.
+                        replies = [text[start:start + 1900] for start in range(0, len(text), 1900)]
+                    else:
+                        response = AgentResponse.model_validate(raw)
+                        replies = format_reply(response)
                     status = "answered"
                 except (BotError, ValueError, TypeError):
                     replies, status = [API_FAILURE], "api_failed"

@@ -1,4 +1,34 @@
-# Private Telegram development mode running — 2026-10-16
+# Concept explanations and paper questions live in Telegram — 2026-10-16
+
+The user reported that `/start` worked but “what is the RAG” and “understand ML
+systems” produced insufficient-evidence behavior. Both messages had been
+processed; the paper-only answer contract and unhelpful retrieved passages were
+the cause. The user explicitly chose **“Explain concepts and answer paper
+questions”** in `call_f67b81f76b9a43bb90bc2905c2e4f6c4`.
+
+The private development bot now routes general AI/ML questions to a labeled,
+bounded model-knowledge explanation. Named-paper questions retain the real
+LangGraph evidence/quotation path; absent paper facts never fall back to general
+knowledge. The initial routing decision replaces the duplicate paper scope call,
+keeping the six-call limit and total question deadline. Production/qualified
+launchers remain paper-only by default. Explanations cannot claim paper markers
+or links; Telegram displays their source as model knowledge. `/start` help is
+updated, and owner/private-chat/API/offset/resource protections remain active.
+
+The restarted bot is polling. Both exact questions passed live authenticated API
+checks, returning correct general explanations in about 1.01s/0.44s, one HF call
+each. These are two new development checks, not reuse of evaluation allowances;
+no Telegram messages were replayed. Evidence and exact user preference are in
+`tests/test_output/concept-bot-live-20261016-01/`. The owner should resend their
+questions to test the updated Telegram replies.
+
+168 targeted tests pass, zero skips, plus Ruff and mypy on six source files.
+Report: `tests/test_output/concept-bot-final-20261016-05.xml`. No full-suite or
+new paper-quality acceptance claim. The failed holdout remains historical.
+Edit `src/services/development_assistant.py` for concept/paper routing;
+`./Telegram.ps1 -Restart` loads changes. See [usage](telegram-development.md).
+
+# Historical: Private Telegram development mode running — 2026-10-16
 
 The user explicitly requested live manual Telegram/HF testing while editing the
 agent, with quick RAM handling. This supersedes earlier instructions to leave
