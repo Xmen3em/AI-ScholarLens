@@ -1,0 +1,48 @@
+{
+  "version": "hosted-cerebras-paced-v4",
+  "local_manifest_sha256": "58b099eead49d8fd22d96be7a7ceba3142de9524ce6f80846e2e8ddee884b0db",
+  "model_pairs": [
+    "openai/gpt-oss-120b:cerebras"
+  ],
+  "prices_per_million": {
+    "openai/gpt-oss-120b:cerebras": {
+      "input": 0.35,
+      "output": 0.75
+    }
+  },
+  "qualification_calls": 5,
+  "maximum_outbound_attempts": 773,
+  "development_jobs": 64,
+  "holdout_jobs": 192,
+  "admission_mib": {
+    "bm25": 1024,
+    "hybrid": 1536
+  },
+  "live_margin_mib": 600,
+  "emergency_floor_mib": 384,
+  "generations_per_minute": 6,
+  "window_seconds": 61,
+  "baseline_p95_ms": 10000,
+  "agent_p95_ms": 20000,
+  "deadline_seconds": 90,
+  "node_timeout_seconds": 30,
+  "hf_timeout_seconds": 30,
+  "candidates_per_passage": 3,
+  "embedding_model": "nomic-embed-text",
+  "temperature": 0,
+  "reasoning_effort": "low",
+  "context_limit": 8192,
+  "template_reserve": 512,
+  "controller_output_limit": 256,
+  "selector_output_limit": 512,
+  "maximum_response_bytes": 65536,
+  "maximum_content_characters": 8192,
+  "input_admission": {
+    "method": "o200k_ordinary_schema_inclusive_v1",
+    "encoding": "o200k_harmony",
+    "vocabulary_sha256": "446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d",
+    "maximum_payload_bytes": 65536,
+    "maximum_schema_bytes": 7168
+  },
+  "max_sentence_candidates": 10
+}

@@ -1,0 +1,10 @@
+{
+  "version": "hosted-cerebras-paced-v4",
+  "frozen_on": "2026-10-16",
+  "authorization_status": "no_execution_funding",
+  "parent_evidence_manifest_sha256": "2dc8ab7bb2dd98c544d06b80d5b41873a7e3399e04af9375d332829719c6c23b",
+  "sha256": {
+    "PROTOCOL.md": "2b427b6513487a075089196e09242162e936397d68025b9d17316fb3fde2dc75",
+    "profile.json": "5d59821ab6112497640499a68d7aafc22b9b029fc434b717b345697fd5f0ef7a"
+  }
+}

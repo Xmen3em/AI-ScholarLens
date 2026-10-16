@@ -17,7 +17,9 @@ CEREBRAS_TASK_SHA256 = "92ec9996534e5a958d4ead38fa9224b83ce6c3a318ca3919d886deca
 CEREBRAS_PROFILE = "hosted-cerebras-tokenized-v2"
 EVIDENCE_PROFILE = "hosted-cerebras-evidence-v3"
 EVIDENCE_TASK_SHA256 = "2dc8ab7bb2dd98c544d06b80d5b41873a7e3399e04af9375d332829719c6c23b"
-PAPER_PROFILES = (CEREBRAS_PROFILE, EVIDENCE_PROFILE)
+PACED_PROFILE = "hosted-cerebras-paced-v4"
+PACED_TASK_SHA256 = "a289b0f75fdf6af2da9687e9e0ecd8df281598cb69b235141704515a34f31ca7"
+PAPER_PROFILES = (CEREBRAS_PROFILE, EVIDENCE_PROFILE, PACED_PROFILE)
 
 
 def load_legacy_profile(root=Path("evaluation/week7_hf/cerebras-evaluation-v1")) -> dict:
@@ -90,6 +92,24 @@ def load_evidence_profile(root=Path("evaluation/week7_hf/cerebras-evidence-v3"))
     return profile
 
 
+def load_paced_profile(root=Path("evaluation/week7_hf/cerebras-paced-v4")) -> dict:
+    manifest_path = root / "manifest.json"
+    if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != PACED_TASK_SHA256:
+        raise ValueError("Paced Cerebras manifest differs")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (manifest.get("version") != PACED_PROFILE
+            or manifest.get("parent_evidence_manifest_sha256") != EVIDENCE_TASK_SHA256
+            or set(manifest.get("sha256", {})) != {"PROTOCOL.md", "profile.json"}):
+        raise ValueError("Paced Cerebras parent differs")
+    for name, expected in manifest["sha256"].items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("Frozen paced Cerebras input differs")
+    profile = json.loads((root / "profile.json").read_text(encoding="utf-8"))
+    if digest(profile) != digest({**load_evidence_profile(), "version": PACED_PROFILE}):
+        raise ValueError("Paced Cerebras profile changes an inherited gate")
+    return profile
+
+
 def get_profile(name="hosted-agent-v1") -> tuple[dict, str]:
     if name == "hosted-agent-v1":
         return load_protocol(), HF_MANIFEST_SHA256
@@ -99,6 +119,8 @@ def get_profile(name="hosted-agent-v1") -> tuple[dict, str]:
         return load_profile(), CEREBRAS_TASK_SHA256
     if name == EVIDENCE_PROFILE:
         return load_evidence_profile(), EVIDENCE_TASK_SHA256
+    if name == PACED_PROFILE:
+        return load_paced_profile(), PACED_TASK_SHA256
     raise ValueError("Unknown frozen hosted profile")
 
 
