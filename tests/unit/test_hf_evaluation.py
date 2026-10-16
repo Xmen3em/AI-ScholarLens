@@ -55,6 +55,7 @@ def test_hosted_memory_profile_is_separate_and_does_not_lower_local_gate():
 
 
 @pytest.mark.parametrize("changes", [{"rag_sentence_candidates_per_passage": 2}, {"agent_deadline_seconds": 91},
+                                     {"rag_max_sentence_candidates": 10},
                                      {"hf_timeout_seconds": 10}, {"api_generations_per_minute": 7},
                                      {"ollama_embedding_model": "different"}])
 def test_hosted_admission_rejects_changed_frozen_controls(changes):

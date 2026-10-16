@@ -31,6 +31,7 @@ class FundedHF(CerebrasInputAdmission, MeasuredHF):
                 or not settings.agent_enabled or settings.answer_cache_enabled or settings.local_tracing_enabled
                 or settings.monitoring_directory is not None or not settings.api_key
                 or any(getattr(settings, key) != profile[value] for key, value in expected.items())
+                or settings.rag_max_sentence_candidates != profile.get("max_sentence_candidates")
                 or type(outbound_budget) is not int or outbound_budget != grant.receipt["maximum_outbound_attempts"]
                 or grant.receipt["hosted_manifest_sha256"] != CEREBRAS_TASK_SHA256
                 or grant.receipt["model"] != controller["model"] or grant.receipt["source_sha256"] != digest(source)

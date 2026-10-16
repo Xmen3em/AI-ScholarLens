@@ -1,3 +1,28 @@
+# Offline scope/catalog correction — 2026-10-16
+
+The source now clarifies scope using the ingested categories and adds an opt-in
+catalog cap. The default remains one sentence per passage. A three-sentence,
+ten-candidate experiment exposes the missing names in all 16 affected saved
+contexts; its 52 constructed native selector/scope payloads fit the unchanged
+input/schema limits. This is offline evidence availability, not improved model
+quality. Existing frozen HF profiles reject the new candidate option.
+
+**All 1,334 tests pass, zero skips**, with two existing Typer dependency warnings;
+Ruff and mypy126 pass. The fresh full run follows correction of two environment
+template documentation omissions. No tests or quality gates were removed.
+JUnit: `tests/test_output/hf-cerebras-evidence-fix-20261016-01/full-02.xml`.
+Final source-map digest:
+`66626db90a270820b19e1d9e1fc78693fae21c399b790aefc4c08c0f2e9ec420`.
+Details and remaining profile/approval boundary:
+[hf-cerebras-offline-correction.md](hf-cerebras-offline-correction.md).
+
+No HF calls or Telegram activity for this correction. Previous 125 attempts stay
+used; 164 remain unspent in the completed source-bound grant. The app/bot remain
+disabled. All 400 protected files and 15 retained containers match; API8000,
+58 papers/2,775 chunks and installed model digests are preserved. The earlier
+failed development result below remains authoritative for
+its captured source; it has not been replaced with a passing model result.
+
 # Approved Cerebras development completed; quality failed — 2026-10-16
 
 The user approved the corrected **single 261-call scope**. All five fresh schema

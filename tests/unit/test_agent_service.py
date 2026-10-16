@@ -100,6 +100,38 @@ async def test_scope_rejection_has_no_retrieval_and_no_evidence():
 
 
 @pytest.mark.anyio
+async def test_scope_policy_covers_ingested_categories_and_separates_missing_evidence():
+    from src.policies.ai_scope import AI_CATEGORY_ALLOWLIST
+
+    agent = service([{"in_scope": False}])
+    await answer(agent)
+    prompt = agent.rag.ollama.calls[0][1]
+    instruction, data = prompt.split("\nData:\n", 1)
+    assert all(category in instruction for category in AI_CATEGORY_ALLOWLIST)
+    assert "robotics" in instruction.lower()
+    assert "whether the answer is available" in instruction
+    assert json.loads(data) == {"question": QUESTION}
+    assert not agent.rag.search.calls
+
+
+@pytest.mark.anyio
+async def test_bounded_catalog_survives_agent_relevance_filtering():
+    result = search_result()
+    result.hits[0].passages[0].content = (
+        "The neural retrieval method binds claims to evidence using passage identifiers. "
+        "The neural retrieval method binds claims to evidence using sentence identifiers. "
+        "The neural retrieval method binds claims to evidence using document identifiers."
+    )
+    agent = service([{"in_scope": True}, {"relevant_markers": ["[1.1]"]}, {"answer": "E3"}, "E1"],
+                    results=[result], rag_sentence_candidates_per_passage=3, rag_max_sentence_candidates=2)
+    response = await answer(agent)
+    assert response.model_calls == 4  # Filtered contexts retain the same catalog limit.
+    assert response.answer == f'"{EVIDENCE}" [1.1]'
+    for _, prompt, _ in agent.rag.ollama.calls[2:]:
+        assert "document identifiers" not in prompt and "E3:" not in prompt
+
+
+@pytest.mark.anyio
 @pytest.mark.parametrize("empty", [False, True])
 async def test_exhausted_refinement_abstains_without_third_retrieval(empty):
     outputs = [{"in_scope": True}]

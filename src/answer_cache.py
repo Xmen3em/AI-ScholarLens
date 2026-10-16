@@ -52,7 +52,8 @@ class AnswerCache:
         controls["model"] = normalize_model_name(request.model or self.settings.ollama_default_model)
         payload = canonical({"request": controls, "revision": revision, "policy": self.policy,
                              "settings": {k: getattr(self.settings, k) for k in ["ollama_models", "ollama_embedding_model",
-                                          "rag_sentence_candidates_per_passage", "ollama_timeout"]}})
+                                          "rag_sentence_candidates_per_passage", "rag_max_sentence_candidates",
+                                          "ollama_timeout"]}})
         return "scholarlens:answer:v1:" + self.signature("key:", payload)
 
     async def lookup(self, request: AskRequest) -> CacheTicket:

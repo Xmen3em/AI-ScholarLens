@@ -27,14 +27,18 @@ class EvidenceExcerpt:
     marker: str
 
 
-def build_excerpts(citations: Sequence[Citation], query: str, *, candidates_per_passage: int = 1) -> dict[str, EvidenceExcerpt]:
+def build_excerpts(citations: Sequence[Citation], query: str, *, candidates_per_passage: int = 1,
+                   max_candidates: int | None = None) -> dict[str, EvidenceExcerpt]:
     """Offer bounded matching whole sentences; expansion is an opt-in experiment.
 
     Short headings and overlong sentences are omitted, never truncated. Original
     wording is preserved; only PDF whitespace is normalized.
+    An optional total cap offers one sentence per passage before extra sentences.
     """
     if not 1 <= candidates_per_passage <= MAX_CANDIDATES_PER_PASSAGE:
         raise ValueError("candidates_per_passage must be between one and three")
+    if max_candidates is not None and (type(max_candidates) is not int or not 1 <= max_candidates <= 10):
+        raise ValueError("max_candidates must be between one and ten")
     terms = _terms(query)
     # A shared topic mention is insufficient when most requested details are absent.
     # This deliberately abstains on some paraphrases; it is not semantic entailment.
@@ -45,7 +49,7 @@ def build_excerpts(citations: Sequence[Citation], query: str, *, candidates_per_
         for arxiv_id in {citation.arxiv_id for citation in citations}
     }
     eligible = {arxiv_id for arxiv_id, available in paper_terms.items() if len(terms & available) / len(terms) >= MIN_QUERY_COVERAGE}
-    excerpts: dict[str, EvidenceExcerpt] = {}
+    groups: list[list[EvidenceExcerpt]] = []
     for citation in citations:
         if citation.arxiv_id not in eligible:
             continue
@@ -57,9 +61,14 @@ def build_excerpts(citations: Sequence[Citation], query: str, *, candidates_per_
         ]
         frequency = Counter(term for sentence in raw_sentences for term in _terms(sentence))
         sentences.sort(key=lambda text: -sum(1 / frequency[term] for term in terms & _terms(text)))
-        for sentence in sentences[:candidates_per_passage]:
-            excerpts[f"E{len(excerpts) + 1}"] = EvidenceExcerpt(sentence, citation.marker)
-    return excerpts
+        groups.append([EvidenceExcerpt(sentence, citation.marker) for sentence in sentences[:candidates_per_passage]])
+    if max_candidates is None:
+        offered = [excerpt for group in groups for excerpt in group]
+    else:
+        # Give every passage a first candidate before offering second/third ones.
+        offered = [group[rank] for rank in range(candidates_per_passage) for group in groups if rank < len(group)]
+        offered = offered[:max_candidates]
+    return {f"E{index}": excerpt for index, excerpt in enumerate(offered, start=1)}
 
 
 def render_selection(selection: Sequence[str], excerpts: dict[str, EvidenceExcerpt]) -> str:

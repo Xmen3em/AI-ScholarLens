@@ -149,6 +149,13 @@ class Settings(DefaultSettings):
     # Expansion improves evidence coverage but regressed relevance in the holdout.
     # Keep conservative production behavior until selector quality is justified.
     rag_sentence_candidates_per_passage: int = Field(default=1, ge=1, le=3)
+    # Opt-in total cap; frozen evaluation profiles must explicitly admit it.
+    rag_max_sentence_candidates: int | None = Field(default=None, ge=1, le=10)
+
+    @field_validator("rag_max_sentence_candidates", mode="before")
+    @classmethod
+    def empty_catalog_limit(cls, value):
+        return None if value == "" else value
     
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)

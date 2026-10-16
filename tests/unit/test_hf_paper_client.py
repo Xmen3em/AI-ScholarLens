@@ -68,6 +68,20 @@ async def test_preflight_rejections_do_not_reserve_or_send(tmp_path, monkeypatch
 
 
 @pytest.mark.anyio
+async def test_frozen_funded_client_rejects_an_unregistered_candidate_catalog(tmp_path, monkeypatch, stub_httpx):
+    calls = stub_httpx(lambda request: httpx.Response(200, json=envelope()))
+    hf, grant = client(tmp_path, monkeypatch)
+    try:
+        with pytest.raises(ValueError):
+            command.FundedHF(hf.settings.model_copy(update={"rag_max_sentence_candidates": 10}),
+                             grant=grant, output=tmp_path / "new", source=hf.source,
+                             outbound_budget=261, memory=lambda: 4096)
+        assert grant.used == len(calls) == 0
+    finally:
+        await hf.aclose()
+
+
+@pytest.mark.anyio
 @pytest.mark.parametrize("failure", ["400", "timeout", "missing_usage", "schema"])
 async def test_wire_or_measurement_failure_consumes_one_and_stops_next_valid_call(tmp_path, monkeypatch, stub_httpx, failure):
     def respond(request):

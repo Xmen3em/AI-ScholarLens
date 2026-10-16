@@ -20,7 +20,7 @@ from src.schemas.api.search import ChunkSearchResponse, HybridSearchResponse
 from src.schemas.generation import GenerationPort
 from src.schemas.ollama import OllamaGenerateResponse
 from src.services.rag.context import INSUFFICIENT_EVIDENCE_ANSWER, RAGContext, build_context, validate_answer_evidence
-from src.services.rag.excerpts import build_excerpts, render_selection
+from src.services.rag.excerpts import EvidenceExcerpt, build_excerpts, render_selection
 from src.services.search import SearchService
 from src.tracing import traced
 
@@ -81,6 +81,11 @@ class PreparedRAG:
     search_mode: Literal["hybrid", "bm25"]
     model: str
     candidates_per_passage: int = 1
+    max_candidates: int | None = None
+
+    def excerpts(self) -> dict[str, EvidenceExcerpt]:
+        return build_excerpts(self.context.citations, self.request.query,
+                              candidates_per_passage=self.candidates_per_passage, max_candidates=self.max_candidates)
 
     def sources_event(self) -> SourcesEvent:
         return SourcesEvent(
@@ -131,7 +136,8 @@ class RAGService:
                    passages=sum(len(paper.passages) for paper in result.hits), mode=mode)
         context = build_context(result.hits, character_budget=EVIDENCE_CHARACTER_BUDGET)
         return PreparedRAG(request=request, context=context, search_mode=mode, model=model,
-                           candidates_per_passage=self.settings.rag_sentence_candidates_per_passage)
+                           candidates_per_passage=self.settings.rag_sentence_candidates_per_passage,
+                           max_candidates=self.settings.rag_max_sentence_candidates)
 
     async def ask(self, request: AskRequest) -> AskResponse:
         ticket = await self.cache.lookup(request) if self.cache else None
@@ -147,8 +153,7 @@ class RAGService:
     @traced("generation_and_validation")
     async def _generate_answer(self, prepared: PreparedRAG) -> str:
         """Use one selection transport and bounded validation policy for both routes."""
-        if not build_excerpts(prepared.context.citations, prepared.request.query,
-                              candidates_per_passage=prepared.candidates_per_passage):
+        if not prepared.excerpts():
             return INSUFFICIENT_EVIDENCE_ANSWER
 
         generated = await self.ollama.generate(
@@ -195,8 +200,7 @@ class RAGService:
 
     @staticmethod
     def _prompt(prepared: PreparedRAG, *, structured: bool) -> str:
-        excerpts = build_excerpts(prepared.context.citations, prepared.request.query,
-                                  candidates_per_passage=prepared.candidates_per_passage)
+        excerpts = prepared.excerpts()
         blocks = []
         for citation in prepared.context.citations:
             sentences = [f"{key}: {excerpt.text}" for key, excerpt in excerpts.items() if excerpt.marker == citation.marker]
@@ -205,6 +209,8 @@ class RAGService:
         expansion_guidance = (
             "Never repeat an ID. Do not fill unused slots with background. "
             "Include complementary sentences when a passage contains several requested details. "
+            "Select only sentences that provide a requested fact, not merely the same topic. "
+            "A method description does not substitute for a requested measurement or evaluation criterion. "
             if prepared.candidates_per_passage > 1 else ""
         )
         distinct = "distinct " if prepared.candidates_per_passage > 1 else ""
@@ -230,8 +236,7 @@ class RAGService:
     @staticmethod
     def _selection_schema(prepared: PreparedRAG) -> dict:
         schema = GeneratedAnswer.model_json_schema()
-        ids = list(build_excerpts(prepared.context.citations, prepared.request.query,
-                                  candidates_per_passage=prepared.candidates_per_passage))
+        ids = list(prepared.excerpts())
         schema["properties"]["answer"] = {
             "type": "string",
             "pattern": _selection_pattern(len(ids)),
@@ -253,8 +258,7 @@ class RAGService:
         else:
             selection = [] if raw.strip() == "NONE" else raw.split()
         try:
-            return render_selection(selection, build_excerpts(prepared.context.citations, prepared.request.query,
-                                                             candidates_per_passage=prepared.candidates_per_passage))
+            return render_selection(selection, prepared.excerpts())
         except ValueError as exc:
             emit_event("rag_selection_validation_failed", level=logging.WARNING, reason=str(exc))
             raise GroundingError("Generated answer failed grounding validation") from exc

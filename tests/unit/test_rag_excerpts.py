@@ -108,3 +108,26 @@ def test_expansion_does_not_change_default_candidate_count():
 def test_candidate_expansion_rejects_limits_outside_the_measured_bound(limit):
     with pytest.raises(ValueError):
         build_excerpts([], "classifier", candidates_per_passage=limit)
+
+
+def test_bounded_catalog_preserves_passage_diversity_before_extra_sentences():
+    citations = [
+        _citation(f"[{i}.1]", (
+            "Aster reports visual accuracy with a linear classifier. "
+            "Aster reports visual accuracy with a neural classifier. "
+            "Aster reports visual accuracy with a tree classifier."
+        )) for i in range(1, 5)
+    ]
+    excerpts = build_excerpts(citations, "What visual accuracy does Aster report?",
+                              candidates_per_passage=3, max_candidates=5)
+    assert list(excerpts) == [f"E{i}" for i in range(1, 6)]
+    assert [e.marker for e in list(excerpts.values())[:4]] == [f"[{i}.1]" for i in range(1, 5)]
+    assert excerpts["E5"].marker == "[1.1]"
+    for excerpt in excerpts.values():
+        assert excerpt.text in next(c.evidence for c in citations if c.marker == excerpt.marker)
+
+
+@pytest.mark.parametrize("limit", [0, 11, True, 2.5])
+def test_bounded_catalog_rejects_invalid_total_limits(limit):
+    with pytest.raises(ValueError):
+        build_excerpts([], "classifier", candidates_per_passage=3, max_candidates=limit)

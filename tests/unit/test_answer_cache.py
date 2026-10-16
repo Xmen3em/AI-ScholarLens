@@ -66,6 +66,17 @@ async def test_invalidation_includes_effective_options_and_revision(cache):
     assert len(cache_policy_digest()) == 64
 
 
+def test_candidate_catalog_limits_cannot_share_a_cached_answer(cache):
+    service, store, identity = cache
+    request = AskRequest(query='same paper question')
+    revision = {'corpus': 'unchanged'}
+    keys = {service.key(request, revision)}
+    for limit in (2, 10):
+        bounded = AnswerCache(store, identity, service.settings.model_copy(update={'rag_max_sentence_candidates': limit}))
+        keys.add(bounded.key(request, revision))
+    assert len(keys) == 3
+
+
 @pytest.mark.anyio
 async def test_unavailability_invalid_answers_and_degradation_never_break_requests(cache):
     service, store, identity = cache

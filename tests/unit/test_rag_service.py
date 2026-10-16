@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 
 import pytest
@@ -370,3 +371,24 @@ async def test_default_only_changes_output_contract_and_keeps_expansion_guidance
     assert "a string containing up to three selected IDs" in prompt
     assert "Do not fill unused slots" not in prompt
     assert "Include complementary sentences" not in prompt
+
+
+@pytest.mark.anyio
+async def test_bounded_catalog_is_identical_in_prompt_schema_and_rendering(settings):
+    paper = _paper()
+    paper.passages[0].content = (
+        "Aster reports visual accuracy with a linear classifier. "
+        "Aster reports visual accuracy with a neural classifier. "
+        "Aster reports visual accuracy with a tree classifier."
+    )
+    settings = settings.model_copy(update={"rag_sentence_candidates_per_passage": 3,
+                                           "rag_max_sentence_candidates": 2})
+    ollama = StubOllama(["E3"], retry_answer=["E1"])
+    service = RAGService(StubSearch(_search_response(hits=[paper])), ollama, settings)
+    response = await service.ask(AskRequest(query="What visual accuracy does Aster report?"))
+    assert len(ollama.calls) == 2  # A valid-looking ID outside the offered catalog must be rejected.
+    assert response.answer == '"Aster reports visual accuracy with a linear classifier." [1.1]'
+    for call in ollama.calls:
+        assert "E3:" not in call["prompt"] and "tree classifier" not in call["prompt"]
+    pattern = ollama.calls[0]["response_format"]["properties"]["answer"]["pattern"]
+    assert re.fullmatch(pattern, "E2") and not re.fullmatch(pattern, "E3")

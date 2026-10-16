@@ -48,7 +48,8 @@ def hosted_admission(settings: Settings, jobs: list, free_mib: float, profile: d
     expected = {"rag_sentence_candidates_per_passage": "candidates_per_passage", "agent_deadline_seconds": "deadline_seconds",
                 "agent_node_timeout_seconds": "node_timeout_seconds", "hf_timeout_seconds": "hf_timeout_seconds",
                 "api_generations_per_minute": "generations_per_minute", "ollama_embedding_model": "embedding_model"}
-    if any(getattr(settings, field) != profile[key] for field, key in expected.items()):
+    if (any(getattr(settings, field) != profile[key] for field, key in expected.items())
+            or settings.rag_max_sentence_candidates != profile.get("max_sentence_candidates")):
         return "policy_changed"
     if not math.isfinite(free_mib) or free_mib < max(profile["admission_mib"][job["mode"]] for job in jobs or [{"mode": "bm25"}]):
         return "insufficient_memory"
