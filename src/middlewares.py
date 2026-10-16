@@ -99,7 +99,8 @@ class OperationalMiddleware:
                 try:
                     retry = await anyio.to_thread.run_sync(
                         lambda: RateLimiter(settings).reserve(generation=scope["path"] in {
-                            "/api/v1/ask", "/api/v1/stream", "/api/v1/agent/ask", "/api/v1/agent/stream"
+                            "/api/v1/ask", "/api/v1/stream", "/api/v1/agent/ask", "/api/v1/agent/stream",
+                            "/api/v1/study/messages"
                         })
                     )
                 except (OSError, sqlite3.Error):

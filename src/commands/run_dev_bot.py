@@ -19,7 +19,7 @@ STOP_PATH = Path("data/pc-app/development.stop")
 
 
 async def run(settings: Settings, bot: TelegramSettings) -> None:
-    local = create_development_app(settings)
+    local = create_development_app(settings, study_owner=bot.owner_id)
     server = uvicorn.Server(uvicorn.Config(local, host="127.0.0.1", port=8002, workers=1,
         access_log=False, ws="none", lifespan="on", timeout_graceful_shutdown=3))
     server_task = asyncio.create_task(server.serve())
@@ -33,7 +33,7 @@ async def run(settings: Settings, bot: TelegramSettings) -> None:
                 await asyncio.sleep(0.05)
         print(json.dumps({"status": "development_api_ready", "port": 8002, "model": MODEL,
                           "search_mode": "bm25", "accepted": False}), flush=True)
-        bot_task = asyncio.create_task(run_bot(bot, settings, development_assistant=True))
+        bot_task = asyncio.create_task(run_bot(bot, settings, development_assistant=True, study=True))
 
         async def wait_stop():
             while not STOP_PATH.exists():

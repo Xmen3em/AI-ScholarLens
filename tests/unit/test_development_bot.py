@@ -155,11 +155,11 @@ async def test_stop_closes_both_development_api_and_bot(tmp_path, monkeypatch, b
     stop = tmp_path / "development.stop"
     stop.touch()
     monkeypatch.setattr(command, "STOP_PATH", stop)
-    monkeypatch.setattr(command, "create_development_app", lambda settings: object())
+    monkeypatch.setattr(command, "create_development_app", lambda settings, **kwargs: object())
     monkeypatch.setattr(command.uvicorn, "Server", lambda config: Server())
     monkeypatch.setattr(command, "run_bot", bot)
     if bot_failure:
-        with pytest.raises(RuntimeError): await command.run(settings(), None)
+        with pytest.raises(RuntimeError): await command.run(settings(), SimpleNamespace(owner_id=123))
     else:
-        await command.run(settings(), None)
+        await command.run(settings(), SimpleNamespace(owner_id=123))
     assert events == ["bot_closed", "api_closed"]

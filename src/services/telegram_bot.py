@@ -1,6 +1,7 @@
 """Explicit private polling client; no automatic startup or inference retries."""
 
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -17,7 +18,7 @@ from src.config import DefaultSettings
 from src.schemas.api.agent import AgentResponse
 from src.schemas.api.assistant import LearningResponse
 from src.services.rag.service import _unique_object
-from src.services.telegram_policy import HELP_TEXT, format_reply, parse_update
+from src.services.telegram_policy import HELP_TEXT, format_reply, owner_text, parse_update
 
 API_FAILURE = "The research service is unavailable or could not validate an answer. This question was not retried."
 MAX_BODY_BYTES = 262_144
@@ -155,7 +156,7 @@ def _invalid_constant(value):
 
 
 class PrivateTelegramBot:
-    def __init__(self, settings: TelegramSettings, api_key: SecretStr, store: OffsetStore, *, development_assistant=False):
+    def __init__(self, settings: TelegramSettings, api_key: SecretStr, store: OffsetStore, *, development_assistant=False, study=False):
         if (
             not settings.enabled
             or settings.owner_id is None
@@ -165,6 +166,7 @@ class PrivateTelegramBot:
             raise BotError("configuration_required")
         self.settings, self.store = settings, store
         self.development_assistant = development_assistant
+        self.study = study
         self.owner_id = settings.owner_id
         self._work_lock = asyncio.Lock()
         limits = httpx.Limits(max_connections=1, max_keepalive_connections=1)
@@ -251,6 +253,16 @@ class PrivateTelegramBot:
             # Durable admission precedes all inference and messaging. Interrupted
             # or uncertain work stays consumed instead of being replayed on restart.
             self.store.advance(update_id + 1)
+            text = owner_text(update, self.owner_id)
+            if self.study and text is not None and len(text) <= 512:
+                try:
+                    result = await self._post(self._api, self.settings.api_base_url.rstrip("/") + "/study/messages",
+                                              {"intent": f"telegram:{update_id}", "text": text})
+                    if result.get("fallback") is not True:
+                        await self._study_text(result.get("reply", "الطلب اتسجّل."))
+                        return "study_admitted"
+                except (BotError, ValueError, TypeError):
+                    return "api_failed"
             action = parse_update(update, self.owner_id)
             if action is None:
                 return "ignored"
@@ -286,3 +298,48 @@ class PrivateTelegramBot:
                 except BotError:
                     return "reply_failed"
             return status
+
+    async def _study_text(self, text: str) -> None:
+        if type(text) is not str or not 0 < len(text) <= 30000:
+            raise BotError("invalid_study_reply")
+        keyboard = {"keyboard": [["بسّطها", "مثال"], ["اشرح الطريقة", "اختبر فهمي"], ["/study", "/notes"]],
+                    "resize_keyboard": True, "is_persistent": True}
+        # 1900 Unicode characters remain below Telegram's 4096 UTF-16-unit cap.
+        for start in range(0, len(text), 1900):
+            sent = await self._call_telegram("sendMessage", {"chat_id": self.owner_id, "text": text[start:start + 1900],
+                                            "reply_markup": keyboard})
+            if type(sent) is not dict or type(sent.get("message_id")) is not int or sent["message_id"] <= 0:
+                raise BotError("invalid_message_acknowledgement")
+
+    async def deliver_study(self) -> None:
+        if not self.study:
+            return
+        origin = self.settings.api_base_url.rstrip("/")
+        pending = await self._post(self._api, origin + "/study/pending", {})
+        jobs = pending.get("jobs")
+        if type(jobs) is not list or len(jobs) > 5:
+            raise BotError("invalid_study_jobs")
+        for job in jobs:
+            if type(job) is not dict or not re.fullmatch(r"[a-f0-9]{32}", str(job.get("id", ""))):
+                raise BotError("invalid_study_job")
+            claimed = await self._post(self._api, origin + "/study/claim", {"job_id": job["id"]})
+            if claimed.get("claimed") is not True:
+                continue
+            result = claimed.get("result", {})
+            await self._study_text(result.get("text"))
+            if result.get("image"):
+                await self._study_photo(result["image"])
+
+    async def _study_photo(self, encoded: str) -> None:
+        try:
+            data = base64.b64decode(encoded, validate=True)
+            if len(data) > 180000 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
+                raise ValueError
+            assert self.settings.bot_token is not None
+            url = f"https://api.telegram.org/bot{self.settings.bot_token.get_secret_value()}/sendPhoto"
+            response = await self._telegram.post(url, data={"chat_id": str(self.owner_id), "caption": "خريطة للمذاكرة — ترتيب الشرح، مش علاقات سببية."},
+                                                  files={"photo": ("study-map.png", data, "image/png")})
+            if response.status_code != 200 or len(response.content) > MAX_BODY_BYTES or response.json().get("ok") is not True:
+                raise BotError("study_photo_failed")
+        except (ValueError, TypeError, httpx.HTTPError):
+            raise BotError("study_photo_failed") from None

@@ -12,18 +12,22 @@ from src.config import Settings
 from src.services.telegram_bot import BotError, OffsetStore, PrivateTelegramBot, TelegramSettings, single_instance
 
 
-async def run_bot(config: TelegramSettings, settings: Settings, *, development_assistant=False) -> None:
+async def run_bot(config: TelegramSettings, settings: Settings, *, development_assistant=False, study=False) -> None:
     if settings.api_key is None:
         raise BotError("api_key_required")
     with single_instance(config.offset_path):
         store = OffsetStore(config.offset_path)
         extra = {"development_assistant": True} if development_assistant else {}
+        if study:
+            extra["study"] = True
         async with PrivateTelegramBot(config, settings.api_key, store, **extra) as bot:
             await bot.check_webhook()
             print(json.dumps({"status": "polling_private_bot"}), flush=True)
             delay = 1
             while True:
                 try:
+                    if study:
+                        await bot.deliver_study()
                     updates = await bot.poll()
                 except BotError:
                     print(json.dumps({"status": "poll_unavailable", "retry_seconds": delay}), flush=True)

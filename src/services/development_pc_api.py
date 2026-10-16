@@ -5,6 +5,7 @@ from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
 
 import anyio
+import httpx
 from fastapi import FastAPI, HTTPException
 from src.commands.evaluate_agent import free_memory_mib
 from src.commands.hf_evaluation import validate_structured
@@ -74,7 +75,7 @@ class DevelopmentHF(CerebrasInputAdmission, HFClient):
             raise
 
 
-def create_development_app(settings: Settings):
+def create_development_app(settings: Settings, *, study_owner: int | None = None):
     if (not settings.hf_inference_enabled or not settings.agent_enabled or settings.api_key is None
             or settings.hf_models != [MODEL] or settings.hf_default_model != MODEL
             or settings.answer_cache_enabled or settings.local_tracing_enabled or settings.monitoring_directory is not None):
@@ -92,6 +93,27 @@ def create_development_app(settings: Settings):
             app.state.hf = hf
             app.state.rag = HostedRAGService(app.state.search, hf, settings)
             app.state.agent = DevelopmentAssistant(app.state.rag, settings)
+            if study_owner is not None:
+                from src.services.study.content import PaperContentService
+                from src.services.study.intake import ArxivIntake
+                from src.services.study.service import StudyService
+                from src.services.study.store import StudyStore
+                from src.services.study.tutor import StudyModel
+
+                workspace = Path.cwd().resolve()
+                root = workspace / "data/study"
+                if any(path.is_symlink() for path in (workspace / "data", root)) or not root.resolve().is_relative_to(workspace):
+                    raise ValueError("Study state must stay in the workspace")
+                public = httpx.AsyncClient(trust_env=False, follow_redirects=False, timeout=30,
+                    headers={"User-Agent": "ScholarLens-private-study/0.1"},
+                    limits=httpx.Limits(max_connections=1, max_keepalive_connections=1))
+                owned.push_async_callback(public.aclose)
+                store = StudyStore(root / "sessions.sqlite3", str(study_owner))
+                store.recover_interrupted()
+                tutor = StudyModel(settings.hf_token, store)
+                owned.push_async_callback(tutor.aclose)
+                app.state.study = StudyService(store, ArxivIntake(public), PaperContentService(root / "sources", public), tutor)
+                owned.push_async_callback(app.state.study.aclose)
             yield
         finally:
             with anyio.CancelScope(shield=True):
@@ -101,6 +123,12 @@ def create_development_app(settings: Settings):
     app.state.settings = settings
     app.state.monitoring = app.state.tracing = None
     app.add_middleware(OperationalMiddleware, settings=settings)
+    if study_owner is not None:
+        if type(study_owner) is not int or not 0 < study_owner < 2**52:
+            raise ValueError("Study requires the paired owner")
+        from src.services.study.api import add_study_routes
+
+        add_study_routes(app)
 
     @app.get("/api/v1/development")
     async def status():

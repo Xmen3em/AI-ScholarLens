@@ -17,7 +17,8 @@ class BotAction:
     reply: str | None = None
 
 
-def parse_update(update, owner_id: int) -> BotAction | None:
+def owner_text(update, owner_id: int) -> str | None:
+    """The shared owner gate runs before either legacy or study dispatch."""
     if type(update) is not dict or type(update.get("message")) is not dict:
         return None
     message = update["message"]
@@ -36,7 +37,13 @@ def parse_update(update, owner_id: int) -> BotAction | None:
         or type(message.get("text")) is not str
     ):
         return None
-    text = message["text"].strip()
+    return message["text"].strip()
+
+
+def parse_update(update, owner_id: int) -> BotAction | None:
+    text = owner_text(update, owner_id)
+    if text is None:
+        return None
     if len(text) > 512:
         return BotAction(reply=HELP_TEXT)
     if text.startswith("/"):
