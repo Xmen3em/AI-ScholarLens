@@ -13,7 +13,7 @@ from src.commands.evaluate_retrieval import digest
 from src.commands.hf_allowance import validate_pilot_scope
 from src.commands.hf_evaluation import HF_MANIFEST_SHA256, hosted_work, load_protocol, qualification_cases
 from src.commands.hf_paper_allowance import validate_task_accounting
-from src.commands.hf_paper_profile import CEREBRAS_PROFILE, get_profile
+from src.commands.hf_paper_profile import PAPER_PROFILES, get_profile
 from src.commands.hf_qualification import load_revision
 from src.commands.score_agent import make_review_template, score_records
 
@@ -74,7 +74,7 @@ def score_run(run: Path, source: Path, reviews: dict, *, profile_name=None) -> d
     read = lambda name: json.loads((run / name).read_text(encoding="utf-8"))
     profile, manifest_sha = scoring_profile(profile_name)
     metadata = read("metadata.json")
-    cerebras = profile["version"] == CEREBRAS_PROFILE
+    cerebras = profile["version"] in PAPER_PROFILES
     if metadata.get("hosted_manifest_sha256") != manifest_sha or metadata.get("inference_started") is not True:
         raise ValueError("Run lacks hosted inference evidence")
     model, split = metadata["configuration"]["model"], metadata["split"]
@@ -100,7 +100,7 @@ def score_run(run: Path, source: Path, reviews: dict, *, profile_name=None) -> d
     funding_binding = None
     if cerebras:
         budget = 261 if split == "development" else 773
-        if (metadata.get("configuration", {}).get("policy") != CEREBRAS_PROFILE
+        if (metadata.get("configuration", {}).get("policy") != profile["version"]
                 or any(type(metadata.get(key)) is not int or metadata[key] != budget
                        for key in ("planned_outbound_budget", "approved_outbound_budget", "outbound_budget"))
                 or metadata.get("source_snapshot_sha256") != hashlib.sha256((source / "state.json").read_bytes()).hexdigest()):
@@ -114,7 +114,7 @@ def score_run(run: Path, source: Path, reviews: dict, *, profile_name=None) -> d
                 selection = metadata.get("selection_lock", {})
                 if metadata.get("selection_sha256") != digest(selection):
                     raise ValueError("Selection binding differs")
-                validate_selection(selection, model, source, profile_name=CEREBRAS_PROFILE)
+                validate_selection(selection, model, source, profile_name=profile["version"])
             except (ValueError, OSError, KeyError, sqlite3.Error):
                 gates.append("cerebras_development_lock_incomplete")
     elif revision:
@@ -165,7 +165,7 @@ def main() -> None:
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--reviews", type=Path)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--profile", choices=("hosted-agent-v1", CEREBRAS_PROFILE))
+    parser.add_argument("--profile", choices=("hosted-agent-v1", *PAPER_PROFILES))
     args = parser.parse_args()
     run, output = args.run.resolve(), args.output.resolve()
     roots = [(Path.cwd() / name).resolve() for name in ("test_output", "tests/test_output")]
@@ -182,7 +182,7 @@ def main() -> None:
         result = hosted_review_template(records, labels[metadata["split"]]["cases"], metadata["configuration"]["model"],
             fixture_manifest_sha256=metadata.get("fixture_manifest_sha256"), profile_name=args.profile)
     elif args.operation == "accept":
-        if args.profile != CEREBRAS_PROFILE or args.reviews is None or args.reviews.resolve() != (run / "reviews.json").resolve():
+        if args.profile not in PAPER_PROFILES or args.reviews is None or args.reviews.resolve() != (run / "reviews.json").resolve():
             parser.error("App acceptance requires the explicit Cerebras profile and reviews.json inside its holdout run")
         from src.commands.hf_paper_acceptance import create_acceptance_lock
 

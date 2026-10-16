@@ -11,10 +11,9 @@ from sqlalchemy.engine import make_url
 from src.commands.evaluate_agent import free_memory_mib
 from src.commands.hf_evaluation import load_protocol
 from src.commands.hf_paper_acceptance import validate_acceptance
-from src.commands.hf_paper_profile import load_profile
 from src.config import Settings
 from src.services.pc_api import create_preview_app
-from src.services.qualified_pc_api import create_qualified_app, validate_policy
+from src.services.qualified_pc_api import accepted_profile, create_qualified_app, validate_policy
 from src.services.telegram_bot import single_instance
 
 
@@ -81,12 +80,13 @@ def main() -> None:
         profile = load_protocol()
         if app_mode:
             proof = validate_acceptance(args.acceptance)
+            profile = accepted_profile(proof)
             settings = Settings.model_validate(settings.model_copy(update={
                 "hf_inference_enabled": True, "agent_enabled": True, "hf_models": [proof["model"]],
-                "hf_default_model": proof["model"], "rag_sentence_candidates_per_passage": 1,
+                "hf_default_model": proof["model"], "rag_sentence_candidates_per_passage": profile["candidates_per_passage"],
+                "rag_max_sentence_candidates": profile.get("max_sentence_candidates"),
             }).model_dump())
-            profile = load_profile()
-            validate_policy(settings)
+            validate_policy(settings, profile_name=profile["version"])
         free_mib = free_memory_mib()
         admitted = math.isfinite(free_mib) and free_mib >= profile["admission_mib"]["hybrid" if app_mode else "bm25"]
         if not args.execute_preview and not args.execute_app:

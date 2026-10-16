@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
+from src.commands.hf_paper_profile import CEREBRAS_TASK_SHA256
 from src.commands.hf_schema_execution import load_cerebras
 from src.operations import request_context
 from src.services import qualified_pc_api as runtime
@@ -27,7 +28,8 @@ def config(tmp_path, **updates):
 
 
 def accepted(monkeypatch):
-    proof = {"model": "openai/gpt-oss-120b:cerebras", "source_files": {"src/test": "frozen"}}
+    proof = {"model": "openai/gpt-oss-120b:cerebras", "hosted_manifest_sha256": CEREBRAS_TASK_SHA256,
+             "source_files": {"src/test": "frozen"}}
     monkeypatch.setattr(runtime, "validate_acceptance", lambda path: dict(proof))
     return proof
 

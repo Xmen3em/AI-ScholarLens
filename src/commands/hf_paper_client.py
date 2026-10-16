@@ -8,7 +8,7 @@ from src.commands.evaluate_hf_agent import source_hashes
 from src.commands.evaluate_retrieval import digest
 from src.commands.hf_evaluation import MeasuredHF, validate_structured
 from src.commands.hf_paper_allowance import TaskAllowance
-from src.commands.hf_paper_profile import CEREBRAS_TASK_SHA256, load_profile
+from src.commands.hf_paper_profile import CEREBRAS_PROFILE, PAPER_PROFILES, get_profile, load_profile
 from src.commands.hf_schema_execution import load_cerebras, load_selectors
 from src.config import Settings
 from src.operations import request_context
@@ -22,8 +22,12 @@ class FundedHF(CerebrasInputAdmission, MeasuredHF):
     stop_on_failed_record = True
 
     def __init__(self, settings: Settings, *, grant: TaskAllowance, output: Path, source: dict,
-                 outbound_budget: int, memory=free_memory_mib):
-        profile, controller, selectors = load_profile(), load_cerebras(), load_selectors()
+                 outbound_budget: int, memory=free_memory_mib, profile_name=CEREBRAS_PROFILE):
+        if profile_name not in PAPER_PROFILES:
+            raise ValueError("Unknown funded paper profile")
+        profile, manifest_sha = get_profile(profile_name)
+        controller, selectors = load_cerebras(), load_selectors()
+        self.profile_name = profile_name
         expected = {"rag_sentence_candidates_per_passage": "candidates_per_passage", "agent_deadline_seconds": "deadline_seconds",
                     "agent_node_timeout_seconds": "node_timeout_seconds", "hf_timeout_seconds": "hf_timeout_seconds",
                     "api_generations_per_minute": "generations_per_minute", "ollama_embedding_model": "embedding_model"}
@@ -33,7 +37,7 @@ class FundedHF(CerebrasInputAdmission, MeasuredHF):
                 or any(getattr(settings, key) != profile[value] for key, value in expected.items())
                 or settings.rag_max_sentence_candidates != profile.get("max_sentence_candidates")
                 or type(outbound_budget) is not int or outbound_budget != grant.receipt["maximum_outbound_attempts"]
-                or grant.receipt["hosted_manifest_sha256"] != CEREBRAS_TASK_SHA256
+                or grant.receipt["hosted_manifest_sha256"] != manifest_sha
                 or grant.receipt["model"] != controller["model"] or grant.receipt["source_sha256"] != digest(source)
                 or source_hashes() != source or grant.started):
             raise ValueError("Funded evaluation requires the unchanged approved source, pair and policy")
@@ -42,7 +46,7 @@ class FundedHF(CerebrasInputAdmission, MeasuredHF):
         self.qualification = controller["cases"] + selectors["cases"]
         self.payloads = controller["payloads"] + selectors["payloads"]
         self.schemas = {digest(case["schema"]): 256 for case in controller["cases"]}
-        for count in range(31):
+        for count in range(profile.get("max_sentence_candidates", 30) + 1):
             schema = GeneratedAnswer.model_json_schema()
             schema["properties"]["answer"] = {"type": "string", "pattern": _selection_pattern(count)}
             self.schemas[digest(schema)] = 512
@@ -59,7 +63,7 @@ class FundedHF(CerebrasInputAdmission, MeasuredHF):
         request_id = (request_context.get() or {}).get("request_id") or "administrative"
         reserved = False
         try:
-            profile = load_profile()
+            profile = load_profile() if self.profile_name == CEREBRAS_PROFILE else get_profile(self.profile_name)[0]
             free_mib = self.memory()
             if (source_hashes() != self.source or not math.isfinite(free_mib) or free_mib < profile["live_margin_mib"]
                     or before >= self.outbound_budget or self.request_calls.get(request_id, 0) >= 6):

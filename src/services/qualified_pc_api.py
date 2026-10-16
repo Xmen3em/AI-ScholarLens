@@ -11,7 +11,14 @@ from src.commands.evaluate_hf_agent import live_snapshot
 from src.commands.evaluate_retrieval import digest
 from src.commands.hf_evaluation import hosted_admission, validate_structured
 from src.commands.hf_paper_acceptance import validate_acceptance
-from src.commands.hf_paper_profile import load_profile
+from src.commands.hf_paper_profile import (
+    CEREBRAS_PROFILE,
+    CEREBRAS_TASK_SHA256,
+    PAPER_PROFILES,
+    get_profile,
+    get_profile_by_manifest,
+    load_profile,
+)
 from src.commands.hf_schema_execution import load_cerebras
 from src.config import Settings
 from src.operations import request_context
@@ -26,8 +33,20 @@ from src.services.rag.service import _selection_pattern
 from src.services.search import SearchService
 
 
-def validate_policy(settings: Settings) -> dict:
-    profile = load_profile()
+def accepted_profile(proof: dict) -> dict:
+    manifest_sha = proof.get("hosted_manifest_sha256")
+    if not isinstance(manifest_sha, str):
+        raise ValueError("Accepted profile identity is missing")
+    profile = load_profile() if manifest_sha == CEREBRAS_TASK_SHA256 else get_profile_by_manifest(manifest_sha)
+    if proof.get("model") != profile["model_pairs"][0]:
+        raise ValueError("Accepted provider differs from its frozen profile")
+    return profile
+
+
+def validate_policy(settings: Settings, *, profile_name=CEREBRAS_PROFILE) -> dict:
+    if profile_name not in PAPER_PROFILES:
+        raise ValueError("Unknown private generation profile")
+    profile = load_profile() if profile_name == CEREBRAS_PROFILE else get_profile(profile_name)[0]
     model = profile["model_pairs"][0]
     if (hosted_admission(settings, [], profile["admission_mib"]["bm25"], profile) is not None
             or not settings.hf_inference_enabled or not settings.agent_enabled
@@ -39,12 +58,14 @@ def validate_policy(settings: Settings) -> dict:
 
 class QualifiedHF(CerebrasInputAdmission, HFClient):
     def __init__(self, settings: Settings, acceptance: Path, *, memory=free_memory_mib):
-        validate_policy(settings)
         proof = validate_acceptance(acceptance)
+        profile = accepted_profile(proof)
+        self.profile_name = profile["version"]
+        validate_policy(settings, profile_name=self.profile_name)
         verify_vocabulary()
         self.acceptance, self.proof, self.memory = acceptance.resolve(), proof, memory
         self.schemas = {digest(case["schema"]): 256 for case in load_cerebras()["cases"]}
-        for count in range(31):
+        for count in range(profile.get("max_sentence_candidates", 30) + 1):
             schema = GeneratedAnswer.model_json_schema()
             schema["properties"]["answer"] = {"type": "string", "pattern": _selection_pattern(count)}
             self.schemas[digest(schema)] = 512
@@ -56,7 +77,7 @@ class QualifiedHF(CerebrasInputAdmission, HFClient):
                 or context.get("hf_calls", 0) >= 6 or self._busy):
             raise HFGenerationError("Private generation request is unavailable or exhausted")
         try:
-            profile = validate_policy(self.settings)
+            profile = validate_policy(self.settings, profile_name=self.profile_name)
             free_mib = self.memory()
             if not math.isfinite(free_mib) or free_mib < profile["live_margin_mib"]:
                 raise HFGenerationError("Private generation has insufficient memory")
@@ -87,8 +108,9 @@ def verify_live_source(settings: Settings, proof: dict) -> None:
 
 
 def create_qualified_app(settings: Settings, acceptance: Path):
-    validate_policy(settings)
     proof = validate_acceptance(acceptance)
+    profile = accepted_profile(proof)
+    validate_policy(settings, profile_name=profile["version"])
 
     @asynccontextmanager
     async def lifespan(app):
