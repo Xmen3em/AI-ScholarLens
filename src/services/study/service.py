@@ -32,6 +32,7 @@ HELP = ("أهلًا! ابعت رابط arXiv أو رقم الورقة، أو /pa
         "/deep سؤالك — بحث أعمق داخل الورقة بأدوات قراءة محدودة (اختياري)\n"
         "بعد الشرح ابعت سؤالك، أو جرّب: بسّطها، مثال، اشرح الطريقة، اختبر فهمي.\n"
         "الشرح بيتولد بالذكاء الاصطناعي؛ راجع المصدر، خصوصًا المعادلات والجداول.")
+BUSY = "في طلب شغّال حاليًا. استنى النتيجة؛ مش هبدأ طلب تاني بالتوازي أو أكرر الاستدعاء تلقائيًا."
 
 
 class StudyState(TypedDict, total=False):
@@ -94,6 +95,8 @@ class StudyService:
         text = text.strip()
         command, _, argument = text.partition(" ")
         command = command.lower()
+        if command in {"/paper", "/choose", "/ask", "/deep"} and not argument.strip():
+            return {"reply": HELP}
         if command in {"/start", "/help"}:
             return {"reply": HELP}
         if command == "/level":
@@ -128,6 +131,8 @@ class StudyService:
         if not context and command not in {"/paper", "/choose"}:
             # Preserve the existing general-concept assistant for explicit questions.
             if re.match(r"(?i)^(what|why|how|explain|define|understand|ما هو|ايه|إيه|اشرح|يعني)\b", text):
+                if any(not task.done() for task in self.tasks):
+                    return {"reply": BUSY}
                 return {"fallback": True}
         try:
             job = self.store.create_job(intent, {"text": text}, max_calls=4)

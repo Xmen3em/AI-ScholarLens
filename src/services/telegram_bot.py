@@ -347,7 +347,9 @@ class PrivateTelegramBot:
                         raise BotError("study_photo_failed")
                     body.extend(chunk)
                 raw = json.loads(body, object_pairs_hook=_unique_object)
-            if response.status_code != 200 or type(raw) is not dict or raw.get("ok") is not True:
+            if (response.status_code != 200 or type(raw) is not dict or raw.get("ok") is not True
+                    or type(raw.get("result")) is not dict or type(raw["result"].get("message_id")) is not int
+                    or raw["result"]["message_id"] <= 0):
                 raise BotError("study_photo_failed")
         except (ValueError, TypeError, httpx.HTTPError):
             raise BotError("study_photo_failed") from None

@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from src.services.study.service import BUSY
 
 
 class StudyMessage(BaseModel):
@@ -18,6 +19,8 @@ class DeliveryClaim(BaseModel):
 def add_study_routes(app: FastAPI) -> None:
     @app.post("/api/v1/study/messages")
     async def message(request: StudyMessage):
+        if getattr(app.state, "legacy_question_busy", False):
+            return {"reply": BUSY}
         return app.state.study.submit(request.intent, request.text)
 
     @app.post("/api/v1/study/pending")

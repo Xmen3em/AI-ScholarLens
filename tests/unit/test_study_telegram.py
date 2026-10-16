@@ -53,3 +53,16 @@ async def test_uncertain_delivery_is_claimed_first_and_not_replayed(stub_httpx, 
             await bot.deliver_study()
         await bot.deliver_study()
     assert sum(request.url.host == "api.telegram.org" for request in calls) == 1
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("ack", [{}, {"message_id": False}, {"message_id": 0}])
+async def test_photo_requires_a_valid_acknowledgement_without_retry(stub_httpx, tmp_path, ack):
+    import base64
+    from src.services.telegram_bot import BotError
+    calls = stub_httpx(lambda _: httpx.Response(200, json={"ok": True, "result": ack}))
+    encoded = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"synthetic-test-image").decode()
+    async with PrivateTelegramBot(settings(), SecretStr(KEY), OffsetStore(tmp_path / "offset.json"), study=True) as bot:
+        with pytest.raises(BotError):
+            await bot._study_photo(encoded)
+    assert len(calls) == 1

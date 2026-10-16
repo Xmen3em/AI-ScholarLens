@@ -125,6 +125,7 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
 
     app = FastAPI(title="ScholarLens private development bot", lifespan=lifespan)
     app.state.settings = settings
+    app.state.legacy_question_busy = False
     app.state.monitoring = app.state.tracing = None
     app.add_middleware(OperationalMiddleware, settings=settings)
     if study_owner is not None:
@@ -145,11 +146,18 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
     async def ask(request: AskRequest):
         if request.model is not None and request.model != MODEL:
             raise HTTPException(status_code=422, detail="Requested generation model is not configured")
+        study = getattr(app.state, "study", None)
+        if app.state.legacy_question_busy or study and any(not task.done() for task in study.tasks):
+            raise HTTPException(status_code=503, detail="A question is already running; wait for its result.")
         free = free_memory_mib()
         if not math.isfinite(free) or free < LIVE_MIB:
             raise HTTPException(status_code=503, detail="Insufficient memory; try again after other work finishes.")
         # Keyword retrieval avoids loading a local embedding model. Generation
         # remains remote and the response accurately reports its actual mode.
-        return await ask_agent(request.model_copy(update={"use_hybrid": False}), app.state.agent)
+        app.state.legacy_question_busy = True
+        try:
+            return await ask_agent(request.model_copy(update={"use_hybrid": False}), app.state.agent)
+        finally:
+            app.state.legacy_question_busy = False
 
     return app
