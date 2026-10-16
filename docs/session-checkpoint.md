@@ -1,3 +1,53 @@
+# Cerebras development accepted and locked; full holdout approval pending — 2026-10-16
+
+The complete paced-v4 comparison passes **all 64 jobs and five fresh schema
+checks**, with no failed gates. All 48 positive answers cover both required
+facts, all 82 quotations are relevant and all 16 negative answers abstain.
+Agent p95 is 9.74–11.27 seconds; baseline 2.67–6.44 seconds, against unchanged
+20/10-second limits. Zero scope/attribution/request errors, unknown usage or
+hybrid fallbacks. Review is Codex development annotation, not independent
+human or holdout acceptance. The app and private Telegram bot remain disabled.
+
+**125 new calls used**, all settled/known; **374 cumulative** (28+97+124+125).
+The latest completed grant's unused 136 and earlier unused 164/137 cannot
+transfer or replay. Returned-usage estimate USD 0.07434775 is not an invoice.
+The user approved this completed scope in call_ac6574a5a0e749d4ae647ff98af4c1f1.
+Exact approval, receipts, full source/corpus/model preservation and accounting
+are in tests/test_output/hf-cerebras-paced-development-execution-20261016-01/.
+Its post-run audit preserves **520 paths**, all 15 retained containers/images/
+states, five running/no extras, 58 papers/2,775 chunks and model digests.
+API8000 stays up; API8002 is closed; global HF/agent/Telegram remain false.
+Minimum sampled request RAM is 1,739.98 MiB. Admission rebounded to 2,193.96 MiB
+and passed after earlier zero-call low-RAM checks; thresholds are unchanged.
+
+The accepted full development selection is
+ tests/test_output/hf-cerebras-paced-development-live-20261016-01/selection-lock.json,
+byte SHA256 9ddebd299671abfe932f225c1aaf2a9df172a6863d833afa8cccc0b71a09335e.
+Source remains ba1f168, collected at e0fe52e; source-map digest
+8baa1a6e12e3e14e7c061dfec03653e3670dee929fde5340aa889b944c950487.
+Profile hosted-cerebras-paced-v4 manifest
+ a289b0f75fdf6af2da9687e9e0ecd8df281598cb69b235141704515a34f31ca7.
+All **1,386 tests, zero skips**, Ruff/mypy127 remain passing; no source change.
+Details: [development result](hf-cerebras-paced-development-result.md).
+
+The separate **full 192-job holdout** proposal is now concrete. It needs one
+fresh ceiling of **up to 773 additional calls**, including five fresh checks;
+no holdout calls are approved. Metadata/receipt:
+ tests/test_output/hf-cerebras-paced-holdout-proposal-20261016-01/,
+receipt byte SHA256 dd33e8d9c5a87216f86869ef7dcd90bb5deaa799284cb8bff7da0d7b1c39fd43.
+It binds the accepted selection, current source and all 374 previous attempts.
+The actual pending-receipt execution rejects before credentials/network/funding.
+Both fixed holdout ledger and registration are absent. Provider catalog checked
+09:19:24 UTC: live/structured, unchanged .35/.75 rates. Conservative bound USD
+2.374656 is not an invoice. Current preparation RAM 1,973.74 MiB passes; check
+again at execution. Scope: [holdout execution](hf-cerebras-paced-holdout-execution.md).
+
+Next: explicit approval, admitted full holdout collection, honest reviewed
+scoring and source-bound app acceptance only if all gates pass. Separate
+explicit private PC/API/owner Telegram activation and an actual bot test follow
+accepted holdout. Token and owner pairing are already configured. No further
+setup is required now; older proposal/balance sections below are historical.
+
 # Paced HF/Cerebras fixes verified; fresh approval pending — 2026-10-16
 
 Source checkpoint `ba1f168` follows `dca1a18` (quota pacing), `8582a96`
