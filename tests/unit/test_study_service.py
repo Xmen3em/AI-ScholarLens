@@ -32,6 +32,8 @@ class Model:
 
     async def complete(self, job, purpose, messages, **kwargs):
         self.calls.append(messages)
+        if purpose == "grounding_review":
+            return {"output": {"unsupported_sections": [], "issues": []}}
         return {"output": lesson()}
 
 
@@ -56,7 +58,7 @@ async def test_intake_lesson_followup_and_forget_are_end_to_end(tmp_path):
     assert store.context()["paper_id"] == "1706.03762v1"
     again = service.submit("tg:1", "/paper 1706.03762")
     assert again["job_id"] == first["job_id"]
-    assert len(model.calls) == 1
+    assert len(model.calls) == 2
     followup = service.submit("tg:2", "اشرح الطريقة بمثال")
     assert (await finished(service, followup["job_id"]))["status"] == "ready"
     assert len(store.context()["turns"]) == 1
@@ -83,7 +85,7 @@ async def test_failed_validation_cannot_activate_or_leak_an_unverified_lesson(tm
     class BadModel(Model):
         async def complete(self, *args, **kwargs):
             bad = lesson()
-            bad["sections"][0]["evidence"][0]["quote"] = "Fabricated source quotation"
+            bad["sections"][0]["evidence_ids"] = ["Fabricated source quotation"]
             return {"output": bad}
 
     service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), BadModel())

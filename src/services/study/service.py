@@ -3,20 +3,33 @@
 import asyncio
 import base64
 import json
+import os
 import re
+from pathlib import Path
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from src.operations import emit_event
 from src.services.study.content import ContentError, PaperContent
+from src.services.study.evidence import evidence_catalog
 from src.services.study.intake import StudyInputError, StudyPaper, normalize_input
 from src.services.study.store import StoreConflict, StudyStore
-from src.services.study.tutor import PROMPT_REVISION, SYSTEM, Lesson, TutorError, render_lesson, validate_lesson
+from src.services.study.tutor import (
+    PROMPT_REVISION,
+    SYSTEM,
+    Lesson,
+    TutorError,
+    lesson_schema,
+    render_lesson,
+    review_lesson,
+    validate_lesson,
+)
 from src.services.study.visuals import study_map
 
 HELP = ("أهلًا! ابعت رابط arXiv أو رقم الورقة، أو /paper وبعدها اسمها. هنعمل شرح بالمصري وبعدين نناقشها مع بعض.\n\n"
         "/study — الورقة الحالية وآخر شرح\n/notes — ملاحظات فيها الاقتباسات الأصلية\n"
         "/level beginner أو /level researcher — مستوى الشرح\n/forget — امسح سياقك وتفضيلاتك\n"
+        "/deep سؤالك — بحث أعمق داخل الورقة بأدوات قراءة محدودة (اختياري)\n"
         "بعد الشرح ابعت سؤالك، أو جرّب: بسّطها، مثال، اشرح الطريقة، اختبر فهمي.\n"
         "الشرح بيتولد بالذكاء الاصطناعي؛ راجع المصدر، خصوصًا المعادلات والجداول.")
 
@@ -54,8 +67,9 @@ def select_evidence(content: PaperContent, question: str, *, limit: int = 24):
 
 
 class StudyService:
-    def __init__(self, store: StudyStore, intake, content, model):
+    def __init__(self, store: StudyStore, intake, content, model, *, research_python: Path | None = None, ocr=None):
         self.store, self.intake, self.content, self.model = store, intake, content, model
+        self.research_python, self.ocr = research_python, ocr
         self.tasks: set[asyncio.Task] = set()
         graph = StateGraph(StudyState)
         graph.add_node("resolve", self._resolve)
@@ -102,8 +116,10 @@ class StudyService:
                 return {"reply": "في طلب شغّال دلوقتي. استنى يخلص وبعدين ابعت /forget عشان يتمسح السياق كله."}
             self.store.forget()
             return {"reply": "مسحت الورقة الحالية وسياق الحوار والتفضيلات. ملفات المصادر العامة وسجل عدد الاستدعاءات بيفضلوا محفوظين."}
-        if command.startswith("/") and command not in {"/paper", "/choose", "/ask", "/quiz"}:
+        if command.startswith("/") and command not in {"/paper", "/choose", "/ask", "/quiz", "/deep"}:
             return {"reply": HELP}
+        if command == "/deep" and (not self.research_python or not self.store.context()):
+            return {"reply": "الشرح العادي متاح. وضع /deep محتاج ورقة مختارة وبيئة research الاختيارية المثبتة."}
         if command == "/quiz":
             text = "اختبر فهمي بسؤال واحد من الورقة؛ ما تقولش الإجابة لسه."
         elif command == "/ask":
@@ -142,7 +158,8 @@ class StudyService:
                 "pdf_unavailable": "ملف الـPDF مش متاح من arXiv دلوقتي؛ جرّب طلب جديد لاحقًا.",
                 "needs_ocr": "الورقة محتاجة OCR. مسار OCR المستضاف لسه اختياري ومش مفعّل؛ مش هشرح ملف مش مقروء.",
             }
-            self.store.finish_job(job_id, {"text": messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية.")}, status="failed")
+            self.store.finish_job(job_id, {"text": messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية."),
+                "diagnostic": exc.diagnostic if isinstance(exc, TutorError) else code}, status="failed")
             emit_event("study_job_completed", outcome="failed", error_class=type(exc).__name__)
 
     async def _resolve(self, state: StudyState) -> dict:
@@ -179,6 +196,8 @@ class StudyService:
 
     async def _extract(self, state: StudyState) -> dict:
         document = state.get("content") or await self.content.acquire(state["paper"])
+        if self.ocr is not None and document.missing_pages:
+            document = await self.ocr.enrich(document, self.content.source_path(document.paper), state["job_id"])
         if not document.blocks:
             raise ContentError("needs_ocr")
         return {"content": document}
@@ -192,13 +211,25 @@ class StudyService:
         payload = {"prompt_revision": PROMPT_REVISION, "task": "followup" if state.get("followup") else "first_lesson",
                    "paper": {"id": document.paper.arxiv_id, "title": document.paper.title},
                    "coverage": document.coverage, "depth": self.store.preferences()["depth"],
-                   "question": question, "recent_dialogue_not_evidence": recent[-4:],
-                   "source_blocks": [b.model_dump() for b in selected]}
-        result = await self.model.complete(state["job_id"], "followup" if state.get("followup") else "lesson",
-            [{"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
-            schema=Lesson.model_json_schema())
+                   "question": question, "recent_dialogue_not_evidence": [
+                       {"question": turn["question"][:600], "answer": turn["answer"][:1800]} for turn in recent[-4:]],
+                   "source_evidence": evidence_catalog(selected)}
+        if question.startswith("/deep "):
+            result = await self._deep(state["job_id"])
+            selected = document.blocks
+        else:
+            system = SYSTEM
+            if state.get("followup"):
+                system += ("\nCURRENT TASK: answer ONLY this follow-up question in at most THREE focused sections. "
+                           "Do not repeat the introductory lesson. Do not add experiments/results unless the user asks for them. "
+                           "For a simple explanation use a short supported explanation, an explicitly labeled example, and optionally one question.")
+            result = await self.model.complete(state["job_id"], "followup" if state.get("followup") else "lesson",
+                [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
+                schema=lesson_schema(selected, followup=bool(state.get("followup"))))
         lesson = validate_lesson(result["output"], selected)
-        text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title, coverage=document.coverage)
+        lesson = await review_lesson(self.model, state["job_id"], lesson)
+        coverage = document.coverage if len(selected) == len(document.blocks) else "sampled_text"
+        text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title, coverage=coverage)
         self.store.save_paper(document.paper.arxiv_id, document.model_dump(), None if state.get("followup") else lesson.model_dump())
         if not state.get("followup"):
             self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
@@ -210,6 +241,34 @@ class StudyService:
             if picture and len(picture) <= 180000:
                 response["image"] = base64.b64encode(picture).decode()
         return {"result": response}
+
+    async def _deep(self, job_id: str) -> dict:
+        if self.research_python is None:
+            raise TutorError("research_environment_required")
+        env = {name: value for name, value in os.environ.items() if name.upper() in {"SYSTEMROOT", "WINDIR", "TEMP", "TMP"}}
+        env.update(PYTHONUTF8="1", LANGSMITH_TRACING="false", LANGCHAIN_TRACING_V2="false")
+        process = await asyncio.create_subprocess_exec(str(self.research_python), "-m", "src.commands.study_research", "--job", job_id,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL, env=env,
+            creationflags=0x08000000 if os.name == "nt" else 0)
+        try:
+            async with asyncio.timeout(105):
+                assert process.stdout is not None
+                body = bytearray()
+                while chunk := await process.stdout.read(4096):
+                    body.extend(chunk)
+                    if len(body) > 65536:
+                        raise TutorError("research_output_limit")
+                await process.wait()
+            if process.returncode or len(body) > 65536:
+                raise TutorError("research_worker_failed")
+            raw = json.loads(body)
+            if type(raw) is not dict or "output" not in raw:
+                raise TutorError("research_output_invalid")
+            return raw
+        finally:
+            if process.returncode is None:
+                process.kill()
+                await process.wait()
 
     @staticmethod
     def notes(document: PaperContent, lesson: Lesson) -> str:

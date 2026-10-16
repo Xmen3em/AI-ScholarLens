@@ -5,23 +5,22 @@ import pytest
 from pydantic import SecretStr
 from src.services.study.content import EvidenceBlock
 from src.services.study.store import StudyStore
-from src.services.study.tutor import StudyModel, TutorError, validate_lesson
+from src.services.study.tutor import Lesson, StudyModel, TutorError, review_lesson, validate_lesson
 
 
 def lesson():
     return {"title": "شرح الورقة", "sections": [
         {"heading": "الفكرة", "kind": "paper", "text": "الطريقة بتستخدم attention عشان تفهم العلاقات بين الكلمات.",
-         "evidence": [{"block_id": "p1b1", "quote": "The model uses attention."}]},
-        {"heading": "فكّر فيها", "kind": "question", "text": "إيه الفرق بين الطريقة دي والتكرار؟", "evidence": []}]}
+         "evidence_ids": ["p1b1s0"]},
+        {"heading": "فكّر فيها", "kind": "question", "text": "إيه الفرق بين الطريقة دي والتكرار؟", "evidence_ids": []}]}
 
 
 def test_paper_sections_require_real_exact_evidence_and_preserve_numbers():
     blocks = [EvidenceBlock(id="p1b1", page=1, section="Method", text="The model uses attention. Accuracy is 92.5 percent.")]
     assert validate_lesson(lesson(), blocks).title == "شرح الورقة"
-    for support in ({"block_id": "p9b9", "quote": "The model uses attention."},
-                    {"block_id": "p1b1", "quote": "Invented quotation."}):
+    for support in ("p9b9s0", "invented"):
         bad = lesson()
-        bad["sections"][0]["evidence"] = [support]
+        bad["sections"][0]["evidence_ids"] = [support]
         with pytest.raises(TutorError):
             validate_lesson(bad, blocks)
     bad = lesson()
@@ -32,9 +31,16 @@ def test_paper_sections_require_real_exact_evidence_and_preserve_numbers():
 
 def test_paper_claim_cannot_drop_its_citation():
     bad = lesson()
-    bad["sections"][0]["evidence"] = []
+    bad["sections"][0]["evidence_ids"] = []
     with pytest.raises(TutorError):
         validate_lesson(bad, [])
+
+
+def test_a_percentage_can_use_the_units_from_the_table_header():
+    raw = lesson()
+    raw["sections"][0]["text"] = "النتيجة على مجموعة الاختبار كانت 92.5% في مقياس الدقة."
+    blocks = [EvidenceBlock(id="p1b1", page=1, section="Results", text="Test accuracy (%) 92.5")]
+    assert validate_lesson(raw, blocks).sections[0].evidence
 
 
 @pytest.mark.asyncio
@@ -87,3 +93,25 @@ async def test_low_ram_blocks_before_attempt_reservation(tmp_path):
         await model.complete(job["id"], "lesson", [{"role": "user", "content": "test"}], schema={"type": "object"})
     assert store.attempts(job["id"]) == []
     await model.aclose()
+
+
+@pytest.mark.anyio
+async def test_semantic_review_removes_a_bad_comparison_without_rewriting_it():
+    original = Lesson.model_validate({"title": "شرح", "sections": [
+        {"heading": "الفكرة", "kind": "paper", "text": "الطريقة بتسترجع مصادر وتستخدمها في التوليد.",
+         "evidence": [{"block_id": "p1b1", "quote": "The model retrieves documents."}]},
+        {"heading": "المقارنة", "kind": "paper", "text": "الطريقة أحسن من كل النماذج في كل المقاييس.",
+         "evidence": [{"block_id": "p2b1", "quote": "Some metrics improve; other metrics decline."}]}]})
+    class Reviewer:
+        async def complete(self, *args, **kwargs):
+            return {"output": {"unsupported_sections": [1], "issues": ["overgeneralized_comparison"]}}
+    revised = await review_lesson(Reviewer(), "job", original)
+    assert revised.sections[0] == original.sections[0]
+    assert revised.sections[1].kind == "uncertainty" and revised.sections[1].evidence == []
+    assert "كل النماذج" not in revised.sections[1].text
+
+
+def test_server_copies_the_original_quote_instead_of_asking_a_model_to_reproduce_it():
+    blocks = [EvidenceBlock(id="p1b1", page=1, section="Method", text="The model uses attention. Original text, with punctuation!")]
+    result = validate_lesson(lesson(), blocks)
+    assert result.sections[0].evidence[0].quote == blocks[0].text
