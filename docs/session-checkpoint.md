@@ -1,3 +1,59 @@
+# Paced HF/Cerebras fixes verified; fresh approval pending — 2026-10-16
+
+Source checkpoint `ba1f168` follows `dca1a18` (quota pacing), `8582a96`
+(operation-scoped validation), and `6a59c56` (additive immutable profile).
+The source-map digest is
+`8baa1a6e12e3e14e7c061dfec03653e3670dee929fde5340aa889b944c950487`.
+`hosted-cerebras-paced-v4` preserves every inherited gate and uses manifest
+`a289b0f75fdf6af2da9687e9e0ecd8df281598cb69b235141704515a34f31ca7`.
+Complete scope and evidence: [hf-cerebras-paced-execution.md](hf-cerebras-paced-execution.md).
+
+**All 1,386 tests pass, zero skips**, in 946.66 seconds, with two existing
+Typer dependency warnings; Ruff and mypy127 pass. The final JUnit report is
+`tests/test_output/hf-cerebras-local-runtime-fix-20261016-01/full-final.xml`.
+The initial two failures were preserved-output collisions from a reused test
+basename; the clean full rerun uses a globally unique name. No source or test
+assertion changed between these runs. Initial evidence is retained.
+
+Same-input historical validation improves 3,629.608 ms -> 373.998 ms (9.7x),
+with identical output and networking forbidden. Fresh v4 additionally verifies
+the stopped history and averages 911.974 ms. Current-source local rehearsal
+passes 32 cells/60 native payloads using real retained retrieval/LangGraph and
+synthetic decisions, with HF transport forbidden. These are offline checks,
+not fresh answer-quality, live-latency or application acceptance.
+
+The final audit preserves **480 protected paths**, 15 containers/images/states,
+five running/no extras, the same 58 papers/2,775 chunks and model digests.
+API8000 remains up; API8002 is closed; HF/agent/Telegram remain disabled.
+All historical accounting is unchanged. No new inference or Telegram traffic.
+
+**249 historical attempts remain used**: 28 + 97 + 124. The stopped v3 grant's
+137 and older grant's 164 unused slots are not transferred or replayed. The
+new pending proposal in
+`tests/test_output/hf-cerebras-paced-development-proposal-20261016-01/`
+binds the current source and all histories. Receipt SHA256:
+`1db8bf7374eb94f72b5873d47912e76f58063a2fb78cbe015dbe4c2fb888ea6d`.
+It proposes one fresh maximum of 261 calls: five qualifications/full 64-job
+development. An actual pending-receipt execution rejects before Settings,
+networking or ledger allocation. New fixed ledgers/registrations and an
+approved receipt are absent. The checked cost bound is USD 0.801792, not an
+invoice; rates/resources/source/accounting must be checked again at execution.
+The audit had 1386.74 MiB free and returned
+`insufficient_memory` for hybrid admission (requires 1,536 MiB).
+No threshold was lowered; collection must wait for a passing current check.
+A later collector-only probe also rejects at 1,293.56 MiB. No grant or call is
+created. The preparation seal contains 39 files and the expanded baseline has
+520 protected paths, in the same preparation directory. Seal SHA256:
+`e5c0222dd1baf91598b713694ba4d1334482e59df93c036b1890c29b6ce0bb1e`.
+
+Next: explicit approval of this concrete new ceiling, admitted collection,
+honest review/scoring and a selection lock only if the full development passes.
+A separate full 192-job holdout/up-to-773-call approval and accepted result
+precede explicit private PC/owner Telegram activation and the real bot test.
+Token and owner pairing are already configured; no repeated setup is needed.
+The preparation is complete; the app remains unaccepted and disabled.
+Older approval/balance sections below are historical.
+
 # Approved evidence comparison stopped; local fixes next — 2026-10-16
 
 The user approved the new 261-call scope. Five fresh schema checks passed and
