@@ -13,7 +13,14 @@ from src.commands.evaluate_retrieval import digest
 from src.commands.hf_allowance import transaction
 from src.commands.hf_cerebras_selectors import CONTROLLER_APPROVAL, CONTROLLER_RUN, SELECTOR_ALLOWANCE_PATH
 from src.commands.hf_cerebras_selectors import approval_proposal as selector_proposal
-from src.commands.hf_paper_profile import CEREBRAS_PROFILE, CEREBRAS_TASK_SHA256, load_profile, plan_collection
+from src.commands.hf_paper_profile import (
+    CEREBRAS_PROFILE,
+    CEREBRAS_TASK_SHA256,
+    EVIDENCE_PROFILE,
+    PAPER_PROFILES,
+    get_profile,
+    plan_collection,
+)
 from src.commands.hf_schema_execution import load_cerebras
 
 SCHEMA_REPORT = Path("tests/test_output/hf-cerebras-five-case-summary-20261015-01/report.json")
@@ -22,6 +29,20 @@ SELECTOR_RUN = Path("tests/test_output/hf-cerebras-selectors-live-20261015-02")
 SELECTOR_APPROVAL = Path("tests/test_output/hf-cerebras-selectors-execution-20261015-01/approval.json")
 DEVELOPMENT_ALLOWANCE = Path("tests/test_output/hf-cerebras-development-allowance-20261015/allowance.sqlite3")
 HOLDOUT_ALLOWANCE = Path("tests/test_output/hf-cerebras-holdout-allowance-20261015/allowance.sqlite3")
+EVIDENCE_DEVELOPMENT_ALLOWANCE = Path("tests/test_output/hf-cerebras-evidence-development-allowance-20261016/allowance.sqlite3")
+EVIDENCE_HOLDOUT_ALLOWANCE = Path("tests/test_output/hf-cerebras-evidence-holdout-allowance-20261016/allowance.sqlite3")
+PRIOR_DEVELOPMENT_RUN = Path("tests/test_output/hf-cerebras-tokenized-development-live-20261016-01")
+PRIOR_DEVELOPMENT_SEAL = Path("tests/test_output/hf-cerebras-tokenized-development-execution-20261016-01/evidence-sha256.json")
+PRIOR_DEVELOPMENT_SEAL_SHA256 = "1a85984057e92331b78c3692bc82ec75c7e62b76d815437a05c20c1f50ecb17f"
+
+
+def allowance_path(metadata: dict) -> Path:
+    split, name = metadata["split"], metadata["configuration"]["policy"]
+    if split not in {"development", "holdout"} or name not in PAPER_PROFILES:
+        raise ValueError("Unknown funded profile or split")
+    if name == EVIDENCE_PROFILE:
+        return EVIDENCE_DEVELOPMENT_ALLOWANCE if split == "development" else EVIDENCE_HOLDOUT_ALLOWANCE
+    return DEVELOPMENT_ALLOWANCE if split == "development" else HOLDOUT_ALLOWANCE
 
 
 def schema_history_binding(*, report_path=SCHEMA_REPORT, selector_path=SELECTOR_ALLOWANCE_PATH,
@@ -64,15 +85,18 @@ def schema_history_binding(*, report_path=SCHEMA_REPORT, selector_path=SELECTOR_
 
 
 def _scope(metadata: dict) -> dict:
-    profile, cases = load_profile(), load_cerebras()
+    name = metadata.get("configuration", {}).get("policy")
+    if name not in PAPER_PROFILES:
+        raise ValueError("Unknown funded paper profile")
+    (profile, manifest_sha), cases = get_profile(name), load_cerebras()
     split = metadata.get("split")
     if split not in {"development", "holdout"}:
         raise ValueError("Unknown paper scope")
     jobs = metadata.get("jobs", [])
     count = profile[f"{split}_jobs"]
     budget = 5 + count // 2 * 8
-    if (metadata.get("hosted_manifest_sha256") != CEREBRAS_TASK_SHA256
-            or metadata.get("configuration") != {"model": cases["model"], "policy": CEREBRAS_PROFILE}
+    if (metadata.get("hosted_manifest_sha256") != manifest_sha
+            or metadata.get("configuration") != {"model": cases["model"], "policy": name}
             or metadata.get("fixture_manifest_sha256") != cases["qualification_manifest_sha256"]
             or len(jobs) != count or len({job["key"] for job in jobs}) != len(jobs)
             or sum(job["path"] == "agent" for job in jobs) != count // 2
@@ -82,7 +106,7 @@ def _scope(metadata: dict) -> dict:
     selection = metadata.get("selection_lock")
     if split == "holdout" and (type(selection) is not dict or metadata.get("selection_sha256") != digest(selection)):
         raise ValueError("Holdout requires a bound development selection")
-    return {"hosted_manifest_sha256": CEREBRAS_TASK_SHA256, "model": cases["model"], "split": split,
+    return {"hosted_manifest_sha256": manifest_sha, "model": cases["model"], "split": split,
             "qualification_manifest_sha256": cases["qualification_manifest_sha256"],
             "jobs_sha256": digest(jobs), "source_sha256": digest(metadata["source_sha256"]),
             "source_snapshot_sha256": metadata["source_snapshot_sha256"], "maximum_outbound_attempts": budget,
@@ -92,13 +116,28 @@ def _scope(metadata: dict) -> dict:
 def approval_proposal(metadata: dict) -> dict:
     scope = _scope(metadata)
     split, budget = scope["split"], scope["maximum_outbound_attempts"]
-    return {"kind": f"hf_cerebras_{split}_approval_v1", "status": "pending_user_approval", "authorization_source": None,
+    evidence = metadata["configuration"]["policy"] == EVIDENCE_PROFILE
+    history = {}
+    if evidence:
+        prior_used = 125
+        if split == "holdout":
+            _selection_files(metadata["selection_lock"])
+            completion = json.loads((Path(metadata["selection_lock"]["development_run"]) / "completion.json").read_text(encoding="utf-8"))
+            used = completion.get("outbound_attempts")
+            if type(used) is not int or not 5 <= used <= 261:
+                raise ValueError("Selected development accounting differs")
+            prior_used += used
+        history = {"prior_development_binding": prior_development_binding(), "prior_attempts_used": prior_used}
+    return {"kind": f"hf_cerebras_{'evidence_' if evidence else ''}{split}_approval_v1",
+            "status": "pending_user_approval", "authorization_source": None,
             **scope, "paper_data_planned": True, "exhausted_history_binding": schema_history_binding(),
+            **history,
             "scope": f"At most {budget} HF/Cerebras attempts for five unchanged fresh synthetic qualifications and the complete "
                      f"{len(metadata['jobs'])}-job {split} comparison on the retained public papers. Send only the bounded questions and "
                      "public paper contexts required by these jobs. Failed or uncertain attempts count. Stop on failed "
                      "qualification, schema, attribution, accounting, source, usage or resource checks and uncertain work. "
-                     "No retry of a stopped run, provider fallback, spending outside this split or app/Telegram activation."}
+                     "No retry of a stopped run, provider fallback, spending outside this split or app/Telegram activation."
+                     + (" This is a separate ceiling; the prior development grant's 164 unused slots are not transferred." if evidence else "")}
 
 
 def _selection_files(selection: dict) -> None:
@@ -117,7 +156,7 @@ def validate_task_accounting(metadata: dict, run: Path, completion: dict, *, pat
     """Validate completed grant evidence without constructing or repairing a grant."""
     scope = _scope(metadata)
     details = metadata.get("allowance", {})
-    ledger = Path(path) if path is not None else DEVELOPMENT_ALLOWANCE if scope["split"] == "development" else HOLDOUT_ALLOWANCE
+    ledger = Path(path) if path is not None else allowance_path(metadata)
     approval = Path(details.get("approval_path", ""))
     marker = ledger.with_suffix(".registered")
     if (Path(details.get("path", "")).resolve() != ledger.resolve()
@@ -141,23 +180,55 @@ def validate_task_accounting(metadata: dict, run: Path, completion: dict, *, pat
     return digest({"signature": signature, "rows": rows, "sqlite_sha256": hashlib.sha256(ledger.read_bytes()).hexdigest()})
 
 
+def prior_development_binding(*, run=PRIOR_DEVELOPMENT_RUN, ledger=DEVELOPMENT_ALLOWANCE,
+                              seal_path=PRIOR_DEVELOPMENT_SEAL, seal_sha256=PRIOR_DEVELOPMENT_SEAL_SHA256) -> str:
+    """Read the sealed failed run and its 97 settled attempts; never repair state."""
+    run, ledger, seal_path = Path(run), Path(ledger), Path(seal_path)
+    if hashlib.sha256(seal_path.read_bytes()).hexdigest() != seal_sha256:
+        raise ValueError("Previous development evidence seal differs")
+    hashes = json.loads(seal_path.read_text(encoding="utf-8"))["files"]
+    if any(hashlib.sha256(Path(name).read_bytes()).hexdigest() != expected for name, expected in hashes.items()):
+        raise ValueError("Previous development evidence changed")
+    metadata = json.loads((run / "metadata.json").read_text(encoding="utf-8"))
+    completion = json.loads((run / "completion.json").read_text(encoding="utf-8"))
+    report = json.loads((run / "score.json").read_text(encoding="utf-8"))
+    required = {run / name for name in ("metadata.json", "completion.json", "qualification.json", "records.jsonl", "reviews.json", "score.json")}
+    required.update({ledger, ledger.with_suffix(".registered"), Path(metadata["allowance"]["approval_path"])})
+    if not {p.resolve() for p in required} <= {Path(name).resolve() for name in hashes}:
+        raise ValueError("Previous evidence seal is incomplete")
+    accounting = validate_task_accounting(metadata, run, completion, path=ledger)
+    if (metadata.get("configuration", {}).get("policy") != CEREBRAS_PROFILE
+            or metadata.get("hosted_manifest_sha256") != CEREBRAS_TASK_SHA256
+            or metadata.get("split") != "development" or completion.get("status") != "collected"
+            or completion.get("outbound_attempts") != 97 or completion.get("accounted_attempts_used") != 97
+            or completion.get("attempts") != 64 or completion.get("planned") != 64
+            or report.get("development_accepted") is not False or report.get("collection_complete") is not True
+            or report.get("attempts") != 64 or report.get("planned_attempts") != 64
+            or report.get("hosted_manifest_sha256") != CEREBRAS_TASK_SHA256
+            or report.get("model") != metadata["configuration"]["model"] or report.get("funding_binding") != accounting):
+        raise ValueError("Previous failed development or accounting differs")
+    return digest({"seal_sha256": seal_sha256, "accounting": accounting, "attempts_used": 97})
+
+
 class TaskAllowance:
     def __init__(self, approval: Path, metadata: dict, *, snapshot: Path, path=None):
         self.metadata = copy.deepcopy(metadata)
         split = self.metadata["split"]
-        fresh = plan_collection(snapshot, split=split)
+        name = self.metadata["configuration"]["policy"]
+        extra = {"profile_name": name} if name != CEREBRAS_PROFILE else {}
+        fresh = plan_collection(snapshot, split=split, **extra)
         if split == "holdout":
             from src.commands.evaluate_hf_agent import validate_selection
 
             selection = self.metadata.get("selection_lock", {})
-            validate_selection(selection, load_cerebras()["model"], snapshot, profile_name=CEREBRAS_PROFILE)
+            validate_selection(selection, load_cerebras()["model"], snapshot, profile_name=name)
             fresh.update(selection_lock=selection, selection_sha256=digest(selection))
         if _scope(self.metadata) != _scope(fresh):
             raise ValueError("Approval requires the current complete frozen plan")
         expected = approval_proposal(self.metadata)
         expected.update(status="approved", authorization_source="explicit_user_approval")
         self.approval = Path(approval)
-        self.path = Path(path) if path is not None else DEVELOPMENT_ALLOWANCE if split == "development" else HOLDOUT_ALLOWANCE
+        self.path = Path(path) if path is not None else allowance_path(self.metadata)
         receipt = json.loads(self.approval.read_text(encoding="utf-8"))
         if digest(receipt) != digest(expected):
             raise ValueError("Explicit approval of this paper scope is required")
