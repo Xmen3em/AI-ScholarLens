@@ -1,0 +1,10 @@
+{
+  "version": "hosted-cerebras-evidence-v3",
+  "frozen_on": "2026-10-16",
+  "authorization_status": "no_execution_funding",
+  "parent_tokenized_manifest_sha256": "92ec9996534e5a958d4ead38fa9224b83ce6c3a318ca3919d886decaeba2558d",
+  "sha256": {
+    "PROTOCOL.md": "521d9ad7ad4ce873940d414f28e0214d3352b2b91a84bd7be6b0144353d99bbe",
+    "profile.json": "daa585fa3bee53ce52ed14cd245b5e76c087b6d221569aafccf22de5fd0161ae"
+  }
+}
