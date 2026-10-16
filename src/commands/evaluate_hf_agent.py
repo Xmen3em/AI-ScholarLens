@@ -7,6 +7,7 @@ import json
 import logging
 import socket
 import time
+from collections import deque
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -143,13 +144,14 @@ async def run_collection(settings: Settings, jobs: list, papers: list, chunks: l
     records = []
     stop = None
     try:
-        started = time.monotonic()
         extra = {"revision": revision} if revision else {}
         qualification = await qualify(hf, profile, limiter=RateLimiter(settings), **extra)
         write_json(output / "qualification.json", qualification)
         if not qualification["qualified"]:
             return {"status": "qualification_failed", "attempts": 0, "planned": len(jobs), "outbound_attempts": hf.attempts}
-        await wait_window(started, profile["window_seconds"])
+        # Qualification can cross a server window; start paper traffic only
+        # after its final request has left every possible quota window.
+        await wait_window(time.monotonic(), profile["window_seconds"])
         search_client = OpenSearch(hosts=[settings.opensearch_host], retry_on_timeout=False, max_retries=0, timeout=30)
         search = CountedSearch(search_client, CountedEmbedder(settings.ollama_host, settings.ollama_embedding_model))
         local = create_hosted_app(settings, search, hf)
@@ -167,14 +169,17 @@ async def run_collection(settings: Settings, jobs: list, papers: list, chunks: l
                 await asyncio.sleep(0.02)
         headers = {"X-API-Key": settings.api_key.get_secret_value()} if settings.api_key else {}
         async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=150, headers=headers, trust_env=False) as client:
-            window_start = time.monotonic()
-            for index, job in enumerate(jobs):
-                if index and index % profile["generations_per_minute"] == 0:
-                    await wait_window(window_start, profile["window_seconds"])
-                    window_start = time.monotonic()
+            arrivals: deque[float] = deque(maxlen=profile["generations_per_minute"])
+            for job in jobs:
+                # Batch clocks drift when the API resets its fixed window in
+                # the middle of a slow batch. A rolling client bound also fits
+                # every server window, including a later burst of fast reads.
+                if len(arrivals) == arrivals.maxlen:
+                    await wait_window(arrivals[0], profile["window_seconds"])
                 if free_memory_mib() < profile["live_margin_mib"]:
                     stop = "pre_request_resource_floor"
                     break
+                arrivals.append(time.monotonic())
                 record = await collect_hosted_attempt(client, job, handler, papers, chunks, hf, profile)
                 records.append(record)
                 with (output / "records.jsonl").open("a", encoding="utf-8") as stream:
