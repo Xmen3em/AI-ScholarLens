@@ -1,3 +1,36 @@
+# Approved evidence comparison stopped; local fixes next — 2026-10-16
+
+The user approved the new 261-call scope. Five fresh schema checks passed and
+63 of 64 jobs were recorded; the local API returned HTTP 429 at job 63, so the
+collector stopped before the last baseline job. **124 new attempts used, all
+settled/known; 249 total used.** No retry or transfer of the remaining 137 slots.
+The earlier 164 remain bound to their old completed grant. No holdout or app/bot
+activation. Collection stayed on source `50ab668`, digest
+`a5aa4ad496a324c69ccbce8a42584fea2b899a317319238920d642813944cb26`.
+
+Review finds 100% fact coverage and relevance across all positive baseline/agent
+cells, all 82 selected quotations relevant, and zero scope errors. All 14
+successful negatives abstain; the failed/missing negatives earn no credit.
+**Development acceptance is false** because the matrix is incomplete, the 429
+fails its cell, and agent p95 is 32.85–34.54 seconds against the unchanged 20-second
+target. This is development evidence with Codex review, not independent holdout.
+
+The final audit preserves all 449 protected paths, all 15 retained containers,
+58 papers/2,775 chunks/model digests and disabled flags. API8000 stays available;
+API8002 is closed. Minimum sampled paper-request RAM was 1,222.04 MiB. Source and
+all preservation checks pass. Known-usage estimate USD 0.07419595 is not an invoice.
+Full evidence and limitations:
+[hf-cerebras-evidence-development-result.md](hf-cerebras-evidence-development-result.md).
+
+Read-only profiling identifies repeated historical validation: about 3.6 seconds
+per check, 834 qualification loads / 4,170 schema builds / 10,159 opens in one
+profile. The collector's batch timer also drifts from the API's actual fixed
+window after slow requests. Next: offline regression-led scheduling and validation
+fixes, measure, verify and prepare any new execution scope before a fresh approval.
+The source has not been changed yet; all 1,354 source tests remain the last full
+passing baseline. No live test process remains; collector37713, review3733,
+profile64798 and audit40300 completed. Older pending-approval text below is historical.
+
 # Bounded evidence profile prepared; fresh approval required — 2026-10-16
 
 The user asked to commit the current work and continue. The scope/catalog
