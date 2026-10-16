@@ -1,4 +1,32 @@
-# Full Cerebras holdout completed; quality rejected — 2026-10-16
+# Private Telegram development mode running — 2026-10-16
+
+The user explicitly requested live manual Telegram/HF testing while editing the
+agent, with quick RAM handling. This supersedes earlier instructions to leave
+the bot disabled for development testing. A separate opt-in development mode is
+now running on localhost8002 with the paired owner and `@AIScholarLensbot`.
+It reports `accepted:false`; the rejected holdout and normal acceptance guards
+remain unchanged. No old evaluation grant is reused and no automated paid smoke
+question was sent. Owner questions now trigger remote HF/Cerebras inference.
+
+Run `./Telegram.ps1`, `./Telegram.ps1 -Restart` after edits, or
+`./Telegram.ps1 -Stop`. The API and bot share one Python process and use BM25
+retrieval, requiring no local model inference or SQL startup. RAM admission
+remains 1,024 MiB/live 600, with 3,117.15 MiB free at the final audit. Local SQL
+credentials failed during the first attempt; this test mode no longer depends
+on SQL, and no credentials/data/containers changed. Global private flags stay
+false; the process uses isolated enabled copies. Original API8000 is preserved.
+
+152 targeted tests pass, zero skips, plus Ruff, mypy on two source files and
+PowerShell parsing. Actual scripted restart, authenticated status, unauthorized
+401 and bot polling are verified. All 585 historical protected paths and all 15
+retained containers match. Runtime/log pointers:
+`data/pc-app/development-process.json`. Verification:
+`tests/test_output/telegram-development-launch-20261016-01/verification.json`.
+Usage and design: [telegram-development.md](telegram-development.md).
+Known answer-quality limitations remain; a real owner question/reply is still
+the user's manual test. No new full evaluation or production acceptance claimed.
+
+# Historical: Full Cerebras holdout completed; quality rejected — 2026-10-16
 
 The user explicitly approved up to 773 additional calls in
 `call_b003f7dbf66a4b71a4568fa76fd020bf`. All five fresh checks and **192 jobs
