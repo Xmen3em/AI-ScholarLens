@@ -1,3 +1,18 @@
+# Current execution outcome — 2026-10-16
+
+The corrected **single 261-call development scope was explicitly approved**.
+Five fresh checks and all 64 jobs completed using **97 additional calls**; 164
+remain unspent and cannot fund a replay or changed scope. All earlier 28 remain
+exhausted. **Development acceptance failed** on scope errors and agent regression;
+holdout and runtime activation remain unauthorized. Preserve the completed run
+and fixed grant. Correct scope instructions and sentence candidate availability
+offline before any fresh live proposal. See
+[the reviewed result](hf-cerebras-development-result.md) for metrics, evidence,
+accounting and preservation. No application source changed during this run.
+
+Preparation and proposal instructions below describe the retained implementation;
+their pending-approval/no-funding statements predate this execution.
+
 # Cerebras paper evaluation and private PC runtime
 
 The selected provider is absent from the original frozen Groq/Fireworks profile.

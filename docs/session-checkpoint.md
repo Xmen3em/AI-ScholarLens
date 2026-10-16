@@ -1,3 +1,28 @@
+# Approved Cerebras development completed; quality failed — 2026-10-16
+
+The user approved the corrected **single 261-call scope**. All five fresh schema
+checks and all 64 development jobs completed on source `005651b`, using **97 new
+calls**, all settled with known usage; earlier 28 remain unchanged, 125 total used.
+The other **164 are unspent**, bound to this completed scope, with no replay or
+transfer to another run. Returned-usage cost estimate is USD 0.04131235.
+
+Semantic review and scoring **reject development acceptance**: 12 incorrect scope
+rejections and regression in all four BM25/hybrid × JSON/SSE comparisons. Agent
+fact coverage is 33.3% versus baseline 66.7%. No selection lock, holdout or app/bot
+activation. Offline catalog reconstruction found the one-sentence picker omits
+the required benchmark-task/index names; the vague scope prompt also rejects
+robotics questions despite the corpus's `cs.RO` policy. Correct these offline
+before proposing fresh inference. No application source changed in this run.
+
+All 382 protected files, all 15 retained container identities/images/states,
+API8000, 58 papers/2,775 chunks and model digests match. Global HF/agent/Telegram
+remain false; API8002 is closed. Holdout funding remains absent. Full result,
+review limitations, accounting, evidence paths and next work:
+[hf-cerebras-development-result.md](hf-cerebras-development-result.md).
+
+The preparation and pending-approval text below is historical; the current
+authorization and outcome above supersede its call balances and next steps.
+
 # Current Cerebras token-admission correction — 2026-10-16
 
 Source checkpoint **005651b** (tokenizer foundation `bb85d8d`, tokenized profile
