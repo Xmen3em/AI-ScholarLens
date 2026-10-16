@@ -1,5 +1,11 @@
 # Week 6 local verification
 
+> Current direction — 16 October 2026: private manual Telegram testing is working.
+> These older task lists are retained as history and may contain stale unchecked
+> items. The proposed next work is the [paper-learning capability map](../CAPABILITY_MAP.md).
+> Review its boundaries before creating module specifications and new tasks;
+> do not restart old experiments or treat unused historical grants as available.
+
 ## Active HF/LangGraph/private PC goal — 2026-10-15
 
 - [x] Create the user-requested app-completion goal; retain owner pairing and old state.

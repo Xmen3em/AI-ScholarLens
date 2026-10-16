@@ -1,4 +1,52 @@
-# Concept explanations and paper questions live in Telegram — 2026-10-16
+# Open-source documentation and paper-learning direction — 2026-10-16
+
+The user published the working branch, then requested an open-source README,
+an updated visual codebase guide, an article explaining the implementation,
+and a new direction centered on interactive understanding of a user-selected
+AI paper in Egyptian Arabic. Weekly discovery is outside that next iteration.
+The user selected the MIT license and requested separate branches for the
+working prototype and the next work.
+
+`codex/telegram-prototype-checkpoint` preserves `a7a0746`. The previously
+published `codex/week7-agent-hf-checkpoint` remains unchanged. New documentation
+and proposals are on `codex/paper-learning-plan`; the new branches are local
+until explicitly published. No source, dependency, container, environment,
+model, evidence or runtime behavior was changed for this documentation work.
+
+Read the new [README](../README.md), [Egyptian Arabic introduction](../README.ar.md),
+[visual guide](../codebase-overview.html), [build-story article](build-story.md),
+[capability map](../CAPABILITY_MAP.md), and [research notes](paper-learning-research.md).
+The original long README is retained in [the archive](archive/platform-readme-20261016.md)
+with its historical status explicit. Contribution guidance and an MIT license
+are added. Older task files now point to the proposed map instead of appearing
+to be current activation/budget instructions.
+
+The map is proposed, not an approved module spec or implementation plan.
+Review module boundaries next, then specify `paper-intake`. First complete
+slice: identify one paper/version, extract source-linked content, deliver an
+initial grounded Egyptian Arabic lesson, and answer a follow-up about that
+paper. OCR/HF extraction model selection remains deferred. Deep Agents is a
+candidate requiring separate tool-calling qualification; the existing JSON
+adapter does not establish compatibility. Visuals, external research, session
+memory and optional Notion exports each have explicit module boundaries.
+
+The user's existing Notion Deep Agents page was read as reference and left
+unchanged. A separate private Egyptian Arabic study draft was created using
+the Notion plugin and fetched successfully, including its diagram and links
+to existing notes. Its private URL is in the chat/ignored handoff, not this
+public repository documentation. The bot has no automatic Notion connection.
+
+Verification: 147 relative documentation links resolve; HTML IDs/anchors are
+valid. An isolated headless browser checked 1440px desktop and 390px mobile
+rendering, Arabic/RTL, no page overflow, and zero console errors/warnings;
+three screenshots were visually inspected. Local proof is under
+`tests/test_output/docs-publication-20261016-01/`. `git diff --check` passes;
+source/runtime/evaluation files match `a7a0746`. Authenticated development
+status is 200 with concept and paper modes and `accepted:false`; polling
+marker remains present. No inference was initiated by this documentation
+session. No application tests were rerun because application code is unchanged.
+
+# Historical: Concept explanations and paper questions live in Telegram — 2026-10-16
 
 The user reported that `/start` worked but “what is the RAG” and “understand ML
 systems” produced insufficient-evidence behavior. Both messages had been

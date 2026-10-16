@@ -1,5 +1,14 @@
 # Week 6: local operational controls
 
+> Direction update — 16 October 2026: the private Telegram development prototype
+> is working and preserved at `a7a0746` on `codex/telegram-prototype-checkpoint`.
+> New documentation and the proposed interactive Egyptian Arabic paper-learning
+> direction are on `codex/paper-learning-plan`. Start with the
+> [capability map](../CAPABILITY_MAP.md) and [research](../docs/paper-learning-research.md).
+> This file's older completion goals and evaluation budgets are historical;
+> they are not current activation instructions or a renewed call allowance.
+> No module implementation plan has been approved for the new direction.
+
 ## Active private PC app goal — 2026-10-15
 
 User explicitly requested a goal to finish HF/LangGraph/private Telegram on this

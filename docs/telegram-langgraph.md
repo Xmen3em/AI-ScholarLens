@@ -1,5 +1,12 @@
 # Private Telegram app with LangGraph
 
+> Current status, 16 October 2026: private owner development testing is running
+> with concept explanations and cited paper questions. Follow
+> [telegram-development.md](telegram-development.md) for that opt-in mode.
+> This document retains the original qualified-runtime contract and pairing
+> procedure; its older disabled/acceptance notes do not describe the development
+> launcher's current state. The formal paper-quality holdout remains rejected.
+
 The user chose LangGraph like the course reference, a bot private to their own
 account, and initial operation on their current PC. This supersedes earlier
 optional-Telegram/no-LangGraph planning, while preserving application guards,

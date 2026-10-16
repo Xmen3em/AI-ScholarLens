@@ -1,618 +1,128 @@
 # AI-ScholarLens
 
-AI-ScholarLens is a research-paper ingestion and retrieval platform for arXiv papers. It is being built in phases: first the service foundation, then automated arXiv/PDF ingestion, followed by search, RAG answers, and evaluation.
+**Read AI papers. Trace the evidence. Build understanding.**
 
-The project is intentionally split into small replaceable components. The arXiv client, PDF parser, metadata pipeline, repository layer, and model client can evolve independently as later phases are completed.
+[بالمصري](README.ar.md) · [Visual codebase guide](codebase-overview.html) · [How we built it](docs/build-story.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
 
-## Current phase
+ScholarLens is an experimental AI research assistant with a private Telegram interface. It explains general AI/ML concepts and answers questions about an indexed paper collection using cited evidence. The current prototype uses **LangGraph**, **OpenSearch**, and **Hugging Face Inference Providers**, with `openai/gpt-oss-120b:cerebras` for remote generation.
 
-| Phase | Capability | Status |
-|---|---|---|
-| Phase 1 | Docker foundation, FastAPI, PostgreSQL, OpenSearch, Ollama, and Airflow | Complete |
-| Phase 2 | arXiv metadata, PDF download/cache, Docling parsing, PostgreSQL storage, and Airflow orchestration | Complete |
-| Phase 3 | OpenSearch indexing and hybrid retrieval | Complete |
-| Phase 4 | Chunking and retrieval evaluation | Initial evaluation and pre-Week-6 quality pass complete; candidate expansion remains opt-in after relevance regressed. See [quality results](evaluation/quality_fixes/REPORT.md). |
-| Phase 5 | Grounded RAG answers with Ollama | Complete — conservative evidence excerpts, 200-word guards, and live acceptance verified |
-| Phase 6 | Local operations, monitoring and caching | Implemented and locally activated: signed revision-aware Redis answers, bounded metadata tracing, file monitoring, access/quotas and recovery verification. Full Langfuse backend/UI verified separately; sustained combined operation remains unverified. [Activation](docs/week6-local-activation.md), [observation](docs/week6-observation.md), [operations](docs/operations.md). |
-| Phase 7 | Agentic RAG and application development | In progress: bounded LangGraph agent, disabled HF adapter and private Telegram polling client implemented/tested. Bot setup, live HF acceptance, local activation, research interface and later server work remain. [Telegram/setup](docs/telegram-langgraph.md), [hosted evaluation](docs/hf-evaluation.md), [continuation](docs/week7-continuation.md). |
+The next product direction is an **interactive paper tutor in Egyptian Arabic**: bring a paper by URL, title, or identifier; receive an initial guided lesson; then explore its methods, figures, equations, results, and limitations through conversation. That experience is being designed. It is not yet implemented.
 
-Update this table and the diagrams when a phase is accepted. Keep unfinished work in the “Planned” or “In progress” rows instead of presenting it as an active runtime dependency.
+> **Development prototype.** Private manual testing works. Formal paper-answer quality gates have not passed; valid questions can still produce insufficient evidence, and multi-paper coverage is limited. This is not a public hosted bot or a production release. See the [measured holdout result](docs/hf-cerebras-paced-holdout-result.md).
 
-Answer quality remains limited despite the completed selector-reliability pass:
-unsupported questions can receive irrelevant quotations, multi-paper answers omit
-requested facts, and inspected regression coverage declined. See the measured
-[selector report](evaluation/selector_reliability/REPORT.md). Further tuning needs
-separate development examples and another fresh source-reviewed holdout. Week 6
-controls do not constitute broad answer-quality acceptance.
+## What works today
 
-## Architecture
-
-### Runtime architecture
-
-Solid edges are implemented in the current application. Dashed edges are reserved for later phases.
-
-~~~mermaid
-flowchart LR
-    User[Researcher / Client]
-
-    subgraph Runtime[Docker Compose runtime]
-        API[FastAPI API<br/>:8000]
-        Budgets[(SQLite request budgets<br/>shared by local API workers)]
-        Cache[(Redis<br/>opt-in signed answer cache)]
-        Events[(Local metadata event files)]
-        Airflow[Airflow Scheduler + DAG<br/>:8080 or AIRFLOW_PORT]
-        DB[(PostgreSQL<br/>papers + parsed content)]
-        Search[(OpenSearch<br/>arxiv-papers + paper-chunks)]
-        Ollama[Ollama<br/>generation + embeddings]
-    end
-
-    Arxiv[(arXiv API)]
-    PDF[(PDF cache)]
-    Docling[Docling PDF parser]
-    Retriever[Retriever / RAG service<br/>Phase 3–5]
-
-    User --> API
-    API --> Budgets
-    API -- after authentication and quotas --> Cache
-    API -- metadata only --> Events
-    API --> DB
-    API -- BM25 search --> Search
-    API -- health check --> Ollama
-
-    Airflow --> Arxiv
-    Airflow --> PDF
-    PDF --> Docling
-    Docling --> DB
-    DB -- chunks --> Search
-    Airflow --> DB
-
-    DB -. index papers .-> Search
-    Search -- grouped passages --> Retriever
-    Ollama -- generate answer --> Retriever
-    Retriever -- grounded answer + citations --> API
-~~~
-
-### Paper-ingestion flow
-
-~~~mermaid
-sequenceDiagram
-    participant S as Airflow DAG
-    participant A as arXiv API
-    participant M as MetadataFetcher
-    participant C as PDF cache
-    participant P as DoclingParser
-    participant D as PostgreSQL
-
-    S->>M: fetch_and_process_papers()
-    M->>A: Fetch AI-category metadata
-    A-->>M: Paper metadata
-    M->>C: Download PDF if not cached
-    C-->>M: Local PDF path
-    M->>P: Parse PDF
-    P-->>M: Sections and raw text
-    M->>D: Upsert metadata and parsed content
-    D-->>S: Processing counts and errors
-~~~
-
-The ingestion pipeline is designed to degrade gracefully: a failed PDF download or parse should be recorded while allowing other papers to continue through the batch.
-
-### AI category scope
-
-Ingestion covers eight core AI categories from [arXiv's taxonomy](https://arxiv.org/category_taxonomy):
-
-| Category | Field |
+| Capability | Current behavior |
 | --- | --- |
-| `cs.AI` | Artificial Intelligence |
-| `cs.LG` | Machine Learning |
-| `cs.CL` | Computation and Language |
-| `cs.CV` | Computer Vision and Pattern Recognition |
-| `cs.RO` | Robotics |
-| `cs.MA` | Multiagent Systems |
-| `cs.NE` | Neural and Evolutionary Computing |
-| `stat.ML` | Machine Learning (Statistics) |
+| General AI/ML questions | Simple explanations, explicitly labeled as model knowledge |
+| Paper questions | Retrieval, bounded LangGraph decisions, exact quotations and source citations |
+| Private Telegram | Paired owner only; polling on the owner's PC |
+| Hosted generation | HF routes requests to Cerebras; no local generation weights needed for this mode |
+| Low-memory development | One API/bot process; BM25 search avoids local query embeddings |
+| Existing platform | arXiv ingestion, Docling parsing, PostgreSQL, keyword/hybrid search, JSON/SSE answers and Gradio |
+| Operational controls | API authentication, quotas, bounded calls, deadlines and durable Telegram offsets |
 
-A paper qualifies when **any** of its arXiv categories is in that list, so cross-listed work counts: a
-paper tagged `["quant-ph", "cs.LG"]` is ingested. Adjacent fields such as information retrieval, HCI,
-speech, and signal processing are excluded unless they are cross-listed into an allowlisted category.
+The development bot does **not** yet ingest a paper pasted into chat, remember an active paper across questions, generate teaching diagrams, run quizzes, or respond consistently in Egyptian Arabic. Those are [proposed capabilities](CAPABILITY_MAP.md). Scheduled paper discovery remains part of the existing platform; it is no longer the focus of the next product iteration.
 
-The scope is a code constant in `src/policies/ai_scope.py`, not a setting, so no deployment
-configuration can widen ingestion beyond it. It is enforced twice: the arXiv query asks only for these
-categories, and `MetadataFetcher` re-checks every fetched paper before any PDF is downloaded, parsed,
-or stored.
+## Try the current prototype
 
-To check the stored corpus against the allowlist, see [Corpus scope audit](#corpus-scope-audit).
+Examples for the existing collection:
 
-### Search
+- `What is RAG?` — general explanation, labeled as model knowledge.
+- `Which dataset is used in When Does a Classifier Help an LLM?` — cited paper evidence.
+- `What tool-use failures does SpeechGym identify?` — cited paper evidence.
 
-Two OpenSearch indices, for two different questions.
+Use the paper title and one specific question per message. Paper responses quote evidence; they do not yet provide a complete personalized lesson. The Telegram integration is private: contributors need their own bot and configuration.
 
-| Index | Document | Answers |
-| --- | --- | --- |
-| `arxiv-papers` | one per paper | "which papers are about X" |
-| `paper-chunks` | one per passage | "which passage says X" |
-
-One index cannot do both. BM25 normalizes relevance by field length, so in a
-paper-sized document the passage that actually matched is buried, and a passage-sized
-document has no title or abstract to weight.
-
-Both are rewritten in full by the `index_to_opensearch` DAG task. Writes go to the
-concrete index (`arxiv-papers-v1`, `paper-chunks-v2`) and reads go through the alias,
-which is moved onto the new index in a single atomic action **only after** a clean
-rewrite. A mapping change — such as `paper-chunks` gaining its vector field — is
-therefore rolled out by filling a new index while searches keep hitting the old,
-complete one. The superseded index is left in place to roll back to, and is yours to
-delete once the new one is confirmed good.
-
-Embedding a passage costs about two thirds of a second on CPU, so re-embedding the whole
-corpus on every pass would cost a quarter of an hour and grow with the corpus. Each
-document stores a hash of its text, and a rewrite reuses the stored vector whenever that
-hash still matches — a normal daily run embeds only the passages that are actually new.
-
-Both endpoints share one query builder, differing only in a profile: which fields are
-searched and with what boost, which are returned, and how they are highlighted. The
-matching rules — `best_fields`, fuzziness, the filter clause, `track_total_hits` — are
-the same for both, and a test asserts they stay that way.
-
-#### Ranking papers
-
-`POST /api/v1/search/` scores matches across three fields, weighted:
-
-| Field | Boost | Why |
-| --- | --- | --- |
-| `title` | 3x | The strongest signal a paper *is about* the query |
-| `abstract` | 2x | The author's own summary of it |
-| `authors` | 1x | Searching by name, which a fuzzy text match would otherwise rank below an incidental mention |
-
-The query is a `best_fields` multi-match, so a paper whose title alone matches the whole
-query beats one that spreads the terms across three fields — which is the only way a 3x
-title boost means anything. `fuzziness: AUTO` with `prefix_length: 2` absorbs typos
-("retreival augmnted generaton" finds the RAG papers) while keeping the first two
-characters exact, so short queries do not match half the vocabulary. Titles and
-abstracts are stemmed with snowball; author names are only lowercased, because stemming
-a surname produces something no query spells.
-
-Results carry `<mark>`-wrapped highlights — whole field for titles and authors,
-fragments for abstracts — and `took_ms` from OpenSearch. Category filtering is a `filter`
-clause rather than a query clause, so a category never contributes to relevance. An
-empty query browses: filters and the newest-first sort still apply, which is how "the
-latest cs.CL papers" is asked for.
-
-`total` counts matching documents in every case. On the hybrid endpoint that is the
-keyword half's count: fusion reranks a bounded candidate pool, so `offset` cannot walk
-all the way through it. `score_kind` says which scale `score` is on — `rrf` for a fused
-score near 1/60, `bm25` for the keyword half's own, in the tens.
-
-#### Hybrid ranking
-
-`POST /api/v1/search/hybrid` runs the keyword query and a vector similarity query over
-the same passages and fuses the two rankings with **reciprocal rank fusion**.
-
-Only rank positions are used, never the underlying numbers. A BM25 score and a cosine
-similarity are on incomparable scales, and normalizing them means inventing a conversion
-nobody can defend; RRF sidesteps that entirely by asking only "how highly did each half
-rank this?". A passage both halves place well beats one that either half puts first. The
-`score` on a hybrid hit is therefore the fused score — near 1/60, not a BM25 score.
-
-Each half retrieves five pages deep before fusing, because fusion can only reorder what
-it is given: a passage ranked 8th by one half and 40th by the other is invisible unless
-both lists run past the page being served.
-
-**Embeddings** come from `nomic-embed-text` running in the Ollama container — 768
-dimensions, no API key, no external calls. The model is prompted with its task prefixes
-(`search_document:` when indexing, `search_query:` when searching); without them queries
-and passages land in different regions of the space and similarity quietly degrades,
-which is invisible in the output because the vectors still have the right shape.
-
-If Ollama is unreachable the endpoint **falls back to keyword-only** and says so in
-`mode`, with the reason in `fallback_reason`. Worse results beat no results, and the
-keyword half is complete on its own.
-
-#### Ranking passages
-
-`POST /api/v1/search/chunks` scores the passage text at 3x and its section heading at 2x.
-
-The paper title is deliberately **not** scored. Every passage of a paper carries the same
-title, so boosting it returns forty pieces of one paper instead of the best passage from
-each — measured on this corpus, six results collapsed to a single distinct paper. The
-section heading earns its 2x: it lifts "F LIMITATIONS AND FUTURE WORK" into the top three
-for "limitations and future work", which the passage text alone ranked fifth.
-
-Each passage carries `section_index` and `chunk_index` alongside its paper's `arxiv_id`,
-so a quoted passage can always be traced back to where in the paper it came from.
-
-#### Grouping by paper
-
-Both passage endpoints return **papers, each with up to three passages** — not a flat
-list. `size` counts papers.
-
-Excluding the title from scoring was not enough on its own. A paper that repeats the query
-throughout still owned the whole page: for "RAG", all ten results came from one paper, out
-of 172 matching passages across 34 papers. Three passages is enough to carry a claim and
-its evidence, and few enough that a page still spans several sources — which is what a
-grounded answer needs in order to cite more than one.
-
-`/search/chunks` does this with an OpenSearch `collapse` on `arxiv_id`, so the grouping and
-the cap happen in one server-side query and `matching_passages` reports how many passages
-the paper really had — 24, for that dominant paper.
-
-`/search/hybrid` groups *after* fusing instead. Fusion ranks a flat list, and collapsing
-first would mean reconciling two different choices of which passages represent each paper.
-It therefore leaves `matching_passages` unset: fusion only ever sees a bounded candidate
-pool, so a count from it would understate the truth.
-
-### Search chunks
-
-Parsed papers are split into retrievable chunks and written to the `paper-chunks`
-OpenSearch index by the `index_paper_chunks` DAG task. The rules live in
-`src/policies/chunking.py`:
-
-- **The unit is a section.** Docling already recovers the paper's own structure, so a
-  section is a real boundary rather than a blind split. A section longer than 2000
-  characters is split further at the last paragraph, line, or sentence boundary that
-  fits, with 200 characters of overlap so a passage cut mid-argument stays recoverable.
-- **Reference lists are excluded.** A bibliography is a list of other people's titles:
-  indexed as body text it matches almost any query and grounds nothing. It is the
-  largest section in the corpus — 26 of 26 parsed papers, 234k of 1.8M characters. The
-  text stays in `papers.sections` for whoever extracts citations later.
-- **Sections under 100 characters are dropped.** Measured on the live corpus, all 48 of
-  them were arXiv stamp lines, author affiliation blocks, or bare link captions.
-- **Chunk ids are positional** (`{arxiv_id}:{section_index}:{chunk_index}`), so
-  re-indexing a paper overwrites its chunks instead of duplicating them.
-
-Each pass rewrites the whole corpus, then deletes any chunk it did not rewrite — which
-covers both a paper re-parsed into fewer sections and a paper purged from the database.
-That cleanup is skipped when any paper failed to index, so a transient failure cannot
-delete chunks that are still good.
-
-Writes and reads both go through the `paper-chunks` alias, which points at
-`paper-chunks-v1`. An OpenSearch mapping cannot be changed in place, so a field-type
-change means building the next index and repointing the alias — and an alias cannot
-share a name with an existing index, so it has to exist from the first write.
-
-## How the application works today
-
-1. The API starts, connects to PostgreSQL, and brings the schema to the latest migration.
-2. The API exposes health, ping, and paper read endpoints.
-3. Airflow schedules the arxiv_paper_ingestion DAG for weekdays at 06:00 UTC. Airflow creates DAGs paused, so it runs only after the DAG is unpaused or triggered manually.
-4. The DAG fetches metadata from arXiv across the eight allowlisted AI categories.
-5. PDFs are downloaded and cached, then parsed with Docling inside the Airflow image.
-6. Paper metadata and parsed content are upserted into PostgreSQL.
-7. The DAG rewrites every stored paper into both OpenSearch indices.
-8. Passages are embedded with `nomic-embed-text`, reusing stored vectors for text that
-   has not changed.
-9. `/api/v1/search/` ranks papers with BM25; `/search/chunks` ranks passages; `/search/hybrid`
-   fuses keyword and vector rankings.
-10. Retrieval evaluation and grounded RAG answering are implemented; see the [evaluation report](evaluation/REPORT.md) for measured coverage, abstention, and reliability limitations.
-
-The [pre-Week-6 quality pass](evaluation/quality_fixes/REPORT.md) measured sentence
-expansion on separate development and fresh corpus questions. Both answer endpoints
-now share buffered selection validation and a bounded retry. Candidate expansion
-remains opt-in (`RAG_SENTENCE_CANDIDATES_PER_PASSAGE=2` or `3`, default `1`) because
-it reduced excerpt relevance. The 60% lexical gate, exact attribution, frozen v1
-benchmark, repaired corpus and both indexes are preserved. Phase 6 remains planned.
-
-The [selector-reliability continuation](evaluation/selector_reliability/REPORT.md)
-tests a grammar-constrained ID string: up to three known IDs in increasing numeric
-order, or `NONE`. The server independently validates that contract and rejects
-duplicate JSON keys. The sparse keyed-object experiment is retained as rejected
-evaluation data. Selection validity does not establish semantic relevance or
-complete fact coverage; the continuation report records those measurements.
-
-The API image does not initialize Docling. PDF parsing belongs to the Airflow image, which contains the heavier PDF-processing dependencies.
-
-The two images run `src/` under different SQLAlchemy majors: the API installs SQLAlchemy 2.x from `pyproject.toml`, while the Airflow image pins `>=1.4.36,<2.0.0` because Airflow 2.10 does not support SQLAlchemy 2.x. Shared code under `src/` must stay inside the compatible subset — declare columns with `Column()` rather than `Mapped[]`/`mapped_column()`, and import `declarative_base` from `sqlalchemy.orm`.
-
-## Quick start
+## Run locally
 
 ### Prerequisites
 
-- Docker Desktop
-- Python 3.12
-- PowerShell on Windows, or an equivalent shell
-- At least one available host port for each exposed service
-
-Start the stack from the repository root:
-
-~~~powershell
-docker compose up --build -d
-~~~
-
-Pull both configured models explicitly; startup never downloads models automatically:
-
-~~~powershell
-docker compose exec ollama ollama pull llama3.2:1b
-docker compose exec ollama ollama pull nomic-embed-text
-~~~
-
-The health endpoint returns 503 until the default generation model is installed. A missing
-embedding or other optional configured model reports `degraded` with HTTP 200.
-
-If host port 8080 is already in use, select another Airflow host port:
-
-~~~powershell
-$env:AIRFLOW_PORT = "8081"
-docker compose up -d
-~~~
-
-Check the containers:
-
-~~~powershell
-docker compose ps
-docker compose logs --tail=100 api
-docker compose logs --tail=100 airflow
-~~~
-
-Airflow creates new DAGs in a paused state. Unpause the ingestion DAG before expecting it to run on schedule:
-
-~~~powershell
-docker compose exec airflow airflow dags unpause arxiv_paper_ingestion
-~~~
-
-Launch the Week 5 interface separately:
-
-~~~powershell
-uv run python gradio_launcher.py
-~~~
-
-Gradio is available at http://localhost:7861. The API documentation is available at
-http://localhost:8000/docs. Airflow is available at http://localhost:8080, or at the
-configured AIRFLOW_PORT. The default Airflow credentials are admin/admin.
-
-## API endpoints
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | /api/v1/ping | Basic API connectivity check |
-| GET | /api/v1/health | API, database, and Ollama health information |
-| GET | /api/v1/papers/ | List stored papers with pagination |
-| GET | /api/v1/papers/{arxiv_id} | Retrieve one stored paper |
-| POST | /api/v1/search/ | BM25 keyword search over papers |
-| POST | /api/v1/search/chunks | BM25 keyword search over passages |
-| POST | /api/v1/search/hybrid | Keyword and vector search, fused with RRF |
-| POST | /api/v1/ask | Grounded answer with ordered sources and exact passage citations |
-| POST | /api/v1/stream | The same pipeline as typed Server-Sent Events |
-| GET | /docs | Interactive OpenAPI documentation |
-
-Example:
-
-~~~powershell
-Invoke-RestMethod http://localhost:8000/api/v1/ping
-Invoke-RestMethod http://localhost:8000/api/v1/health
-Invoke-RestMethod http://localhost:8000/api/v1/papers/
-
-# Relevance-ranked search
-Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
-  -Body '{"query": "retrieval augmented generation", "size": 5}'
-
-# The newest cs.CL papers, no query term
-Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/ -ContentType application/json `
-  -Body '{"query": "", "categories": ["cs.CL"], "newest_first": true}'
-
-# The passages that answer a question, not the papers that mention it
-Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/chunks -ContentType application/json `
-  -Body '{"query": "how are the benchmarks constructed", "size": 5}'
-
-# The same, ranked by meaning as well as wording
-Invoke-RestMethod -Method Post http://localhost:8000/api/v1/search/hybrid -ContentType application/json `
-  -Body '{"query": "how do they stop the model making things up", "size": 5}'
-
-# Standard grounded answer; top_k counts paper groups, not chunks
-Invoke-RestMethod -Method Post http://localhost:8000/api/v1/ask -ContentType application/json `
-  -Body '{"query": "how do they ground factual claims", "top_k": 3, "use_hybrid": true}'
-
-# Streaming answer: named sources, delta, and done/error SSE events
-curl.exe -N -X POST http://localhost:8000/api/v1/stream `
-  -H "Content-Type: application/json" `
-  -d '{"query":"how do they ground factual claims","top_k":3,"use_hybrid":true}'
-~~~
-
-`size` is 1-50, `offset` 0-1000, and `categories` must be inside the ingested AI
-allowlist — a filter on `hep-th` is a 422 rather than a silent zero-result page, because
-the corpus can never contain one. `/search/` accepts an empty query and browses;
-`/search/chunks` requires one, because a passage is only meaningful as an answer to
-something. `/ask` and `/stream` accept `top_k` from 1-10, an allowlisted configured
-generation model, the same category filter, and either hybrid or grouped BM25 retrieval.
-Every generated marker resolves to an exact returned `section_index` and `chunk_index`.
-Answers quote up to three server-owned evidence sentences selected by the model, with
-source-exact attribution and a server-enforced 200-word limit including citation markers.
-A conservative lexical relevance guard can abstain on unrelated or paraphrased questions.
-Streams emit complete excerpts after the internal selection is validated. See
-[TESTING.md](TESTING.md) for the acceptance evidence and limitations of this extractive mode.
-
-Week 7 adds optional `/api/v1/agent/ask` and `/api/v1/agent/stream` using the same
-request controls, authentication and shared generation budget. `AGENT_ENABLED=false`
-by default; disabled requests return 503. The workflow validates AI research scope,
-retrieves and grades evidence, rewrites retrieval once if needed, and returns
-validated quotations or abstention. It allows two retrievals and six generation
-calls, with 90-second total and 30-second stage defaults. Hybrid retrieval may
-also embed up to two queries. Agent results are uncached; fixed operation status
-events precede validated sources/deltas/done in SSE. See the
-[audit and acceptance specification](docs/week7-agent-spec.md).
-This source feature has not been activated in the retained Week 6 runtime.
-The [evaluation protocol and frozen v2 labels](evaluation/week7_agent/README.md)
-are prepared: eight development and 24 holdout questions, reviewed against preserved
-sources with disjoint source papers. Offline checks pass; live comparison is pending.
-
-## Testing
-
-Run the deterministic local test suite:
-
-~~~powershell
-.\.venv\Scripts\python.exe -m pytest -q
-~~~
-
-The automated tests cover settings, schemas, arXiv parsing and caching, Ollama client behavior, API routes, ingestion pipeline accounting, and the Airflow-to-metadata pipeline contract. `tests/integration/` additionally runs `PaperRepository` against a real PostgreSQL container when Docker is available, and skips when it is not.
-
-For Docker service checks, database verification, Airflow DAG checks, PDF processing, and the complete ingestion test, see [TESTING.md](TESTING.md).
-
-## Useful commands
-
-| Command | Purpose |
-|---|---|
-| docker compose up --build -d | Build and start the full stack |
-| docker compose ps | Show service status |
-| docker compose logs -f api | Follow API logs |
-| docker compose logs -f airflow | Follow Airflow logs |
-| docker compose exec airflow airflow dags list | List Airflow DAGs |
-| docker compose exec airflow airflow dags list-import-errors | Check DAG import errors |
-| docker compose exec airflow airflow dags unpause arxiv_paper_ingestion | Enable the scheduled DAG |
-| docker compose exec airflow airflow dags trigger arxiv_paper_ingestion | Trigger ingestion manually |
-| docker compose exec postgres psql -U rag_user -d rag_db | Open a PostgreSQL shell |
-| docker compose down | Stop containers and preserve volumes |
-| docker compose down -v | Stop containers and delete volumes |
-
-Use docker compose down -v only when existing local data can be discarded or the schema needs a clean rebuild. It also clears the cached arXiv PDFs and Docling's model weights, so the next ingestion run re-downloads them.
-
-## Repository layout
-
-~~~text
-AI-ScholarLens/
-├── airflow/
-│   ├── dags/
-│   │   ├── arxiv_paper_ingestion.py
-│   │   └── arxiv_ingestion/tasks.py
-│   ├── Dockerfile
-│   └── requirements-airflow.txt
-├── src/
-│   ├── main.py                  # FastAPI app, lifespan, router wiring
-│   ├── config.py                # Settings loaded from environment
-│   ├── dependencies.py          # FastAPI dependency injection
-│   ├── exceptions.py            # Domain exception hierarchy
-│   ├── gradio_app.py            # Streaming Gradio client and rendering
-│   ├── routers/                 # FastAPI endpoints, including ask + stream
-│   ├── services/
-│   │   ├── arxiv/               # arXiv client
-│   │   ├── ollama/              # Reusable Ollama client and RAG prompt
-│   │   ├── rag/                 # Evidence budgeting, citations, generation
-│   │   ├── pdf_parser/          # Docling parser
-│   │   ├── embeddings/          # Ollama embedding client
-│   │   ├── metadata_fetcher.py  # Ingestion orchestration
-│   │   ├── reindex.py           # Idempotent full-corpus reindex, shared
-│   │   ├── paper_indexer.py     # Corpus -> arxiv-papers index
-│   │   ├── chunk_indexer.py     # Corpus -> paper-chunks index
-│   │   └── paper_search.py      # BM25 search over arxiv-papers
-│   ├── repositories/            # Query logic (PaperRepository)
-│   ├── models/                  # SQLAlchemy models
-│   ├── schemas/                 # Pydantic contracts
-│   ├── policies/                # AI category allowlist, chunk boundaries
-│   ├── search/                  # Index mappings, query builder, RRF, client
-│   ├── commands/                # Operational CLIs (python -m src.commands.*)
-│   └── db/                      # Database interface, PostgreSQL impl, factory
-│       ├── migrations.py        # Startup migration runner
-│       └── alembic/             # Alembic env and versions/
-├── tests/
-│   ├── api/
-│   ├── integration/
-│   └── unit/
-├── compose.yml
-├── Dockerfile
-├── gradio_launcher.py
-├── pyproject.toml
-├── uv.lock
-├── TESTING.md
-└── README.md
-~~~
-
-## Phase update process
-
-At the end of each phase:
-
-1. Update the phase table and mark only verified capabilities as complete.
-2. Move newly implemented diagram nodes from dashed to solid edges.
-3. Add the phase's automated and Docker-backed acceptance checks to TESTING.md.
-4. Update the “How the application works today” section.
-5. Record major architectural decisions in an ADR if a component boundary or technology choice changes.
-
-This keeps the README useful to both developers and future agents without requiring a complete rewrite after every phase.
-
-## Configuration
-
-Copy `.env.example` to `.env` and adjust:
-
-~~~bash
-cp .env.example .env
-~~~
-
-`.env.example` lists every setting with its in-code default, so an empty `.env` is a working
-one. Docker Compose does not read `.env` — it sets the container environment inline in
-`compose.yml` — so `.env` matters when running the API or tooling on the host.
-
-Runtime settings are loaded from environment variables and .env through src/config.py. Important settings include:
-
-- POSTGRES_DATABASE_URL
-- OPENSEARCH_HOST
-- OLLAMA_HOST
-- ARXIV__MAX_RESULTS — papers per ingestion run, counted across all eight AI categories combined
-  rather than per category. Defaults to 10, which compose.yml also sets explicitly for Airflow.
-- arXiv rate-limit, timeout, and cache settings
-- PDF page-size and file-size limits
-
-The set of arXiv categories is deliberately **not** configurable; it lives in
-`src/policies/ai_scope.py`. `ARXIV__SEARCH_CATEGORY` has been removed, and any leftover entry for it
-in a local `.env` is ignored.
-
-Do not commit credentials or private environment files.
-
-## Database migrations
-
-The schema is owned by Alembic, in `src/db/alembic/versions/`. `PostgreSQLDatabase.startup()`
-runs `alembic upgrade head`, so both the API and the Airflow DAG converge on the same schema
-without a manual step. A PostgreSQL advisory lock serialises them, since both call
-`make_database()`.
-
-This replaced `Base.metadata.create_all`, which only ever created *missing tables*. It never
-altered an existing one, so any new column silently failed to reach a deployed database.
-
-A database created before migrations existed is detected (schema present, no history) and
-stamped at `0001_papers_baseline` before newer revisions run, so no manual `alembic stamp` is
-needed and existing rows are untouched.
-
-After changing a model:
-
-~~~bash
-make migration m="add citation_count to papers"   # autogenerate
-# review the generated file in src/db/alembic/versions/ before committing
-make migrate                                       # apply locally
-~~~
-
-Two constraints are load-bearing, both in `src/db/alembic/env.py`:
-
-- **The version table is `alembic_version_scholarlens`, not `alembic_version`.** Compose points
-  Airflow at the same `rag_db`, and Airflow runs Alembic itself — sharing the default table
-  would interleave two unrelated migration histories.
-- **`include_name` limits autogenerate to this project's tables.** Without it, autogenerate
-  compares against a database full of Airflow's tables and emits `drop_table()` for every one
-  of them, including Airflow's own `alembic_version`.
-
-## Corpus scope audit
-
-`python -m src.commands.ai_scope` checks stored papers against the AI allowlist and removes any that
-predate it.
-
-~~~bash
-# Read-only report of scanned, compliant, and non-compliant rows
-docker compose exec airflow python -m src.commands.ai_scope audit
-
-# Exit non-zero when anything is out of scope (for scripting)
-docker compose exec airflow python -m src.commands.ai_scope audit --fail-on-violation
-
-# Rehearse a cleanup; writes nothing without --apply
-docker compose exec airflow python -m src.commands.ai_scope purge --expected-count 3
-
-# Delete, having reviewed the audit above
-docker compose exec airflow python -m src.commands.ai_scope purge --expected-count 3 --apply
-~~~
-
-`purge` is a dry run unless `--apply` is passed, and `--apply` requires `--expected-count N`. If the
-number of non-compliant rows no longer matches `N`, the command aborts without deleting anything, so a
-stale audit can never authorise a deletion. Deletion is permanent — back the table up first:
-
-~~~bash
-docker compose exec postgres pg_dump -U rag_user -d rag_db -t papers > papers_backup.sql
-~~~
-
-Add `--json` to either subcommand for machine-readable output on stdout; logs stay on stderr.
-
-## License
-
-This project is currently under active development. Add the project license here when it is selected.
+- Python **3.12**, [uv](https://docs.astral.sh/uv/), and Docker Desktop/Compose.
+- A local OpenSearch instance with indexed paper passages for paper questions.
+- For private Telegram testing: your own bot token, verified owner account, HF inference token, and API key in private local configuration.
+
+Create the Windows environment expected by `Telegram.ps1`:
+
+```powershell
+git clone https://github.com/Xmen3em/AI-ScholarLens.git
+cd AI-ScholarLens
+$env:UV_PROJECT_ENVIRONMENT = ".venv-win"
+uv sync --frozen
+Copy-Item .env.example .env
+```
+
+Review `.env` locally. Follow the [bot pairing guide](docs/telegram-langgraph.md#local-setup) and the [development runtime guide](docs/telegram-development.md). A fresh clone does not include credentials, paired state, model/tokenizer caches, or the development corpus. The [platform reference](docs/archive/platform-readme-20261016.md) and [testing guide](TESTING.md) describe ingestion and indexing prerequisites.
+
+Check the configured development runtime without network calls or state writes:
+
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.run_dev_bot --check
+```
+
+For a configured, paired installation with indexed passages:
+
+```powershell
+.\Telegram.ps1           # start private manual testing
+.\Telegram.ps1 -Restart  # load source edits
+.\Telegram.ps1 -Stop     # stop API and bot gracefully
+```
+
+This mode serves the agent API at `127.0.0.1:8002`, uses remote HF generation, and reports `accepted:false`. It requires 1,024 MiB free host RAM at startup and retains a 600 MiB live floor. It does not initialize SQL or load a local embedding model. These are free-RAM admission checks, not a total system RAM recommendation; Docker and the other services also consume memory.
+
+For the broader Docker platform, start with `docker compose up --build -d` and follow [TESTING.md](TESTING.md). That is a separate mode with PostgreSQL, Airflow, and Ollama dependencies; it does not activate this private bot.
+
+## How it works
+
+```mermaid
+flowchart TD
+    T[Private Telegram chat] --> B[Owner and message validation]
+    B --> A[Local development API]
+    A --> R[Concept or paper routing]
+    R -->|general concept| K[Model knowledge explanation]
+    R -->|paper question| G[Bounded LangGraph workflow]
+    G --> S[(OpenSearch passages / BM25)]
+    S --> E[Evidence validation and exact citations]
+    R --> H[HF router / Cerebras]
+    G --> H
+    K --> B
+    E --> B
+```
+
+The paper graph validates scope, retrieves passages, grades evidence, optionally rewrites once, then answers or abstains. Server-side validation owns the quoted text and citations. A concept explanation is labeled separately; missing paper evidence never silently becomes a model-knowledge answer.
+
+| Start here | Responsibility |
+| --- | --- |
+| [development_assistant.py](src/services/development_assistant.py) | Concept explanations and routing to the paper graph |
+| [agent.py](src/services/agent.py) | LangGraph paper workflow |
+| [development_pc_api.py](src/services/development_pc_api.py) | Isolated hosted-generation runtime and admission limits |
+| [telegram_bot.py](src/services/telegram_bot.py) | Private chat, command handling and reply formatting |
+| [hf/](src/services/hf/) | HF transport, validation and token admission |
+| [search.py](src/services/search.py) | Retrieval orchestration |
+| [metadata_fetcher.py](src/services/metadata_fetcher.py) | Existing batch ingestion |
+| [pdf_parser/](src/services/pdf_parser/) | Existing Docling parser |
+| [evaluation/](evaluation/) | Versioned questions, reports and quality limitations |
+
+## Checks and contributions
+
+```powershell
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_development_assistant.py tests/unit/test_development_bot.py -q
+.venv-win/Scripts/python.exe -m ruff check src tests
+```
+
+[TESTING.md](TESTING.md) covers the full suite and service-dependent checks. Live model calls and paid evaluations are separate from deterministic tests. Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing evidence handling or adding a tool. Small fixes, Arabic terminology review, extraction fixtures, and reproducible quality reports are welcome.
+
+## Where the project is going
+
+1. Resolve the paper a researcher supplies and keep its version explicit.
+2. Extract structured content; use OCR when needed, with an HF model chosen later.
+3. Produce a first lesson in Egyptian Arabic, grounded in that paper.
+4. Continue through guided questions, examples, comprehension checks and progress.
+5. Add diagrams and inspectable charts, followed by a richer study view.
+6. Add bounded research tools and optional private Notion study exports.
+
+This is a proposed direction. Read the [capability map](CAPABILITY_MAP.md) and [technical research](docs/paper-learning-research.md) for dependencies, open decisions and the distinction between current behavior and future work.
+
+## License and acknowledgements
+
+Project code is available under the [MIT license](LICENSE). Papers, datasets, models, dependencies, and third-party assets retain their own licenses and terms. ScholarLens builds on FastAPI, LangGraph, OpenSearch, PostgreSQL, Docling, Ollama, Airflow and Hugging Face. The implementation grew from a Zero-to-RAG learning project; the [build story](docs/build-story.md) explains the work and its limits.
