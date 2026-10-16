@@ -1,3 +1,53 @@
+# Bounded evidence profile prepared; fresh approval required — 2026-10-16
+
+The user asked to commit the current work and continue. The scope/catalog
+correction was already committed as `acf9ddf`; subsequent local commits are
+`d2bdf7a` (additive profile), `b126a8c` (separate history-bound funding) and
+`984735a` (collection/scoring/acceptance/private runtime integration).
+The current source-map digest is
+`a5aa4ad496a324c69ccbce8a42584fea2b899a317319238920d642813944cb26`.
+
+The new `hosted-cerebras-evidence-v3` profile explicitly admits three sentences
+per passage and ten total candidates. Every other frozen quality/resource/input/
+schema/work gate is preserved; older profiles/defaults remain unchanged.
+The complete implementation and concrete approval scope are in
+[hf-cerebras-evidence-execution.md](hf-cerebras-evidence-execution.md).
+
+**All 1,354 tests pass, zero skips**, in 939.68 seconds, with two existing Typer
+dependency warnings. Ruff and mypy126 pass. JUnit:
+`tests/test_output/hf-cerebras-evidence-profile-prep-20261016-01/full.xml`.
+The local rehearsal checks 32 first-pass cells and 60 native payloads with real
+retained search/embedding and service/LangGraph execution; maximum 4,573 input
+tokens, 13,651 payload bytes and 947 schema bytes, no fallback. HF generation is
+forbidden and decisions are synthetic; this is not model-quality acceptance.
+
+Final audit: **419 protected files** unchanged; all 15 retained containers and
+their images/states match, five running/no extras. Original API8000, 58 papers/
+2,775 chunks and installed model digests match. API8002 is closed; global HF,
+agent and Telegram remain false. All earlier evidence/private setup is intact.
+Full pytest session96051 and final audit13983 completed successfully; no test
+process remains. An earlier audit saw pytest's temporary containers; the final
+audit after cleanup passed. Final free RAM was 2,749.75 MiB, admission passed.
+
+**No new HF calls or Telegram traffic.** Earlier 28 plus completed failed-run
+97 attempts remain **125 used**. The old 164 unspent slots cannot fund this
+changed source/profile. The fresh pending development receipt is
+`tests/test_output/hf-cerebras-evidence-development-proposal-20261016-01/proposed-approval.json`,
+SHA256 `79f1875b101ffc13a664693c2a48fc2e79e59b4d87690a03d723f46efe4c59f3`.
+It proposes one separate maximum of 261 additional attempts: five fresh unchanged
+qualifications plus all 64 development jobs, bounded public paper data. Failed
+or uncertain work counts; failed checks stop. Both new ledgers/registrations and
+an approved receipt remain absent. The public catalog still lists the route live
+and structured at the frozen rates; the estimated bound is USD 0.801792, not an
+invoice. Recheck source, provider, RAM and accounting before any execution.
+
+Next: explicit approval of that concrete scope, fresh admitted execution, honest
+review/scoring and a development lock only if gates pass. A separate full
+holdout approval and accepted 192-job result precede private PC/owner Telegram
+activation and the real bot test. The token and owner pairing are already done.
+The preparation is complete; the application is not yet accepted or enabled.
+Older checkpoint sections below retain their historical balances and outcomes.
+
 # Offline scope/catalog correction — 2026-10-16
 
 The source now clarifies scope using the ingested categories and adds an opt-in
