@@ -22,6 +22,7 @@ from src.commands.hf_paper_profile import (
     plan_collection,
 )
 from src.commands.hf_schema_execution import load_cerebras
+from src.commands.hf_validation import validation_operation
 
 SCHEMA_REPORT = Path("tests/test_output/hf-cerebras-five-case-summary-20261015-01/report.json")
 SCHEMA_REPORT_SHA256 = "3c4e2045f46c4d21ac30f50ffdec4d3da7880068498319dc9f459bd3a0caef0d"
@@ -113,6 +114,7 @@ def _scope(metadata: dict) -> dict:
             **({"selection_sha256": metadata["selection_sha256"]} if split == "holdout" else {})}
 
 
+@validation_operation
 def approval_proposal(metadata: dict) -> dict:
     scope = _scope(metadata)
     split, budget = scope["split"], scope["maximum_outbound_attempts"]

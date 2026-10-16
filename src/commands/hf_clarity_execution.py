@@ -7,11 +7,13 @@ from pathlib import Path
 from src.commands.hf_allowance import PILOT_MODEL
 from src.commands.hf_fixture_clarity import CLARITY_SHA256, load_clarity
 from src.commands.hf_success_diagnostics import SUCCESS_DIAGNOSTICS_SHA256
+from src.commands.hf_validation import memoized_input
 from src.services.hf.registry import HF_ROUTER_URL
 
 CLARITY_EXECUTION_SHA256 = "aef8ff44f41dc662dcbe032755d0af014c4c590f98f9b54be79514d206190672"
 
 
+@memoized_input
 def load_execution(root=Path("evaluation/week7_hf/clarity-execution-v1")) -> dict:
     manifest = root / "manifest.json"
     if hashlib.sha256(manifest.read_bytes()).hexdigest() != CLARITY_EXECUTION_SHA256:

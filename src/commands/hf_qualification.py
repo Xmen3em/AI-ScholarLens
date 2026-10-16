@@ -4,11 +4,13 @@ import hashlib
 import json
 from pathlib import Path
 
+from src.commands.hf_validation import memoized_input
 from src.services.agent import CONTROLLER_SYSTEM
 
 REVISION_SHA256 = "762bbc82e159bd873d41185059bcb838a641b4fa81d8636805b1eec1417a6464"
 
 
+@memoized_input
 def load_revision(root=Path("evaluation/week7_hf/qualification-v2")) -> dict:
     from src.commands.hf_evaluation import HF_MANIFEST_SHA256, qualification_cases
 

@@ -13,6 +13,7 @@ from src.commands.agent_collection import create_evaluation_app
 from src.commands.evaluate_agent import MANIFEST_SHA256, _count, free_memory_mib, memory_watch
 from src.commands.evaluate_retrieval import digest
 from src.commands.hf_qualification import decision_diagnostics
+from src.commands.hf_validation import memoized_input
 from src.config import Settings
 from src.middlewares import RateLimiter
 from src.operations import request_context
@@ -26,6 +27,7 @@ from src.services.rag.service import _selection_pattern, _unique_object
 HF_MANIFEST_SHA256 = "3b42fccb34bc542e91ccdd3df0d8acb85c0bc86f7237eebdb214e6e9dbfc37a1"
 
 
+@memoized_input
 def load_protocol(root=Path("evaluation/week7_hf")) -> dict:
     manifest_path = root / "manifest.json"
     if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != HF_MANIFEST_SHA256:

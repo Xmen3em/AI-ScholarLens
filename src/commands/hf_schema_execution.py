@@ -9,6 +9,7 @@ from src.commands.hf_clarity_execution import CLARITY_EXECUTION_SHA256
 from src.commands.hf_clarity_execution import load_execution as load_clarity_execution
 from src.commands.hf_evaluation import HF_MANIFEST_SHA256, load_protocol
 from src.commands.hf_qualification import load_revision
+from src.commands.hf_validation import memoized_input
 from src.services.hf.registry import HF_ROUTER_URL
 
 SCHEMA_EXECUTION_SHA256 = "51a6c389b97a4668439bfa2ecdf12258ecb866a164c610829d20c03ef11af32c"
@@ -19,6 +20,7 @@ CEREBRAS_MODEL = "openai/gpt-oss-120b:cerebras"
 SELECTORS_SHA256 = "b633c44720e1d4cc0820529bf1eafe38a7be63671b79103a0515b18872a85630"
 
 
+@memoized_input
 def load_execution(root=Path("evaluation/week7_hf/schema-execution-v1")) -> dict:
     manifest = root / "manifest.json"
     if hashlib.sha256(manifest.read_bytes()).hexdigest() != SCHEMA_EXECUTION_SHA256:
@@ -86,6 +88,7 @@ def load_experiment(experiment: str) -> dict:
     raise ValueError("Unknown frozen schema experiment")
 
 
+@memoized_input
 def load_cerebras(root=Path("evaluation/week7_hf/cerebras-remaining-v1")) -> dict:
     manifest = root / "manifest.json"
     if hashlib.sha256(manifest.read_bytes()).hexdigest() != CEREBRAS_SHA256:
@@ -117,6 +120,7 @@ def measurement_profile(experiment: str) -> dict:
     return profile
 
 
+@memoized_input
 def load_selectors(root=Path("evaluation/week7_hf/cerebras-selectors-v1")) -> dict:
     manifest = root / "manifest.json"
     if hashlib.sha256(manifest.read_bytes()).hexdigest() != SELECTORS_SHA256:
