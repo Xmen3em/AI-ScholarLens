@@ -19,6 +19,8 @@ dependencies = [
     "langgraph==1.2.15",
     "tiktoken==0.14.0",
     "pypdfium2==5.14.0",
+    "jsonschema==4.25.0",
+    "pillow==12.3.0",
 ]
 readme = "README.md"
 

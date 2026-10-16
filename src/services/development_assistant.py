@@ -19,6 +19,7 @@ LEARNING_SYSTEM = (
     "A short topic request such as understanding ML systems asks for an introductory explanation. "
     "RAG means retrieval-augmented generation, ML means machine learning, and LLM means large language model. "
     "For general questions explain from model knowledge in simple language: a definition, key ideas and a small example. "
+    "Use natural Egyptian Arabic by default, preserve English technical terms, and keep explanations under 100 words. "
     "Keep it under 160 words in plain text without Markdown headings, URLs, references or citation markers. "
     "Use kind=paper with an empty explanation for questions about specific research papers, their methods, "
     "datasets, experiments or reported results; those require retrieval even when an answer might be unavailable. "

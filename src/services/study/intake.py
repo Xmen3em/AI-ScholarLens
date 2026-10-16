@@ -8,7 +8,7 @@ from datetime import datetime
 from urllib.parse import urlsplit
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from src.policies.ai_scope import AI_CATEGORY_ALLOWLIST, ai_scope_query
 
 API_URL = "https://export.arxiv.org/api/query"
@@ -32,6 +32,13 @@ class StudyPaper(BaseModel):
     abstract: str = Field(min_length=1, max_length=10_000)
     categories: list[str] = Field(min_length=1, max_length=30)
     published: str = Field(min_length=10, max_length=40)
+
+    @field_validator("arxiv_id")
+    @classmethod
+    def explicit_version(cls, value: str) -> str:
+        if not valid_id(value, versioned=True):
+            raise ValueError("An explicit arXiv version is required")
+        return value
 
     @property
     def source_url(self) -> str:

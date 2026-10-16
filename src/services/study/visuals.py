@@ -1,7 +1,10 @@
 """Deterministic study maps; arrows mean reading order, never invented results."""
 
+import base64
 import io
+import json
 import os
+import subprocess
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, features
@@ -11,7 +14,7 @@ from src.services.study.tutor import Lesson
 def study_map(lesson: Lesson) -> bytes | None:
     # Arabic shaping is required. Do not silently ship disconnected glyphs.
     if not features.check_feature("raqm"):
-        return None
+        return _windows_map(lesson) if os.name == "nt" else None
     fonts = [Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts/segoeui.ttf",
              Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")]
     font_path = next((path for path in fonts if path.is_file()), None)
@@ -39,3 +42,22 @@ def study_map(lesson: Lesson) -> bytes | None:
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=True)
     return buffer.getvalue()
+
+
+def _windows_map(lesson: Lesson) -> bytes | None:
+    nodes = [section for section in lesson.sections if section.kind == "paper"][:4]
+    if not nodes:
+        return None
+    payload = {"title": "خريطة مذاكرة الورقة", "subtitle": "الأسهم بترتّب المذاكرة؛ مش نتائج أو علاقات سببية",
+               "nodes": [{"label": s.heading[:44], "refs": "  ".join(e.block_id for e in s.evidence)} for s in nodes]}
+    executable = Path(os.environ.get("SYSTEMROOT", "C:/Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+    try:
+        result = subprocess.run([str(executable), "-NoProfile", "-NonInteractive", "-File", str(Path(__file__).with_name("render_map.ps1"))],
+            input=json.dumps(payload, ensure_ascii=True).encode("ascii"), capture_output=True, timeout=15,
+            creationflags=subprocess.CREATE_NO_WINDOW)
+        if result.returncode or len(result.stdout) > 240000:
+            return None
+        data = base64.b64decode(result.stdout, validate=True)
+        return data if data.startswith(b"\x89PNG\r\n\x1a\n") and len(data) <= 180000 else None
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return None

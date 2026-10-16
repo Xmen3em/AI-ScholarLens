@@ -280,6 +280,8 @@ class PrivateTelegramBot:
                     }:
                         learning = LearningResponse.model_validate(raw)
                         prefix = "General AI/ML explanation (model knowledge):\n\n" if learning.kind == "general_explanation" else ""
+                        if self.study and prefix:
+                            prefix = "شرح عام من معرفة الموديل؛ مش اقتباس من ورقة:\n\n"
                         text = prefix + learning.answer
                         # Telegram measures UTF-16 units; bound each part without
                         # splitting astral Unicode characters.
@@ -337,9 +339,15 @@ class PrivateTelegramBot:
                 raise ValueError
             assert self.settings.bot_token is not None
             url = f"https://api.telegram.org/bot{self.settings.bot_token.get_secret_value()}/sendPhoto"
-            response = await self._telegram.post(url, data={"chat_id": str(self.owner_id), "caption": "خريطة للمذاكرة — ترتيب الشرح، مش علاقات سببية."},
-                                                  files={"photo": ("study-map.png", data, "image/png")})
-            if response.status_code != 200 or len(response.content) > MAX_BODY_BYTES or response.json().get("ok") is not True:
+            async with self._telegram.stream("POST", url, data={"chat_id": str(self.owner_id), "caption": "خريطة للمذاكرة — ترتيب الشرح، مش علاقات سببية."},
+                                              files={"photo": ("study-map.png", data, "image/png")}) as response:
+                body = bytearray()
+                async for chunk in response.aiter_bytes(chunk_size=8192):
+                    if len(body) + len(chunk) > MAX_BODY_BYTES:
+                        raise BotError("study_photo_failed")
+                    body.extend(chunk)
+                raw = json.loads(body, object_pairs_hook=_unique_object)
+            if response.status_code != 200 or type(raw) is not dict or raw.get("ok") is not True:
                 raise BotError("study_photo_failed")
         except (ValueError, TypeError, httpx.HTTPError):
             raise BotError("study_photo_failed") from None

@@ -15,6 +15,7 @@ import anyio
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 from src.services.study.intake import StudyPaper, valid_id
+from src.services.study.pdf_worker import REVISION
 
 
 class ContentError(ValueError):
@@ -42,6 +43,7 @@ class PaperContent(BaseModel):
     missing_pages: list[int] = Field(max_length=45)
     truncated_pages: list[int] = Field(default_factory=list, max_length=45)
     coverage: Literal["full_text", "partial_text", "needs_ocr", "abstract_only"]
+    ocr_provenance: list[dict[str, str | int]] = Field(default_factory=list, max_length=45)
 
 
 def _worker(path: Path, action: str, page: int | None = None, *, timeout: float = 30) -> dict:
@@ -110,12 +112,16 @@ class PaperContentService:
                     if cache.stat().st_size > 2_000_000 or path.stat().st_size > self.max_bytes:
                         raise ValueError
                     saved = PaperContent.model_validate_json(cache.read_bytes())
-                    if saved.paper.arxiv_id != paper.arxiv_id or saved.source_sha256 != hashlib.sha256(path.read_bytes()).hexdigest():
+                    if (saved.parser_revision != REVISION or saved.paper.arxiv_id != paper.arxiv_id
+                            or saved.source_sha256 != hashlib.sha256(path.read_bytes()).hexdigest()):
                         raise ValueError
                     return saved
                 except ValueError:
                     raise ContentError("source_cache_invalid") from None
             self.root.mkdir(parents=True, exist_ok=True)
+            used = sum(p.stat().st_size for p in self.root.glob("*.pdf") if p.is_file() and not p.is_symlink())
+            if used + self.max_bytes > 256 * 1024 * 1024:
+                raise ContentError("source_cache_full")
             temporary = path.with_suffix(".part-" + uuid4().hex)
             try:
                 async with self.client.stream("GET", paper.pdf_url, follow_redirects=False, timeout=30) as response:
@@ -133,7 +139,13 @@ class PaperContentService:
                         raise ContentError("invalid_pdf")
                 document = await anyio.to_thread.run_sync(extract_document, temporary, paper)
                 os.replace(temporary, path)
-                cache.write_text(document.model_dump_json(), encoding="utf-8")
+                cache_temporary = temporary.with_name(temporary.name + ".json")
+                try:
+                    with cache_temporary.open("x", encoding="utf-8") as output:
+                        output.write(document.model_dump_json())
+                    os.replace(cache_temporary, cache)
+                finally:
+                    cache_temporary.unlink(missing_ok=True)
                 return document
             except httpx.HTTPError:
                 raise ContentError("pdf_unavailable") from None
