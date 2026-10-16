@@ -1,7 +1,11 @@
 # Capability map: interactive paper learning
 
-**Proposed direction — 16 October 2026.** This is a product-level capability
-map for review, not an approved module specification or implementation plan.
+**Execution authorized — 17 October 2026.** The user requested research followed
+by implementation, autonomous routine decisions, and questions deferred until
+the implementation report. This authorizes the next iteration using the module
+boundaries below; implementation decisions and verification are recorded in the
+[iteration specification](docs/specs/paper-learning.md). Earlier review gates
+are superseded by that explicit instruction, not silently bypassed.
 Current code is preserved at `a7a0746` on `codex/telegram-prototype-checkpoint`.
 Documentation and this proposal live on `codex/paper-learning-plan`.
 

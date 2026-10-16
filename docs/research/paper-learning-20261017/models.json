@@ -1,0 +1,309 @@
+{
+  "checked_on": "2026-10-17",
+  "timezone": "Africa/Cairo",
+  "kind": "public_metadata_not_inference_qualification",
+  "models": [
+    {
+      "id": "lightonai/LightOnOCR-2-1B",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/lightonai/LightOnOCR-2-1B",
+      "revision": "be7c41313c30e940fe5571de59e5fabc779e00c8",
+      "task": "image-text-to-text",
+      "license": "apache-2.0",
+      "languages": [
+        "en",
+        "fr",
+        "de",
+        "es",
+        "it",
+        "nl",
+        "pt",
+        "sv",
+        "da",
+        "zh",
+        "ja"
+      ],
+      "providers": {
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "lightonai/LightOnOCR-2-1B",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "card_status": 200,
+      "card_sha256": "d1f6210e238042fa858dc7a8449b40f7e973c7ceca20b2de9f0b0e5523f68394"
+    },
+    {
+      "id": "ibm-granite/granite-docling-258M",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/ibm-granite/granite-docling-258M",
+      "revision": "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
+      "task": "image-text-to-text",
+      "license": "apache-2.0",
+      "languages": [
+        "en"
+      ],
+      "providers": {},
+      "card_status": 200,
+      "card_sha256": "b43727febeba2c6ce20b8746322e7687ca667d81a12d0364f346148f30622d84"
+    },
+    {
+      "id": "PaddlePaddle/PaddleOCR-VL-1.5",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/PaddlePaddle/PaddleOCR-VL-1.5",
+      "revision": "2a4195faa5e7914c12f2fc601d72c81caf8d2da5",
+      "task": "image-text-to-text",
+      "license": "apache-2.0",
+      "languages": [
+        "en",
+        "zh",
+        "multilingual"
+      ],
+      "providers": {},
+      "card_status": 200,
+      "card_sha256": "0eeebf42ca617495dec7343909667a79840b240d7cb6c5572e221fad0b128557"
+    },
+    {
+      "id": "zai-org/GLM-OCR",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/zai-org/GLM-OCR",
+      "revision": "2e85a62840ccac27daa451df36c736c4636b8628",
+      "task": "image-to-text",
+      "license": "mit",
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "de",
+        "ja",
+        "ko"
+      ],
+      "providers": {
+        "zai-org": {
+          "status": "error",
+          "providerId": "glm-ocr",
+          "task": "conversational",
+          "isModelAuthor": true
+        }
+      },
+      "card_status": 200,
+      "card_sha256": "172334449c3df98650bc9a42781c254c64c9d466b440e2ca8ce31f99829212b2"
+    },
+    {
+      "id": "Qwen/Qwen3-VL-8B-Instruct",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/Qwen/Qwen3-VL-8B-Instruct",
+      "revision": "0c351dd01ed87e9c1b53cbc748cba10e6187ff3b",
+      "task": "image-text-to-text",
+      "license": "apache-2.0",
+      "languages": null,
+      "providers": {
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "Qwen/Qwen3-VL-8B-Instruct",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "novita": {
+          "status": "error",
+          "providerId": "qwen/qwen3-vl-8b-instruct",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "card_status": 200,
+      "card_sha256": "6d5d06e0c3f069097002445d30dce9ee107db3afaf15563f09e6df49b8dcb4d7"
+    },
+    {
+      "id": "Qwen/Qwen3.5-35B-A3B",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/Qwen/Qwen3.5-35B-A3B",
+      "revision": "59d61f3ce65a6d9863b86d2e96597125219dc754",
+      "task": "image-text-to-text",
+      "license": "apache-2.0",
+      "languages": null,
+      "providers": {
+        "novita": {
+          "status": "live",
+          "providerId": "qwen/qwen3.5-35b-a3b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "Qwen/Qwen3.5-35B-A3B",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "card_status": 200,
+      "card_sha256": "71c3bbc2eadadd5980bbdbb15df958c27d42ede24821015602a021109aacf492"
+    },
+    {
+      "id": "inception42/Jais-2-8B-Chat",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/inception42/Jais-2-8B-Chat",
+      "revision": "da0e1639cd92b508b24120f7f77f5270a8465dc4",
+      "task": "text-generation",
+      "license": "apache-2.0",
+      "languages": [
+        "ar",
+        "en"
+      ],
+      "providers": {},
+      "card_status": 401
+    },
+    {
+      "id": "inception42/Jais-2-70B-Chat",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/inception42/Jais-2-70B-Chat",
+      "revision": "8bcbd3a66b34e59424a0e5eb0329cf022df4482e",
+      "task": "text-generation",
+      "license": "apache-2.0",
+      "languages": [
+        "ar",
+        "en"
+      ],
+      "providers": {},
+      "card_status": 401
+    },
+    {
+      "id": "MBZUAI-Paris/Nile-Chat-4B",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/MBZUAI-Paris/Nile-Chat-4B",
+      "revision": "2a365667659bbd6786c2760d868e37c506d76ce3",
+      "task": "text-generation",
+      "license": "gemma",
+      "languages": [
+        "arz"
+      ],
+      "providers": {},
+      "card_status": 200,
+      "card_sha256": "fe4617c246267f1425118c3109764a1e1c7d44676e16165cc45cd232cf731574"
+    },
+    {
+      "id": "CohereLabs/aya-expanse-32b",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/CohereLabs/aya-expanse-32b",
+      "revision": "b306ea27e360683b50c005d7fcbad6a242317910",
+      "task": "text-generation",
+      "license": "cc-by-nc-4.0",
+      "languages": [
+        "en",
+        "fr",
+        "de",
+        "es",
+        "it",
+        "pt",
+        "ja",
+        "ko",
+        "zh",
+        "ar",
+        "el",
+        "fa",
+        "pl",
+        "id",
+        "cs",
+        "he",
+        "hi",
+        "nl",
+        "ro",
+        "ru",
+        "tr",
+        "uk",
+        "vi"
+      ],
+      "providers": {
+        "cohere": {
+          "status": "live",
+          "providerId": "c4ai-aya-expanse-32b",
+          "task": "conversational",
+          "isModelAuthor": true
+        }
+      },
+      "card_status": 401
+    },
+    {
+      "id": "openai/gpt-oss-120b",
+      "status": 200,
+      "source": "https://huggingface.co/api/models/openai/gpt-oss-120b",
+      "revision": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+      "task": "text-generation",
+      "license": "apache-2.0",
+      "languages": null,
+      "providers": {
+        "groq": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "novita": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "cerebras": {
+          "status": "live",
+          "providerId": "gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "nscale": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "together": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "fireworks-ai": {
+          "status": "live",
+          "providerId": "accounts/fireworks/models/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "scaleway": {
+          "status": "live",
+          "providerId": "gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "baseten": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "ovhcloud": {
+          "status": "live",
+          "providerId": "gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "error",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "card_status": 200,
+      "card_sha256": "92b0408cf5dce04e4c5e4e5f2be0361da710d3650baefd7d7519badd1c687919"
+    }
+  ]
+}

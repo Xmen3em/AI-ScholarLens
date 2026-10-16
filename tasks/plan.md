@@ -1,5 +1,24 @@
 # Week 6: local operational controls
 
+## Active: interactive paper learning — 17 October 2026
+
+The owner authorized autonomous research then implementation, with questions
+deferred to the final implementation report. Work on `codex/paper-intake`.
+The [implementation contract](../docs/specs/paper-learning.md) supersedes old
+approval pauses for this iteration. Preserve the live private bot and all old
+evaluation evidence. Commit each verified slice.
+
+1. Resolve safe arXiv IDs/URLs and title candidates with exact versions.
+2. Add isolated native extraction, provenance and a qualified remote OCR adapter.
+3. Add durable study jobs/sessions, bounded context and explicit preferences/reset.
+4. Teach a first lesson and follow-ups in Egyptian Arabic with source validation.
+5. Integrate Telegram progress, selection, study actions and deterministic visuals.
+6. Add restricted study tools/MCP and a separately bounded Deep Agents path.
+7. Verify the complete private flow; update documentation and collect questions.
+
+Research decisions and pinned model metadata:
+[engineering research](../docs/research/paper-learning-20261017/DECISIONS.md).
+
 > Direction update — 16 October 2026: the private Telegram development prototype
 > is working and preserved at `a7a0746` on `codex/telegram-prototype-checkpoint`.
 > New documentation and the proposed interactive Egyptian Arabic paper-learning
