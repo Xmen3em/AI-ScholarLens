@@ -1,4 +1,42 @@
-# Cerebras development accepted and locked; full holdout approval pending — 2026-10-16
+# Full Cerebras holdout completed; quality rejected — 2026-10-16
+
+The user explicitly approved up to 773 additional calls in
+`call_b003f7dbf66a4b71a4568fa76fd020bf`. All five fresh checks and **192 jobs
+completed** on unchanged paced-v4 source. **345 calls used, all settled/known;
+719 cumulative.** Remaining 428 stay bound to this completed holdout, as do
+earlier unused 164/137/136. No retry or transfer. App and Telegram remain disabled.
+
+Holdout acceptance is **false**: all four comparisons fail the regression gate.
+Each agent cell falsely abstains on three positives versus two for baseline.
+Agent BM25/hybrid fact coverage is 68.75%/78.13%, baseline 70.83%/78.13%; agent
+multi-paper coverage is zero. All 64 negatives abstain correctly; no scope,
+request, attribution, schema, usage or hybrid-fallback errors. Agent p95
+9.307–10.070 s and baseline 2.681–3.935 s pass unchanged limits. Codex reviewed
+108 responses/170 quotes (26 unique,154 relevant); not independent human review.
+Known-usage estimate USD 0.20357985 is not an invoice.
+
+Saved-output diagnosis identifies the 0.60 per-paper lexical filter excluding
+the retained SpeechGym abstract at 0.50 and the TTPO half of a combined question
+at 0.545. No parameter, source, prompt, label or gate changed; no holdout tuning.
+This inspected holdout cannot become unseen acceptance for a tuned replacement.
+Next: generic synthetic development regressions, evidence-filtering/multi-paper
+correction, offline verification and a separately versioned evaluation scope
+with fresh unseen holdout before any new calls or private Telegram activation.
+Token/owner pairing already exist; nothing new is needed from the user now.
+
+Result and limits: [hf-cerebras-paced-holdout-result.md](hf-cerebras-paced-holdout-result.md).
+Run: tests/test_output/hf-cerebras-paced-holdout-live-20261016-01/.
+Execution: tests/test_output/hf-cerebras-paced-holdout-execution-20261016-01/.
+Seal32files SHA32928bd5969ab1ce09324dee5aa51bb56dac59c9a33072bd8609b0dc0242c0bf;
+next protected-expanded baseline585paths. Preserve all sealed files/ledgers.
+Final audit:552 old paths/15 container identities-images-states/5running,
+58papers2775chunks/model digests/source intact. API8000up,8002closed, all flagsfalse.
+Minimum request RAM1130.41MiB exceeds live600; admission2599.09MiB passes1536.
+Source digest8baa1a6e12e3e14e7c061dfec03653e3670dee929fde5340aa889b944c950487
+stillba1f168; collection296835a. Last1386tests0skips/Ruff/mypy127 stillpass;
+no source changes or unnecessary suite reruns. Collector63481/audit91459 finished.
+
+# Historical: Cerebras development accepted and locked; holdout pending
 
 The complete paced-v4 comparison passes **all 64 jobs and five fresh schema
 checks**, with no failed gates. All 48 positive answers cover both required

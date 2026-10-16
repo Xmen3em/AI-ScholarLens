@@ -1,4 +1,10 @@
-# Full Cerebras holdout proposal — 2026-10-16
+# Full Cerebras holdout execution — 2026-10-16
+
+Update: the user explicitly approved the 773-call scope. All five checks and
+192 jobs completed using 345 calls, but quality acceptance failed in all four
+comparisons. The remaining 428 cannot fund a retry; the app and bot remain
+disabled. See the [sealed result and next development work](hf-cerebras-paced-holdout-result.md).
+The proposal below records the exact historical scope before that approval.
 
 The complete 64-job development comparison is accepted and its selection is
 locked. The next step is the frozen **192-job holdout** using the identical
