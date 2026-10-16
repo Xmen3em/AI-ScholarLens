@@ -17,6 +17,8 @@ from src.commands.hf_paper_profile import (
     CEREBRAS_PROFILE,
     CEREBRAS_TASK_SHA256,
     EVIDENCE_PROFILE,
+    EVIDENCE_TASK_SHA256,
+    PACED_PROFILE,
     PAPER_PROFILES,
     get_profile,
     plan_collection,
@@ -32,9 +34,14 @@ DEVELOPMENT_ALLOWANCE = Path("tests/test_output/hf-cerebras-development-allowanc
 HOLDOUT_ALLOWANCE = Path("tests/test_output/hf-cerebras-holdout-allowance-20261015/allowance.sqlite3")
 EVIDENCE_DEVELOPMENT_ALLOWANCE = Path("tests/test_output/hf-cerebras-evidence-development-allowance-20261016/allowance.sqlite3")
 EVIDENCE_HOLDOUT_ALLOWANCE = Path("tests/test_output/hf-cerebras-evidence-holdout-allowance-20261016/allowance.sqlite3")
+PACED_DEVELOPMENT_ALLOWANCE = Path("tests/test_output/hf-cerebras-paced-development-allowance-20261016/allowance.sqlite3")
+PACED_HOLDOUT_ALLOWANCE = Path("tests/test_output/hf-cerebras-paced-holdout-allowance-20261016/allowance.sqlite3")
 PRIOR_DEVELOPMENT_RUN = Path("tests/test_output/hf-cerebras-tokenized-development-live-20261016-01")
 PRIOR_DEVELOPMENT_SEAL = Path("tests/test_output/hf-cerebras-tokenized-development-execution-20261016-01/evidence-sha256.json")
 PRIOR_DEVELOPMENT_SEAL_SHA256 = "1a85984057e92331b78c3692bc82ec75c7e62b76d815437a05c20c1f50ecb17f"
+PRIOR_EVIDENCE_RUN = Path("tests/test_output/hf-cerebras-evidence-development-live-20261016-01")
+PRIOR_EVIDENCE_SEAL = Path("tests/test_output/hf-cerebras-evidence-development-execution-20261016-01/evidence-sha256.json")
+PRIOR_EVIDENCE_SEAL_SHA256 = "efbeb5b64c9f646374417bb9e5f8c0dc85f36a2c9d6a404dde96f4464ac6622f"
 
 
 def allowance_path(metadata: dict) -> Path:
@@ -43,6 +50,8 @@ def allowance_path(metadata: dict) -> Path:
         raise ValueError("Unknown funded profile or split")
     if name == EVIDENCE_PROFILE:
         return EVIDENCE_DEVELOPMENT_ALLOWANCE if split == "development" else EVIDENCE_HOLDOUT_ALLOWANCE
+    if name == PACED_PROFILE:
+        return PACED_DEVELOPMENT_ALLOWANCE if split == "development" else PACED_HOLDOUT_ALLOWANCE
     return DEVELOPMENT_ALLOWANCE if split == "development" else HOLDOUT_ALLOWANCE
 
 
@@ -118,10 +127,11 @@ def _scope(metadata: dict) -> dict:
 def approval_proposal(metadata: dict) -> dict:
     scope = _scope(metadata)
     split, budget = scope["split"], scope["maximum_outbound_attempts"]
-    evidence = metadata["configuration"]["policy"] == EVIDENCE_PROFILE
+    name = metadata["configuration"]["policy"]
+    evidence, paced = name == EVIDENCE_PROFILE, name == PACED_PROFILE
     history = {}
-    if evidence:
-        prior_used = 125
+    if evidence or paced:
+        prior_used = 249 if paced else 125
         if split == "holdout":
             _selection_files(metadata["selection_lock"])
             completion = json.loads((Path(metadata["selection_lock"]["development_run"]) / "completion.json").read_text(encoding="utf-8"))
@@ -130,7 +140,10 @@ def approval_proposal(metadata: dict) -> dict:
                 raise ValueError("Selected development accounting differs")
             prior_used += used
         history = {"prior_development_binding": prior_development_binding(), "prior_attempts_used": prior_used}
-    return {"kind": f"hf_cerebras_{'evidence_' if evidence else ''}{split}_approval_v1",
+        if paced:
+            history["prior_evidence_binding"] = prior_evidence_binding()
+    qualifier = "paced_" if paced else "evidence_" if evidence else ""
+    return {"kind": f"hf_cerebras_{qualifier}{split}_approval_v1",
             "status": "pending_user_approval", "authorization_source": None,
             **scope, "paper_data_planned": True, "exhausted_history_binding": schema_history_binding(),
             **history,
@@ -139,7 +152,8 @@ def approval_proposal(metadata: dict) -> dict:
                      "public paper contexts required by these jobs. Failed or uncertain attempts count. Stop on failed "
                      "qualification, schema, attribution, accounting, source, usage or resource checks and uncertain work. "
                      "No retry of a stopped run, provider fallback, spending outside this split or app/Telegram activation."
-                     + (" This is a separate ceiling; the prior development grant's 164 unused slots are not transferred." if evidence else "")}
+                     + (" This is a separate ceiling; the previous grants' 164 and 137 unused slots are not transferred." if paced else
+                        " This is a separate ceiling; the prior development grant's 164 unused slots are not transferred." if evidence else "")}
 
 
 def _selection_files(selection: dict) -> None:
@@ -210,6 +224,37 @@ def prior_development_binding(*, run=PRIOR_DEVELOPMENT_RUN, ledger=DEVELOPMENT_A
             or report.get("model") != metadata["configuration"]["model"] or report.get("funding_binding") != accounting):
         raise ValueError("Previous failed development or accounting differs")
     return digest({"seal_sha256": seal_sha256, "accounting": accounting, "attempts_used": 97})
+
+
+def prior_evidence_binding(*, run=PRIOR_EVIDENCE_RUN, ledger=EVIDENCE_DEVELOPMENT_ALLOWANCE,
+                           seal_path=PRIOR_EVIDENCE_SEAL, seal_sha256=PRIOR_EVIDENCE_SEAL_SHA256) -> str:
+    """Verify the sealed stopped v3 run and all 124 settled calls, read-only."""
+    run, ledger, seal_path = Path(run), Path(ledger), Path(seal_path)
+    if hashlib.sha256(seal_path.read_bytes()).hexdigest() != seal_sha256:
+        raise ValueError("Stopped development evidence seal differs")
+    hashes = json.loads(seal_path.read_text(encoding="utf-8"))["files"]
+    if any(hashlib.sha256(Path(name).read_bytes()).hexdigest() != expected for name, expected in hashes.items()):
+        raise ValueError("Stopped development evidence changed")
+    metadata = json.loads((run / "metadata.json").read_text(encoding="utf-8"))
+    completion = json.loads((run / "completion.json").read_text(encoding="utf-8"))
+    report = json.loads((run / "score.json").read_text(encoding="utf-8"))
+    required = {run / name for name in ("metadata.json", "completion.json", "qualification.json", "records.jsonl", "reviews.json", "score.json")}
+    required.update({ledger, ledger.with_suffix(".registered"), Path(metadata["allowance"]["approval_path"])})
+    if not {p.resolve() for p in required} <= {Path(name).resolve() for name in hashes}:
+        raise ValueError("Stopped evidence seal is incomplete")
+    accounting = validate_task_accounting(metadata, run, completion, path=ledger)
+    if (metadata.get("configuration", {}).get("policy") != EVIDENCE_PROFILE
+            or metadata.get("hosted_manifest_sha256") != EVIDENCE_TASK_SHA256
+            or metadata.get("split") != "development" or completion.get("status") != "stopped"
+            or completion.get("stop_reason") != "failed_paper_request"
+            or completion.get("outbound_attempts") != 124 or completion.get("accounted_attempts_used") != 124
+            or completion.get("attempts") != 63 or completion.get("planned") != 64
+            or report.get("development_accepted") is not False or report.get("collection_complete") is not False
+            or report.get("attempts") != 63 or report.get("planned_attempts") != 64
+            or report.get("hosted_manifest_sha256") != EVIDENCE_TASK_SHA256
+            or report.get("model") != metadata["configuration"]["model"] or report.get("funding_binding") != accounting):
+        raise ValueError("Stopped development or accounting differs")
+    return digest({"seal_sha256": seal_sha256, "accounting": accounting, "attempts_used": 124})
 
 
 class TaskAllowance:

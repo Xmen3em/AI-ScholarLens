@@ -8,7 +8,7 @@ from src.commands import evaluate_hf_papers as cli
 from src.commands import hf_paper_client as client_module
 from src.commands import score_hf_agent as scoring
 from src.commands.hf_paper_allowance import TaskAllowance
-from src.commands.hf_paper_profile import EVIDENCE_PROFILE, EVIDENCE_TASK_SHA256
+from src.commands.hf_paper_profile import EVIDENCE_PROFILE, EVIDENCE_TASK_SHA256, PACED_PROFILE, PACED_TASK_SHA256
 from src.config import Settings
 from src.operations import request_context
 from src.schemas.api.rag import GeneratedAnswer
@@ -16,26 +16,35 @@ from src.services.rag.service import _selection_pattern
 
 from tests.unit.test_hf_client import envelope, settings
 from tests.unit.test_hf_evidence_allowance import evidence_setup
+from tests.unit.test_hf_paced_allowance import paced_setup
 from tests.unit.test_hf_paper_client import arguments
 from tests.unit.test_hf_paper_scoring import complete_development
 from tests.unit.test_hf_tokenizer import install_vocabulary
 
 
-def test_evidence_cli_proposal_is_unfunded_and_does_not_read_credentials(tmp_path, monkeypatch):
-    metadata, _, path = evidence_setup(tmp_path, monkeypatch, approved=False)
+@pytest.fixture(params=[(EVIDENCE_PROFILE, EVIDENCE_TASK_SHA256, 125, evidence_setup),
+                       (PACED_PROFILE, PACED_TASK_SHA256, 249, paced_setup)])
+def selected_profile(request):
+    return request.param
+
+
+def test_evidence_cli_proposal_is_unfunded_and_does_not_read_credentials(tmp_path, monkeypatch, selected_profile):
+    profile_name, manifest_sha, previous, prepare = selected_profile
+    metadata, _, path = prepare(tmp_path, monkeypatch, approved=False)
     monkeypatch.setattr(cli, "plan_collection", lambda *a, **k: metadata.copy())
     monkeypatch.setattr(cli, "Settings", lambda: pytest.fail("Proposal read credentials"))
-    monkeypatch.setattr(sys, "argv", ["evaluate_hf_papers", "--snapshot", str(tmp_path), "--profile", EVIDENCE_PROFILE,
+    monkeypatch.setattr(sys, "argv", ["evaluate_hf_papers", "--snapshot", str(tmp_path), "--profile", profile_name,
                                     "--output", str(tmp_path / "proposal"), "--propose-approval"])
     cli.main()
     proposed = json.loads((tmp_path / "proposal/proposed-approval.json").read_text())
-    assert proposed["status"] == "pending_user_approval" and proposed["prior_attempts_used"] == 125
-    assert proposed["hosted_manifest_sha256"] == EVIDENCE_TASK_SHA256
+    assert proposed["status"] == "pending_user_approval" and proposed["prior_attempts_used"] == previous
+    assert proposed["hosted_manifest_sha256"] == manifest_sha
     assert not path.exists() and not path.with_suffix(".registered").exists()
 
 
-def test_approved_evidence_collector_receives_exact_profile_without_changing_private_settings(tmp_path, monkeypatch):
-    metadata, approval, path = evidence_setup(tmp_path, monkeypatch)
+def test_approved_evidence_collector_receives_exact_profile_without_changing_private_settings(tmp_path, monkeypatch, selected_profile):
+    profile_name, manifest_sha, previous, prepare = selected_profile
+    metadata, approval, path = prepare(tmp_path, monkeypatch)
     monkeypatch.setattr(cli, "plan_collection", lambda *a, **k: metadata.copy())
     monkeypatch.setattr(cli, "source_hashes", lambda: metadata["source_sha256"].copy())
     original = settings(agent_enabled=False, rag_sentence_candidates_per_passage=1).model_copy(
@@ -54,22 +63,23 @@ def test_approved_evidence_collector_receives_exact_profile_without_changing_pri
     async def collect(config, jobs, papers, chunks, output, profile, budget, **kwargs):
         assert config.rag_sentence_candidates_per_passage == 3 and config.rag_max_sentence_candidates == 10
         assert config.hf_inference_enabled and config.agent_enabled and not config.answer_cache_enabled
-        assert len(jobs) == 64 and budget == 261 and profile["version"] == EVIDENCE_PROFILE
-        assert kwargs["hf_factory"].keywords["profile_name"] == EVIDENCE_PROFILE
+        assert len(jobs) == 64 and budget == 261 and profile["version"] == profile_name
+        assert kwargs["hf_factory"].keywords["profile_name"] == profile_name
         seen.append(True)
         return {"status": "stopped", "outbound_attempts": 0}
 
     monkeypatch.setattr(cli, "run_collection", collect)
-    monkeypatch.setattr(sys, "argv", ["evaluate_hf_papers", "--snapshot", str(tmp_path), "--profile", EVIDENCE_PROFILE,
+    monkeypatch.setattr(sys, "argv", ["evaluate_hf_papers", "--snapshot", str(tmp_path), "--profile", profile_name,
                                     "--output", str(tmp_path / "run"), "--execute", "--approval", str(approval)])
     cli.main()
     assert seen and path.exists() and original.model_dump() == before
 
 
 @pytest.mark.anyio
-async def test_evidence_client_qualifies_then_enforces_ten_candidate_boundary(tmp_path, monkeypatch, stub_httpx):
+async def test_evidence_client_qualifies_then_enforces_ten_candidate_boundary(tmp_path, monkeypatch, stub_httpx, selected_profile):
+    profile_name, manifest_sha, previous, prepare = selected_profile
     install_vocabulary(tmp_path, monkeypatch)
-    metadata, approval, path = evidence_setup(tmp_path, monkeypatch)
+    metadata, approval, path = prepare(tmp_path, monkeypatch)
     grant = TaskAllowance(approval, metadata, snapshot=tmp_path)
     monkeypatch.setattr(client_module, "source_hashes", lambda: metadata["source_sha256"].copy())
     config = settings(hf_models=["openai/gpt-oss-120b:cerebras"], hf_default_model="openai/gpt-oss-120b:cerebras",
@@ -80,7 +90,7 @@ async def test_evidence_client_qualifies_then_enforces_ten_candidate_boundary(tm
     calls = stub_httpx(lambda request: httpx.Response(200, json=envelope(json.dumps(outputs.pop(0)),
                                                         usage={"prompt_tokens": 100, "completion_tokens": 20})))
     hf = client_module.FundedHF(config, grant=grant, output=tmp_path, source=metadata["source_sha256"],
-                                outbound_budget=261, memory=lambda: 4096, profile_name=EVIDENCE_PROFILE)
+                                outbound_budget=261, memory=lambda: 4096, profile_name=profile_name)
     try:
         for case in cases:
             await hf.generate_result(config.hf_default_model, case["prompt"], **arguments(case))
@@ -99,13 +109,14 @@ async def test_evidence_client_qualifies_then_enforces_ten_candidate_boundary(tm
         await hf.aclose()
 
 
-def test_evidence_scoring_uses_funded_complete_matrix_without_lowering_quality_gates(tmp_path, monkeypatch):
+def test_evidence_scoring_uses_funded_complete_matrix_without_lowering_quality_gates(tmp_path, monkeypatch, selected_profile):
+    profile_name, manifest_sha, previous, prepare = selected_profile
     reviews = complete_development(tmp_path, monkeypatch)
     path = tmp_path / "metadata.json"
     metadata = json.loads(path.read_text())
-    metadata["configuration"]["policy"] = EVIDENCE_PROFILE
-    metadata["hosted_manifest_sha256"] = reviews["hosted_manifest_sha256"] = EVIDENCE_TASK_SHA256
+    metadata["configuration"]["policy"] = profile_name
+    metadata["hosted_manifest_sha256"] = reviews["hosted_manifest_sha256"] = manifest_sha
     path.write_text(json.dumps(metadata))
-    result = scoring.score_run(tmp_path, tmp_path, reviews, profile_name=EVIDENCE_PROFILE)
+    result = scoring.score_run(tmp_path, tmp_path, reviews, profile_name=profile_name)
     assert result["development_accepted"] and result["funding_binding"] == "funded-proof"
     assert result["attempts"] == 64 and result["gate_failures"] == []
