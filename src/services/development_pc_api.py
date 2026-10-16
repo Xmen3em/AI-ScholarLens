@@ -112,7 +112,11 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
                 store.recover_interrupted()
                 tutor = StudyModel(settings.hf_token, store)
                 owned.push_async_callback(tutor.aclose)
-                app.state.study = StudyService(store, ArxivIntake(public), PaperContentService(root / "sources", public), tutor)
+                research_python = workspace / ".venv-study-research/Scripts/python.exe"
+                if not research_python.is_file() or research_python.is_symlink():
+                    research_python = None
+                app.state.study = StudyService(store, ArxivIntake(public), PaperContentService(root / "sources", public), tutor,
+                                               research_python=research_python)
                 owned.push_async_callback(app.state.study.aclose)
             yield
         finally:
@@ -134,7 +138,8 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
     async def status():
         return {"mode": "development", "accepted": False, "model": MODEL, "search_mode": "bm25",
                 "answer_modes": ["general_knowledge", "paper_evidence"],
-                "generation_attempts": app.state.hf.attempts}
+                "generation_attempts": app.state.hf.attempts, "study_enabled": study_owner is not None,
+                "study_generation_attempts": app.state.study.store.total_attempts() if study_owner is not None else 0}
 
     @app.post("/api/v1/agent/ask", response_model=AgentResponse | LearningResponse)
     async def ask(request: AskRequest):

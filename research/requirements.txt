@@ -1,0 +1,9 @@
+# Isolated SDK experiment; do not synchronize this into the running bot venv.
+deepagents==0.7.28
+langchain==1.4.6
+langchain-core==1.6.12
+langgraph==1.2.15
+mcp==1.30.0
+tiktoken==0.14.0
+pypdfium2==5.14.0
+pydantic==2.12.5

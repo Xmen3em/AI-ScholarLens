@@ -82,3 +82,19 @@ def test_a_delivery_is_reserved_before_sending_and_cannot_be_claimed_twice(tmp_p
     store.finish_job(job["id"], {"text": "lesson"})
     assert store.claim_delivery(job["id"]) is True
     assert StudyStore(path, "owner-a").claim_delivery(job["id"]) is False
+
+
+def test_retention_and_forget_preserve_admission_without_retaining_the_question(tmp_path):
+    clock = [1000]
+    store = StudyStore(tmp_path / "study.sqlite3", "owner", now=lambda: clock[0])
+    job = store.create_job("one", {"text": "private learner question"})
+    store.finish_job(job["id"], {"text": "private learner answer"})
+    store.forget()
+    redacted = store.create_job("one", {"text": "private learner question"})
+    assert redacted["payload"] == {} and redacted["result"] is None
+    clock[0] += 31 * 86400
+    second = store.create_job("two", {"text": "another question"})
+    store.finish_job(second["id"], {"text": "another answer"})
+    clock[0] += 31 * 86400
+    store.create_job("three", {})
+    assert store.get_job(second["id"])["payload"] == {} and store.get_job(second["id"])["result"] is None

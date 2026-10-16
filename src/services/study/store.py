@@ -42,6 +42,10 @@ class StudyStore:
                     owner TEXT NOT NULL, id TEXT NOT NULL, content TEXT NOT NULL, lesson TEXT,
                     PRIMARY KEY(owner,id));
             """)
+            if "payload_hash" not in {row[1] for row in db.execute("PRAGMA table_info(jobs)")}:
+                db.execute("ALTER TABLE jobs ADD COLUMN payload_hash TEXT")
+                for row in db.execute("SELECT id,payload FROM jobs").fetchall():
+                    db.execute("UPDATE jobs SET payload_hash=? WHERE id=?", (hashlib.sha256(row["payload"].encode()).hexdigest(), row["id"]))
 
     @contextmanager
     def _db(self):
@@ -67,17 +71,21 @@ class StudyStore:
         if not 1 <= len(intent) <= 120 or not 1 <= max_calls <= 8:
             raise StoreConflict("invalid_admission")
         encoded = _json(payload)
+        digest = hashlib.sha256(encoded.encode()).hexdigest()
         with self._db() as db:
+            # Keep accounting/idempotency tombstones, but expire old dialogue/results.
+            db.execute("UPDATE jobs SET payload='{}',result=NULL,delivery=1 WHERE owner=? AND status!='running' AND created<?",
+                       (self.owner, self.now() - 30 * 86400))
             row = db.execute("SELECT * FROM jobs WHERE owner=? AND intent=?", (self.owner, intent)).fetchone()
             if row:
-                if row["payload"] != encoded:
+                if row["payload_hash"] != digest:
                     raise StoreConflict("intent_payload_changed")
                 return self._job(row)
             if db.execute("SELECT 1 FROM jobs WHERE owner=? AND status='running'", (self.owner,)).fetchone():
                 raise StoreConflict("study_busy")
             identity = uuid.uuid4().hex
-            db.execute("INSERT INTO jobs(id,owner,intent,payload,status,max_calls,created) VALUES(?,?,?,?,?,?,?)",
-                       (identity, self.owner, intent, encoded, "running", max_calls, self.now()))
+            db.execute("INSERT INTO jobs(id,owner,intent,payload,status,max_calls,created,payload_hash) VALUES(?,?,?,?,?,?,?,?)",
+                       (identity, self.owner, intent, encoded, "running", max_calls, self.now(), digest))
             return self._job(db.execute("SELECT * FROM jobs WHERE id=?", (identity,)).fetchone())
 
     def get_job(self, job_id: str) -> dict | None:
@@ -107,6 +115,11 @@ class StudyStore:
             count = db.execute("SELECT COUNT(*) FROM attempts WHERE job=?", (job_id,)).fetchone()[0]
             if not job or job["status"] != "running" or count >= job["max_calls"]:
                 raise StoreConflict("attempt_budget_exhausted")
+            ceiling = self._get(db, "attempt_ceiling")
+            if ceiling is not None:
+                total = db.execute("SELECT COUNT(*) FROM attempts a JOIN jobs j ON j.id=a.job WHERE j.owner=?", (self.owner,)).fetchone()[0]
+                if total >= ceiling:
+                    raise StoreConflict("run_attempt_budget_exhausted")
             db.execute("INSERT INTO attempts VALUES(?,?,?,?,?)", (job_id, count + 1, purpose[:80], model[:160], "reserved"))
             return count + 1
 
@@ -149,6 +162,7 @@ class StudyStore:
             context = self._get(db, "context")
             if context and self.now() - context["updated"] > 86400:
                 context["turns"] = []
+                self._set(db, "context", context)
             return context
 
     def append_turn(self, paper_id: str, question: str, answer: str) -> None:
@@ -163,6 +177,19 @@ class StudyStore:
     def preferences(self) -> dict:
         with self._db() as db:
             return self._get(db, "preferences", {"depth": "beginner"})
+
+    def set_total_ceiling(self, ceiling: int) -> None:
+        if type(ceiling) is not int or not 1 <= ceiling <= 12:
+            raise StoreConflict("invalid_run_budget")
+        with self._db() as db:
+            current = self._get(db, "attempt_ceiling")
+            if current is not None and current != ceiling:
+                raise StoreConflict("run_budget_is_immutable")
+            self._set(db, "attempt_ceiling", ceiling)
+
+    def total_attempts(self) -> int:
+        with self._db() as db:
+            return db.execute("SELECT COUNT(*) FROM attempts a JOIN jobs j ON j.id=a.job WHERE j.owner=?", (self.owner,)).fetchone()[0]
 
     def set_preferences(self, *, depth: str) -> None:
         if depth not in {"beginner", "researcher"}:
@@ -182,6 +209,8 @@ class StudyStore:
             db.execute("INSERT INTO papers VALUES(?,?,?,?) ON CONFLICT(owner,id) DO UPDATE "
                        "SET content=excluded.content,lesson=COALESCE(excluded.lesson,papers.lesson)",
                        (self.owner, paper_id, _json(content), _json(lesson) if lesson else None))
+            db.execute("DELETE FROM papers WHERE owner=? AND rowid NOT IN "
+                       "(SELECT rowid FROM papers WHERE owner=? ORDER BY rowid DESC LIMIT 10)", (self.owner, self.owner))
 
     def paper(self, paper_id: str) -> dict | None:
         with self._db() as db:
@@ -191,7 +220,7 @@ class StudyStore:
     def forget(self) -> None:
         # Admission/attempt records are accounting tombstones and remain durable.
         with self._db() as db:
-            db.execute("DELETE FROM state WHERE owner=?", (self.owner,))
+            db.execute("DELETE FROM state WHERE owner=? AND key!='attempt_ceiling'", (self.owner,))
             db.execute("DELETE FROM papers WHERE owner=?", (self.owner,))
             db.execute("UPDATE jobs SET payload='{}', result=NULL,delivery=1 WHERE owner=? AND status!='running'", (self.owner,))
 
