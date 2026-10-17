@@ -21,6 +21,10 @@ from src.services.rag.service import _unique_object
 from src.services.telegram_policy import HELP_TEXT, format_reply, owner_text, parse_update
 
 API_FAILURE = "The research service is unavailable or could not validate an answer. This question was not retried."
+STUDY_API_FAILURE = (
+    "الخدمة مش متاحة حاليًا أو وصلنا لحدّ الطلبات. استنى شوية، وبعدها استخدم /study أو /notes لمراجعة آخر ورقة. "
+    "مش هكرر الطلب تلقائيًا."
+)
 MAX_BODY_BYTES = 262_144
 LEARNING_HELP = (
     "Ask me to explain AI/ML concepts or ask about the stored research papers. "
@@ -258,11 +262,18 @@ class PrivateTelegramBot:
                 try:
                     result = await self._post(self._api, self.settings.api_base_url.rstrip("/") + "/study/messages",
                                               {"intent": f"telegram:{update_id}", "text": text})
-                    if result.get("fallback") is not True:
-                        await self._study_text(result.get("reply", "الطلب اتسجّل."))
-                        return "study_admitted"
                 except (BotError, ValueError, TypeError):
+                    try:
+                        await self._study_text(STUDY_API_FAILURE)
+                    except BotError:
+                        return "reply_failed"
                     return "api_failed"
+                if result.get("fallback") is not True:
+                    try:
+                        await self._study_text(result.get("reply", "الطلب اتسجّل."))
+                    except (BotError, ValueError, TypeError):
+                        return "reply_failed"
+                    return "study_admitted"
             action = parse_update(update, self.owner_id)
             if action is None:
                 return "ignored"
@@ -291,7 +302,7 @@ class PrivateTelegramBot:
                         replies = format_reply(response)
                     status = "answered"
                 except (BotError, ValueError, TypeError):
-                    replies, status = [API_FAILURE], "api_failed"
+                    replies, status = [STUDY_API_FAILURE if self.study else API_FAILURE], "api_failed"
             for reply in replies:
                 try:
                     sent = await self._call_telegram("sendMessage", {"chat_id": self.owner_id, "text": reply})

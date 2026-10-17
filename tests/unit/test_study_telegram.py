@@ -67,3 +67,33 @@ async def test_photo_requires_a_valid_acknowledgement_without_retry(stub_httpx, 
         with pytest.raises(BotError):
             await bot._study_photo(encoded)
     assert len(calls) == 1
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("failure", [429, 503, "timeout"])
+async def test_study_api_failure_is_explained_once_to_the_owner(stub_httpx, tmp_path, failure):
+    def respond(request):
+        if request.url.host == "api.telegram.org":
+            return httpx.Response(200, json={"ok": True, "result": {"message_id": 1}})
+        if failure == "timeout":
+            raise httpx.ReadTimeout("uncertain local admission")
+        return httpx.Response(failure, json={"detail": "private-diagnostic-must-not-be-forwarded"})
+    calls = stub_httpx(respond)
+    async with PrivateTelegramBot(settings(), SecretStr(KEY), OffsetStore(tmp_path / "offset.json"), study=True) as bot:
+        assert await bot.handle(update("/paper 1706.03762")) == "api_failed"
+        assert bot.store.offset == 11
+    assert len(calls) == 2
+    payload = json.loads(calls[-1].content)
+    assert "الخدمة" in payload["text"] and "private-diagnostic" not in payload["text"]
+
+
+@pytest.mark.anyio
+async def test_an_uncertain_admission_reply_does_not_trigger_another_telegram_message(stub_httpx, tmp_path):
+    def respond(request):
+        if request.url.host == "api.telegram.org":
+            raise httpx.ReadTimeout("uncertain message acknowledgement")
+        return httpx.Response(200, json={"reply": "بجهّز الشرح", "job_id": "a" * 32})
+    calls = stub_httpx(respond)
+    async with PrivateTelegramBot(settings(), SecretStr(KEY), OffsetStore(tmp_path / "offset.json"), study=True) as bot:
+        assert await bot.handle(update("/paper 1706.03762")) == "reply_failed"
+    assert len(calls) == 2
