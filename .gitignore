@@ -182,6 +182,7 @@ data/
 test_*.py
 !tests/test_*.py
 !tests/**/test_*.py
+!research/tests/test_*.py
 test_output/
 test_data/
 

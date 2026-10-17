@@ -59,6 +59,7 @@ async def test_uncertain_delivery_is_claimed_first_and_not_replayed(stub_httpx, 
 @pytest.mark.parametrize("ack", [{}, {"message_id": False}, {"message_id": 0}])
 async def test_photo_requires_a_valid_acknowledgement_without_retry(stub_httpx, tmp_path, ack):
     import base64
+
     from src.services.telegram_bot import BotError
     calls = stub_httpx(lambda _: httpx.Response(200, json={"ok": True, "result": ack}))
     encoded = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"synthetic-test-image").decode()

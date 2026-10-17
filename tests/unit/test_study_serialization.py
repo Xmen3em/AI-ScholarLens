@@ -8,6 +8,7 @@ from src.services import development_pc_api as runtime
 from src.services.study.api import add_study_routes
 from src.services.study.service import StudyService
 from src.services.study.store import StudyStore
+
 from tests.unit.test_development_bot import config
 from tests.unit.test_study_service import Content, Model
 
