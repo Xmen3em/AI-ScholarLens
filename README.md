@@ -2,18 +2,24 @@
 
 **Read AI papers. Trace the evidence. Build understanding.**
 
-[بالمصري](README.ar.md) · [Visual codebase guide](codebase-overview.html) · [How we built it](docs/build-story.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
+[بالمصري](README.ar.md) · [Paper-study guide](docs/paper-study-guide.md) · [Visual baseline guide](codebase-overview.html) · [How we built it](docs/build-story.md) · [MIT license](LICENSE)
 
-ScholarLens is an experimental AI research assistant with a private Telegram interface. It explains general AI/ML concepts and answers questions about an indexed paper collection using cited evidence. The current prototype uses **LangGraph**, **OpenSearch**, and **Hugging Face Inference Providers**, with `openai/gpt-oss-120b:cerebras` for remote generation.
+ScholarLens is an experimental paper-learning assistant with a private Telegram interface. Bring an AI paper from arXiv, receive an initial lesson in Egyptian Arabic, and explore that paper through follow-up questions, examples and comprehension checks. It uses **LangGraph** and **Hugging Face Inference Providers**, with `openai/gpt-oss-120b:cerebras` for remote generation.
 
-The next product direction is an **interactive paper tutor in Egyptian Arabic**: bring a paper by URL, title, or identifier; receive an initial guided lesson; then explore its methods, figures, equations, results, and limitations through conversation. That experience is being designed. It is not yet implemented.
+The selected-paper workflow is implemented on `codex/paper-intake` and has passed bounded live development checks for a lesson, Arabic follow-up and restricted **Deep Agents** tool use. It retains general concept explanations and cited answers over the existing OpenSearch collection. See the [implementation report](docs/paper-study-implementation.md) for measured results and limitations.
 
-> **Development prototype.** Private manual testing works. Formal paper-answer quality gates have not passed; valid questions can still produce insufficient evidence, and multi-paper coverage is limited. This is not a public hosted bot or a production release. See the [measured holdout result](docs/hf-cerebras-paced-holdout-result.md).
+> **Development prototype.** Scientific explanations and Egyptian wording still need human review and an independent learning-quality evaluation. The earlier indexed-paper quality gates have not passed; see the [holdout result](docs/hf-cerebras-paced-holdout-result.md). This is a private PC prototype, not a public hosted service.
 
 ## What works today
 
 | Capability | Current behavior |
 | --- | --- |
+| Bring a paper | arXiv URL/ID with explicit version; title matches require selection |
+| Egyptian Arabic lessons | Initial teaching, paper-scoped follow-ups and labeled examples |
+| Evidence | Server-owned exact excerpts, ID/numeric validation and a bounded grounding review |
+| Study interaction | Telegram keyboard, conversational comprehension questions, depth selection and study maps |
+| Memory | Four recent turns per paper, expiry, explicit preferences and `/forget` |
+| Optional research | Isolated Deep Agents with source read tools; optional read-only local MCP |
 | General AI/ML questions | Simple explanations, explicitly labeled as model knowledge |
 | Paper questions | Retrieval, bounded LangGraph decisions, exact quotations and source citations |
 | Private Telegram | Paired owner only; polling on the owner's PC |
@@ -22,24 +28,35 @@ The next product direction is an **interactive paper tutor in Egyptian Arabic**:
 | Existing platform | arXiv ingestion, Docling parsing, PostgreSQL, keyword/hybrid search, JSON/SSE answers and Gradio |
 | Operational controls | API authentication, quotas, bounded calls, deadlines and durable Telegram offsets |
 
-The development bot does **not** yet ingest a paper pasted into chat, remember an active paper across questions, generate teaching diagrams, run quizzes, or respond consistently in Egyptian Arabic. Those are [proposed capabilities](CAPABILITY_MAP.md). Scheduled paper discovery remains part of the existing platform; it is no longer the focus of the next product iteration.
+OCR is an implemented but disabled candidate adapter; live image qualification, reliable figure/equation interpretation, scored learning progress, web study UI and application-level Notion export remain future work. Scheduled discovery belongs to the existing platform and is outside the learning flow.
 
 ## Try the current prototype
 
-Examples for the existing collection:
+Start with one paper:
+
+```text
+/paper https://arxiv.org/abs/2005.11401v4
+اشرح الفرق بين retriever و generator بمثال بسيط
+اختبر فهمي
+/notes
+```
+
+For title search use `/paper Attention Is All You Need`, then `/choose 1`. Use `/study` for the current version, `/level researcher` for more depth, and `/forget` to clear study context. The [study guide](docs/paper-study-guide.md) explains optional `/deep`, coverage, retention and failure behavior.
+
+Examples for the older collection/concept modes:
 
 - `What is RAG?` — general explanation, labeled as model knowledge.
 - `Which dataset is used in When Does a Classifier Help an LLM?` — cited paper evidence.
 - `What tool-use failures does SpeechGym identify?` — cited paper evidence.
 
-Use the paper title and one specific question per message. Paper responses quote evidence; they do not yet provide a complete personalized lesson. The Telegram integration is private: contributors need their own bot and configuration.
+When a paper is active, ordinary messages refer to that paper. The Telegram integration is private: contributors need their own bot and configuration.
 
 ## Run locally
 
 ### Prerequisites
 
-- Python **3.12**, [uv](https://docs.astral.sh/uv/), and Docker Desktop/Compose.
-- A local OpenSearch instance with indexed paper passages for paper questions.
+- Python **3.12** and [uv](https://docs.astral.sh/uv/). Docker Desktop/Compose is needed for the broader platform services, not native arXiv study itself.
+- A local OpenSearch instance with indexed passages for the older collection-answer mode. New arXiv study uses its own source cache and SQLite.
 - For private Telegram testing: your own bot token, verified owner account, HF inference token, and API key in private local configuration.
 
 Create the Windows environment expected by `Telegram.ps1`:
@@ -48,7 +65,7 @@ Create the Windows environment expected by `Telegram.ps1`:
 git clone https://github.com/Xmen3em/AI-ScholarLens.git
 cd AI-ScholarLens
 $env:UV_PROJECT_ENVIRONMENT = ".venv-win"
-uv sync --frozen
+uv sync --frozen --inexact
 Copy-Item .env.example .env
 ```
 
@@ -78,21 +95,29 @@ For the broader Docker platform, start with `docker compose up --build -d` and f
 flowchart TD
     T[Private Telegram chat] --> B[Owner and message validation]
     B --> A[Local development API]
+    A --> I[Selected arXiv paper / title selection]
+    I --> P[Isolated PDF text / page evidence]
+    P --> L[Egyptian lesson / follow-up / review]
+    L --> H[HF router / Cerebras]
+    L --> M[(Owner study state / SQLite)]
+    L --> V[Text actions / study map]
+    V --> B
     A --> R[Concept or paper routing]
     R -->|general concept| K[Model knowledge explanation]
     R -->|paper question| G[Bounded LangGraph workflow]
     G --> S[(OpenSearch passages / BM25)]
     S --> E[Evidence validation and exact citations]
-    R --> H[HF router / Cerebras]
+    R --> H
     G --> H
     K --> B
     E --> B
 ```
 
-The paper graph validates scope, retrieves passages, grades evidence, optionally rewrites once, then answers or abstains. Server-side validation owns the quoted text and citations. A concept explanation is labeled separately; missing paper evidence never silently becomes a model-knowledge answer.
+The study graph resolves, extracts and teaches one selected version. Source validation and review precede delivery; follow-ups use that paper's bounded context. The older collection graph validates scope, retrieves passages, grades evidence, optionally rewrites once, then answers or abstains. Concept explanations are labeled as model knowledge.
 
 | Start here | Responsibility |
 | --- | --- |
+| [study/](src/services/study/) | Paper intake, extraction, learning state, tutor, tools and visuals |
 | [development_assistant.py](src/services/development_assistant.py) | Concept explanations and routing to the paper graph |
 | [agent.py](src/services/agent.py) | LangGraph paper workflow |
 | [development_pc_api.py](src/services/development_pc_api.py) | Isolated hosted-generation runtime and admission limits |
@@ -112,16 +137,15 @@ The paper graph validates scope, retrieves passages, grades evidence, optionally
 
 [TESTING.md](TESTING.md) covers the full suite and service-dependent checks. Live model calls and paid evaluations are separate from deterministic tests. Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing evidence handling or adding a tool. Small fixes, Arabic terminology review, extraction fixtures, and reproducible quality reports are welcome.
 
-## Where the project is going
+## Next extensions
 
-1. Resolve the paper a researcher supplies and keep its version explicit.
-2. Extract structured content; use OCR when needed, with an HF model chosen later.
-3. Produce a first lesson in Egyptian Arabic, grounded in that paper.
-4. Continue through guided questions, examples, comprehension checks and progress.
-5. Add diagrams and inspectable charts, followed by a richer study view.
-6. Add bounded research tools and optional private Notion study exports.
+1. Qualify hosted OCR on scientific scans and difficult tables.
+2. Evaluate Egyptian scientific teaching and missing-evidence behavior independently.
+3. Explain source figures and equations with inspected visual provenance.
+4. Add a richer web study view and explicit learning-progress design.
+5. Add reviewed external research and optional private Notion export.
 
-This is a proposed direction. Read the [capability map](CAPABILITY_MAP.md) and [technical research](docs/paper-learning-research.md) for dependencies, open decisions and the distinction between current behavior and future work.
+Read the [implementation report](docs/paper-study-implementation.md), [current engineering research](docs/research/paper-learning-20261017/DECISIONS.md), and [deferred review questions](docs/paper-study-review.ar.md). The visual HTML guide describes the earlier platform baseline; the study guide covers this iteration.
 
 ## License and acknowledgements
 

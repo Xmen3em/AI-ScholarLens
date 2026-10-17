@@ -21,8 +21,8 @@ bounded operations and restart behavior are part of the product.
   runtime. Add an isolated study store under ignored `data/study/`.
 - Support arXiv first. Title matches require explicit selection, even if there
   is one result. Never silently select an approximate title or a newer version.
-- Use structured HTML when reliable, otherwise bounded PDF text extraction.
-  Use remote OCR as a separately validated fallback; no local OCR weights or
+- Deliver bounded PDF extraction first so page citations/rendering share a source;
+  structured HTML remains an extension. Use remote OCR as a separately validated fallback; no local OCR weights or
   automatic GPU allocation. Record partial, scanned and abstract-only coverage.
 - Keep the user's HF/Cerebras model as the first teaching candidate. Evaluate
   Egyptian Arabic scientific explanation separately from general multilingual
@@ -98,7 +98,7 @@ this is ordinary development verification, not reuse of historical eval grants.
 .venv-win/Scripts/python.exe -m pytest tests/unit/test_study_intake.py -q
 .venv-win/Scripts/python.exe -m pytest tests/unit tests/api -q --basetemp tests/test_output/study-final-tmp
 .venv-win/Scripts/python.exe -m ruff check src tests
-.venv-win/Scripts/python.exe -m mypy src/services/study src/schemas/api/study.py
+.venv-win/Scripts/python.exe -m mypy src/services/study src/commands/study_research.py
 ```
 
 Run focused checks after each slice. Use a new base-temp path whose parent

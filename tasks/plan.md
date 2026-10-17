@@ -16,6 +16,15 @@ evaluation evidence. Commit each verified slice.
 6. Add restricted study tools/MCP and a separately bounded Deep Agents path.
 7. Verify the complete private flow; update documentation and collect questions.
 
+Implementation delivered for the initial native-text learning path: intake,
+PDF worker, durable sessions/attempts, Egyptian teaching/review, Telegram study
+actions/maps, restricted Deep Agents and optional stdio MCP. Live development
+used one immutable 12-attempt ceiling; a lesson, follow-up and actual HF tool
+loop completed. See [results](../docs/paper-study-implementation.md) and
+[review questions](../docs/paper-study-review.ar.md). OCR adapter tests pass,
+but live image qualification and activation remain a separate extension.
+Final broad validation/runtime status is recorded in the committed checkpoint.
+
 Research decisions and pinned model metadata:
 [engineering research](../docs/research/paper-learning-20261017/DECISIONS.md).
 
@@ -26,7 +35,7 @@ Research decisions and pinned model metadata:
 > [capability map](../CAPABILITY_MAP.md) and [research](../docs/paper-learning-research.md).
 > This file's older completion goals and evaluation budgets are historical;
 > they are not current activation instructions or a renewed call allowance.
-> No module implementation plan has been approved for the new direction.
+> The later 17 October authorization and implementation supersede that planning-only state.
 
 ## Active private PC app goal — 2026-10-15
 

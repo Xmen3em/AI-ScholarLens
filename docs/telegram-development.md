@@ -1,5 +1,14 @@
 # Private Telegram development testing
 
+**17 October 2026:** selected-paper learning is implemented on `codex/paper-intake`.
+The [study guide](paper-study-guide.md) covers `/paper`, selection, Egyptian lessons,
+paper memory, study maps, `/notes`, optional `/deep` and local MCP. The sections
+below retain the baseline concept/collection mode and launcher details. Study
+jobs have their own four-attempt shared ceiling; the original six-call legacy
+question ceiling is unchanged. The API also exposes authenticated study job
+admission/delivery endpoints, so the older "only agent endpoint" description
+below applies to the earlier baseline.
+
 Update: the owner chose **“Explain concepts and answer paper questions.”** The
 development bot now handles both. “What is RAG?” and “understand ML systems”
 were each checked live and returned a general explanation using one HF call.

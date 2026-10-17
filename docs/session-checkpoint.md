@@ -1,3 +1,78 @@
+# Interactive paper learning — 2026-10-17
+
+The user authorized a goal, primary-source research and autonomous implementation,
+with questions deferred until the implementation report. The initial native-text
+learning iteration is implemented on `codex/paper-intake`; source checkpoint
+`a358444`. The earlier prototype/checkpoint branches remain historical references.
+
+## Delivered behavior
+
+- Explicit arXiv version resolution; bounded title search with required selection.
+- Isolated PDFium native extraction/rendering, page/hash/revision provenance,
+  source-ID catalogs and server-owned exact excerpts.
+- Egyptian first lessons and focused follow-ups, numeric checks and a separate
+  grounding review that withholds unsupported sections.
+- Durable owner jobs, reserve-before-outbound attempts, interrupted/unknown
+  recovery, paper-scoped recent context, explicit depth, retention and forget.
+- Private Telegram queued delivery, study actions, conversational comprehension
+  questions, notes and deterministic Arabic study maps.
+- An optional separate Deep Agents environment, restricted paper read tools,
+  shared budgets and a patched local read-only MCP server.
+- A disabled remote OCR candidate using publisher image-only input with preserved
+  table/equation line breaks. It is not live-qualified or enabled.
+
+See the [study guide](paper-study-guide.md), [engineering/results article](paper-study-implementation.md),
+[research decisions](research/paper-learning-20261017/DECISIONS.md),
+[next evaluation design](paper-study-evaluation.md) and [Egyptian review note](paper-study-review.ar.md).
+
+## Verification and runtime
+
+Final unit/API verification on source `a358444`: **1,467 passed**, zero failures
+or skips, in823.74seconds. Two existing Typer/Click deprecation warnings remain.
+Proof: ignored `tests/test_output/study-release-final.log` and JUnit XML.
+Current mypy passes all151 source files, Ruff passes src/tests/research, and
+five isolated SDK/protocol/security tests pass.
+
+The independent development smoke ceiling is exhausted at **12/12 attempts**.
+A reviewed lesson, focused Arabic follow-up and actual Deep Agents/HF tool loop
+completed; rejected outputs remain documented. All twelve were transport
+completions, including outputs later rejected by grounding checks. No OCR or
+unsupported-question live smoke occurred. No old grant/receipt was reused/reset.
+These are inspected development cases, not an unseen teaching benchmark.
+
+The paired private PC bot was started successfully on loopback8002. Authenticated
+status and delivery checks returned200; missing API key returned401. Study mode is
+enabled and status remains `accepted:false`. Runtime verification sent no model
+request and no unsolicited Telegram test message. Global enable flags/tokens and
+original data/evaluation evidence were not changed.
+
+Startup/live RAM floors remain1,024/600MiB. Thin imports reduced the measured
+launcher private allocation from101.67 to85.07MiB. A one-time clean WSL cache
+reclamation recovered headroom during debugging. All Docker containers were
+already stopped when inspected; no app was closed or container restarted. Native
+arXiv study runs independently of that stack. See the article for the limits of
+these measurements and the45-page/20MiB input cap.
+
+The optional SDK stack is isolated in `.venv-study-research`: DeepAgents0.7.28,
+LangChain1.4.6/core1.6.12, LangGraph1.2.15, Pydantic2.12.5 and patched MCP1.30.0.
+Baseline Pydantic2.11.7/core2.33.2 and LangChain-core1.6.10 were restored after an
+initial locked-file dependency sync; main environment compatibility passes.
+Final audits found no known vulnerabilities in the pinned optional environment
+or the three new/direct study dependencies. No local model weights were installed.
+
+## Next review
+
+Use the existing private bot; do not repeat BotFather or owner pairing. Review a
+lesson and follow-up, then choose learner depth/terminology and the next extension.
+OCR qualification, source figure/equation interpretation, a richer web study view,
+external research and application-level Notion export remain separate work.
+Deep Agents currently runs on explicit `/deep` requests; the default lesson is
+the bounded LangGraph path. The review note collects the deferred choices.
+
+---
+
+# Earlier documentation checkpoint (historical)
+
 # Open-source documentation and paper-learning direction — 2026-10-16
 
 The user published the working branch, then requested an open-source README,

@@ -10,6 +10,7 @@ this snapshot is not an inference or teaching-quality qualification.
 | Candidate | Verified catalog facts | Decision |
 | --- | --- | --- |
 | LightOnOCR-2-1B | Apache 2.0; HF lists a live Featherless conversational route; card emphasizes scientific text/math; listed languages do not include Arabic | Preferred remote OCR candidate for English AI papers; qualify image input and extraction before enabling |
+| LightOnOCR-3-4B | Apache 2.0; newer author-recommended generation with visual grounding; checked HF mapping is empty | Add to future OCR/figure evaluation; no hosted route or endpoint was provisioned |
 | Granite Docling 258M | Apache 2.0; English listed; no HF provider mapping | Useful structured-extraction reference; do not promise an existing hosted route |
 | PaddleOCR-VL-1.5 | Apache 2.0; multilingual; no HF provider mapping | Candidate for a later separately hosted extraction worker |
 | GLM-OCR | MIT; its listed HF provider currently reports error | Do not select an unavailable route |
@@ -28,6 +29,14 @@ does not demonstrate scientific reasoning, citation fidelity or tool use.
 [Qwen's card](https://huggingface.co/Qwen/Qwen3.5-35B-A3B) describes broad
 language/vision capability; we still need task-specific evaluation.
 
+The [newer LightOnOCR-3 card](https://huggingface.co/lightonai/LightOnOCR-3-4B)
+describes transcription, block bounding boxes and figure/chart understanding.
+Those are author claims requiring independent validation, especially numerical
+chart reconstruction. Public metadata was checked at revision
+`b71010f095dc3735de7ee6b9969bff8f8f50b39a`; no provider mapping was returned.
+The implementation retains the already scoped OCR-2 adapter, disabled pending
+actual image qualification. No claim that OCR-2 is the newest model is intended.
+
 Use the same reviewed source passages and tasks when comparing teaching
 candidates: explain a method, distinguish an analogy, preserve a numerical
 setting, answer an Arabic follow-up, and acknowledge missing evidence. Assess
@@ -36,8 +45,9 @@ or fine-tuning is justified before a prompting/retrieval baseline is measured.
 
 ## Extraction and memory on this PC
 
-Use native structured text first. Prefer arXiv HTML where it reliably preserves
-sections and math, otherwise extract PDF pages. Native PDF extraction does not
+Use native structured text first. The delivered adapter uses versioned PDF pages
+so extraction, source hashes, citation pages and rendering share one source.
+Reliable arXiv HTML is a future adapter. Native PDF extraction does not
 recover scanned text; OCR is a separate operation.
 [PDF extraction limitations](https://pypdf.readthedocs.io/en/stable/user/extract-text.html).
 
@@ -112,8 +122,10 @@ Current LangChain documentation uses the beta `langchain.mcp.MCPAdapter` in
 chosen integration instead of mixing snippets.
 [Current LangChain MCP docs](https://docs.langchain.com/oss/python/langchain/mcp).
 
-The standalone Python MCP SDK also has a newer 2.x line. A compatible pinned
-1.x server can be an explicit optional component for local stdio use; no server
+The standalone Python MCP SDK also has a newer 2.x line. The delivered server
+pins patched `mcp==1.30.0` in the optional isolated environment. Dependency audit
+found vulnerabilities in the initially considered 1.26.0; it was upgraded before
+delivery. Local stdio is the only supported transport; no server
 is automatically installed into the user's desktop configuration. An app's
 Notion connection remains separate from the Codex Notion plugin.
 [Python SDK](https://github.com/modelcontextprotocol/python-sdk).
@@ -129,6 +141,15 @@ needed for the initial native-text learning path.
 
 ## Evidence and remaining validation
 
+The dedicated study profile uses source-ID enums and required strict object
+fields; it does not add the historical unsupported selector regex. The current
+[Cerebras structured-output documentation](https://inference-docs.cerebras.ai/capabilities/structured-outputs)
+lists integer/array/enum support and strict-schema size/nesting limits. Its
+[reasoning documentation](https://inference-docs.cerebras.ai/capabilities/reasoning)
+describes provider reasoning fields in conversation history. The adapter retains
+recognized history fields in memory for tool continuity and excludes them from
+user output and development reports.
+
 The HF connector's model-search tool returned unavailable, so public official
 Hub HTTP metadata and author cards were used. Research HTML/Markdown snapshots
 and hashes are retained locally under ignored test output. Restricted cards are
@@ -136,3 +157,11 @@ marked as unread rather than inferred from a title. Verify the actual selected
 provider/model route before activating OCR. A working implementation and a
 bounded smoke check are development evidence, not a replacement for an unseen
 learning-quality benchmark or a human Egyptian Arabic review.
+
+## Implementation evidence
+
+Read the [implementation report](../../paper-study-implementation.md) for the
+12-attempt live development ledger summary, rejected outputs, exact-snippet
+catalog, semantic review, successful Arabic follow-up and real Deep Agents/HF
+tool loop. OCR received no live call and remains disabled. The optional SDK's
+newer dependency requirements are isolated from the original bot environment.

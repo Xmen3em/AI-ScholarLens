@@ -9,6 +9,13 @@ are superseded by that explicit instruction, not silently bypassed.
 Current code is preserved at `a7a0746` on `codex/telegram-prototype-checkpoint`.
 Documentation and this proposal live on `codex/paper-learning-plan`.
 
+**Implementation update:** the initial arXiv/PDF learning loop, Egyptian lessons,
+paper context, study maps, restricted Deep Agents and optional stdio MCP are now
+implemented on `codex/paper-intake`. See the [measured implementation](docs/paper-study-implementation.md).
+OCR qualification, source figure/equation interpretation, external research and
+application Notion export remain extensions. The map below retains the broader
+intended scope; it is not a claim that every proposed capability shipped.
+
 ## Product promise
 
 الباحث يبعت ورقة، والتطبيق يبدأ يساعده يفهمها بالمصري: شرح واضح من الدليل،
