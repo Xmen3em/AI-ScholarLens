@@ -95,3 +95,11 @@ async def test_failed_validation_cannot_activate_or_leak_an_unverified_lesson(tm
     assert "Fabricated" not in job["result"]["text"]
     assert service.store.context() is None
     await service.aclose()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("question", ["Which dataset is used in this research paper?", "/ask RAG", "Who developed this model?"])
+async def test_explicit_questions_keep_the_existing_assistant_when_no_paper_is_selected(tmp_path, question):
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), None, None, None)
+    assert service.submit("question", question) == {"fallback": True}
+    assert not service.tasks

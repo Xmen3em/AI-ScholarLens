@@ -130,7 +130,7 @@ class StudyService:
         context = self.store.context()
         if not context and command not in {"/paper", "/choose"}:
             # Preserve the existing general-concept assistant for explicit questions.
-            if re.match(r"(?i)^(what|why|how|explain|define|understand|ما هو|ايه|إيه|اشرح|يعني)\b", text):
+            if command == "/ask" or re.match(r"(?i)^(what|why|how|which|who|where|when|explain|define|understand|ما هو|ايه|إيه|اشرح|يعني|هل|مين|فين|متى)\b", text):
                 if any(not task.done() for task in self.tasks):
                     return {"reply": BUSY}
                 return {"fallback": True}
