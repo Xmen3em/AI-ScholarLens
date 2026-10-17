@@ -8,9 +8,9 @@ from contextlib import suppress
 from pathlib import Path
 
 import uvicorn
-from src.commands.evaluate_agent import free_memory_mib
 from src.commands.run_telegram import run_bot
 from src.config import Settings
+from src.resources import free_memory_mib
 from src.services.development_pc_api import ADMISSION_MIB, MODEL, create_development_app, development_settings
 from src.services.hf.tokenizer import verify_vocabulary
 from src.services.telegram_bot import TelegramSettings, single_instance

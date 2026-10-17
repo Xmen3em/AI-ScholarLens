@@ -7,9 +7,15 @@ from pathlib import Path
 
 import httpx
 from pydantic import ValidationError
-from src.commands.hf_paper_acceptance import validate_acceptance
 from src.config import Settings
 from src.services.telegram_bot import BotError, OffsetStore, PrivateTelegramBot, TelegramSettings, single_instance
+
+
+def validate_acceptance(path):
+    # Acceptance execution is optional; ordinary private polling needs no runner.
+    from src.commands.hf_paper_acceptance import validate_acceptance as validate_original
+
+    return validate_original(path)
 
 
 async def run_bot(config: TelegramSettings, settings: Settings, *, development_assistant=False, study=False) -> None:

@@ -7,13 +7,10 @@ from pathlib import Path
 import anyio
 import httpx
 from fastapi import FastAPI, HTTPException
-from src.commands.evaluate_agent import free_memory_mib
-from src.commands.hf_evaluation import validate_structured
-from src.commands.run_pc_api import preview_settings
 from src.config import Settings
 from src.middlewares import OperationalMiddleware
 from src.operations import request_context
-from src.routers.agent import ask as ask_agent
+from src.resources import free_memory_mib
 from src.schemas.api.agent import AgentResponse
 from src.schemas.api.assistant import LearningDecision, LearningResponse
 from src.schemas.api.rag import AskRequest
@@ -21,12 +18,27 @@ from src.services.development_assistant import DevelopmentAssistant, parse_learn
 from src.services.hf.client import HFClient, HFGenerationError, HFResponseError
 from src.services.hf.rag import HostedRAGService
 from src.services.hf.tokenizer import CerebrasInputAdmission, verify_vocabulary
-from src.services.pc_api import make_embedder, make_search_client
+from src.services.pc_clients import make_embedder, make_search_client
+from src.services.pc_configuration import preview_settings
 from src.services.search import SearchService
 
 MODEL = "openai/gpt-oss-120b:cerebras"
 ADMISSION_MIB = 1024
 LIVE_MIB = 600
+
+
+async def ask_agent(request, agent):
+    # Reuse the original error contract only when a legacy question is requested.
+    from src.routers.agent import ask
+
+    return await ask(request, agent)
+
+
+def validate_structured(content, schema):
+    # The original validator remains canonical, loaded only by legacy paper work.
+    from src.commands.hf_evaluation import validate_structured as validate_original
+
+    return validate_original(content, schema)
 
 
 def development_settings(original: Settings, workspace: Path) -> Settings:

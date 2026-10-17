@@ -5,7 +5,6 @@ from typing import Iterator
 
 import anyio
 from fastapi import FastAPI, HTTPException
-from opensearchpy import OpenSearch
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -15,17 +14,9 @@ from src.dependencies import get_settings
 from src.middlewares import OperationalMiddleware
 from src.routers import papers, ping, search
 from src.schemas.api.rag import AskRequest
-from src.services.embeddings.ollama import OllamaEmbedder
 from src.services.ollama.factory import make_ollama_client
+from src.services.pc_clients import make_embedder, make_search_client
 from src.services.search import SearchService
-
-
-def make_search_client(settings: Settings):
-    return OpenSearch(hosts=[settings.opensearch_host], retry_on_timeout=False, max_retries=0, timeout=30)
-
-
-def make_embedder(settings: Settings):
-    return OllamaEmbedder(host=settings.ollama_host, model=settings.ollama_embedding_model)
 
 
 class ReadOnlyDatabase(BaseDatabase):

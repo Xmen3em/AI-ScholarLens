@@ -9,6 +9,7 @@ from typing import Literal
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from src.operations import emit_event
+from src.resources import free_memory_mib as host_memory_mib
 from src.services.hf.client import _unique_object
 from src.services.hf.tokenizer import count_input_tokens
 from src.services.study.content import EvidenceBlock
@@ -45,25 +46,6 @@ class TutorError(RuntimeError):
     def __init__(self, code: str, *, diagnostic: str | None = None):
         self.diagnostic = diagnostic
         super().__init__(code)
-
-
-def host_memory_mib() -> float:
-    # Lazy import keeps optional tool research independent of the evaluation stack.
-    import ctypes
-    import os
-
-    if os.name != "nt":
-        sysconf = getattr(os, "sysconf")
-        available = sysconf("SC_AVPHYS_PAGES") * sysconf("SC_PAGE_SIZE")
-        return available / 1048576
-    class Memory(ctypes.Structure):
-        _fields_ = [("length", ctypes.c_ulong), ("load", ctypes.c_ulong),
-                    *[(name, ctypes.c_ulonglong) for name in ("physical", "available", "page", "available_page", "virtual", "available_virtual", "extended")]]
-    state = Memory()
-    state.length = ctypes.sizeof(state)
-    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(state)):
-        raise TutorError("study_memory_unavailable")
-    return state.available / 1048576
 
 
 class StrictModel(BaseModel):
