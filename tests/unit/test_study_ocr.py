@@ -11,17 +11,20 @@ async def test_ocr_is_one_bounded_vision_attempt_and_returns_untrusted_text(tmp_
     store = StudyStore(tmp_path / "store.sqlite3", "owner")
     job = store.create_job("ocr", {})
     seen = []
+    transcription = "# Results\n| Model | Score |\n| RAG | 44.5 |\nEquation: $y=x^2$"
     def respond(request):
         import json
         payload = json.loads(request.content)
         seen.append(payload)
         assert store.attempts(job["id"])[0]["model"] == "lightonai/LightOnOCR-2-1B:featherless-ai"
         return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {
-            "role": "assistant", "content": "The model uses attention."}}], "usage": {"prompt_tokens": 100, "completion_tokens": 20}})
+            "role": "assistant", "content": transcription}}], "usage": {"prompt_tokens": 100, "completion_tokens": 20}})
     async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
         ocr = RemoteOCR(SecretStr("private-test"), store, client=client, memory=lambda: 2000)
-        assert await ocr.extract_page(job["id"], b"\x89PNG\r\n\x1a\n" + b"x" * 20) == "The model uses attention."
+        assert await ocr.extract_page(job["id"], b"\x89PNG\r\n\x1a\n" + b"x" * 20) == transcription
     assert len(seen) == 1 and seen[0]["max_tokens"] == 2500
+    assert len(seen[0]["messages"][0]["content"]) == 1
+    assert seen[0]["messages"][0]["content"][0]["type"] == "image_url"
     assert store.attempts(job["id"])[0]["state"] == "succeeded"
 
 
