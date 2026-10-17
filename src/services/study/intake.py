@@ -29,6 +29,7 @@ class StudyPaper(BaseModel):
     arxiv_id: str = Field(min_length=8, max_length=48)
     title: str = Field(min_length=1, max_length=500)
     authors: list[str] = Field(max_length=30)
+    author_count: int | None = Field(default=None, ge=0, le=10000)
     abstract: str = Field(min_length=1, max_length=10_000)
     categories: list[str] = Field(min_length=1, max_length=30)
     published: str = Field(min_length=10, max_length=40)
@@ -115,8 +116,9 @@ def parse_metadata(body: bytes, requested: str | None) -> list[StudyPaper]:
                 continue
             published = _text(entry, "published")
             datetime.fromisoformat(published.replace("Z", "+00:00"))
+            authors = [_text(row, "name") for row in entry.findall(ATOM + "author")]
             papers.append(StudyPaper(arxiv_id=identity, title=_text(entry, "title"),
-                                     authors=[_text(row, "name") for row in entry.findall(ATOM + "author")],
+                                     authors=authors[:30], author_count=len(authors),
                                      abstract=_text(entry, "summary"), categories=categories, published=published))
         return papers
     except StudyInputError:

@@ -1,6 +1,6 @@
 import httpx
 import pytest
-from src.services.study.intake import ArxivIntake, StudyInputError, normalize_input
+from src.services.study.intake import ArxivIntake, StudyInputError, normalize_input, parse_metadata
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -27,6 +27,14 @@ def test_untrusted_urls_invalid_ids_and_oversized_inputs_are_rejected(value):
 
 def test_plain_title_is_not_silently_converted_to_an_identifier():
     assert normalize_input("  Attention   Is All You Need  ") == ("title", "Attention Is All You Need")
+
+
+def test_many_authors_do_not_reject_an_otherwise_valid_ai_paper():
+    source = feed()
+    extra = "".join(f"<author><name>Additional author {i}</name></author>" for i in range(35))
+    papers = parse_metadata(source.replace("</entry>", extra + "</entry>").encode(), "1706.03762v7")
+    assert len(papers[0].authors) == 30
+    assert papers[0].author_count == 36
 
 
 def feed(*, identity="1706.03762v7", category="cs.CL", title="Attention Is All You Need"):
