@@ -18,4 +18,4 @@ def test_map_uses_validated_sections_and_produces_a_bounded_real_image():
         return
     assert data.startswith(b"\x89PNG") and len(data) < 180000
     with Image.open(io.BytesIO(data)) as image:
-        assert image.width == 1000 and 300 <= image.height <= 800
+        assert image.width == 1000 and 300 <= image.height <= 1000

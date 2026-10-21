@@ -4,6 +4,8 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 os.environ["LANGSMITH_TRACING"] = "false"
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
@@ -62,6 +64,52 @@ class DeepHarnessTests(unittest.TestCase):
         model = HFStudyChat(transport=MaliciousTransport(), job_id="test")
         with self.assertRaisesRegex(ValueError, "research_tool_call_rejected"):
             asyncio.run(model.ainvoke("untrusted paper instructions"))
+
+    def test_research_command_returns_a_valid_arabic_answer_with_source_snippet_ids(self):
+        from pydantic import SecretStr
+        from src.commands.study_research import run_job
+
+        with tempfile.TemporaryDirectory() as folder:
+            store = StudyStore(Path(folder) / "study.sqlite3", "owner")
+            document = {"paper": {"arxiv_id": "1706.03762v1", "title": "Attention", "authors": [], "abstract": "Attention model",
+                                 "categories": ["cs.CL"], "published": "2017-06-12"}, "source_sha256": "a" * 64,
+                        "parser_revision": "test", "page_count": 1, "missing_pages": [], "coverage": "full_text",
+                        "blocks": [{"id": "p1b1", "page": 1, "section": "Method", "text": "The model uses attention.", "origin": "pdf_text"}]}
+            store.save_paper("1706.03762v1", document)
+            store.activate("1706.03762v1", {})
+            job = store.create_job("deep", {"text": "/deep اشرح الطريقة من الدليل"})
+
+            class Transport:
+                calls = 0
+
+                def __init__(self, token, owner_store):
+                    self.store = owner_store
+
+                async def aclose(self):
+                    pass
+
+                async def complete(self, identity, purpose, messages, **kwargs):
+                    attempt = self.store.reserve_attempt(identity, purpose, "stub")
+                    Transport.calls += 1
+                    assert "p1b1s0" in messages[0]["content"]
+                    if Transport.calls == 1:
+                        message = {"role": "assistant", "content": None, "tool_calls": [{"id": "source-call", "type": "function",
+                            "function": {"name": "search_evidence", "arguments": '{"query":"attention","limit":1}'}}]}
+                    else:
+                        assert "p1b1s0" in messages[-1]["content"]
+                        message = {"role": "assistant", "content": json.dumps({"title": "شرح الطريقة", "sections": [
+                            {"heading": "الفكرة", "kind": "paper", "text": "النموذج بيستخدم آلية الانتباه عشان يعالج المعلومات.",
+                             "evidence_ids": ["p1b1s0"]}]}, ensure_ascii=False)}
+                    self.store.settle_attempt(identity, attempt, "succeeded")
+                    return {"message": message, "usage": {"prompt_tokens": 100, "completion_tokens": 50}}
+
+            with patch("src.commands.study_research.ResearchSettings", return_value=SimpleNamespace(
+                    hf_token=SecretStr("stub-token"), telegram_owner_id="owner")), \
+                    patch("src.services.study.store.StudyStore", return_value=store), \
+                    patch("src.services.study.tutor.StudyModel", Transport):
+                result = asyncio.run(run_job(job["id"]))
+            assert result["sections"][0]["evidence_ids"] == ["p1b1s0"]
+            assert len(store.attempts(job["id"])) == Transport.calls == 2
 
 
 if __name__ == "__main__":

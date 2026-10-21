@@ -317,9 +317,30 @@ class PrivateTelegramBot:
             raise BotError("invalid_study_reply")
         keyboard = {"keyboard": [["بسّطها", "مثال"], ["اشرح الطريقة", "اختبر فهمي"], ["/study", "/notes"]],
                     "resize_keyboard": True, "is_persistent": True}
-        # 1900 Unicode characters remain below Telegram's 4096 UTF-16-unit cap.
-        for start in range(0, len(text), 1900):
-            sent = await self._call_telegram("sendMessage", {"chat_id": self.owner_id, "text": text[start:start + 1900],
+        # Keep paragraphs together where possible and reserve space for part labels.
+        # Telegram measures its cap in UTF-16 units, including astral characters.
+        parts, remaining = [], text
+        while remaining:
+            end, units = 0, 0
+            for character in remaining:
+                cost = 2 if ord(character) > 0xFFFF else 1
+                if units + cost > 3900:
+                    break
+                units += cost
+                end += 1
+            if end < len(remaining):
+                boundary = remaining.rfind("\n\n", 0, end)
+                if boundary >= 0:
+                    end = boundary + 2
+                else:
+                    boundary = remaining.rfind(" ", 0, end)
+                    if boundary > 0:
+                        end = boundary + 1
+            parts.append(remaining[:end])
+            remaining = remaining[end:]
+        for index, part in enumerate(parts, 1):
+            label = f"[{index}/{len(parts)}]\n" if len(parts) > 1 else ""
+            sent = await self._call_telegram("sendMessage", {"chat_id": self.owner_id, "text": label + part,
                                             "reply_markup": keyboard})
             if type(sent) is not dict or type(sent.get("message_id")) is not int or sent["message_id"] <= 0:
                 raise BotError("invalid_message_acknowledgement")

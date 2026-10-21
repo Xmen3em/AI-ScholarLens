@@ -95,6 +95,18 @@ class StudyService:
         text = text.strip()
         command, _, argument = text.partition(" ")
         command = command.lower()
+        if command == "/deep":
+            example = "/deep اشرح طريقة التدريب خطوة بخطوة من الدليل"
+            if not argument.strip():
+                return {"reply": "اكتب سؤالًا بعد /deep عن الورقة الحالية، مثل:\n" + example +
+                        "\nلو لسه ما اخترتش ورقة، افتحها الأول بأمر /paper والرابط."}
+            try:
+                kind, _ = normalize_input(argument)
+            except StudyInputError:
+                kind = None
+            if kind == "id" or argument.startswith(("http://", "https://")):
+                return {"reply": "بعد /deep اكتب سؤالك، مش رابط الورقة. لفتح الورقة استخدم:\n/paper " + argument +
+                        "\nوبعد ما الشرح يجهز ابعت مثلًا:\n" + example}
         if command in {"/paper", "/choose", "/ask", "/deep"} and not argument.strip():
             return {"reply": HELP}
         if command in {"/start", "/help"}:
@@ -235,9 +247,9 @@ class StudyService:
                 [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
                 schema=lesson_schema(selected, followup=bool(state.get("followup"))))
         lesson = validate_lesson(result["output"], selected)
-        lesson = await review_lesson(self.model, state["job_id"], lesson)
-        coverage = document.coverage if len(selected) == len(document.blocks) else "sampled_text"
-        text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title, coverage=coverage)
+        lesson = await review_lesson(self.model, state["job_id"], lesson, blocks=document.blocks)
+        text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title,
+                             coverage=document.coverage, sampled=len(selected) != len(document.blocks))
         self.store.save_paper(document.paper.arxiv_id, document.model_dump(), None if state.get("followup") else lesson.model_dump())
         if not state.get("followup"):
             self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
@@ -267,9 +279,14 @@ class StudyService:
                     if len(body) > 65536:
                         raise TutorError("research_output_limit")
                 await process.wait()
+            raw = json.loads(body)
+            if type(raw) is dict and raw.get("error") == "lesson_validation_failed":
+                diagnostic = raw.get("diagnostic")
+                if diagnostic not in {"shape", "missing_evidence", "unsupported_quote", "unsupported_number", "arabic_output_required"}:
+                    diagnostic = None
+                raise TutorError("lesson_validation_failed", diagnostic=diagnostic)
             if process.returncode or len(body) > 65536:
                 raise TutorError("research_worker_failed")
-            raw = json.loads(body)
             if type(raw) is not dict or "output" not in raw:
                 raise TutorError("research_output_invalid")
             return raw

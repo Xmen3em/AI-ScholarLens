@@ -24,7 +24,7 @@ async def run_job(job_id: str) -> dict:
     from src.services.study.deep import HFStudyChat, create_study_research
     from src.services.study.store import StudyStore
     from src.services.study.tools import StudyTools
-    from src.services.study.tutor import SYSTEM, LessonDraft, StudyModel, validate_lesson
+    from src.services.study.tutor import SYSTEM, StudyModel, lesson_schema, validate_lesson
 
     settings = ResearchSettings()
     store = StudyStore(Path("data/study/sessions.sqlite3"), str(settings.telegram_owner_id))
@@ -36,7 +36,9 @@ async def run_job(job_id: str) -> dict:
     try:
         model = HFStudyChat(transport=transport, job_id=job_id)
         system = SYSTEM + "\nYou have read-only paper tools. Use them to verify the answer. No external web research is available. "
-        system += "Return your final answer as JSON matching this schema: " + json.dumps(LessonDraft.model_json_schema())
+        system += ("Answer only the question, in at most three focused sections; do not repeat the introductory lesson. "
+                   "evidence_ids must be snippet IDs from the tools' evidence entries (e.g. p1b0s0), not block IDs. ")
+        system += "Return your final answer as JSON matching this schema: " + json.dumps(lesson_schema(tools.document.blocks, followup=True))
         agent = create_study_research(model, tools, system)
         context = store.context()
         payload = {"question": job["payload"]["text"][6:], "depth": store.preferences()["depth"],
@@ -60,8 +62,15 @@ def main():
     try:
         result = asyncio.run(run_job(args.job))
         print(json.dumps({"output": result}, ensure_ascii=True), flush=True)
-    except Exception:
-        print(json.dumps({"error": "research_unavailable_or_invalid"}), flush=True)
+    except Exception as exc:
+        from src.services.study.tutor import TutorError
+
+        failure = {"error": "research_unavailable_or_invalid"}
+        if isinstance(exc, TutorError) and str(exc) == "lesson_validation_failed":
+            failure["error"] = "lesson_validation_failed"
+            if exc.diagnostic in {"shape", "missing_evidence", "unsupported_quote", "unsupported_number", "arabic_output_required"}:
+                failure["diagnostic"] = exc.diagnostic
+        print(json.dumps(failure), flush=True)
         raise SystemExit(2) from None
 
 
