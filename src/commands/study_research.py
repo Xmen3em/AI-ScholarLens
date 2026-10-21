@@ -46,7 +46,12 @@ async def run_job(job_id: str) -> dict:
         async with asyncio.timeout(95):
             result = await agent.ainvoke({"messages": [{"role": "user", "content": json.dumps(payload, ensure_ascii=False)}]},
                                          config={"recursion_limit": 16, "callbacks": []})
-        raw = json.loads(result["messages"][-1].content)
+        try:
+            raw = json.loads(result["messages"][-1].content)
+        except (ValueError, TypeError):
+            from src.services.study.tutor import TutorError
+
+            raise TutorError("research_final_json_invalid") from None
         validate_lesson(raw, tools.document.blocks)
         return raw
     finally:
@@ -63,14 +68,9 @@ def main():
         result = asyncio.run(run_job(args.job))
         print(json.dumps({"output": result}, ensure_ascii=True), flush=True)
     except Exception as exc:
-        from src.services.study.tutor import TutorError
+        from src.services.study.failures import failure_payload
 
-        failure = {"error": "research_unavailable_or_invalid"}
-        if isinstance(exc, TutorError) and str(exc) == "lesson_validation_failed":
-            failure["error"] = "lesson_validation_failed"
-            if exc.diagnostic in {"shape", "missing_evidence", "unsupported_quote", "unsupported_number", "arabic_output_required"}:
-                failure["diagnostic"] = exc.diagnostic
-        print(json.dumps(failure), flush=True)
+        print(json.dumps(failure_payload(exc)), flush=True)
         raise SystemExit(2) from None
 
 

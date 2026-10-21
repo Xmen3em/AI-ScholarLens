@@ -12,6 +12,7 @@ from langgraph.graph import END, START, StateGraph
 from src.operations import emit_event
 from src.services.study.content import ContentError, PaperContent
 from src.services.study.evidence import evidence_catalog
+from src.services.study.failures import SAFE_DIAGNOSTICS, SAFE_FAILURES, failure_payload
 from src.services.study.intake import StudyInputError, StudyPaper, normalize_input
 from src.services.study.store import StoreConflict, StudyStore
 from src.services.study.tutor import (
@@ -93,6 +94,10 @@ class StudyService:
         if not text.strip() or len(text) > 512:
             return {"reply": HELP}
         text = text.strip()
+        capability_question = " ".join(re.sub(r"[^\w\s]", "", text.casefold()).split())
+        if capability_question in {"what you can make now", "what can you do", "what can you do now",
+                                   "what can you help me with", "تقدر تعمل إيه", "تقدر تعمل ايه", "بتعمل ايه"}:
+            return {"reply": HELP}
         command, _, argument = text.partition(" ")
         command = command.lower()
         if command == "/deep":
@@ -167,11 +172,14 @@ class StudyService:
             raise
         except Exception as exc:
             code = exc.code if isinstance(exc, (ContentError, StudyInputError)) else "study_generation_unavailable"
-            if isinstance(exc, TutorError) and str(exc) in {"lesson_validation_failed", "study_memory_unavailable"}:
-                code = str(exc)
+            failure = failure_payload(exc, default=code)
+            code = failure["error"]
             messages = {
                 "lesson_validation_failed": "الشرح ما اجتازش التحقق من المصادر، فمش هعرض إجابة ممكن تكون مضللة.",
                 "study_memory_unavailable": "الذاكرة المتاحة قليلة حاليًا. الطلب ما اتكررش تلقائيًا.",
+                "study_context_limit": "سياق الطلب أكبر من الحد الحالي. جرّب سؤالًا عن خطوة محددة؛ مش هكرر الطلب تلقائيًا.",
+                "study_tool_budget_exhausted": "وصلت لحدّ قراءة المصادر المسموح للطلب ده. مش هعرض تحليلًا ناقصًا أو أعيد الطلب تلقائيًا.",
+                "study_provider_http_429": "مزوّد النموذج وصل لحدّ الطلبات حاليًا. الطلب مش هيتكرر تلقائيًا.",
                 "pdf_unavailable": "ملف الـPDF مش متاح من arXiv دلوقتي؛ جرّب طلب جديد لاحقًا.",
                 "pdf_size_limit": "حجم الملف أكبر من حد النسخة الحالية: 20 MiB. اختار ورقة أصغر حاليًا.",
                 "pdf_processing_failed": "ماقدرتش أقرأ ملف الـPDF. الحد الحالي 45 صفحة و20 MiB؛ الملفات الأطول أو غير المقروءة مش مدعومة في النسخة دي.",
@@ -179,7 +187,7 @@ class StudyService:
                 "needs_ocr": "الورقة محتاجة OCR. مسار OCR المستضاف لسه اختياري ومش مفعّل؛ مش هشرح ملف مش مقروء.",
             }
             self.store.finish_job(job_id, {"text": messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية."),
-                "diagnostic": exc.diagnostic if isinstance(exc, TutorError) else code}, status="failed")
+                "failure_code": code, "diagnostic": failure.get("diagnostic", code)}, status="failed")
             emit_event("study_job_completed", outcome="failed", error_class=type(exc).__name__)
 
     async def _resolve(self, state: StudyState) -> dict:
@@ -280,11 +288,11 @@ class StudyService:
                         raise TutorError("research_output_limit")
                 await process.wait()
             raw = json.loads(body)
-            if type(raw) is dict and raw.get("error") == "lesson_validation_failed":
+            if type(raw) is dict and type(raw.get("error")) is str and raw["error"] in SAFE_FAILURES:
                 diagnostic = raw.get("diagnostic")
-                if diagnostic not in {"shape", "missing_evidence", "unsupported_quote", "unsupported_number", "arabic_output_required"}:
+                if type(diagnostic) is not str or diagnostic not in SAFE_DIAGNOSTICS:
                     diagnostic = None
-                raise TutorError("lesson_validation_failed", diagnostic=diagnostic)
+                raise TutorError(raw["error"], diagnostic=diagnostic)
             if process.returncode or len(body) > 65536:
                 raise TutorError("research_worker_failed")
             if type(raw) is not dict or "output" not in raw:

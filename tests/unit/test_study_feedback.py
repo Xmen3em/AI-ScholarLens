@@ -145,6 +145,20 @@ def test_empty_deep_gives_a_question_example_without_work(tmp_path):
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize("question", ["what you can make now", "What can you do?", "تقدر تعمل إيه؟"])
+async def test_capability_questions_return_local_help_without_admitting_a_job(tmp_path, question):
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), None, None, None)
+    document = await Content().acquire((await Intake().resolve("1706.03762"))[0])
+    service.store.save_paper(document.paper.arxiv_id, document.model_dump())
+    service.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
+    result = service.submit("capabilities", question)
+    assert "job_id" not in result
+    assert "/paper" in result["reply"] and "/deep" in result["reply"]
+    assert not service.tasks
+    await service.aclose()
+
+
+@pytest.mark.anyio
 async def test_research_worker_reports_a_safe_validation_category(monkeypatch, capsys):
     import sys
 
@@ -165,3 +179,82 @@ async def test_research_worker_reports_a_safe_validation_category(monkeypatch, c
     with pytest.raises(SystemExit):
         await asyncio.to_thread(study_research.main)
     assert json.loads(capsys.readouterr().out) == {"error": "lesson_validation_failed", "diagnostic": "unsupported_quote"}
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("code", ["study_context_limit", "research_tool_execution_denied"])
+async def test_worker_preserves_allowlisted_error_codes_without_raw_exception_text(monkeypatch, capsys, code):
+    import asyncio
+    import sys
+
+    from src.commands import study_research
+    from src.services.study.tutor import TutorError
+
+    async def failed(_):
+        if code.startswith("study_"):
+            raise TutorError(code)
+        raise ValueError(code)
+
+    monkeypatch.setattr(study_research, "run_job", failed)
+    monkeypatch.setattr(study_research.logging, "disable", lambda _: None)
+    monkeypatch.setattr(sys, "argv", ["study_research", "--job", "a" * 32])
+    monkeypatch.setenv("LANGSMITH_TRACING", "false")
+    monkeypatch.setenv("LANGCHAIN_TRACING_V2", "false")
+    with pytest.raises(SystemExit):
+        await asyncio.to_thread(study_research.main)
+    assert json.loads(capsys.readouterr().out)["error"] == code
+
+
+@pytest.mark.anyio
+async def test_job_retains_a_context_failure_category_instead_of_null(tmp_path):
+    from src.services.study.tutor import TutorError
+
+    class LimitedModel(Model):
+        async def complete(self, *args, **kwargs):
+            raise TutorError("study_context_limit")
+
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), LimitedModel())
+    admitted = service.submit("context", "/paper 1706.03762")
+    job = await finished(service, admitted["job_id"])
+    assert job["result"]["failure_code"] == "study_context_limit"
+    assert job["result"]["diagnostic"] == "study_context_limit"
+    assert "سياق" in job["result"]["text"]
+    await service.aclose()
+
+
+def test_failure_metadata_never_copies_unknown_exception_text():
+    from src.services.study.failures import failure_payload
+
+    result = failure_payload(ValueError("private-provider-output-and-token-must-not-escape"))
+    assert result == {"error": "research_unavailable_or_invalid", "diagnostic": "ValueError"}
+
+
+@pytest.mark.anyio
+async def test_worker_error_crosses_the_process_boundary_as_a_safe_category(monkeypatch, tmp_path):
+    import asyncio
+
+    from src.services.study.tutor import TutorError
+
+    class Output:
+        body = b'{"error":"unknown_evidence_block","diagnostic":"unknown_evidence_block"}'
+
+        async def read(self, _):
+            body, self.body = self.body, b""
+            return body
+
+    class Process:
+        stdout, returncode = Output(), 2
+
+        async def wait(self):
+            return 2
+
+    async def spawn(*args, **kwargs):
+        return Process()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), None, None, None,
+                           research_python=tmp_path / "optional-python.exe")
+    with pytest.raises(TutorError, match="unknown_evidence_block") as captured:
+        await service._deep("a" * 32)
+    assert captured.value.diagnostic == "unknown_evidence_block"
+    await service.aclose()
