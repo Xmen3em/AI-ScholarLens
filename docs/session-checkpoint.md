@@ -1,3 +1,19 @@
+# Arabic/English reading requirement added — 2026-10-21
+
+On `codex/visual-learning`, the owner's follow-up adds explicit mixed-direction
+reading requirements to the existing visual plan. The new
+[Arabic reading contract](specs/arabic-reading.md) records primary W3C/Unicode,
+SVG/Pillow and Telegram guidance, canonical-text boundaries, practical wrapping/
+typography, copy/input behavior, fallback and twelve acceptance cases. Tasks V2,
+V3, V4 and V7 now include these checks. This is specification/documentation;
+no renderer/Telegram behavior changed and no new model is required or activated.
+Application source still matches `1bf7c9a`. No inference or Telegram message was
+initiated. The previous budget/Deep-diagnosis boundaries below remain in force.
+Documentation links, twelve acceptance cases and Git hygiene were checked;
+application tests were not rerun for this specification-only change.
+
+---
+
 # Visual-learning research and next implementation — 2026-10-21
 
 The user asked to search for Kimi-like visualization/models/agents and prepare

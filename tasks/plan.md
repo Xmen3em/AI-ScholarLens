@@ -14,6 +14,10 @@ Read the[model/agent research](../docs/research/visual-learning-20261021/DECISIO
 [Egyptian overview](../docs/visual-learning-next.ar.md), and
 [visual implementation contract](../docs/specs/learning-visuals.md).
 The ordered checklist is[at the top of todo](todo.md#learning-visuals--next-implementation).
+The owner's added [Arabic/English reading contract](../docs/specs/arabic-reading.md)
+is part of V2 contracts, V3 measured rendering, V4 browser/input/copy checks and
+V7 Telegram client qualification. Direction is an application responsibility;
+it adds no model/agent or inference requirement.
 
 Implementation order:
 

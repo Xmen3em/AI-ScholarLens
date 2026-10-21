@@ -11,6 +11,8 @@ below. Current work completed research/specification; feature tasks are pending.
 - [x] Research Kimi K3/K2.x, live HF metadata, PaperVizAgent, interactive revision
   and declarative rendering from primary sources; record revisions/hashes.
 - [x] Select a bounded source-linked method explainer as the first offline slice.
+- [x] Research W3C/Unicode, SVG/Pillow and Telegram direction boundaries; record
+  the owner's mixed Arabic/English [reading contract](../docs/specs/arabic-reading.md).
 
 ### V1 — Reviewed RAG source fixture (small; no dependency)
 
@@ -29,6 +31,8 @@ focused fixture test. Verify a curator can inspect each fact's source/page.
 - [ ] Reject unknown references, cross-paper hashes, invalid graph endpoints and
   unsupported scientific update relations; keep example origins distinct.
 - [ ] Add meaningful positive/negative contract tests, including inert labels.
+- [ ] Define bounded semantic text runs and shared mixed-text fixtures from the
+  reading contract; keep canonical source/IDs separate from decorated text.
 
 Likely files:`src/services/study/visual_learning/models.py`, `validation.py`,
 `tests/unit/test_visual_contract.py`. Verify focused pytest, Ruff and mypy.
@@ -38,6 +42,8 @@ Likely files:`src/services/study/visual_learning/models.py`, `validation.py`,
 - [ ] Draw approved scene primitives from one validated spec and source manifest.
 - [ ] Produce readable RTL/mixed-term SVG and PNG without model code execution.
 - [ ] Visually inspect real exports, clipping, arrow meanings and image bounds.
+- [ ] Measure shaped text in pixels; preserve graphemes/diacritics, isolate
+  mixed terms and citations, and inspect both SVG and PNG against the RTL cases.
 
 Likely files:visual scene/renderer module, fixed Windows drawing support where
 needed, `tests/unit/test_visual_renderer.py`. Keep current reading maps working.
@@ -49,6 +55,9 @@ needed, `tests/unit/test_visual_renderer.py`. Keep current reading maps working.
 - [ ] Navigation performs zero model/network requests and exposes no credentials.
 - [ ] Verify keyboard, narrow/desktop layouts, Arabic, reduced motion and console
   errors using an actual browser; preserve a text alternative.
+- [ ] Verify explicit RTL blocks/LTR runs, auto-direction input, logical focus
+  order, 320px reflow/zoom/spacing and canonical copy; no arrow/axis mirroring.
+- [ ] Keep text, source and navigation usable if the visual cannot be rendered.
 
 Likely files:viewer exporter, trusted static assets and viewer tests. The output
 opens on this PC; do not advertise a phone-accessible Mini App or public link.
@@ -82,6 +91,8 @@ Likely files:dedicated visual API module, thin app registration and API tests.
 - [ ] Add `/visual method` and validated text actions, PNG/source display and a
   clear unsupported-paper response while only the fixture prototype is available.
 - [ ] Preserve owner/forward/update/acknowledgement/replay gates and error behavior.
+- [ ] Qualify plain-text isolation/splitting and final UTF-16 budgets on Desktop
+  and the owner's mobile client; use separate lines when needed, no HTML `bdi`.
 - [ ] Test the local flow; obtain explicit authorization before any developer-
   initiated live model call or Telegram test message.
 

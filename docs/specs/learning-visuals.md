@@ -4,6 +4,9 @@ Status: proposed implementation specification, 21 October 2026. This extends the
 existing `learning-visuals` capability in [the map](../../CAPABILITY_MAP.md).
 Research/plan only in this change; no live model or app behavior is activated.
 [Research and model decision](../research/visual-learning-20261021/DECISIONS.md).
+The owner's mixed Arabic/English reading requirement is specified in the
+[Arabic reading contract](arabic-reading.md); it applies across text, visuals
+and delivery, beginning with the first offline prototype.
 
 ## Outcome and first slice
 
@@ -129,6 +132,10 @@ Use the existing Pillow/Arabic-shaping path and Windows fixed drawing worker
 for PNG where feasible. Both exports derive from the same scene. Paginate or
 expand a diagram rather than shrinking Arabic below a readable size. Verify RTL,
 mixed English terms, arrows, contrast, labels, keyboard use and reduced motion.
+Implement the Arabic reading contract: canonical logical text, explicit RTL
+teaching blocks, isolated English/code/math/citation runs, shaped pixel-based
+wrapping and separate Telegram presentation. Keep scientific arrow/axis meaning
+independent of UI direction. No LLM call is needed for direction or navigation.
 
 The first prototype adds no local model weights, new hosted service, daemon or
 browser to normal bot startup. Browser tooling may be used for development QA.
@@ -168,6 +175,9 @@ First prototype is complete when:
    source inspection and navigation perform zero network/model requests.
 3. Malicious labels are inert; owner/source boundaries, versions and export data
    contain no credentials. Changes preserve the previous accepted artifact.
+4. Mixed-text acceptance cases preserve terms, signs, citations and copy/paste;
+   narrow/zoomed text stays readable. Visual failure retains usable text/source.
+   Telegram client qualification is recorded separately when delivery is added.
 
 Later model acceptance uses the same fixtures for all candidates: schema validity,
 scientific facts/edges, source coverage, Egyptian terminology, interactive task
