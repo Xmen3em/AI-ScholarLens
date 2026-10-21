@@ -2,6 +2,10 @@
 
 [English](README.md) · [دليل الكود المصوّر](codebase-overview.html) · [حكاية البناء](docs/build-story.md) · [الاتجاه الجاي](CAPABILITY_MAP.md)
 
+للمرحلة الجاية: [الخطة الكاملة بالمصري](docs/researcher-implementation-plan.ar.md)،
+[مواصفات المكونات](docs/specs/researcher-app.md)، و[مهام التنفيذ واختباراتها](tasks/todo.md#whole-app-implementation--task-index).
+دي مواصفات للتطوير، والمزايا المخططة فيها لسه محتاجة تنفيذ وتقييم.
+
 ScholarLens مشروع مفتوح المصدر هدفه يساعد الباحث يفهم أبحاث الذكاء الاصطناعي.
 النسخة الحالية فيها بوت Telegram خاص بصاحب الحساب: بتبعت ورقة arXiv برابط
 أو رقم أو عنوان، ويبدأ شرح بالمصري، وبعده تناقش نفس الورقة وتطلب أمثلة

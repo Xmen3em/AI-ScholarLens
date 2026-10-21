@@ -1,5 +1,35 @@
 # Capability map: interactive paper learning
 
+**Whole implementation planning — 21 October 2026.** The owner requested a
+complete plan and specifications using the engineering skills. Retain the nine
+stable module IDs below. Their detailed contracts are now indexed here and in
+the [whole-app specification](docs/specs/researcher-app.md). The existing
+`docs/specs/` convention is retained rather than creating duplicate root specs.
+This request covers preparing the map, specifications and plan together; this
+change does not activate features, inference, external writes or deployment.
+
+| Module id | Current baseline | Detailed specification |
+| --- | --- | --- |
+| `paper-intake` | Versioned arXiv resolution and explicit title selection | [Paper identity and intake](docs/specs/paper-intake.md) |
+| `paper-content` | Isolated native PDF extraction; OCR adapter disabled | [Structured content and OCR](docs/specs/paper-content.md) |
+| `paper-evidence` | Exact snippets and bounded selection; scientific validity still needs work | [Evidence and claims](docs/specs/paper-evidence.md) |
+| `learning-session` | Owner SQLite state, four recent turns, explicit depth, forget | [Learning state and memory](docs/specs/learning-session.md) |
+| `paper-tutor` | Egyptian lessons/follow-ups; real scientific mistakes documented | [Interactive teaching](docs/specs/paper-tutor.md) |
+| `learning-visuals` | Reading-order map; method visuals remain planned | [Visual teaching](docs/specs/learning-visuals.md) |
+| `study-research` | Isolated Deep Agents/MCP; live Deep failure unresolved | [Bounded research](docs/specs/study-research.md) |
+| `learning-delivery` | Private Telegram and local API; rich study view planned | [Telegram and study workspace](docs/specs/learning-delivery.md) |
+| `study-notes` | `/notes` lesson/quote output; Notion export unconnected | [Notes and export](docs/specs/study-notes.md) |
+
+Shared [Arabic reading](docs/specs/arabic-reading.md), model/context/runtime rules
+and release evidence in the whole-app spec apply to these modules; they are not
+new services. Detailed build order and checkpoints are in
+[the plan](tasks/plan.md#whole-app-implementation--21-october-2026) and
+[the tasks](tasks/todo.md#whole-app-implementation--task-index).
+Historical 17 October context below explains the implemented starting point;
+the new specs distinguish existing behavior from each proposed extension.
+
+## Historical 17 October baseline
+
 **Execution authorized — 17 October 2026.** The user requested research followed
 by implementation, autonomous routine decisions, and questions deferred until
 the implementation report. This authorizes the next iteration using the module
@@ -47,8 +77,9 @@ available as infrastructure; this documentation does not change its schedule.
 
 ## Proposed modules
 
-Dependency arrows mean consumer → required provider. Provider interfaces will
-be defined in separate module specifications after review of this map.
+Dependency arrows mean consumer → required provider. Provider interfaces live
+in the module specifications linked above. Optional reports/artifacts are passed
+by the delivery/workflow coordinator; providers do not import their consumers.
 
 | Stable module id | Responsibility | Depends on |
 | --- | --- | --- |
@@ -112,20 +143,22 @@ Show a short orientation first; reveal deeper sections on demand. Use separate
 labels for paper claims, background explanation, teaching analogies, and outside
 research. Do not present generated Arabic paraphrases as exact source quotes.
 
-## Decisions still needed before implementation
+## Historical decisions and remaining qualification
 
-- The initial supported source policy: recommend arXiv URLs/IDs first, title
-  resolution with explicit selection, then wider publisher URLs in a later slice.
+- The initial arXiv source/version/selection policy is implemented. Broader
+  publisher sources and authenticated PDF upload remain later explicit slices.
 - Extraction/OCR model, host/provider availability, page limits, quality checks,
   price and measured peak memory. No model is selected here.
-- A small, explicit budget and latency envelope for lesson creation; the current
-  six-call question cap does not silently become a Deep Agents task allowance.
-- Minimum lesson/session data to retain, where to store it, and retention/delete
-  controls. Existing offset state is not conversation memory.
+- Keep the selected-paper job's current four-attempt ceiling. Any different
+  experimental ceiling needs its own applicable authorization; legacy question
+  budgets do not fund study/visual jobs.
+- Current SQLite session/retention rules are implemented; persistent study
+  progress and deletion of new artifacts need the new session contract.
 - Whether the first visuals arrive as Telegram images or through a web study
   view; recommend images/buttons first, web interactivity afterward.
 - An Arabic/English terminology rubric and fresh unseen paper-learning examples
   to assess factuality, explanation quality, follow-up continuity and comprehension.
 
-See [research and tool choices](docs/paper-learning-research.md). Detailed module
-specifications and task estimates come after the module boundaries are reviewed.
+See [research and tool choices](docs/paper-learning-research.md) and the detailed
+module contracts above. Remaining provider/hosting/Notion decisions are recorded
+at the end of the whole-app plan; they do not block offline implementation.

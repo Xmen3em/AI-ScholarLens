@@ -14,6 +14,8 @@ Owner testing on21October2026 found an unresolved `/deep` failure. Its offline S
 
 The next visual-learning iteration is specified in the [Kimi/model research](docs/research/visual-learning-20261021/DECISIONS.md) and [visual teaching plan](docs/specs/learning-visuals.md). It starts with a source-linked offline method explainer; the new interactive feature is not yet implemented.
 
+The [complete researcher-app specification](docs/specs/researcher-app.md), [implementation plan](tasks/plan.md#whole-app-implementation--21-october-2026) and [task checklist](tasks/todo.md#whole-app-implementation--task-index) cover reliability, evidence, teaching, memory, visuals/RTL, OCR, research, notes and private hosting. These are proposed extensions with explicit acceptance gates; see the [Egyptian review guide](docs/researcher-implementation-plan.ar.md).
+
 ## What works today
 
 | Capability | Current behavior |

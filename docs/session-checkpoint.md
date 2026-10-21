@@ -1,3 +1,33 @@
+# Whole researcher-app specifications and plan — 2026-10-21
+
+The owner requested a complete implementation plan using skills to produce specs.
+Prepared the nine stable module contracts under `docs/specs/`, shared engineering/
+model/context/runtime/evaluation rules in [researcher-app](specs/researcher-app.md),
+and an [Egyptian review guide](researcher-implementation-plan.ar.md). The capability
+map indexes actual baseline versus proposed extensions. The active whole-app
+section in `tasks/plan.md` and task index in `tasks/todo.md` preserve all earlier
+incomplete tasks; V1–V9 remain canonical and are linked to the wider initiative.
+
+The plan sequences reliability/scientific grounding and offline RAG/RTL lanes,
+private daily study, structured content/OCR, comparison/research/export/workspace,
+then hosted private phone access. Every task specifies dependencies, acceptance,
+verification and bounded likely files. Proposed scientific/learning metrics are
+not achieved scores. Provider/OCR/host/Notion choices remain staged decisions.
+
+This is documentation only on `codex/visual-learning`; application source remains
+`1bf7c9a`. No live inference, Telegram message, Notion write, dependency change,
+runtime restart or deployment was initiated. The pending eight-call Deep diagnosis
+is still unapproved/frozen to its source; new code must not silently reuse it.
+Historical grants/12-attempt smoke and current owner/resource limits are unchanged.
+Verification:18 changed/new Markdown files have valid local links/anchors and
+tables; nine module specs and53 unique tasks are indexed, with dependency graphs
+checked for cycles. Every prior unchecked task is preserved. Credential-pattern
+scan and `git diff --check` pass; application source invariance was checked.
+Application tests were not rerun for documentation-only work. Ignored proof is
+under `tests/test_output/whole-app-plan-20261021/`.
+
+---
+
 # Arabic/English reading requirement added — 2026-10-21
 
 On `codex/visual-learning`, the owner's follow-up adds explicit mixed-direction

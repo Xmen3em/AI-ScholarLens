@@ -7,6 +7,10 @@ Research/plan only in this change; no live model or app behavior is activated.
 The owner's mixed Arabic/English reading requirement is specified in the
 [Arabic reading contract](arabic-reading.md); it applies across text, visuals
 and delivery, beginning with the first offline prototype.
+This is the `learning-visuals` module in the
+[whole-app specification](researcher-app.md). It inherits the shared engineering,
+model-budget, source-identity and release-evidence rules; depends on
+`paper-evidence` and provides accepted visual artifacts to delivery/notes.
 
 ## Outcome and first slice
 
@@ -197,3 +201,17 @@ Create the base-temp parent and choose a fresh directory. Rendering/browser QA
 must inspect actual exports at desktop and narrow widths with console/network
 checks. These commands describe future verification; they were not run against
 nonexistent implementation files during this planning change.
+
+## Scope beyond the first method prototype
+
+Extend templates one at a time: verified table-cell comparisons, source equation
+walkthroughs and original figure/region explanations. Each has a distinct source
+contract, negative scientific fixtures and renderer QA; general-paper acceptance
+must use fresh sources beyond the curated RAG prototype. Preserve original
+figures and distinguish derived labels from author content. Interactive toy
+parameters affect explicitly educational examples, never overwrite reported data.
+
+Follow the whole-app Python/Pydantic code style and module layout. The immediate
+offline slice has no unresolved model/hosting decision. Vision/planner route,
+chart dependency and equation typesetter are later measured choices; no dependency
+or model is installed merely because it is a research candidate.

@@ -1,5 +1,144 @@
 # Week 6: local operational controls
 
+## Whole-app implementation — 21 October 2026
+
+This is the active extension of the same paper-learning initiative, requested
+by the owner as a complete skills-based plan/specification set. Preserve all
+older incomplete work below. The nine stable modules are indexed in
+[CAPABILITY_MAP](../CAPABILITY_MAP.md) and the
+[whole-app contract](../docs/specs/researcher-app.md). Read the
+[Egyptian review guide](../docs/researcher-implementation-plan.ar.md) first.
+The canonical task target stays `tasks/todo.md`; no external tracker was created.
+
+### Outcome and current source
+
+A private Egyptian researcher can bring an explicit paper/version, learn its
+mechanism from evidence, interact with visuals, attempt a comprehension question,
+save progress and resume later. Native-text study works before optional OCR,
+external research, Notion or hosted operation. Current app source remains
+`1bf7c9a`; all changes in this planning turn are documents only. Existing `/deep`
+failure and scientific mistakes remain recorded; no gate is declared passed.
+
+### Architecture decisions
+
+| Decision | Reason / boundary |
+| --- | --- |
+| Keep FastAPI, SQLite, LangGraph and current HF model baseline | Extend the working private path; avoid a rewrite and new always-on services |
+| Nine provider-oriented modules | Stable contracts and owner/source identity; delivery coordinates optional reports |
+| Source/claims before generated explanation | A cited number can still support a wrong conclusion; bind settings/comparisons |
+| Finite workflow with reserved answer/review attempts | Tool exploration cannot consume the final verification capacity |
+| Canonical evidence separate from session memory | A model answer/summary never becomes an original source |
+| Model plans data; app renders/handles actions | Safe SVG/PNG and interactive controls; zero inference for navigation |
+| RTL and accessibility in the first renderer/viewer | Mixed-language reading is acceptance work, not an end-stage translation patch |
+| Optional OCR/vision/provider qualification | Availability/licensing/schema claims are verified on actual routes before use |
+| Previewed exports and staged private hosting | No inherited Codex credentials, accidental writes or loopback phone claims |
+
+### Dependency map and build order
+
+Module dependencies stay in the capability map; this release sequence describes
+vertical user-visible slices. Independent lanes can advance without waiting for
+live approval. They do not imply spawning concurrent agents/processes.
+
+| Stage | User-visible increment | Tasks / prerequisites | Checkpoint |
+| --- | --- | --- | --- |
+| 0A | Diagnosable, scientifically checked native-text baseline | I1, F1–F5, E1–E2, P1–P2 | C0: no false Deep-repair claim; preserved limits/ledgers |
+| 0B | Inspect a source-linked RAG method locally in Arabic | Existing V1–V4, F1 | CV: reviewed facts, actual SVG/PNG/viewer, zero navigation calls |
+| 1A | Resume a paper and complete a guided learning attempt | S1–S2, T1–T2, D1–D2, N1 | C1: owner study loop survives restart/switch/forget |
+| 1B | Create qualified source-based method visuals in private study | V5–V9, M1, Q1 | R1: fresh paper quality + delivery/RTL evidence |
+| 2A | Inspect real table/equation/figure regions | C1–C3, E3, T3–T4 | C2: structured facts/signs/headers validated |
+| 2B | Read supported scanned regions and plot verified data | O1–O3, V10–V11 | R2: extraction + scientific/visual holdout |
+| 3A | Compare selected papers and consult outside primary sources | S3, T5, R1–R2 | C3: source separation, comparable settings, bounded tools |
+| 3B | Edit/export notes and use a complete desktop workspace | N2–N3, D3–D4 | R3: previewed writes, usable disconnected states |
+| 4 | Reach the private study workspace from a phone continuously | H1–H5, Q2 | R4: host/auth/backup/restore/client acceptance |
+
+Task IDs R1/R2 in the research lane and release labels R1/R2 are namespaced in
+the task headings as `task-R1` versus `release-R1`. Stage 0A and 0B are independent
+except shared fixtures. Recommended first offline work: V1 then V2, with F1
+establishing the shared science rubric; no new model call is required.
+
+The next visual V1–V9 checklist remains canonical below; the full-app index links
+to it instead of creating a second set of visual implementation checkboxes.
+An integrated R1 method-planning claim requires V8/V9 qualification; the earlier
+curated RAG demo is labeled as a fixture prototype throughout.
+
+Task records are grouped by capability, so do not execute the file linearly.
+One valid early offline order is F1 → V1 → V2 → V3 → V4, interleaving independent
+F2/I1/C1/F3 work as capacity permits. Then E1/E2/S1 → T1/S2 → T2/D1/N1 → D2,
+with V5 after S1 and V6/V7 after their action dependencies. M1/Q1 prepare V8;
+V9 follows qualified V8. F4 depends on F2/F3, while F5 uses only its explicitly
+authorized frozen source. P1 measures startup independently and rendering after
+V3; P2 follows measurements. Later stages follow their task prerequisite graph.
+
+### Verification method
+
+Each task has acceptance, dependencies, bounded files and a concrete verification
+method in [todo](todo.md#whole-app-implementation--task-index). The whole-app
+spec owns baseline executable commands and proposed release metrics. Run focused
+checks after each implementation change, real exports/browser QA for rendering,
+real SQLite/parser tests with model/HTTP stubs for integration, and the broad
+regression only at a justified checkpoint. Optional SDK tests use their isolated
+environment. Keep source/hash/date of every proof, including failures.
+
+At every two/three-task increment: inspect the diff; run the task's focused
+tests plus applicable lint/type checks; show a usable artifact/flow; commit the
+bounded slice. Major checkpoints additionally test restart, owner isolation,
+deletion, quotas, finite errors and retained previous artifacts. No skipped
+checks or relaxed RAM/science gates to make a milestone appear finished.
+
+Freeze the shared 12-paper/48-question scientific/Egyptian holdout before paid
+generation. Score supported native-text capabilities for R1 and add structured/
+OCR tasks at R2; preserve denominators, unavailable cases and reviewer disagreement.
+Navigation p95, peak RAM and cold/warm job latency are measured on declared hardware.
+Human reviewer availability and live provider calls are separate from offline CI.
+
+### Operational and model gates
+
+Keep four model attempts per job, current tool/page/cache caps and 1,024/600 MiB
+startup/live host-memory admission. Profile first; reduce imports/worker overlap
+and bounded payloads rather than lowering admission. All uncertain outbound
+attempts remain spent. Do not enable new retries or transfer historic grants.
+
+The pending eight-call Deep plan is frozen to its diagnostic source. If source
+implementation changes before that run, preserve the required snapshot or prepare
+a revised reviewable scope; do not assume its old pending request covers a new
+source/model. New model/visual/OCR comparisons get separate scoped ceilings.
+No such execution, test Telegram replies, Notion writes or hosting occurs here.
+
+### Risks and mitigations
+
+| Risk | Impact | Mitigation / decision point |
+| --- | --- | --- |
+| Deep cause remains unknown | A valid long question still fails | Safe observation + scoped diagnosis, offline repair and verified terminal result |
+| Citation exists but science is wrong | Misleading teaching | Claim/cell/setting contracts, reviewed negatives and independent holdout |
+| OCR damages signs/columns | False equations/results | Region-level coverage, image review and explicit unavailable structure |
+| Tool loop spends review capacity | Unchecked/unreturned answer | Phase reservation and parent attempt ledger tests |
+| Weak mixed-language layout | English terms/citations unreadable | Shared text policy and actual browser/PNG/Telegram fixtures |
+| Source/memory version drift | Wrong paper reused | Version/hash keys, expected versions and switch/restart cases |
+| PC RAM/sleep/connectivity | Slow or unavailable study | Lazy isolated workers, readable fallback, later explicit hosted operation |
+| New model/tool license/API drift | Unusable or incompatible route | Pin/recheck exact capabilities/terms before qualified integration |
+| External write/delivery is uncertain | Duplicate pages/messages | Durable intents, safe unknown states and reconciliation, no exactly-once claim |
+| Plan becomes too broad | No useful increment delivered | Small native-text/visual milestones; optional R2–R4 stay independent |
+
+### Owner decisions collected for the relevant later stage
+
+These are deferred decisions, not a request to stop offline work now:
+
+1. Retention beyond current 30 days for saved study progress/notes; keep current
+   policy until explicitly changed.
+2. New scoped inference ceilings when qualification is ready, plus any acceptable
+   ongoing model cost. Existing pending/closed grants are not general credit.
+3. Actual mobile client for Telegram reading QA and volunteer scientific/Arabic
+   reviewers for release-quality evaluation; private findings can be provisional.
+4. Notion application connection and allowed destination page, only at N3.
+5. Private hosting budget/location/domain and backup destination, only at H1/H3.
+6. Whether to broaden beyond arXiv/private ownership after the private journey
+   is reliable. Public/multi-user access is a separate initiative, not assumed.
+
+This plan creates no new goal object or external tracker. It is ready for review;
+implementation begins from the selected small task, not an all-at-once rewrite.
+
+---
+
 ## Next: source-grounded visual learning — 21 October 2026
 
 The user requested research into Kimi-like visual explanations and the next

@@ -1,5 +1,11 @@
 # Interactive paper learning: implementation contract
 
+The 17 October contract below records the implemented starting iteration.
+The owner's 21 October whole-app extension is specified in
+[researcher-app](researcher-app.md), with nine module contracts and the
+[ordered plan](../../tasks/plan.md#whole-app-implementation--21-october-2026).
+Later specifications describe proposed extensions, not already shipped features.
+
 Date: 17 October 2026. Branch: `codex/paper-intake`, starting at `4a1135e`.
 The owner explicitly authorized research, implementation and routine choices,
 with remaining questions collected at the end. This supersedes the earlier

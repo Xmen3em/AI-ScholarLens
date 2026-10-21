@@ -1,5 +1,545 @@
 # Week 6 local verification
 
+## Whole-app implementation — task index
+
+Active expansion of the same initiative, 21 October 2026. All implementation
+items below are pending; research/specification is not a passing implementation.
+See [whole-app contract](../docs/specs/researcher-app.md) and
+[plan](plan.md#whole-app-implementation--21-october-2026).
+The existing V1–V9 checklist below remains the canonical visual task list.
+
+Task records define acceptance, dependencies, verification and likely files.
+Paths explicitly described as new are proposed. Keep each slice at five files
+or fewer; split a task if its implementation grows. S/M mean one small/focused
+session, not a deadline. Do not check off live work from offline evidence.
+
+For each pytest verification listed below, use the complete runner pattern,
+substituting that task's test files and a fresh task-specific basetemp:
+
+```powershell
+New-Item -ItemType Directory -Force -Path tests/test_output | Out-Null
+.venv-win/Scripts/python.exe -m pytest tests/unit/test_study_service.py -q -o cache_dir=tests/test_output/study-pytest --basetemp tests/test_output/task-check-fresh
+.venv-win/Scripts/python.exe -m ruff check src tests research
+.venv-win/Scripts/python.exe -m mypy src
+```
+
+Future test paths are run only after they are created. Each task runs applicable
+focused tests plus lint/type checks; checkpoints add justified regression/runtime
+checks. SDK verification uses the separate full command in task F2. Never run
+live calls just because a task lists qualification as a prerequisite.
+
+### F1 — Reviewed science and acceptance fixtures
+
+- [ ] Freeze the documented mechanism/comparison failures and evaluation rubric.
+
+**Accept:** Reviewed positive/negative claims, source identity and expected
+outcomes are inspectable; reserve a distinct 12-paper/48-question holdout without
+calling a model. V1 reuses the RAG facts instead of inventing another truth set.
+**Verify:** New `test_study_science_fixtures.py`; inspect every source/label and
+confirm no development/holdout overlap.
+**Depends:** None. **Files:** new `evaluation/paper_learning/README.md`, fixture
+JSON and `tests/unit/test_study_science_fixtures.py`. **Scope:** M, 3 files.
+
+### F2 — Offline Deep failure diagnosis coverage
+
+- [ ] Exercise each worker/transport/validation failure boundary with safe traces.
+
+**Accept:** A failing SDK path retains a bounded stage/category and job identity;
+unknown historic causes stay unknown. No provider output/secret leaks.
+**Verify:** Existing `test_study_feedback.py`, plus
+`.venv-study-research/Scripts/python.exe -m unittest discover -s research/tests -v`;
+inject malformed JSON, IDs, timeout and context limits in the actual SDK loop.
+**Depends:** None. **Files:** `research/tests/test_deep.py`, `failures.py`,
+`src/commands/study_research.py`, `test_study_feedback.py`. **Scope:** M, 4 files.
+
+### F3 — Shared phase-budget reservation
+
+- [ ] Reserve answer/review capacity in the admitted-job budget contract.
+
+**Accept:** Four-attempt total stays immutable; exploration cannot reserve the
+last synthesis/review slots, and failed/unknown attempts remain spent.
+**Verify:** Existing `test_study_store.py` plus new `test_study_budget.py`;
+exercise concurrent reservation, exhaustion, crash and restart.
+**Depends:** F1. **Files:** new `budget.py`, `store.py`, the two named tests.
+**Scope:** M, 4 files.
+
+### F4 — Apply reserved phases to the research workflow
+
+- [ ] Integrate the finite research→synthesis→review schedule.
+
+**Accept:** A research job returns a validated/reviewed artifact or finite useful
+terminal state; no unchecked repair, hidden child budget or automatic retry.
+**Verify:** Actual SDK/stub-transport loop plus `test_study_service.py`; inspect
+attempt purposes/counts when research exhausts its allocation.
+**Depends:** F2, F3. **Files:** `deep.py`, `src/commands/study_research.py`,
+`service.py`, `research/tests/test_deep.py`, `test_study_service.py`.
+**Scope:** M, 5 files.
+
+### F5 — Scoped live Deep diagnosis/verification
+
+- [ ] Execute only an explicitly authorized diagnostic scope and report the result.
+
+**Accept:** Frozen source/intents/ceilings are honored; actual question reaches
+answer/review/delivery before claiming repair. All failures stay recorded.
+**Verify:** Follow `docs/deep-repair-execution-20261021.md`, which is currently
+pending/unapproved. If F3/F4 changed source, preserve its required baseline or
+prepare a revised scope first; do not spend the old pending request on new source.
+**Depends:** F2 and applicable explicit approval; independent of V1–V4.
+**Files:** execution/result documentation, ignored proof only. **Scope:** S.
+
+### P1 — Measure local memory and latency
+
+- [ ] Capture cold/warm startup, native extraction and render resource envelopes.
+
+**Accept:** A reproducible report identifies import/worker peaks and hardware;
+startup/live floors and original ledgers/configuration remain unchanged.
+**Verify:** Offline import/parser/render probe, no inference or unsolicited
+Telegram traffic; repeat only if new measurements justify a change.
+**Depends:** None; render portion follows V3. **Files:** new bounded profiling
+command, its unit test and resource report. **Scope:** M, 3 files.
+
+### P2 — Implement a measured resource/error improvement
+
+- [ ] Address the largest measured peak and preserve readable failure behavior.
+
+**Accept:** Demonstrated lower peak or bounded worker lifetime, same gates,
+no background browser/model load; source/text remain usable after failure.
+**Verify:** Repeat P1's exact probe plus `test_development_imports.py` and the
+focused parser/render failure tests; record before/after rather than a guess.
+**Depends:** P1. **Files:** measured import/worker boundary, two focused tests
+and resource report; select exact boundary from profiling. **Scope:** M, ≤4 files.
+
+### Checkpoint C0 — Baseline and offline visual lane
+
+- [ ] After each two/three tasks, focused checks pass and a bounded slice is committed.
+- [ ] F1–F4/P1–P2 retain quotas, errors and resources; Deep live status is accurate.
+- [ ] Existing V1–V4 produce reviewed RAG SVG/PNG/viewer with source inspection,
+  all applicable RTL cases and zero navigation/model traffic.
+
+### I1 — Canonical paper identity adapter
+
+- [ ] Carry the exact selected identity through new artifact contracts.
+
+**Accept:** Existing StudyPaper/URL/title selection remains compatible; new
+PaperRef is server-owned, and expired/wrong-owner/version-mismatched selections
+cannot fetch a source or attach an old artifact.
+**Verify:** Existing `test_study_intake.py` and service selection/version tests
+with stub metadata and zero inference.
+**Depends:** None. **Files:** new identity adapter, intake/service integration
+and two focused tests. **Scope:** M, ≤5 files.
+
+### C1 — Native source manifest and region identity
+
+- [ ] Add versioned source/region contracts around existing native extraction.
+
+**Accept:** Page/hash/revision/coverage and unknown geometry are explicit; old
+PaperContent/EvidenceBlock consumers still work. No ignored full PDF dependency.
+**Verify:** New `test_source_manifest.py` and existing `test_study_content.py`;
+wrong hashes, missing pages, reading order and parser timeout cases.
+**Depends:** I1, F1. **Files:** new `source_manifest.py`, `content.py`, new manifest
+test and tiny fixture. **Scope:** M, 4 files.
+
+### E1 — Claim identity and numeric validation
+
+- [ ] Validate claims against complete source/setting identities.
+
+**Accept:** False best-result, incompatible metric/split and wrong-source claims
+fail; supported statements retain inspectable original evidence.
+**Verify:** New `test_study_claims.py` plus `test_study_feedback.py` and F1 negatives.
+**Depends:** F1, C1. **Files:** new `claims.py`, `tutor.py`, new claim test and
+`test_study_feedback.py`. **Scope:** M, 4 files.
+
+### E2 — Bilingual evidence selection baseline
+
+- [ ] Compare bounded selection strategies on the same Arabic/English questions.
+
+**Accept:** Supporting-region recall, omissions and unavailable structure are
+reported; no model rewrite, vector service or silent provider fallback is enabled.
+**Verify:** New `test_study_retrieval.py` plus a reproducible local fixture scorer.
+**Depends:** F1, C1. **Files:** new retrieval module, scorer, fixture and test.
+**Scope:** M, 4 files.
+
+### S1 — Persistent library and study position
+
+- [ ] Save/open owner-scoped goals, bookmarks and accepted artifact positions.
+
+**Accept:** A→B→A and restart restore the right version/step with no generation;
+wrong owner and stale artifact IDs fail safely.
+**Verify:** New `test_study_progress.py` and existing `test_study_store.py` with
+real temporary SQLite, migration/rollback and interrupted writes.
+**Depends:** C1. **Files:** new `session_state.py`, `store.py`, new progress test,
+existing store test. **Scope:** M, 4 files.
+
+### S2 — Bounded context and complete deletion
+
+- [ ] Integrate saved progress with recent context, retention and forget.
+
+**Accept:** Late jobs cannot overwrite switched papers; expired/context summaries
+never become evidence. Forget removes new personal state without resetting calls.
+**Verify:** `test_study_store.py`, `test_study_service.py`, new progress tests;
+test expiry, restore, stale responses and two-owner deletion isolation.
+**Depends:** S1. **Files:** session state, store, service and two focused tests.
+**Scope:** M, 5 files.
+
+### T1 — Guided learning action
+
+- [ ] Deliver a short orientation and a focused goal/section step.
+
+**Accept:** Explicit goal/depth, paper/background/example origins and finite next
+actions remain compatible with current Lesson delivery; no full lesson on every action.
+**Verify:** New `test_study_teaching.py` plus tutor/service tests with stub transport.
+**Depends:** E1, E2, S1. **Files:** new `teaching.py`, tutor, service, new teaching
+test and `test_study_tutor.py`. **Scope:** M, 5 files.
+
+### T2 — Learner attempt and grounded feedback
+
+- [ ] Add one task-bound comprehension attempt/feedback loop.
+
+**Accept:** Correct paraphrases are accepted; a reviewed misconception receives
+specific source-based correction, with skip/back and saved state.
+**Verify:** New `test_study_comprehension.py` plus teaching tests and reviewed
+correct/incorrect learner fixtures; budget exhaustion leaves a useful result.
+**Depends:** T1, S2, F3. **Files:** new comprehension module, teaching integration,
+two focused tests and fixture. **Scope:** M, 5 files.
+
+### D1 — Authenticated deterministic study actions
+
+- [ ] Add owner/version-bound actions and artifact/library read contracts.
+
+**Accept:** Request quotas apply to navigation; generation admission remains
+unchanged. Duplicate intent/hash, stale version and inaccessible artifacts behave
+as specified, with zero model calls.
+**Verify:** New `test_study_actions_api.py` and existing API quota tests.
+**Depends:** S1, T1. **Files:** new actions API/models, thin route registration,
+new action tests and existing quota test. **Scope:** M, 5 files.
+
+### D2 — Telegram learning controls and terminal states
+
+- [ ] Route lesson/library/progress text actions through the deterministic contract.
+
+**Accept:** Existing private/update/forward/ack gates remain; help/status/actions
+are local and worker/image failures leave source/text accessible. Existing
+labeled general-concept and legacy paper modes keep their routing contracts.
+**Verify:** Existing study Telegram/bot tests, including duplicate update,
+UTF-16 boundaries and uncertain delivery. Visual delivery stays canonical V7.
+**Depends:** D1, T2. **Files:** Telegram bot, study service, study Telegram test,
+bot test and delivery state test. **Scope:** M, 5 files.
+
+### N1 — Editable source-linked local notes
+
+- [ ] Save/version user notes alongside accepted generated notes and quotations.
+
+**Accept:** Origins remain distinct, stale edits conflict, `/notes` compatibility
+and forget work; editing does not regenerate a lesson.
+**Verify:** New `test_study_notes.py` plus store/service regression.
+**Depends:** S2, T1. **Files:** new notes module/store extension, service adapter,
+new note test and store test. **Scope:** M, 5 files.
+
+### M1 — Provider capability adapter readiness
+
+- [ ] Define isolated route capabilities and deterministic transport qualification.
+
+**Accept:** Schema/images/tools/history/tokenizer/usage/error contracts differ
+explicitly by route; current Cerebras wire settings remain frozen and compatible.
+**Verify:** New provider adapter tests with captured synthetic response fixtures;
+no live request or provider fallback is sent.
+**Depends:** F3, V2. **Files:** capability model, isolated adapter, tests and
+synthetic fixture. **Scope:** M, 4 files. Hosted comparison remains canonical V8.
+
+### Q1 — Scientific and teaching evaluation harness
+
+- [ ] Score the frozen capability-specific holdout and preserve failed outcomes.
+
+**Accept:** Development/holdout identities, supported denominators, critical
+errors and reviewer disagreement are recorded; no score is inferred from unit tests.
+**Verify:** New scorer tests with a tiny synthetic scored run, plus rubric review;
+actual model generation requires a separately approved scope.
+**Depends:** F1, E1, T2. **Files:** evaluation scorer, schema, test and rubric.
+**Scope:** M, 4 files.
+
+### Release R1 — Private daily native-text study
+
+- [ ] F/E/S/T/D/N baseline tasks and V5–V9 integration pass their applicable checks.
+- [ ] User can bring a new supported paper, learn/attempt/inspect a method, save,
+  switch/resume and forget; model-generated visuals are qualified beyond RAG.
+- [ ] Scientific/Arabic/RTL/owner/restart/resource evidence is recorded; Deep is
+  labeled experimental unless F5 actually qualifies it. No old grant is reused.
+
+### C2 — Structured tables and verified cells
+
+- [ ] Extract/curate table regions, headers, cells and experimental settings.
+
+**Accept:** Table/row/column/dataset/split/unit/printed-value identities remain
+attached to source regions; merged/ambiguous cells stay unverified.
+**Verify:** New `test_study_tables.py`, real tiny multicolumn/table PDFs and
+manual comparison to rendered pages.
+**Depends:** C1, E1. **Files:** table models/extractor, table test, fixture and
+source-manifest integration. **Scope:** M, 5 files.
+
+### C3 — Equation and figure region inspection
+
+- [ ] Expose original crops, captions and bounded symbolic interpretations.
+
+**Accept:** Crop coordinates/hash/page are inspectable; extracted minus/sign/
+superscript and caption associations are verified or explicitly unavailable.
+**Verify:** New region tests plus actual crop/render inspection on reviewed fixtures.
+**Depends:** C1. **Files:** region models, fixed region worker, region tests,
+fixture and manifest adapter. **Scope:** M, 5 files.
+
+### E3 — Compatible table comparisons
+
+- [ ] Link numeric claims to verified cell sets and comparison semantics.
+
+**Accept:** Wrong best result, reversed metric, unit and split mismatches fail;
+verified values remain copied, not regenerated by a model.
+**Verify:** New numeric-claim tests plus E1/F1 science regression.
+**Depends:** C2, E1. **Files:** numeric claim module, claim integration,
+numeric test and fixture. **Scope:** M, 4 files.
+
+### O1 — Selective OCR qualification fixtures
+
+- [ ] Prepare page-image scientific extraction cases and strict route responses.
+
+**Accept:** Pages/regions sent, expected signs/columns and quality flags are
+bounded; existing disabled OCR adapter remains disabled.
+**Verify:** Existing OCR tests plus new scientific OCR fixture tests using stub HTTP.
+**Depends:** C1, C2, C3. **Files:** OCR contract/adapter, two tests and fixture.
+**Scope:** M, 5 files.
+
+### O2 — Hosted OCR capability and scientific qualification
+
+- [ ] Compare actual candidate routes under a separate explicit scoped ceiling.
+
+**Accept:** Exact image/task/schema/terms and scientific outputs qualify against
+O1; failed/unknown requests count. No route is enabled from catalog status alone.
+**Verify:** Frozen execution plan, immutable attempts and source/region comparisons;
+stop according to that scope. Public-page/image transmission is disclosed there.
+**Depends:** O1 and applicable approval. **Files:** execution plan, result and
+qualification metadata; ignored run proof. **Scope:** M, ≤4 files.
+
+### O3 — Integrate qualified selective OCR
+
+- [ ] Admit OCR only for the source pages/regions that require it.
+
+**Accept:** Parent budget/resource/disk limits hold, native text stays usable,
+and extraction model/revision/coverage are recorded without silent source replacement.
+**Verify:** OCR/content/service tests for page selection, failure/unknown state,
+partial fallback and measured worker peak.
+**Depends:** O2, F3, P1. **Files:** OCR, content, service and two focused tests.
+**Scope:** M, 5 files.
+
+### T3 — Read a verified table with the learner
+
+- [ ] Teach one result/setting using selected verified cells and a short question.
+
+**Accept:** Explanation and feedback preserve metric/split/unit/comparison set;
+unavailable structure is acknowledged rather than reconstructed.
+**Verify:** New table-teaching tests with correct/misleading learner answers.
+**Depends:** E3, T2. **Files:** table teaching module, tutor adapter, test and
+fixture. **Scope:** M, 4 files.
+
+### T4 — Explain an equation or original figure
+
+- [ ] Walk through reviewed symbols/components with an explicitly educational example.
+
+**Accept:** Original crop/source stays visible, symbol direction/meaning matches
+the verified interpretation and unsupported parts remain marked.
+**Verify:** New equation/figure teaching tests and manual scientific/RTL inspection.
+**Depends:** C3, T2. **Files:** interpretation teaching module, tutor adapter,
+two focused tests and fixture. **Scope:** M, 5 files.
+
+### V10 — Verified numeric chart template
+
+- [ ] Render a restricted interactive chart from verified table-cell IDs.
+
+**Accept:** Values/units/splits copy exactly; no model expressions/URLs, invented
+measurements or silent axis reversal. Source data and text remain inspectable.
+**Verify:** New chart contract/renderer tests and actual browser/PNG output.
+**Depends:** E3, V3, V4. **Files:** chart contract, fixed renderer/template,
+tests and trusted viewer integration. **Scope:** M, ≤5 files.
+
+### V11 — Equation and figure visual walkthrough
+
+- [ ] Add source-linked symbolic/component highlighting to the trusted viewer.
+
+**Accept:** Source figures are preserved, derived labels distinguished and LTR
+equations readable; navigation stays deterministic and prior artifacts survive edits.
+**Verify:** New visual-region tests plus actual export/browser/copy inspection.
+**Depends:** C3, T4, V5. **Files:** walkthrough template, renderer adapter,
+viewer action adapter, tests and fixture. **Scope:** M, 5 files.
+
+### Release R2 — Structured/scanned scientific learning
+
+- [ ] C2/C3/E3/T3/T4/V10/V11 pass structured science and actual output checks.
+- [ ] O1–O3 pass before OCR-supported scanned pages are advertised; unsupported
+  cases remain explicit. Record critical signs/cells/coverage and resources.
+- [ ] Re-evaluate added capabilities on the frozen holdout; native R1 regression
+  and readable failure alternatives remain intact.
+
+### S3 — Explicit multi-paper study selection
+
+- [ ] Create a separate comparison session with two chosen source identities.
+
+**Accept:** Both sources/versions are shown and scoped independently; ordinary
+one-paper context and notes are not overwritten by a comparison.
+**Verify:** New comparison-session tests for switches, wrong versions and two owners.
+**Depends:** S2, E1. **Files:** comparison session model/store, selection adapter,
+tests and API model. **Scope:** M, 5 files.
+
+### T5 — Evidence-based two-paper comparison
+
+- [ ] Compare assumptions/methods/results with independent supporting evidence.
+
+**Accept:** Different datasets/settings are shown as incomparable where required;
+no unsupported global winner and no quote is attributed to the other paper.
+**Verify:** New comparison tutor tests and fresh paired scientific review cases.
+**Depends:** S3, E3, T2. **Files:** comparison tutor, strict output model,
+tests and paired fixture. **Scope:** M, 4 files.
+
+### R1 — External primary-source fetch policy
+
+- [ ] Specify and enforce the bounded read-only external acquisition boundary.
+
+**Accept:** Allowed origins/redirects/bytes/deadlines and source identity are
+explicit; private addresses, credentialed URLs and executable instructions fail.
+**Verify:** New external-fetch policy tests for SSRF, redirect/DNS policy and quotas.
+**Depends:** F3, C1. **Files:** source policy, fixed fetch adapter, tests and
+policy documentation. **Scope:** M, 4 files. No search subscription provisioned.
+
+### R2 — Optional search/MCP research report
+
+- [ ] Expose the approved primary-source tools to bounded research.
+
+**Accept:** Outside-paper findings have their own provenance and label; parent
+budgets, owner and explicit allowed tool set cannot be changed by model text.
+**Verify:** Actual installed MCP/SDK with stub search/fetch; test wrong scope,
+hostile tool content and disconnected provider states.
+**Depends:** R1, F4. **Files:** external tools, MCP adapter, research report model
+and two tests. **Scope:** M, 5 files. Live search/inference needs its own scope.
+
+### N2 — Previewed local export
+
+- [ ] Export exactly selected note/lesson/visual versions to a reviewable package.
+
+**Accept:** Markdown/source links and optional accepted visuals preserve origin,
+canonical copy and hashes; no credentials, new inference or arbitrary file paths.
+**Verify:** New export tests, inspect actual package and Arabic/English copy output.
+**Depends:** N1, V5. **Files:** export module, strict preview model, tests and
+trusted notes UI adapter. **Scope:** M, 4 files.
+
+### N3 — Optional deliberate Notion export
+
+- [ ] Connect a narrow application adapter to an owner-chosen destination.
+
+**Accept:** Preview/action/digest precede the write; revoked/disconnected access
+doesn't block local study; duplicates/unknown outcomes use tracked reconciliation.
+**Verify:** Stubbed create/read-back/revocation tests, then one explicitly
+authorized export with the configured application connection/destination.
+**Depends:** N2 and connection/destination choice. **Files:** Notion adapter,
+export intent store, tests and integration guide. **Scope:** M, 4 files.
+
+### D3 — Readable integrated desktop study workspace
+
+- [ ] Compose source, lesson, visual and note views from accepted artifacts.
+
+**Accept:** Loading/partial/empty/error states, RTL/text alternatives and source
+inspection work without embedded secrets or generation on view open.
+**Verify:** Actual browser DOM/console/network/keyboard/narrow/zoom checks and
+new workspace-export tests; inspect the generated desktop artifact.
+**Depends:** D1, V4, N1, C3. **Files:** workspace exporter, trusted HTML/JS/CSS
+assets and tests. **Scope:** M, 5 files.
+
+### D4 — Workspace study/edit actions
+
+- [ ] Connect deliberate learning, saved-position and note actions to the API.
+
+**Accept:** Model-free controls stay under request quota; generation is explicit,
+version conflicts recover without losing accepted work and deletion is complete.
+**Verify:** Workspace/API integration plus actual browser action/network tests.
+**Depends:** D3, D2, N2, S2. **Files:** workspace action JS, API client,
+action route adapter and two tests. **Scope:** M, 5 files.
+
+### Release R3 — Expanded private research workspace
+
+- [ ] Comparison, external research and exports each pass independent source/
+  owner/budget/disconnected-state checks; enabled capabilities are clearly shown.
+- [ ] Notion remains optional and is tested only after its explicit destination action.
+- [ ] Complete desktop flow and new scientific holdout pass; no public/phone
+  reachability or new research tools are implied by local viewer availability.
+
+### H1 — Private hosting profile
+
+- [ ] Define measured capacity, cost envelope, credentials and traffic move plan.
+
+**Accept:** Host/storage/worker/polling ownership, HTTPS/auth and rollback are
+reviewable before any spend/deployment; no local RAM floor is bypassed by assumption.
+**Verify:** Capacity/secret-boundary/rollback review against P1 and real workload.
+**Depends:** R1 release evidence, owner host/budget choice. **Files:** host profile,
+deployment config draft and operations guide. **Scope:** M, 3 files.
+
+### H2 — Backup and restore verification
+
+- [ ] Create a bounded private-state/artifact backup with safe restore semantics.
+
+**Accept:** Restored study positions/notes/hashes work, spent intents remain
+spent, and old polling/provider/delivery uncertainty cannot replay automatically.
+**Verify:** Real temporary SQLite/files restore drill plus new restoration tests.
+**Depends:** S2, V5, N1. **Files:** backup adapter, restore adapter, tests and
+restore runbook. **Scope:** M, 4 files.
+
+### H3 — Supervised hosted private runtime
+
+- [ ] Deploy only the reviewed private configuration and move one poller safely.
+
+**Accept:** Health/stage/error metrics are redacted; startup/restart/rollback and
+network loss leave safe states. Local and hosted Telegram pollers never overlap.
+**Verify:** Staging health/restore/rollback drill and authorized owner test;
+deployment/cost authorization is required before the external move.
+**Depends:** H1, H2, P2. **Files:** deployment config, supervisor/health adapter,
+tests and runbook. **Scope:** M, ≤5 files.
+
+### H4 — Phone-facing Mini App/session authentication
+
+- [ ] Add validated Telegram initialization and owner-only web session access.
+
+**Accept:** Server verifies signature/owner/freshness/replay; token never reaches
+the frontend, untrusted initDataUnsafe is not authority, and sessions can expire.
+**Verify:** New auth tests for forged/expired/replayed/wrong-owner data plus
+actual HTTPS browser/client verification.
+**Depends:** H3, D4. **Files:** Mini App auth, session adapter, web registration
+and two tests. **Scope:** M, 5 files.
+
+### H5 — Private mobile acceptance
+
+- [ ] Verify complete study and mixed-text reading on the owner's actual clients.
+
+**Accept:** Source/visual/quiz/notes/resume work; failure/text fallbacks remain
+usable across phone/desktop, and hosted availability claims match observed operation.
+**Verify:** Recorded client/version, screenshots, reconnect/restart test and
+owner walkthrough; no unsolicited test messages.
+**Depends:** H4, H2, V7. **Files:** acceptance checklist/result and ignored proof.
+**Scope:** S, ≤2 tracked files.
+
+### Q2 — Automated offline release checks
+
+- [ ] Add a reproducible CI job for established offline contracts and SDK separation.
+
+**Accept:** No paid network/live secrets, disabled tests or softened gates;
+new runner setup reproduces focused/full checks and preserves fixture provenance.
+**Verify:** Local CI-equivalent run, clean installation rehearsal and actual
+CI run once the workflow is committed; keep source/date of evidence.
+**Depends:** Q1, R1 release evidence. **Files:** new CI workflow, test command
+wrapper if needed, reproducibility guide. **Scope:** M, ≤3 files.
+
+### Release R4 — Continuously available private study
+
+- [ ] Hosted runtime, backup/restore, safe polling move, auth and phone tests pass.
+- [ ] Model/resource/quality evidence and operational rollback are current.
+- [ ] Public users, billing or broader source access remain a separate reviewed
+  initiative; no multi-user launch is implied by private hosted readiness.
+
+---
+
 ## learning-visuals — next implementation
 
 This extends the same paper-learning initiative and preserves all older tasks
@@ -24,6 +564,10 @@ below. Current work completed research/specification; feature tasks are pending.
 
 Likely files:`evaluation/visual_learning/rag-method.v1.json`, its readme and one
 focused fixture test. Verify a curator can inspect each fact's source/page.
+Acceptance: fixed training/inference facts and negative cases are inspectable;
+source review is real and independent of the previously generated lesson.
+Whole-app trace: F1/[paper-evidence](../docs/specs/paper-evidence.md).
+Scope: M, 3 files; no new provider call.
 
 ### V2 — Visual contract and validation (medium; depends on V1)
 
@@ -36,6 +580,9 @@ focused fixture test. Verify a curator can inspect each fact's source/page.
 
 Likely files:`src/services/study/visual_learning/models.py`, `validation.py`,
 `tests/unit/test_visual_contract.py`. Verify focused pytest, Ruff and mypy.
+Acceptance: invalid IDs/hash/edges/text controls fail, valid reviewed facts pass.
+Whole-app trace: [visual spec](../docs/specs/learning-visuals.md) and
+[reading contract](../docs/specs/arabic-reading.md). Scope: M, ≤4 files.
 
 ### V3 — SVG/PNG method renderer (medium; depends on V2)
 
@@ -47,6 +594,8 @@ Likely files:`src/services/study/visual_learning/models.py`, `validation.py`,
 
 Likely files:visual scene/renderer module, fixed Windows drawing support where
 needed, `tests/unit/test_visual_renderer.py`. Keep current reading maps working.
+Acceptance: actual shaped SVG/PNG have no clipped labels or misleading arrows;
+missing-shaping/render failure keeps text available. Scope: M, ≤5 files.
 
 ### V4 — Desktop interactive viewer (medium; depends on V3)
 
@@ -61,6 +610,8 @@ needed, `tests/unit/test_visual_renderer.py`. Keep current reading maps working.
 
 Likely files:viewer exporter, trusted static assets and viewer tests. The output
 opens on this PC; do not advertise a phone-accessible Mini App or public link.
+Acceptance: training/inference, step/source controls and text alternatives work
+in a real browser with no model/network calls. Scope: M, ≤5 files.
 
 ### Checkpoint — Offline teaching prototype
 
@@ -70,14 +621,20 @@ opens on this PC; do not advertise a phone-accessible Mini App or public link.
 
 ### V5 — Versioned owner artifacts (medium; depends on V2)
 
+Whole-app prerequisites: V2 and S1. Trace: learning-visuals/learning-session.
+
 - [ ] Store owner/paper/hash/version, locked facts, parent revisions and asset
   hashes under a separate bounded artifact store without modifying old ledgers.
 - [ ] Preserve accepted versions during focused edits; verify isolation/deletion.
 - [ ] Test cache identity, stale source/version rejection and restart recovery.
 
 Likely files:visual artifact store and its tests; no migration of source/eval data.
+Acceptance: version/cache/owner/forget behavior passes real temporary storage
+tests and preserves accepted prior exports. Scope: M, ≤4 files.
 
 ### V6 — Authenticated visual actions (medium; depends on V4,V5)
+
+Whole-app prerequisites: V4, V5 and D1; share its auth/quota/action conventions.
 
 - [ ] Add strict owner-bound artifact/action contracts with existing API auth.
 - [ ] Keep deterministic navigation under request quotas, generation admission
@@ -85,8 +642,12 @@ Likely files:visual artifact store and its tests; no migration of source/eval da
 - [ ] Verify missing/wrong owner access, unknown actions and zero navigation calls.
 
 Likely files:dedicated visual API module, thin app registration and API tests.
+Acceptance: authorized step/source actions succeed, stale/wrong-owner actions
+fail, all with zero model calls and existing quotas intact. Scope: M, ≤5 files.
 
 ### V7 — Private Telegram delivery (medium; depends on V6)
+
+Whole-app prerequisites: V6 and D2; this is the canonical visual delivery task.
 
 - [ ] Add `/visual method` and validated text actions, PNG/source display and a
   clear unsupported-paper response while only the fixture prototype is available.
@@ -97,8 +658,12 @@ Likely files:dedicated visual API module, thin app registration and API tests.
   initiated live model call or Telegram test message.
 
 Likely files:thin Telegram dispatcher, visual service adapter and delivery tests.
+Acceptance: private validated actions deliver image/source/readable fallback;
+Desktop/mobile mixed-text evidence is recorded when authorized. Scope: M, ≤5 files.
 
 ### V8 — Model/provider qualification (medium; depends on offline checkpoint)
+
+Whole-app prerequisites: offline V1–V4, M1, Q1 and a separate applicable ceiling.
 
 - [ ] Freeze common scientific/Arabic/schema/vision cases and a separate budget.
 - [ ] Verify the selected HF route's schema, images, tools/history, tokenizer,
@@ -108,13 +673,24 @@ Likely files:thin Telegram dispatcher, visual service adapter and delivery tests
 
 No execution is authorized by this checklist. Existing pending Deep slots are
 not a visualization grant. Isolate provider settings from frozen Cerebras paths.
+Acceptance: measured route/scientific/Arabic comparison and failures are saved;
+no candidate is activated from metadata alone. Likely files: frozen experiment,
+qualification fixture/schema and result metadata. Scope: M, ≤4 tracked files.
 
 ### V9 — General-paper visual planning (medium; depends on V5,V8)
+
+Whole-app prerequisites: V5, V8, E1 and T1.
 
 - [ ] Add a bounded plan→validate→review→render path over the selected evidence.
 - [ ] Reserve final review capacity; stop on rejection instead of publishing an
   unchecked repair. User-requested edits preserve locked facts and prior versions.
 - [ ] Evaluate new papers and questions separately from the tuned RAG fixture.
+
+Acceptance: new supported papers produce reviewed source-bound method artifacts
+under admitted budgets; rejected edits preserve accepted versions. Verify the
+planner/review loop with stub transport then the separately authorized holdout.
+Likely files: planner, workflow adapter, contract/review test and fixture.
+Scope: M, ≤5 files. Numeric/equation/figure templates are separate V10/V11 tasks.
 
 ### Later slices (not part of first prototype)
 
