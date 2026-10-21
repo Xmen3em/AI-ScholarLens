@@ -14,7 +14,7 @@ index construction. The preparation arrow is not a gradient/update arrow.
 Training arrows describe affected parameters, not differentiability of top-K.
 
 Short exact excerpts are **locators**, not a substitute for their full original
-context; source links/pages remain available. The fixture has 25 quoted words
+context; source links/pages remain available. The fixture has 24 quoted words
 in total. No full PDF/extracted paper is committed. Arabic descriptions are
 teaching paraphrases, not quotations. The diagram omits detailed beam decoding.
 
