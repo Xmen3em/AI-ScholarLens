@@ -26,8 +26,8 @@ The process stays private and reports`accepted:false`.
 Read the [senior engineering/product review](researcher-product-review.ar.md)
 for evidence quality, interactive teaching, structured sources/visuals, memory,
 libraries, evaluation and eventual continuous hosting. It is a proposed roadmap,
-not a claim that these features shipped. A concrete [four-attempt live diagnosis](deep-repair-execution-20261021.md)
-is prepared and pending owner approval, including its private Telegram result.
+not a claim that these features shipped. A concrete [eight-attempt diagnosis and one verification](deep-repair-execution-20261021.md)
+is prepared and pending owner approval, including at most two private Telegram replies.
 All old evaluation/smoke ceilings remain unchanged and exhausted/closed.
 
 ---
