@@ -1,0 +1,270 @@
+{
+  "checked_date": "2026-10-21",
+  "models": [
+    {
+      "id": "moonshotai/Kimi-K3",
+      "url": "https://huggingface.co/api/models/moonshotai/Kimi-K3?expand=inferenceProviderMapping&expand=cardData&expand=sha&expand=lastModified&expand=pipeline_tag",
+      "sha": "f831ab66814297da540d832a5235f8e904f29d06",
+      "lastModified": "2026-09-02T02:22:41.000Z",
+      "pipeline_tag": "image-text-to-text",
+      "license": "other",
+      "providers": {
+        "together": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K3",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "fireworks-ai": {
+          "status": "live",
+          "providerId": "accounts/fireworks/models/kimi-k3",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K3",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "baseten": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K3",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K3",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "snapshot": "moonshotai--Kimi-K3.json",
+      "snapshot_sha256": "74a94886d838a6118fa5488512e2661b9e4b7c1d22e72712f19331ff24751b88",
+      "license_name": "kimi-k3",
+      "vision_schema_tool_arabic_qualified": false
+    },
+    {
+      "id": "moonshotai/Kimi-K2.7-Code",
+      "url": "https://huggingface.co/api/models/moonshotai/Kimi-K2.7-Code?expand=inferenceProviderMapping&expand=cardData&expand=sha&expand=lastModified&expand=pipeline_tag",
+      "sha": "74797c9c62378b951a1f6fcf5c4631024e9b8bef",
+      "lastModified": "2026-06-15T07:49:29.000Z",
+      "pipeline_tag": "image-text-to-text",
+      "license": "other",
+      "providers": {
+        "novita": {
+          "status": "live",
+          "providerId": "moonshotai/kimi-k2.7-code",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K2.7-Code",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K2.7-Code",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "together": {
+          "status": "error",
+          "providerId": "moonshotai/Kimi-K2.7-Code",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "baseten": {
+          "status": "error",
+          "providerId": "moonshotai/Kimi-K2.7-Code",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "snapshot": "moonshotai--Kimi-K2.7-Code.json",
+      "snapshot_sha256": "8267f3ec35e06e0cd0e795285f470a09d5570b24197d3395c6ccf3c0710946e9",
+      "license_name": "modified-mit",
+      "vision_schema_tool_arabic_qualified": false
+    },
+    {
+      "id": "moonshotai/Kimi-K2.6",
+      "url": "https://huggingface.co/api/models/moonshotai/Kimi-K2.6?expand=inferenceProviderMapping&expand=cardData&expand=sha&expand=lastModified&expand=pipeline_tag",
+      "sha": "7eb5002f6aadc958aed6a9177b7ed26bb94011bb",
+      "lastModified": "2026-05-19T09:01:54.000Z",
+      "pipeline_tag": "image-text-to-text",
+      "license": "other",
+      "providers": {
+        "novita": {
+          "status": "live",
+          "providerId": "moonshotai/kimi-k2.6",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K2.6",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K2.6",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "baseten": {
+          "status": "error",
+          "providerId": "moonshotai/Kimi-K2.6",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "snapshot": "moonshotai--Kimi-K2.6.json",
+      "snapshot_sha256": "b8b8bdbc06d5cc8e91257a3eb84881cac74a655f93c694f68411a5c0a8b7f7a0",
+      "license_name": "modified-mit",
+      "vision_schema_tool_arabic_qualified": false
+    },
+    {
+      "id": "moonshotai/Kimi-K2.5",
+      "url": "https://huggingface.co/api/models/moonshotai/Kimi-K2.5?expand=inferenceProviderMapping&expand=cardData&expand=sha&expand=lastModified&expand=pipeline_tag",
+      "sha": "4d01dfe0332d63057c186e0b262165819efb6611",
+      "lastModified": "2026-04-30T03:56:40.000Z",
+      "pipeline_tag": "image-text-to-text",
+      "license": "other",
+      "providers": {
+        "novita": {
+          "status": "live",
+          "providerId": "moonshotai/kimi-k2.5",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K2.5",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "moonshotai/Kimi-K2.5",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "snapshot": "moonshotai--Kimi-K2.5.json",
+      "snapshot_sha256": "97e05d92d133ecf4a6cd243c3dcd20756141a83a338ffefe93bc51fe32311f39",
+      "license_name": "modified-mit",
+      "vision_schema_tool_arabic_qualified": false
+    },
+    {
+      "id": "Qwen/Qwen3.5-35B-A3B",
+      "url": "https://huggingface.co/api/models/Qwen/Qwen3.5-35B-A3B?expand=inferenceProviderMapping&expand=cardData&expand=sha&expand=lastModified&expand=pipeline_tag",
+      "sha": "59d61f3ce65a6d9863b86d2e96597125219dc754",
+      "lastModified": "2026-04-24T02:38:38.000Z",
+      "pipeline_tag": "image-text-to-text",
+      "license": "apache-2.0",
+      "providers": {
+        "novita": {
+          "status": "live",
+          "providerId": "qwen/qwen3.5-35b-a3b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "Qwen/Qwen3.5-35B-A3B",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "snapshot": "Qwen--Qwen3.5-35B-A3B.json",
+      "snapshot_sha256": "f5964bea65613f0a5baa30bddc74ba3afbe72792199f33ce5d6e68838be129e6",
+      "license_name": "apache-2.0",
+      "vision_schema_tool_arabic_qualified": false
+    },
+    {
+      "id": "openai/gpt-oss-120b",
+      "url": "https://huggingface.co/api/models/openai/gpt-oss-120b?expand=inferenceProviderMapping&expand=cardData&expand=sha&expand=lastModified&expand=pipeline_tag",
+      "sha": "b5c939de8f754692c1647ca79fbf85e8c1e70f8a",
+      "lastModified": "2025-08-26T17:25:03.000Z",
+      "pipeline_tag": "text-generation",
+      "license": "apache-2.0",
+      "providers": {
+        "groq": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "novita": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "cerebras": {
+          "status": "live",
+          "providerId": "gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "nscale": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "together": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "fireworks-ai": {
+          "status": "live",
+          "providerId": "accounts/fireworks/models/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "featherless-ai": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "scaleway": {
+          "status": "live",
+          "providerId": "gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "baseten": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "ovhcloud": {
+          "status": "live",
+          "providerId": "gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        },
+        "deepinfra": {
+          "status": "live",
+          "providerId": "openai/gpt-oss-120b",
+          "task": "conversational",
+          "isModelAuthor": false
+        }
+      },
+      "snapshot": "openai--gpt-oss-120b.json",
+      "snapshot_sha256": "c379a59ea1a8ebbd8fd33044ca65d688472157f4e319444a4c33dfc76ff8e051",
+      "license_name": "apache-2.0",
+      "vision_schema_tool_arabic_qualified": false
+    }
+  ],
+  "qualification": "Public catalog/card inspection only. No model inference, weights download or deployment."
+}

@@ -1,5 +1,44 @@
 # Week 6: local operational controls
 
+## Next: source-grounded visual learning — 21 October 2026
+
+The user requested research into Kimi-like visual explanations and the next
+implementation plan. This extends the existing`learning-visuals` capability;
+all prior incomplete work and historical budgets below are preserved. The
+current change is planning/documentation, not feature activation.
+
+Branch:`codex/visual-learning`, based on the preserved`codex/paper-intake`
+checkpoint`b13550c`. Application source remains unchanged from`1bf7c9a`.
+
+Read the[model/agent research](../docs/research/visual-learning-20261021/DECISIONS.md),
+[Egyptian overview](../docs/visual-learning-next.ar.md), and
+[visual implementation contract](../docs/specs/learning-visuals.md).
+The ordered checklist is[at the top of todo](todo.md#learning-visuals--next-implementation).
+
+Implementation order:
+
+1. Curate a small RAG source/fact fixture, with separate training/inference facts.
+2. Define/validate`EvidenceFact` and`VisualSpec`; reject wrong source IDs/arrows.
+3. Render readable Arabic SVG/PNG from application-owned scene primitives.
+4. Build the local interactive viewer: steps, component details and source view.
+5. Persist versioned owner artifacts and deterministic navigation separately from
+   generation admission; preserve existing quotas and private owner controls.
+6. Add Telegram PNG/actions after authenticated API tests and delivery verification.
+7. Qualify model/provider capabilities separately, then compare the current text
+   planner with Kimi K3/Qwen on identical tasks under a new authorized ceiling.
+8. Extend to charts from verified table cells and to equations/source figures.
+
+First reviewable deliverable: offline RAG method explainer with source-linked
+training/inference views. No new model token, weights, deployment, OCR activation
+or paid call is needed for that slice. A fixture prototype must be labeled as
+such until arbitrary-paper planning has been evaluated.
+
+The unresolved Deep failure and its pending8-call diagnosis remain separate.
+Visual offline implementation is independent; this plan spends none of those
+slots or any historical grant. Model experiments require their own later scope.
+
+---
+
 ## Active: interactive paper learning — 17 October 2026
 
 The owner authorized autonomous research then implementation, with questions

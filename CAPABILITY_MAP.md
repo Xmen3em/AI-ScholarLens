@@ -16,6 +16,13 @@ OCR qualification, source figure/equation interpretation, external research and
 application Notion export remain extensions. The map below retains the broader
 intended scope; it is not a claim that every proposed capability shipped.
 
+**Visual-learning research update —21October2026:** the existing`learning-visuals`
+module now has a[proposed implementation contract](docs/specs/learning-visuals.md),
+[Kimi/model/agent research](docs/research/visual-learning-20261021/DECISIONS.md),
+and an[Egyptian overview](docs/visual-learning-next.ar.md). The next offline slice
+is a source-linked RAG method explainer; interactive mechanisms and charts are
+not claimed as delivered by the current reading-order map.
+
 ## Product promise
 
 الباحث يبعت ورقة، والتطبيق يبدأ يساعده يفهمها بالمصري: شرح واضح من الدليل،

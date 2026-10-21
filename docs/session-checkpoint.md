@@ -1,3 +1,39 @@
+# Visual-learning research and next implementation — 2026-10-21
+
+The user asked to search for Kimi-like visualization/models/agents and prepare
+the next implementation. Work is saved on`codex/visual-learning`, branched from
+the preserved`codex/paper-intake` checkpoint`b13550c`. This change contains only
+research metadata, specifications, plans and documentation. Application source
+still matches`1bf7c9a`; no runtime restart or activation is required.
+
+Research checked Kimi K3/K2.7-Code/K2.6/K2.5, Qwen3.5-35B-A3B and the GPT-OSS
+baseline with public HF provider mappings, revisions, license names and hashes.
+Fifteen primary-source/card snapshots are cached under ignored
+`tests/test_output/visual-learning-research-20261021/`. Provider`live` status is
+catalog evidence only; no model/vision/tool/Arabic qualification was performed.
+
+The plan uses source analysis, teaching planning, rendering and critique as
+bounded workflow roles. A structured visual contract feeds application-owned
+SVG/PNG/interaction templates. First slice: offline source-bound RAG training/
+inference explainer, followed by a local viewer and private Telegram integration.
+Kimi K3 is a comparison candidate, not an activated replacement. Charts require
+verified table cells; illustrative simulations retain an explicit example label.
+
+Read the[Egyptian overview](visual-learning-next.ar.md),
+[research decisions](research/visual-learning-20261021/DECISIONS.md),
+[contract](specs/learning-visuals.md), and ordered[tasks](../tasks/todo.md#learning-visuals--next-implementation).
+Older incomplete tasks were preserved and the existing capability map extended.
+No application tests were rerun for documentation-only work; JSON, local links,
+source invariance and Git hygiene are the relevant checks for this checkpoint.
+
+No inference, model weights, new account/service, deployment or Telegram test
+message was initiated. The eight-call Deep diagnosis remains pending and cannot
+fund visualization experiments. Historical budgets/evidence and the private app
+configuration are unchanged. Do not describe the unresolved live Deep failure
+as repaired merely because this future visual workflow is planned.
+
+---
+
 # Researcher-product review and unresolved Deep failure — 2026-10-21
 
 The owner tried the suggested `/deep` question after the previous restart; it

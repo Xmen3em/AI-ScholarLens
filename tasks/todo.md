@@ -1,5 +1,119 @@
 # Week 6 local verification
 
+## learning-visuals — next implementation
+
+This extends the same paper-learning initiative and preserves all older tasks
+below. Current work completed research/specification; feature tasks are pending.
+[Plan](plan.md#next-source-grounded-visual-learning--21-october-2026) ·
+[Contract](../docs/specs/learning-visuals.md).
+
+- [x] Inspect current renderer, workflow, quotas and deployment boundaries.
+- [x] Research Kimi K3/K2.x, live HF metadata, PaperVizAgent, interactive revision
+  and declarative rendering from primary sources; record revisions/hashes.
+- [x] Select a bounded source-linked method explainer as the first offline slice.
+
+### V1 — Reviewed RAG source fixture (small; no dependency)
+
+- [ ] Record canonical version/hash, short source references and reviewed facts
+  for inference and training. No dependency on the ignored full PDF in CI.
+- [ ] Include negative examples: document-encoder update, token/paragraph confusion
+  and the unsupported best-result claim. Mark illustrative material explicitly.
+- [ ] Verify facts against the original source and retain the fixture rubric.
+
+Likely files:`evaluation/visual_learning/rag-method.v1.json`, its readme and one
+focused fixture test. Verify a curator can inspect each fact's source/page.
+
+### V2 — Visual contract and validation (medium; depends on V1)
+
+- [ ] Add typed evidence/spec models with finite template/interaction contracts.
+- [ ] Reject unknown references, cross-paper hashes, invalid graph endpoints and
+  unsupported scientific update relations; keep example origins distinct.
+- [ ] Add meaningful positive/negative contract tests, including inert labels.
+
+Likely files:`src/services/study/visual_learning/models.py`, `validation.py`,
+`tests/unit/test_visual_contract.py`. Verify focused pytest, Ruff and mypy.
+
+### V3 — SVG/PNG method renderer (medium; depends on V2)
+
+- [ ] Draw approved scene primitives from one validated spec and source manifest.
+- [ ] Produce readable RTL/mixed-term SVG and PNG without model code execution.
+- [ ] Visually inspect real exports, clipping, arrow meanings and image bounds.
+
+Likely files:visual scene/renderer module, fixed Windows drawing support where
+needed, `tests/unit/test_visual_renderer.py`. Keep current reading maps working.
+
+### V4 — Desktop interactive viewer (medium; depends on V3)
+
+- [ ] Provide training/inference switching, step navigation, component details
+  and original evidence in a trusted local HTML/SVG shell.
+- [ ] Navigation performs zero model/network requests and exposes no credentials.
+- [ ] Verify keyboard, narrow/desktop layouts, Arabic, reduced motion and console
+  errors using an actual browser; preserve a text alternative.
+
+Likely files:viewer exporter, trusted static assets and viewer tests. The output
+opens on this PC; do not advertise a phone-accessible Mini App or public link.
+
+### Checkpoint — Offline teaching prototype
+
+- [ ] V1–V4 accepted checks pass; inspect an actual training/inference artifact.
+- [ ] Label the RAG fixture scope; no claim of arbitrary-paper model generation.
+- [ ] Record changed files, resources and zero inference before integration.
+
+### V5 — Versioned owner artifacts (medium; depends on V2)
+
+- [ ] Store owner/paper/hash/version, locked facts, parent revisions and asset
+  hashes under a separate bounded artifact store without modifying old ledgers.
+- [ ] Preserve accepted versions during focused edits; verify isolation/deletion.
+- [ ] Test cache identity, stale source/version rejection and restart recovery.
+
+Likely files:visual artifact store and its tests; no migration of source/eval data.
+
+### V6 — Authenticated visual actions (medium; depends on V4,V5)
+
+- [ ] Add strict owner-bound artifact/action contracts with existing API auth.
+- [ ] Keep deterministic navigation under request quotas, generation admission
+  under generation quotas; do not loosen current endpoint classification.
+- [ ] Verify missing/wrong owner access, unknown actions and zero navigation calls.
+
+Likely files:dedicated visual API module, thin app registration and API tests.
+
+### V7 — Private Telegram delivery (medium; depends on V6)
+
+- [ ] Add `/visual method` and validated text actions, PNG/source display and a
+  clear unsupported-paper response while only the fixture prototype is available.
+- [ ] Preserve owner/forward/update/acknowledgement/replay gates and error behavior.
+- [ ] Test the local flow; obtain explicit authorization before any developer-
+  initiated live model call or Telegram test message.
+
+Likely files:thin Telegram dispatcher, visual service adapter and delivery tests.
+
+### V8 — Model/provider qualification (medium; depends on offline checkpoint)
+
+- [ ] Freeze common scientific/Arabic/schema/vision cases and a separate budget.
+- [ ] Verify the selected HF route's schema, images, tools/history, tokenizer,
+  usage, limits and license terms; provider catalog status alone is insufficient.
+- [ ] Compare current text planning against Kimi K3 and a Qwen alternative;
+  record failures and choose from measured results, without automatic fallback.
+
+No execution is authorized by this checklist. Existing pending Deep slots are
+not a visualization grant. Isolate provider settings from frozen Cerebras paths.
+
+### V9 — General-paper visual planning (medium; depends on V5,V8)
+
+- [ ] Add a bounded plan→validate→review→render path over the selected evidence.
+- [ ] Reserve final review capacity; stop on rejection instead of publishing an
+  unchecked repair. User-requested edits preserve locked facts and prior versions.
+- [ ] Evaluate new papers and questions separately from the tuned RAG fixture.
+
+### Later slices (not part of first prototype)
+
+- [ ] Verified table-cell chart contract and declarative chart templates.
+- [ ] Source equation/figure regions and qualified visual interpretation.
+- [ ] Phone-facing Mini App with appropriate HTTPS hosting and validated initData.
+- [ ] Researcher learning evaluation and independent scientific holdout.
+
+---
+
 > Current direction — 16 October 2026: private manual Telegram testing is working.
 > These older task lists are retained as history and may contain stale unchecked
 > items. The proposed next work is the [paper-learning capability map](../CAPABILITY_MAP.md).

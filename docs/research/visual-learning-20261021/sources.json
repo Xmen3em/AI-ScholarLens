@@ -1,0 +1,111 @@
+{
+  "checked_date": "2026-10-21",
+  "sources": [
+    {
+      "id": "kimi-k3-blog",
+      "url": "https://www.kimi.com/en/blog/kimi-k3",
+      "snapshot": "kimi-k3-blog.txt",
+      "bytes": 342772,
+      "sha256": "e80533ff33f83de56cbd47cd26be2e9d5e4c40600bf8b527b4932585e4e43fb0"
+    },
+    {
+      "id": "papervizagent-readme",
+      "url": "https://raw.githubusercontent.com/google-research/papervizagent/main/README.md",
+      "snapshot": "papervizagent-readme.txt",
+      "bytes": 9633,
+      "sha256": "090f4b0a4d88dd198afeea268c022cabee56a8578eddde840c2f2069a5463c0f"
+    },
+    {
+      "id": "paperbanana-interact",
+      "url": "https://arxiv.org/abs/2608.30241",
+      "snapshot": "paperbanana-interact.txt",
+      "bytes": 44256,
+      "sha256": "40ae639ac4eb6ee1d231c2c77854e239cb34c403e263ba6fbfae4587a929eee6"
+    },
+    {
+      "id": "crafter",
+      "url": "https://arxiv.org/abs/2605.30611",
+      "snapshot": "crafter.txt",
+      "bytes": 43935,
+      "sha256": "75e7732843d80e808d60bdd755cf4be50add24193bccaf1373305e94aeddabee"
+    },
+    {
+      "id": "vegalite-parameters",
+      "url": "https://vega.github.io/vega-lite/docs/parameter.html",
+      "snapshot": "vegalite-parameters.txt",
+      "bytes": 32867,
+      "sha256": "0d7159fc2178683c1625b263e54303b822de6338441dc88aa3e2e8d271424182"
+    },
+    {
+      "id": "mermaid-security",
+      "url": "https://mermaid.js.org/config/usage.html",
+      "snapshot": "mermaid-security.txt",
+      "bytes": 174469,
+      "sha256": "e7a7f716cbae6eff49752840ed99f73d2c92b70d45091ee411e04ce86822ed82"
+    },
+    {
+      "id": "langgraph-workflows",
+      "url": "https://docs.langchain.com/oss/python/langgraph/workflows-agents",
+      "snapshot": "langgraph-workflows.txt",
+      "bytes": 1606276,
+      "sha256": "5c63b7081442dbdf60fd63382bfa495565d5aa72c8fc95ef642c59ef21e08186"
+    },
+    {
+      "id": "telegram-miniapps",
+      "url": "https://core.telegram.org/bots/webapps",
+      "snapshot": "telegram-miniapps.txt",
+      "bytes": 154834,
+      "sha256": "65fcadba17a6a066d187cd613218cede06faea3489851a44de1e9c36bcbb5ca8"
+    },
+    {
+      "id": "kimi-k3-api",
+      "url": "https://platform.kimi.ai/docs/guide/kimi-k3-quickstart",
+      "snapshot": "kimi-k3-api.txt",
+      "bytes": 610274,
+      "sha256": "f7fc9482143e79d70a2709f03313f7c5e8c31a1f5937c2a32be1c3b0d50f5c0b"
+    },
+    {
+      "id": "moonshotai--Kimi-K3--readme",
+      "url": "https://huggingface.co/moonshotai/Kimi-K3/raw/f831ab66814297da540d832a5235f8e904f29d06/README.md",
+      "snapshot": "moonshotai--Kimi-K3--readme.txt",
+      "bytes": 45261,
+      "sha256": "57de265b5842dfa465c6e73b368b0e15a89b8793b5450528dad577da202cc6fe"
+    },
+    {
+      "id": "moonshotai--Kimi-K2.7-Code--readme",
+      "url": "https://huggingface.co/moonshotai/Kimi-K2.7-Code/raw/74797c9c62378b951a1f6fcf5c4631024e9b8bef/README.md",
+      "snapshot": "moonshotai--Kimi-K2.7-Code--readme.txt",
+      "bytes": 15061,
+      "sha256": "c78bbe5af19636b180eda956abf1f30a79027ec04d6642ebddc44edbc4470879"
+    },
+    {
+      "id": "moonshotai--Kimi-K2.6--readme",
+      "url": "https://huggingface.co/moonshotai/Kimi-K2.6/raw/7eb5002f6aadc958aed6a9177b7ed26bb94011bb/README.md",
+      "snapshot": "moonshotai--Kimi-K2.6--readme.txt",
+      "bytes": 29325,
+      "sha256": "95db3be1d0473e482c7aa901f237ad7af8bb7929625a777b27428081bb8ea9f7"
+    },
+    {
+      "id": "moonshotai--Kimi-K2.5--readme",
+      "url": "https://huggingface.co/moonshotai/Kimi-K2.5/raw/4d01dfe0332d63057c186e0b262165819efb6611/README.md",
+      "snapshot": "moonshotai--Kimi-K2.5--readme.txt",
+      "bytes": 40082,
+      "sha256": "1b04bed9c6c25894171c0ab5e0b4c4d57667698a654dbfd5a6c1649b922810a5"
+    },
+    {
+      "id": "Qwen--Qwen3.5-35B-A3B--readme",
+      "url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B/raw/59d61f3ce65a6d9863b86d2e96597125219dc754/README.md",
+      "snapshot": "Qwen--Qwen3.5-35B-A3B--readme.txt",
+      "bytes": 93160,
+      "sha256": "71c3bbc2eadadd5980bbdbb15df958c27d42ede24821015602a021109aacf492"
+    },
+    {
+      "id": "openai--gpt-oss-120b--readme",
+      "url": "https://huggingface.co/openai/gpt-oss-120b/raw/b5c939de8f754692c1647ca79fbf85e8c1e70f8a/README.md",
+      "snapshot": "openai--gpt-oss-120b--readme.txt",
+      "bytes": 7111,
+      "sha256": "92b0408cf5dce04e4c5e4e5f2be0361da710d3650baefd7d7519badd1c687919"
+    }
+  ],
+  "snapshot_root": "tests/test_output/visual-learning-research-20261021 (ignored local research cache)"
+}

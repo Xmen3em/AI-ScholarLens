@@ -12,6 +12,8 @@ The selected-paper workflow is implemented on `codex/paper-intake` and has passe
 
 Owner testing on21October2026 found an unresolved `/deep` failure. Its offline SDK checks pass, but the route remains experimental. Read the [researcher-product review](docs/researcher-product-review.ar.md) for priorities and the [pending bounded diagnosis](docs/deep-repair-execution-20261021.md).
 
+The next visual-learning iteration is specified in the [Kimi/model research](docs/research/visual-learning-20261021/DECISIONS.md) and [visual teaching plan](docs/specs/learning-visuals.md). It starts with a source-linked offline method explainer; the new interactive feature is not yet implemented.
+
 ## What works today
 
 | Capability | Current behavior |
