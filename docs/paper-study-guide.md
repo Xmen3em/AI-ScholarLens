@@ -33,6 +33,8 @@ Title matches always require selection, including a single match. When no paper
 is active, a plain title also starts title search; explicit general questions
 continue to the concept assistant. With an active paper, ordinary text is a
 follow-up about that paper. Use `/paper` to switch by title.
+`/help`, `What can you do?`, and the owner's phrasing `what you can make now`
+return local capability help; they do not start a teaching/model job.
 
 The first lesson covers the problem, prerequisites, contribution, method, one
 experiment when the evidence supports it, limitations, a labeled analogy and a
@@ -77,6 +79,10 @@ mastery certificate or persistent learning score.
 A bare `/deep` returns a short example. A paper URL/ID after `/deep` returns
 instructions to open it with `/paper` first; neither starts a model job. This
 avoids spending calls to interpret a source address as a research question.
+The owner's subsequent valid Deep question also failed. Safe worker/job failure
+categories are now retained, but that live failure has not yet been reproduced
+or qualified as repaired. The restricted SDK passes offline tests; do not infer
+live readiness from those tests. See the [pending diagnosis](deep-repair-execution-20261021.md).
 
 The drawing is a **study reading order**, with source block references. It does
 not invent causal relationships, scientific figures or experimental charts.

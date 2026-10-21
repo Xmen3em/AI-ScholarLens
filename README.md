@@ -10,6 +10,8 @@ The selected-paper workflow is implemented on `codex/paper-intake` and has passe
 
 > **Development prototype.** Scientific explanations and Egyptian wording still need human review and an independent learning-quality evaluation. The earlier indexed-paper quality gates have not passed; see the [holdout result](docs/hf-cerebras-paced-holdout-result.md). This is a private PC prototype, not a public hosted service.
 
+Owner testing on21October2026 found an unresolved `/deep` failure. Its offline SDK checks pass, but the route remains experimental. Read the [researcher-product review](docs/researcher-product-review.ar.md) for priorities and the [pending bounded diagnosis](docs/deep-repair-execution-20261021.md).
+
 ## What works today
 
 | Capability | Current behavior |

@@ -1,3 +1,37 @@
+# Researcher-product review and unresolved Deep failure — 2026-10-21
+
+The owner tried the suggested `/deep` question after the previous restart; it
+also failed after two completed transports. A subsequent capability question
+was admitted as paper work and failed before an attempt. Both records contained
+null diagnostics. Their precise original causes cannot be recovered from the
+retained metadata; do not claim that changing command usage fixed Deep Agents.
+The current diagnostic/help source checkpoint is`1bf7c9a`.
+
+Capability questions now return local help without a job or inference. Worker
+and parent share finite safe failure categories for context limits, tool errors,
+response validation, provider failures and other internal boundaries. The job
+stores a non-null failure category without exposing raw exceptions or outputs.
+This improves diagnosis; the original live Deep failure is still unqualified.
+
+Verification:223 affected study/Telegram/development tests pass in16.55s; six
+isolated SDK/MCP tests pass; Ruff passes and mypy passes152 source files. These
+are offline checks, not a successful new live Deep call. Prior results below
+retain their original source/date.
+
+The paired runtime was restarted successfully. Authenticated runtime and the
+owner's exact capability question returned200; capability help created no job
+and added zero model attempts. Proof:`data/study/runtime-reliability-20261021.json`.
+The process stays private and reports`accepted:false`.
+
+Read the [senior engineering/product review](researcher-product-review.ar.md)
+for evidence quality, interactive teaching, structured sources/visuals, memory,
+libraries, evaluation and eventual continuous hosting. It is a proposed roadmap,
+not a claim that these features shipped. A concrete [four-attempt live diagnosis](deep-repair-execution-20261021.md)
+is prepared and pending owner approval, including its private Telegram result.
+All old evaluation/smoke ceilings remain unchanged and exhausted/closed.
+
+---
+
 # Telegram lesson feedback fixes — 2026-10-21
 
 Source checkpoint `bd75251` on `codex/paper-intake` addresses the owner's real
