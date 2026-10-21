@@ -1,3 +1,41 @@
+# Telegram lesson feedback fixes — 2026-10-21
+
+Source checkpoint `bd75251` on `codex/paper-intake` addresses the owner's real
+lesson and `/deep` transcript. Repeated displayed block references collapse;
+selected passages are distinguished from partial extraction; numbered Telegram
+parts preserve paragraph boundaries where possible. Reading maps now include
+short explanation excerpts. Supporting quotations remain intact.
+
+The reported lesson incorrectly called RAG-Token's66.1 on TQA-Wiki the best
+result despite RAG-Sequence's68.0. The previous grounding review accepted this.
+Review now receives bounded full cited-block context for table headers/competing
+rows and can reject misleading analogy mappings. Prompt revision is
+`egyptian-grounded-tutor-context-review-v4`. This remains an LLM review, not a
+proof of scientific correctness or a successful new live qualification.
+
+Bare `/deep` gives a focused question example; `/deep <URL or ID>` explains
+`/paper` intake without spending a model attempt. Proper `/deep <question>` uses
+paper-specific snippet IDs and at most three sections. Safe worker validation
+categories propagate without provider text. The earlier owner URL request failed
+after two transport completions; its exact validation reason was not retained.
+No maintenance-triggered inference or unsolicited Telegram message was sent.
+
+Verification: **215 affected study/Telegram/development tests pass** in14.98s;
+six isolated SDK/MCP tests pass, including the real research-command tool loop
+with a stub model. Ruff src/tests/research and mypy all151 source files pass.
+The Arabic map was rendered and visually inspected. Proof is under ignored
+`tests/test_output/study-feedback-*20261021*`. The historical1,467-test full-suite
+result below belongs to17October; it was not rerun or relabeled for this fix.
+
+The paired private runtime was restarted after confirming no study job was
+running and about2.3GiB host RAM was free. Owner credentials, data, immutable
+smoke/evaluation ceilings and model choice are preserved. The saved initial
+lesson is not silently regenerated; the owner can send a fresh `/paper` request
+to review the updated prompt. See the [guide](paper-study-guide.md) and
+[feedback analysis](paper-study-implementation.md#owner-feedback--21-october-2026).
+
+---
+
 # Interactive paper learning — 2026-10-17
 
 The user authorized a goal, primary-source research and autonomous implementation,

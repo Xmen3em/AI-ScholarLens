@@ -68,8 +68,22 @@ mastery certificate or persistent learning score.
 | `/deep <question>` | Optional Deep Agents research within the current paper |
 | `/forget` | Clear active paper, recent dialogue, preferences and owner study artifacts |
 
+`/deep` takes a question about the selected paper, for example:
+
+```text
+/deep اشرح طريقة التدريب خطوة بخطوة من الدليل
+```
+
+A bare `/deep` returns a short example. A paper URL/ID after `/deep` returns
+instructions to open it with `/paper` first; neither starts a model job. This
+avoids spending calls to interpret a source address as a research question.
+
 The drawing is a **study reading order**, with source block references. It does
 not invent causal relationships, scientific figures or experimental charts.
+Each card includes a short excerpt of its reviewed explanation, with repeated
+block references collapsed. Longer lessons use numbered Telegram parts split at
+paragraph boundaries where possible; the source link and comprehension question
+may appear in the final part.
 Arabic shaping uses Pillow/libraqm where available and a fixed Windows GDI
 drawing worker on this PC. Model text is JSON data; it is never drawing code.
 
@@ -108,7 +122,14 @@ page numbers and stable block IDs. The model chooses IDs from an evidence
 catalog. The server copies the exact original excerpts, checks IDs and numeric
 literals, then runs a separate model review of factual support and comparisons.
 That review can replace unsupported sections with an explicit uncertainty.
+It receives bounded full cited-block context for table headers/competing rows,
+and checks whether an analogy preserves the source mechanism and granularity.
 Neither mechanical validation nor a second LLM proves semantic correctness.
+
+Selecting passages from a fully extracted PDF is labeled **selected passages**.
+It is distinct from incomplete extraction, which retains its own warning. Both
+can apply to the same lesson. Saved `/notes` keeps the earlier lesson; a new
+`/paper` request is needed to regenerate it with a revised teaching prompt.
 
 Recent context is limited to four question/answer pairs for one selected paper,
 expires after 24 hours, and is truncated further when building a prompt. Old

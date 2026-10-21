@@ -223,3 +223,32 @@ remaining choices without blocking this implementation.
 The [next evaluation design](paper-study-evaluation.md) covers scientific support,
 Egyptian teaching, learning interaction, OCR, memory/tool isolation and complete
 response latency. It authorizes no additional inference.
+
+## Owner feedback — 21 October 2026
+
+A real Telegram lesson exposed an accepted but incorrect comparative claim:
+RAG-Token's66.1 on TQA-Wiki was called the best result, despite RAG-Sequence's68.0
+in the same table. It also mapped token-level behavior to paragraphs in an
+analogy. See [the original paper, Table1 and section2.1](https://arxiv.org/pdf/2005.11401v4).
+Exact numeric matching and the earlier review did not prevent either error.
+
+Review now receives up to16,000 characters of full cited-block context, alongside
+the exact selected quotations, so it can inspect headers and competing rows.
+Analogy sections are also eligible for rejection. The teaching prompt distinguishes
+prerequisites as background and preserves token/sentence/document granularity.
+This adds context and validation coverage; it does not establish that future model
+judgments will be correct. No new live model call was initiated to verify this fix.
+
+The PDF in that report was fully extracted. Sampling24 of51 blocks had been
+misreported as partial extraction. Sampling and extraction warnings are now
+separate, repeated display references collapse without deleting supporting quotes,
+and Telegram parts preserve paragraphs where possible and show part numbers.
+The reading map now includes a short explanation under each heading. It remains
+a study-order map, not a scientific diagram.
+
+The owner's `/deep <URL>` request failed after two completed transport attempts;
+the old worker retained no validation detail, so its precise failure is unknown.
+Bare `/deep` now gives a focused example, and URL/ID arguments return `/paper`
+instructions without admitting a new job. Research uses a paper-specific snippet
+ID schema and at most three sections, and propagates allowlisted validation
+categories instead of hiding every failure behind a generic worker error.
