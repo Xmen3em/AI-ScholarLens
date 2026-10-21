@@ -586,8 +586,8 @@ Whole-app trace: [visual spec](../docs/specs/learning-visuals.md) and
 
 ### V3 — SVG/PNG method renderer (medium; depends on V2)
 
-- [ ] Draw approved scene primitives from one validated spec and source manifest.
-- [ ] Produce readable RTL/mixed-term SVG and PNG without model code execution.
+- [x] Draw approved scene primitives from one validated spec and source manifest.
+- [x] Produce readable RTL/mixed-term SVG and PNG without model code execution.
 - [ ] Visually inspect real exports, clipping, arrow meanings and image bounds.
 - [ ] Measure shaped text in pixels; preserve graphemes/diacritics, isolate
   mixed terms and citations, and inspect both SVG and PNG against the RTL cases.
