@@ -575,7 +575,7 @@ Scope: M, 3 files; no new provider call.
 - [x] Reject unknown references, cross-paper hashes, invalid graph endpoints and
   unsupported scientific update relations; keep example origins distinct.
 - [x] Add meaningful positive/negative contract tests, including inert labels.
-- [ ] Define bounded semantic text runs and shared mixed-text fixtures from the
+- [x] Define bounded semantic text runs and shared mixed-text fixtures from the
   reading contract; keep canonical source/IDs separate from decorated text.
 
 Likely files:`src/services/study/visual_learning/models.py`, `validation.py`,

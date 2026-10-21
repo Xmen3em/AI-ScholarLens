@@ -1,0 +1,17 @@
+{
+  "revision": "arabic-reading-v1",
+  "cases": [
+    {"id": "term", "runs": [{"text": "خلّينا نفهم ", "direction": "rtl"}, {"text": "Retrieval-Augmented Generation (RAG)", "direction": "ltr"}, {"text": " خطوة بخطوة.", "direction": "rtl"}]},
+    {"id": "english_first", "runs": [{"text": "RAG", "direction": "ltr"}, {"text": " هنا مجرد مصطلح في مثال للعرض.", "direction": "rtl"}]},
+    {"id": "signs", "runs": [{"text": "المصطلحات: ", "direction": "rtl"}, {"text": "C++ / BERT-base / top-K", "direction": "ltr"}]},
+    {"id": "citation", "runs": [{"text": "المصدر: ", "direction": "rtl"}, {"text": "[p4b0 / p. 4]", "direction": "ltr"}]},
+    {"id": "numeric_example", "runs": [{"text": "مثال افتراضي: ", "direction": "rtl"}, {"text": "-0.25 ± 0.03 ms (95%)", "direction": "ltr"}]},
+    {"id": "arabic_digits", "runs": [{"text": "الخطوة ٢ من ٨", "direction": "rtl"}]},
+    {"id": "equation", "runs": [{"text": "p(y|x) = sum_z p(z|x) p(y|x,z); x < 0", "direction": "ltr"}]},
+    {"id": "url_command", "runs": [{"text": "https://arxiv.org/abs/2005.11401v4 /deep", "direction": "ltr"}]},
+    {"id": "unknown_title", "runs": [{"text": "عنوان مختلط: ", "direction": "rtl"}, {"text": "Learning بالعربي (RAG)", "direction": "auto"}]},
+    {"id": "combining_emoji", "runs": [{"text": "تَعَلُّم 👩🏽‍🔬 خطوة بخطوة", "direction": "rtl"}]},
+    {"id": "hostile_control", "runs": [{"text": "title\u202e", "direction": "auto"}], "reject": true},
+    {"id": "long_title", "runs": [{"text": "شرح عربي طويل بيكمل عند حدود الكلمات عشان القراءة على شاشة صغيرة تفضل واضحة، مع المصطلح ", "direction": "rtl"}, {"text": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", "direction": "ltr"}, {"text": " والمصدر محفوظ كامل.", "direction": "rtl"}]}
+  ]
+}
