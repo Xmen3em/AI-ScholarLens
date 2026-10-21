@@ -556,11 +556,11 @@ below. Current work completed research/specification; feature tasks are pending.
 
 ### V1 — Reviewed RAG source fixture (small; no dependency)
 
-- [ ] Record canonical version/hash, short source references and reviewed facts
+- [x] Record canonical version/hash, short source references and reviewed facts
   for inference and training. No dependency on the ignored full PDF in CI.
-- [ ] Include negative examples: document-encoder update, token/paragraph confusion
+- [x] Include negative examples: document-encoder update, token/paragraph confusion
   and the unsupported best-result claim. Mark illustrative material explicitly.
-- [ ] Verify facts against the original source and retain the fixture rubric.
+- [x] Verify facts against the original source and retain the fixture rubric.
 
 Likely files:`evaluation/visual_learning/rag-method.v1.json`, its readme and one
 focused fixture test. Verify a curator can inspect each fact's source/page.

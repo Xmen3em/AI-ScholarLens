@@ -1,0 +1,66 @@
+{
+  "revision": "rag-method-source-checked-v1",
+  "source": {
+    "paper_id": "2005.11401v4",
+    "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+    "sha256": "23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233",
+    "parser_revision": "pdfium-5.14.0-v1"
+  },
+  "title_ar": "نفهم RAG خطوة بخطوة",
+  "scope_notice": "نموذج تعليمي محلي لورقة محددة، مبني على مراجعة المصدر. مش شرح مولّد لأي ورقة، ولا تقييم علمي مستقل.",
+  "evidence": [
+    {"id": "retrieval-p2", "block_id": "p2b0", "page": 2, "section": "Figure 1", "quote": "top-K documents"},
+    {"id": "training-p4", "block_id": "p4b0", "page": 4, "section": "2.4 Training", "quote": "keep the document encoder (and index) fixed"},
+    {"id": "query-update-p4", "block_id": "p4b0", "page": 4, "section": "2.4 Training", "quote": "only fine-tuning the query encoder"},
+    {"id": "generator-update-p4", "block_id": "p4b0", "page": 4, "section": "2.4 Training", "quote": "the BART generator"},
+    {"id": "token-p3", "block_id": "p3b0", "page": 3, "section": "2.1 Models", "quote": "each target token"},
+    {"id": "sequence-p3", "block_id": "p3b0", "page": 3, "section": "2.1 Models", "quote": "the complete sequence"},
+    {"id": "index-p4", "block_id": "p4b1", "page": 4, "section": "3 Experiments", "quote": "FAISS"}
+  ],
+  "facts": [
+    {"id": "retrieval", "statement_ar": "تمثيل السؤال بيُستخدم لاسترجاع أقرب مقاطع من الفهرس.", "evidence_ids": ["retrieval-p2"], "verification": "source_checked"},
+    {"id": "training", "statement_ar": "التدريب بيحدّث مشفّر السؤال والمولّد، ويثبّت مشفّر المستندات والفهرس.", "evidence_ids": ["training-p4", "query-update-p4", "generator-update-p4"], "verification": "source_checked"},
+    {"id": "marginalization", "statement_ar": "الاحتمالات بتتجمع على المقاطع المسترجعة؛ الاختلاف بين الصيغتين في مستوى التجميع.", "evidence_ids": ["sequence-p3", "token-p3"], "verification": "source_checked"},
+    {"id": "precomputed_index", "statement_ar": "تمثيلات المستندات بتتجهز لبناء الفهرس؛ مشفّر المستندات مش بيتحدّث في التدريب ده.", "evidence_ids": ["index-p4", "training-p4"], "verification": "source_checked"}
+  ],
+  "training_policy": {"query_encoder": "updated", "generator": "updated", "document_encoder": "fixed", "index": "fixed"},
+  "token_unit": "token",
+  "reviewed_comparison": {"dataset": "TriviaQA", "split": "TQA-Wiki", "metric": "EM", "page": 6, "block_id": "p6b0", "values": {"RAG-Token": 66.1, "RAG-Sequence": 68.0}},
+  "rejected_claims": [
+    {"id": "document_encoder_updated", "reason": "Section 2.4 fixes the document encoder and index."},
+    {"id": "token_is_paragraph", "reason": "A token is not a paragraph; no new retrieval per token is implied."},
+    {"id": "token_best_tqa_wiki", "reason": "In Table 1 TQA-Wiki, Sequence 68.0 exceeds Token 66.1."}
+  ],
+  "nodes": [
+    {"id": "question", "label_ar": "السؤال الأصلي", "term_en": "Input x", "phase": "both", "fact_ids": ["retrieval"], "details": [{"text": "نبدأ بالسؤال اللي عايزين نجاوب عليه.", "direction": "rtl"}]},
+    {"id": "query_encoder", "label_ar": "مشفّر السؤال", "term_en": "Query encoder", "phase": "both", "fact_ids": ["retrieval", "training"], "details": [{"text": "بيحوّل السؤال لتمثيل عددي مناسب للبحث.", "direction": "rtl"}]},
+    {"id": "index", "label_ar": "فهرس المستندات", "term_en": "Document index", "phase": "both", "fact_ids": ["retrieval", "precomputed_index", "training"], "details": [{"text": "تمثيلات المستندات محفوظة هنا، والفهرس ثابت أثناء التدريب.", "direction": "rtl"}]},
+    {"id": "passages", "label_ar": "المقاطع المسترجعة", "term_en": "Top-K passages", "phase": "both", "fact_ids": ["retrieval"], "details": [{"text": "مجموعة مقاطع مرتبطة بالسؤال، مش إجابة جاهزة.", "direction": "rtl"}]},
+    {"id": "generator", "label_ar": "المولّد", "term_en": "BART generator", "phase": "both", "fact_ids": ["training", "marginalization"], "details": [{"text": "بيستخدم السؤال والمقاطع لحساب احتمالات النص.", "direction": "rtl"}]},
+    {"id": "answer", "label_ar": "الناتج", "term_en": "Output y", "phase": "inference", "fact_ids": ["marginalization"], "details": [{"text": "الناتج بيتحدد من الاحتمالات حسب صيغة النموذج وطريقة فك الترميز.", "direction": "rtl"}]},
+    {"id": "objective", "label_ar": "هدف التدريب", "term_en": "Training objective", "phase": "training", "fact_ids": ["training"], "details": [{"text": "الإجابة المرجعية بتوجّه حساب الخسارة وتحديث البارامترات.", "direction": "rtl"}]},
+    {"id": "document_encoder", "label_ar": "مشفّر المستندات", "term_en": "Document encoder", "phase": "training", "fact_ids": ["precomputed_index", "training"], "details": [{"text": "بيجهّز تمثيلات الفهرس مسبقًا؛ أوزانه ثابتة في التدريب المعروض.", "direction": "rtl"}]}
+  ],
+  "edges": [
+    {"id": "encode", "source": "question", "target": "query_encoder", "relation": "data_flow", "phase": "both", "label_ar": "تمثيل السؤال", "fact_ids": ["retrieval"]},
+    {"id": "search", "source": "query_encoder", "target": "index", "relation": "data_flow", "phase": "both", "label_ar": "بحث بالتشابه", "fact_ids": ["retrieval"]},
+    {"id": "retrieve", "source": "index", "target": "passages", "relation": "data_flow", "phase": "both", "label_ar": "استرجاع المقاطع", "fact_ids": ["retrieval"]},
+    {"id": "condition", "source": "passages", "target": "generator", "relation": "data_flow", "phase": "both", "label_ar": "سياق من المصدر", "fact_ids": ["retrieval", "marginalization"]},
+    {"id": "original_input", "source": "question", "target": "generator", "relation": "data_flow", "phase": "both", "label_ar": "السؤال الأصلي", "fact_ids": ["retrieval"]},
+    {"id": "predict", "source": "generator", "target": "answer", "relation": "marginalize", "phase": "inference", "label_ar": "تجميع الاحتمالات", "fact_ids": ["marginalization"]},
+    {"id": "prepare_index", "source": "document_encoder", "target": "index", "relation": "preparation", "phase": "training", "label_ar": "تجهيز مسبق", "fact_ids": ["precomputed_index"]},
+    {"id": "score_target", "source": "generator", "target": "objective", "relation": "data_flow", "phase": "training", "label_ar": "احتمال الإجابة المرجعية", "fact_ids": ["training"]},
+    {"id": "update_query", "source": "objective", "target": "query_encoder", "relation": "parameter_update", "phase": "training", "label_ar": "تحديث أوزان", "fact_ids": ["training"]},
+    {"id": "update_generator", "source": "objective", "target": "generator", "relation": "parameter_update", "phase": "training", "label_ar": "تحديث أوزان", "fact_ids": ["training"]}
+  ],
+  "steps": [
+    {"id": "inference-question", "phase": "inference", "heading_ar": "١. نحوّل السؤال", "body": [{"text": "السؤال بيدخل على ", "direction": "rtl"}, {"text": "Query encoder", "direction": "ltr"}, {"text": " عشان نقدر نبحث بيه.", "direction": "rtl"}], "node_ids": ["question", "query_encoder"], "edge_ids": ["encode"], "fact_ids": ["retrieval"]},
+    {"id": "inference-retrieve", "phase": "inference", "heading_ar": "٢. نسترجع مقاطع", "body": [{"text": "نبحث في الفهرس ونختار ", "direction": "rtl"}, {"text": "Top-K passages", "direction": "ltr"}, {"text": " المرتبطة بالسؤال.", "direction": "rtl"}], "node_ids": ["query_encoder", "index", "passages"], "edge_ids": ["search", "retrieve"], "fact_ids": ["retrieval"]},
+    {"id": "inference-generate", "phase": "inference", "heading_ar": "٣. نحسب احتمالات الإجابة", "body": [{"text": "المولّد بيستخدم السؤال الأصلي مع المقاطع المسترجعة.", "direction": "rtl"}], "node_ids": ["question", "passages", "generator"], "edge_ids": ["condition", "original_input"], "fact_ids": ["retrieval", "marginalization"]},
+    {"id": "inference-marginalize", "phase": "inference", "heading_ar": "٤. نجمع الاحتمالات", "body": [{"text": "التجميع في ", "direction": "rtl"}, {"text": "RAG-Sequence", "direction": "ltr"}, {"text": " على مستوى السلسلة، وفي ", "direction": "rtl"}, {"text": "RAG-Token", "direction": "ltr"}, {"text": " على مستوى التوكن؛ مش فقرة، ومش بحث جديد لكل توكن.", "direction": "rtl"}], "node_ids": ["generator", "answer"], "edge_ids": ["predict"], "fact_ids": ["marginalization"]},
+    {"id": "training-fixed", "phase": "training", "heading_ar": "١. نحدد الأجزاء الثابتة", "body": [{"text": "مشفّر المستندات والفهرس ثابتين أثناء التدريب. السهم الرمادي تجهيز مسبق، مش تحديث أوزان.", "direction": "rtl"}], "node_ids": ["document_encoder", "index"], "edge_ids": ["prepare_index"], "fact_ids": ["training", "precomputed_index"]},
+    {"id": "training-retrieve", "phase": "training", "heading_ar": "٢. نسترجع للسؤال", "body": [{"text": "مشفّر السؤال بيشارك في البحث عن المقاطع، والفهرس بيحتفظ بتمثيلاته الثابتة.", "direction": "rtl"}], "node_ids": ["query_encoder", "index", "passages"], "edge_ids": ["search", "retrieve"], "fact_ids": ["retrieval", "training"]},
+    {"id": "training-objective", "phase": "training", "heading_ar": "٣. نحسب هدف التدريب", "body": [{"text": "نستخدم احتمال الإجابة المرجعية لحساب خسارة التدريب.", "direction": "rtl"}], "node_ids": ["generator", "objective"], "edge_ids": ["score_target"], "fact_ids": ["training"]},
+    {"id": "training-update", "phase": "training", "heading_ar": "٤. نحدّث جزئين بس", "body": [{"text": "التحديث بيوصل لـ", "direction": "rtl"}, {"text": "Query encoder", "direction": "ltr"}, {"text": " و", "direction": "rtl"}, {"text": "BART generator", "direction": "ltr"}, {"text": ". الأجزاء الثابتة مش بتتحدّث.", "direction": "rtl"}], "node_ids": ["objective", "query_encoder", "generator"], "edge_ids": ["update_query", "update_generator"], "fact_ids": ["training"]}
+  ]
+}
