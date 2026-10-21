@@ -571,10 +571,10 @@ Scope: M, 3 files; no new provider call.
 
 ### V2 — Visual contract and validation (medium; depends on V1)
 
-- [ ] Add typed evidence/spec models with finite template/interaction contracts.
-- [ ] Reject unknown references, cross-paper hashes, invalid graph endpoints and
+- [x] Add typed evidence/spec models with finite template/interaction contracts.
+- [x] Reject unknown references, cross-paper hashes, invalid graph endpoints and
   unsupported scientific update relations; keep example origins distinct.
-- [ ] Add meaningful positive/negative contract tests, including inert labels.
+- [x] Add meaningful positive/negative contract tests, including inert labels.
 - [ ] Define bounded semantic text runs and shared mixed-text fixtures from the
   reading contract; keep canonical source/IDs separate from decorated text.
 
