@@ -2,11 +2,13 @@
 
 ## Whole-app implementation — task index
 
-Active expansion of the same initiative, 21 October 2026. All implementation
-items below are pending; research/specification is not a passing implementation.
+Active expansion of the same initiative, 21 October 2026. Implementation progress
+is recorded per task; research/specification is not a passing implementation.
 See [whole-app contract](../docs/specs/researcher-app.md) and
 [plan](plan.md#whole-app-implementation--21-october-2026).
 The existing V1–V9 checklist below remains the canonical visual task list.
+On 22 October, the independent V1–V4 source-bound offline prototype passed its
+focused and real-browser checks. Foundation/release tasks remain separate.
 
 Task records define acceptance, dependencies, verification and likely files.
 Paths explicitly described as new are proposed. Keep each slice at five files
@@ -113,7 +115,7 @@ and resource report; select exact boundary from profiling. **Scope:** M, ≤4 fi
 
 - [ ] After each two/three tasks, focused checks pass and a bounded slice is committed.
 - [ ] F1–F4/P1–P2 retain quotas, errors and resources; Deep live status is accurate.
-- [ ] Existing V1–V4 produce reviewed RAG SVG/PNG/viewer with source inspection,
+- [x] Existing V1–V4 produce reviewed RAG SVG/PNG/viewer with source inspection,
   all applicable RTL cases and zero navigation/model traffic.
 
 ### I1 — Canonical paper identity adapter
@@ -543,7 +545,9 @@ wrapper if needed, reproducibility guide. **Scope:** M, ≤3 files.
 ## learning-visuals — next implementation
 
 This extends the same paper-learning initiative and preserves all older tasks
-below. Current work completed research/specification; feature tasks are pending.
+below. V1–V4 have an offline source-bound prototype as of 22 October;
+[implementation evidence and limits](../docs/visual-learning-implementation.ar.md).
+V5 onward remain pending; no general-paper/model/delivery qualification is implied.
 [Plan](plan.md#next-source-grounded-visual-learning--21-october-2026) ·
 [Contract](../docs/specs/learning-visuals.md).
 
@@ -588,9 +592,15 @@ Whole-app trace: [visual spec](../docs/specs/learning-visuals.md) and
 
 - [x] Draw approved scene primitives from one validated spec and source manifest.
 - [x] Produce readable RTL/mixed-term SVG and PNG without model code execution.
-- [ ] Visually inspect real exports, clipping, arrow meanings and image bounds.
-- [ ] Measure shaped text in pixels; preserve graphemes/diacritics, isolate
+- [x] Visually inspect real exports, clipping, arrow meanings and image bounds.
+- [x] Measure shaped text in pixels; preserve graphemes/diacritics, isolate
   mixed terms and citations, and inspect both SVG and PNG against the RTL cases.
+
+Evidence: actual reviewed SVG/Windows PNG labels/citations were inspected;
+native PNG measures complete shaped lines and browser SVG checks text bounds.
+All twelve shared cases are validated/browser-checked, including rejection of
+hostile controls. The renderer only accepts the reviewed labels; new arbitrary
+labels/equations require later qualification, not an assumption of backend parity.
 
 Likely files:visual scene/renderer module, fixed Windows drawing support where
 needed, `tests/unit/test_visual_renderer.py`. Keep current reading maps working.
@@ -599,14 +609,20 @@ missing-shaping/render failure keeps text available. Scope: M, ≤5 files.
 
 ### V4 — Desktop interactive viewer (medium; depends on V3)
 
-- [ ] Provide training/inference switching, step navigation, component details
+- [x] Provide training/inference switching, step navigation, component details
   and original evidence in a trusted local HTML/SVG shell.
-- [ ] Navigation performs zero model/network requests and exposes no credentials.
-- [ ] Verify keyboard, narrow/desktop layouts, Arabic, reduced motion and console
+- [x] Navigation performs zero model/network requests and exposes no credentials.
+- [x] Verify keyboard, narrow/desktop layouts, Arabic, reduced motion and console
   errors using an actual browser; preserve a text alternative.
-- [ ] Verify explicit RTL blocks/LTR runs, auto-direction input, logical focus
+- [x] Verify explicit RTL blocks/LTR runs, auto-direction input, logical focus
   order, 320px reflow/zoom/spacing and canonical copy; no arrow/axis mirroring.
-- [ ] Keep text, source and navigation usable if the visual cannot be rendered.
+- [x] Keep text, source and navigation usable if the visual cannot be rendered.
+
+Evidence: `tests/browser/visual_viewer_cdp.py`, run on the final exported artifact
+with isolated Chrome 155/CDP because no DevTools MCP is configured. Auto-direction
+applies to unknown-title runs and the readonly canonical-copy field here; there
+is no editable question composer in V4. Text enlargement/spacing and 320px reflow
+were exercised; this is not full WCAG/assistive-tech or Telegram qualification.
 
 Likely files:viewer exporter, trusted static assets and viewer tests. The output
 opens on this PC; do not advertise a phone-accessible Mini App or public link.
@@ -615,9 +631,9 @@ in a real browser with no model/network calls. Scope: M, ≤5 files.
 
 ### Checkpoint — Offline teaching prototype
 
-- [ ] V1–V4 accepted checks pass; inspect an actual training/inference artifact.
-- [ ] Label the RAG fixture scope; no claim of arbitrary-paper model generation.
-- [ ] Record changed files, resources and zero inference before integration.
+- [x] V1–V4 accepted checks pass; inspect an actual training/inference artifact.
+- [x] Label the RAG fixture scope; no claim of arbitrary-paper model generation.
+- [x] Record changed files, resources and zero inference before integration.
 
 ### V5 — Versioned owner artifacts (medium; depends on V2)
 

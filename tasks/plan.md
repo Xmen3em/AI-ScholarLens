@@ -141,6 +141,12 @@ implementation begins from the selected small task, not an all-at-once rewrite.
 
 ## Next: source-grounded visual learning — 21 October 2026
 
+Progress, 22 October: offline V1–V4 are implemented for the reviewed RAG fixture,
+with real SVG/Windows PNG and browser/RTL checks. See the
+[implementation guide](../docs/visual-learning-implementation.ar.md). Remaining
+foundation, owner-artifact, action, Telegram and model tasks retain their gates;
+this checkpoint is not a whole-app release.
+
 The user requested research into Kimi-like visual explanations and the next
 implementation plan. This extends the existing`learning-visuals` capability;
 all prior incomplete work and historical budgets below are preserved. The

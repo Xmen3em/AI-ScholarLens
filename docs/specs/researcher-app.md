@@ -8,6 +8,12 @@ does not claim implementation or authorize new paid calls. It extends the
 IDs in [CAPABILITY_MAP](../../CAPABILITY_MAP.md), and links the
 [execution plan](../../tasks/plan.md#whole-app-implementation--21-october-2026).
 
+Implementation update, 22 October 2026: the independent offline visual V1–V4
+lane is implemented and browser-verified for a reviewed RAG fixture. See the
+[implementation evidence and limits](../visual-learning-implementation.ar.md).
+The remaining module extensions and release gates below are still proposed;
+this does not establish general scientific or learning-quality acceptance.
+
 ## Objective and user journey
 
 Help an Egyptian researcher understand a selected AI paper, inspect the evidence,

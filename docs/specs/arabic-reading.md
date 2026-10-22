@@ -1,11 +1,15 @@
 # Arabic reading: mixed Arabic/English presentation
 
-Status: proposed implementation contract, 21 October 2026. This records the
+Status: contract with an offline viewer/rendering subset implemented,
+22 October 2026. This records the
 owner's requirement for comfortable Egyptian Arabic reading alongside English
 terms. It applies to lessons, citations, visual labels, the future viewer and
-Telegram delivery. The policies below are not implemented by this documentation
-change. Build them within [learning-visuals](learning-visuals.md), beginning with
-its offline renderer/viewer; keep the existing bot behavior until tested.
+Telegram delivery. The [implemented subset](../visual-learning-implementation.ar.md)
+uses bounded text runs, explicit HTML isolation, app-owned SVG direction and
+measured Windows PNG labels. Twelve shared cases have browser checks; actual
+Telegram clients, editable question input and arbitrary new visual labels remain
+future qualification. Build them within [learning-visuals](learning-visuals.md);
+keep the existing bot behavior until its separate delivery checks pass.
 
 ## Content and presentation boundaries
 

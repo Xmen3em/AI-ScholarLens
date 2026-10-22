@@ -1,8 +1,10 @@
 # learning-visuals: source-grounded visual teaching
 
-Status: proposed implementation specification, 21 October 2026. This extends the
+Status: specification with the offline V1–V4 subset implemented, 22 October 2026.
+This extends the
 existing `learning-visuals` capability in [the map](../../CAPABILITY_MAP.md).
-Research/plan only in this change; no live model or app behavior is activated.
+The local RAG fixture/validator/renderer/viewer are available through an explicit
+offline command. No live model or Telegram feature is activated.
 [Research and model decision](../research/visual-learning-20261021/DECISIONS.md).
 The owner's mixed Arabic/English reading requirement is specified in the
 [Arabic reading contract](arabic-reading.md); it applies across text, visuals
@@ -13,6 +15,15 @@ model-budget, source-identity and release-evidence rules; depends on
 `paper-evidence` and provides accepted visual artifacts to delivery/notes.
 
 ## Outcome and first slice
+
+Implemented scope and reproducible checks are in the
+[Egyptian implementation guide](../visual-learning-implementation.ar.md).
+The current contract accepts only the exact reviewed catalog content. It carries
+source/revision, nodes, edges, phases and steps; the method-learning goal and
+language are fixed. General planner goals/depth/origins, semantic review of new
+wording, owner artifacts, revision/edit locks and delivery remain later work.
+The broader contracts below retain those requirements without claiming them as
+implemented by this source-bound prototype.
 
 An Egyptian researcher can inspect a paper method as a diagram, advance through
 its steps, reveal what each component means and inspect its original evidence.
@@ -53,7 +64,7 @@ of parallel model processes. The renderer takes data, not model-generated code.
 Deep Agents is optional for later evidence collection; its unresolved failure
 does not block the offline visual contract/rendering work.
 
-The existing `visuals.py` reading map remains available. New source is proposed
+The existing `visuals.py` reading map remains available. New source is isolated
 under `src/services/study/visual_learning/`; do not turn the current map renderer
 into a general code executor or add unrelated logic to the main service.
 
@@ -132,8 +143,10 @@ escaping and fixed fonts/layout. No external resources, scripts, foreignObject,
 event-handler attributes or embedded arbitrary SVG are permitted. Bind controls
 in trusted application code outside untrusted labels.
 
-Use the existing Pillow/Arabic-shaping path and Windows fixed drawing worker
-for PNG where feasible. Both exports derive from the same scene. Paginate or
+The implemented Windows PNG path uses a fixed GDI drawing worker with measured
+shaped text and a finite lifetime. Other systems currently retain SVG/text;
+Pillow/libraqm remains a potential later backend. Both exports derive from the
+same scene. Paginate or
 expand a diagram rather than shrinking Arabic below a readable size. Verify RTL,
 mixed English terms, arrows, contrast, labels, keyboard use and reduced motion.
 Implement the Arabic reading contract: canonical logical text, explicit RTL
