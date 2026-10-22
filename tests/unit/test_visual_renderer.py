@@ -40,8 +40,11 @@ def test_shared_scene_is_bounded_and_has_fixed_labels_in_training():
     assert statuses["query_encoder"] == statuses["generator"] == "بيتدرّب"
 
 
-def test_raster_is_a_real_bounded_image_on_the_pc():
+def test_raster_is_a_real_bounded_image_on_the_pc(monkeypatch):
     catalog = load_curated_method()
+    # Admission/failure paths have separate tests. Exercise the real backend
+    # independently of unrelated apps changing the host's free RAM mid-suite.
+    monkeypatch.setattr("src.services.study.visual_learning.renderer.free_memory_mib", lambda: 2048)
     data = render_png(default_spec(catalog), catalog, phase="training")
     if data is None:
         assert os.name != "nt"
@@ -53,10 +56,14 @@ def test_raster_is_a_real_bounded_image_on_the_pc():
 
 def test_worker_failure_leaves_a_text_svg_fallback(monkeypatch):
     catalog = load_curated_method()
+    calls = []
     def fail(*args, **kwargs):
+        calls.append(args)
         raise subprocess.TimeoutExpired("fixed-renderer", 15)
+    monkeypatch.setattr("src.services.study.visual_learning.renderer.free_memory_mib", lambda: 2048)
     monkeypatch.setattr("src.services.study.visual_learning.renderer.subprocess.run", fail)
     assert render_png(default_spec(catalog), catalog) is None
+    assert len(calls) == (1 if os.name == "nt" else 0)
     assert "<svg" in render_svg(default_spec(catalog), catalog)
 
 
