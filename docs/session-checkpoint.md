@@ -1,3 +1,59 @@
+# Offline source-bound visual teaching implemented — 2026-10-22
+
+The owner authorized implementation and continuation. On `codex/visual-learning`,
+the independent V1–V4 lane is implemented: a reviewed RAG source fixture, strict
+finite contracts, SVG/Windows PNG and a standalone Egyptian Arabic viewer.
+Read the [implementation/verification guide](visual-learning-implementation.ar.md)
+and the accepted tasks in [the checklist](../tasks/todo.md#learning-visuals--next-implementation).
+Implementation source/tests are preserved through `ae3713e`; subsequent changes
+for this checkpoint are documentation. Existing bot/service code is unchanged.
+
+The viewer switches inference/training, selects steps/components, shows original
+source excerpts and supports canonical copy plus a complete text alternative.
+Missing SVG preserves text navigation/source access; invalid data opens the
+static explanation/evidence. Local navigation uses no model or HTTP requests.
+Exports include spec/asset hashes and refuse overwrite. No runtime settings,
+credentials, private state or ignored full PDF are required to export the demo.
+No app integration, restart or activation is needed to try the local artifact.
+
+Validation only accepts the exact reviewed catalog for `2005.11401v4`, source
+SHA256 `23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233`,
+parser `pdfium-5.14.0-v1`. Seven source locators/24 quoted words were checked
+against the original cached PDF/text. Query encoder/BART update; document encoder
+and index stay fixed. The fixture rejects the recorded token/paragraph and
+wrong-best-result claims. This is implementation source review, not independent
+scientific/learning evaluation or semantic validation of arbitrary new wording.
+
+Verification:54 focused tests pass;1539 unit/API tests pass in833.66s with two
+Typer/Click deprecation warnings; the final resource-independent raster test
+revision separately passes all12 renderer tests. Ruff passes; mypy passes161
+source files. A clean `git archive` export also succeeds without private settings
+or ignored paper data. Actual SVG and PNG training/inference images were inspected.
+Chrome155/CDP uses a fresh anonymous profile because DevTools MCP is unavailable:
+12 reading cases, keyboard/component/source/copy fallback,320–1400px reflow,
+200% text resize/spacing, reduced motion and failure fallbacks pass with zero
+console errors/warnings and zero page HTTP requests.100 navigation actions have
+p95=36.8ms on this machine. This is neither WCAG conformance nor Telegram testing.
+
+Final local artifact: `data/study/visual-learning-demo-20261022-v2/index.html`.
+Proof is ignored under `tests/test_output/visual-browser-20261022-accepted/`,
+`visual-clean-source-20261022/`, and `visual-implementation-20261022/`.
+Source review proof is under `visual-implementation-20261021/`.
+The native PNG worker is Windows-only, finite and resource-gated at600MiB;
+unknown/low RAM or rendering failure keeps SVG/text. No browser/model is loaded
+by normal bot startup. Existing startup/live floors remain unchanged.
+
+Remaining foundation tasks and V5 onward stay open: Deep/scientific reliability,
+resource profiling, identity/source manifests and saved study state precede
+owner artifact storage/actions/Telegram. General-paper planning, OCR, model
+qualification, Notion and hosting retain their separate acceptance gates.
+Historical `/deep` failure is still unresolved. All old grants and the12/12
+smoke remain closed; the eight-call diagnostic scope remains unapproved/frozen
+to `1bf7c9a` and cannot fund this feature. This implementation used zero inference,
+sent no Telegram message, installed no dependency and made no external app write.
+
+---
+
 # Whole researcher-app specifications and plan — 2026-10-21
 
 The owner requested a complete implementation plan using skills to produce specs.

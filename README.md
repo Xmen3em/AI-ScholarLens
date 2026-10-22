@@ -35,7 +35,7 @@ The [complete researcher-app specification](docs/specs/researcher-app.md), [impl
 | Existing platform | arXiv ingestion, Docling parsing, PostgreSQL, keyword/hybrid search, JSON/SSE answers and Gradio |
 | Operational controls | API authentication, quotas, bounded calls, deadlines and durable Telegram offsets |
 
-OCR is an implemented but disabled candidate adapter; live image qualification, reliable figure/equation interpretation, scored learning progress, web study UI and application-level Notion export remain future work. Scheduled discovery belongs to the existing platform and is outside the learning flow.
+OCR is an implemented but disabled candidate adapter; live image qualification, reliable figure/equation interpretation, scored learning progress, an authenticated study workspace and application-level Notion export remain future work. Scheduled discovery belongs to the existing platform and is outside the learning flow.
 
 ## Try the current prototype
 
