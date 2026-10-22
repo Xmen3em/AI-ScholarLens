@@ -15,7 +15,7 @@ change does not activate features, inference, external writes or deployment.
 | `paper-evidence` | Exact snippets and bounded selection; scientific validity still needs work | [Evidence and claims](docs/specs/paper-evidence.md) |
 | `learning-session` | Owner SQLite state, four recent turns, explicit depth, forget | [Learning state and memory](docs/specs/learning-session.md) |
 | `paper-tutor` | Egyptian lessons/follow-ups; real scientific mistakes documented | [Interactive teaching](docs/specs/paper-tutor.md) |
-| `learning-visuals` | Reading-order map; method visuals remain planned | [Visual teaching](docs/specs/learning-visuals.md) |
+| `learning-visuals` | Reading map plus curated offline RAG method viewer/exports; general planning pending | [Visual teaching](docs/specs/learning-visuals.md) |
 | `study-research` | Isolated Deep Agents/MCP; live Deep failure unresolved | [Bounded research](docs/specs/study-research.md) |
 | `learning-delivery` | Private Telegram and local API; rich study view planned | [Telegram and study workspace](docs/specs/learning-delivery.md) |
 | `study-notes` | `/notes` lesson/quote output; Notion export unconnected | [Notes and export](docs/specs/study-notes.md) |
@@ -27,6 +27,13 @@ new services. Detailed build order and checkpoints are in
 [the tasks](tasks/todo.md#whole-app-implementation--task-index).
 Historical 17 October context below explains the implemented starting point;
 the new specs distinguish existing behavior from each proposed extension.
+
+**Implementation update — 22 October 2026:** V1–V4 now have a reviewed RAG
+fixture, strict source-bound contracts, SVG/Windows PNG and an offline Egyptian
+Arabic viewer with local step/component/source controls. The
+[implementation guide](docs/visual-learning-implementation.ar.md) distinguishes
+verified behavior from general-paper planning, authenticated artifacts and
+Telegram delivery, which remain future tasks. No new inference was used.
 
 ## Historical 17 October baseline
 

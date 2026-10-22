@@ -12,7 +12,7 @@ The selected-paper workflow is implemented on `codex/paper-intake` and has passe
 
 Owner testing on21October2026 found an unresolved `/deep` failure. Its offline SDK checks pass, but the route remains experimental. Read the [researcher-product review](docs/researcher-product-review.ar.md) for priorities and the [pending bounded diagnosis](docs/deep-repair-execution-20261021.md).
 
-The next visual-learning iteration is specified in the [Kimi/model research](docs/research/visual-learning-20261021/DECISIONS.md) and [visual teaching plan](docs/specs/learning-visuals.md). It starts with a source-linked offline method explainer; the new interactive feature is not yet implemented.
+The first visual-learning slice is implemented on `codex/visual-learning`: an offline Egyptian Arabic RAG method explainer with training/inference diagrams, step/component/source controls and SVG/PNG exports. See the [demo command, verification and limits](docs/visual-learning-implementation.ar.md). It uses a reviewed single-paper fixture; arbitrary-paper generation and Telegram integration remain planned in the [visual teaching contract](docs/specs/learning-visuals.md).
 
 The [complete researcher-app specification](docs/specs/researcher-app.md), [implementation plan](tasks/plan.md#whole-app-implementation--21-october-2026) and [task checklist](tasks/todo.md#whole-app-implementation--task-index) cover reliability, evidence, teaching, memory, visuals/RTL, OCR, research, notes and private hosting. These are proposed extensions with explicit acceptance gates; see the [Egyptian review guide](docs/researcher-implementation-plan.ar.md).
 
@@ -24,6 +24,7 @@ The [complete researcher-app specification](docs/specs/researcher-app.md), [impl
 | Egyptian Arabic lessons | Initial teaching, paper-scoped follow-ups and labeled examples |
 | Evidence | Server-owned exact excerpts, ID/numeric validation and a bounded grounding review |
 | Study interaction | Telegram keyboard, conversational comprehension questions, depth selection and study maps |
+| Offline visual lesson | Reviewed RAG training/inference viewer; local controls, source inspection and exports |
 | Memory | Four recent turns per paper, expiry, explicit preferences and `/forget` |
 | Optional research | Isolated Deep Agents with source read tools; optional read-only local MCP |
 | General AI/ML questions | Simple explanations, explicitly labeled as model knowledge |
