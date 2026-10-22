@@ -22,14 +22,14 @@ def _text(parent: ET.Element, value: str, x: int, y: int, size: int = 18,
           color: str = COLORS["text"], direction: str = "rtl", anchor: str = "start") -> None:
     text = _element(parent, "text", x=str(x), y=str(y), fill=color, font_size=str(size),
                     direction=direction, unicode_bidi="isolate", text_anchor=anchor,
-                    font_family="Segoe UI, Arial, sans-serif")
+                    font_family="Segoe UI, Arial, sans-serif", lang="en" if direction == "ltr" else "ar-EG")
     text.text = value
 
 
 def render_svg(spec: VisualSpec, catalog: CuratedMethod, *, phase: str = "inference", interactive: bool = False) -> str:
     scene = build_scene(spec, catalog, phase)
     root = ET.Element("svg", {"xmlns": "http://www.w3.org/2000/svg", "viewBox": "0 0 1000 860",
-                              "role": "img", "aria-labelledby": f"title-{phase} desc-{phase}",
+                              "role": "group" if interactive else "img", "aria-labelledby": f"title-{phase} desc-{phase}",
                               "data-source-sha256": scene.source_sha256, "lang": "ar-EG"})
     _element(root, "title", id=f"title-{phase}").text = scene.title
     _element(root, "desc", id=f"desc-{phase}").text = scene.subtitle + ". " + scene.footer
@@ -92,7 +92,10 @@ def render_png(spec: VisualSpec, catalog: CuratedMethod, *, phase: str = "infere
     scene = build_scene(spec, catalog, phase)
     # No renderer or new dependency is loaded by normal bot startup. A missing
     # backend/resource is an explicit export fallback, never disconnected glyphs.
-    free = free_memory_mib()
+    try:
+        free = free_memory_mib()
+    except OSError:
+        return None
     if not math.isfinite(free) or free < 600:
         return None
     return _windows_png(scene) if os.name == "nt" else None

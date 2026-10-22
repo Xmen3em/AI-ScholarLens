@@ -84,3 +84,11 @@ def test_missing_or_low_memory_uses_the_export_fallback(monkeypatch, free):
     catalog = load_curated_method()
     monkeypatch.setattr("src.services.study.visual_learning.renderer.free_memory_mib", lambda: free)
     assert render_png(default_spec(catalog), catalog) is None
+
+
+def test_memory_probe_failure_keeps_the_readable_export(monkeypatch):
+    catalog = load_curated_method()
+    def unavailable():
+        raise OSError("probe unavailable")
+    monkeypatch.setattr("src.services.study.visual_learning.renderer.free_memory_mib", unavailable)
+    assert render_png(default_spec(catalog), catalog) is None

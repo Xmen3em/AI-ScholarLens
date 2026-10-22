@@ -19,12 +19,12 @@ PATHS = {
     "predict": [(695, 594), (695, 660)],
     "prepare_index": [(285, 254), (285, 320)],
     "score_target": [(695, 594), (695, 628), (285, 628), (285, 660)],
-    "update_query": [(160, 712), (100, 712), (100, 290), (660, 290), (660, 320)],
+    "update_query": [(160, 712), (100, 712), (100, 272), (660, 272), (660, 320)],
     "update_generator": [(410, 712), (500, 712), (500, 568), (570, 568)],
 }
 LABELS = {"encode": (775, 292), "search": (490, 353), "retrieve": (375, 461),
           "condition": (490, 522), "predict": (795, 633), "prepare_index": (375, 292),
-          "score_target": (485, 618), "update_query": (510, 279), "update_generator": (515, 688)}
+          "score_target": (485, 618), "update_query": (490, 264), "update_generator": (515, 688)}
 
 
 @dataclass(frozen=True)
