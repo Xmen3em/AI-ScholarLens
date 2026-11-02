@@ -258,3 +258,171 @@ async def test_worker_error_crosses_the_process_boundary_as_a_safe_category(monk
         await service._deep("a" * 32)
     assert captured.value.diagnostic == "unknown_evidence_block"
     await service.aclose()
+
+
+class _Worker:
+    """A stand-in research process: fixed stdout, exit code and kill tracking."""
+
+    def __init__(self, body=b"", returncode=0, *, hang=False):
+        self.returncode = None
+        self._exit, self._hang, self.killed = returncode, hang, False
+        worker = self
+
+        class Output:
+            pending = body
+
+            async def read(self, _):
+                if worker._hang:
+                    import asyncio
+
+                    await asyncio.sleep(30)
+                chunk, self.pending = self.pending, b""
+                return chunk
+
+        self.stdout = Output()
+
+    async def wait(self):
+        if self.returncode is None:
+            self.returncode = self._exit
+        return self.returncode
+
+    def kill(self):
+        self.killed = True
+        self.returncode = -9
+
+
+async def _deep_failure(monkeypatch, tmp_path, process=None, *, spawn_error=None):
+    import asyncio
+
+    from src.services.study.tutor import TutorError
+
+    async def spawn(*args, **kwargs):
+        if spawn_error:
+            raise spawn_error
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), None, None, None,
+                           research_python=tmp_path / "optional-python.exe")
+    try:
+        with pytest.raises(TutorError) as captured:
+            await service._deep("a" * 32)
+    finally:
+        await service.aclose()
+    return captured.value
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(("body", "exit_code", "expected"), [
+    # Worker crashed before printing (e.g. optional SDK import failure).
+    (b"", 2, {"error": "research_worker_failed", "diagnostic": "research_worker_failed", "stage": "worker_exit"}),
+    (b"Traceback: private provider text", 1,
+     {"error": "research_worker_failed", "diagnostic": "research_worker_failed", "stage": "worker_exit"}),
+    (b"not json", 0, {"error": "research_output_invalid", "diagnostic": "JSONDecodeError", "stage": "worker_output"}),
+    (b"[]", 0, {"error": "research_output_invalid", "diagnostic": "shape", "stage": "worker_output"}),
+    # A worker category keeps its own stage; an unlisted error is not trusted.
+    (b'{"error":"study_context_limit","diagnostic":"study_context_limit","stage":"agent"}', 2,
+     {"error": "study_context_limit", "diagnostic": "study_context_limit", "stage": "agent"}),
+    (b'{"error":"research_unavailable_or_invalid","diagnostic":"JSONDecodeError","stage":"agent"}', 2,
+     {"error": "research_unavailable_or_invalid", "diagnostic": "JSONDecodeError", "stage": "agent"}),
+    (b'{"error":"raw provider message","stage":"agent"}', 2,
+     {"error": "research_worker_failed", "diagnostic": "research_worker_failed", "stage": "worker_exit"}),
+])
+async def test_deep_process_boundary_reports_a_finite_stage(monkeypatch, tmp_path, body, exit_code, expected):
+    from src.services.study.failures import failure_payload
+
+    error = await _deep_failure(monkeypatch, tmp_path, _Worker(body, exit_code))
+    assert failure_payload(error, default="study_generation_unavailable") == expected
+
+
+@pytest.mark.anyio
+async def test_unknown_worker_stage_stays_unknown_instead_of_guessed(monkeypatch, tmp_path):
+    from src.services.study.failures import failure_payload
+
+    body = b'{"error":"study_context_limit","diagnostic":"made-up","stage":"private-phase"}'
+    error = await _deep_failure(monkeypatch, tmp_path, _Worker(body, 2))
+    assert failure_payload(error, default="study_generation_unavailable") == {"error": "study_context_limit",
+                                                                             "diagnostic": "study_context_limit"}
+
+
+@pytest.mark.anyio
+async def test_deep_worker_timeout_is_named_and_the_process_is_killed(monkeypatch, tmp_path):
+    from src.services.study import service as service_module
+    from src.services.study.failures import failure_payload
+
+    monkeypatch.setattr(service_module, "DEEP_WORKER_TIMEOUT_SECONDS", 0.05)
+    process = _Worker(hang=True)
+    error = await _deep_failure(monkeypatch, tmp_path, process)
+    assert failure_payload(error) == {"error": "research_worker_timeout", "diagnostic": "TimeoutError", "stage": "worker_timeout"}
+    assert process.killed
+
+
+@pytest.mark.anyio
+async def test_missing_research_interpreter_is_a_start_failure(monkeypatch, tmp_path):
+    from src.services.study.failures import failure_payload
+
+    error = await _deep_failure(monkeypatch, tmp_path, spawn_error=FileNotFoundError("C:/private/path/python.exe"))
+    assert failure_payload(error) == {"error": "research_worker_unavailable", "diagnostic": "OSError", "stage": "worker_start"}
+
+
+@pytest.mark.anyio
+async def test_deep_output_limit_is_a_worker_output_failure(monkeypatch, tmp_path):
+    from src.services.study.failures import failure_payload
+
+    process = _Worker(b"x" * 70000)
+    error = await _deep_failure(monkeypatch, tmp_path, process)
+    assert failure_payload(error)["error"] == "research_output_limit"
+    assert failure_payload(error)["stage"] == "worker_output"
+    assert process.killed
+
+
+@pytest.mark.anyio
+async def test_failed_job_keeps_the_stage_and_shows_safe_labels_to_the_owner(tmp_path):
+    from src.services.study.failures import staged
+    from src.services.study.tutor import TutorError
+
+    class StagedModel(Model):
+        async def complete(self, *args, **kwargs):
+            raise staged(TutorError("study_context_limit"), "agent")
+
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), StagedModel())
+    admitted = service.submit("context", "/paper 1706.03762")
+    job = await finished(service, admitted["job_id"])
+    assert job["status"] == "failed"
+    assert (job["result"]["failure_code"], job["result"]["diagnostic"], job["result"]["stage"]) == (
+        "study_context_limit", "study_context_limit", "agent")
+    assert "stage=agent code=study_context_limit diagnostic=study_context_limit" in job["result"]["text"]
+    await service.aclose()
+
+
+def test_the_first_stage_wins_and_stages_are_never_free_text():
+    from src.services.study.failures import failure_payload, staged
+
+    error = staged(staged(ValueError("secret"), "agent"), "validation")
+    assert failure_payload(error) == {"error": "research_unavailable_or_invalid", "diagnostic": "ValueError", "stage": "agent"}
+    free = ValueError("x")
+    free.stage = "C:/Users/private"
+    assert "stage" not in failure_payload(free)
+
+
+@pytest.mark.anyio
+async def test_research_worker_prints_its_stage(monkeypatch, capsys):
+    import asyncio
+    import sys
+
+    from src.commands import study_research
+    from src.services.study.failures import staged
+    from src.services.study.tutor import TutorError
+
+    async def failed(_):
+        raise staged(TutorError("research_final_json_invalid"), "final_json")
+
+    monkeypatch.setattr(study_research, "run_job", failed)
+    monkeypatch.setattr(study_research.logging, "disable", lambda _: None)
+    monkeypatch.setattr(sys, "argv", ["study_research", "--job", "a" * 32])
+    monkeypatch.setenv("LANGSMITH_TRACING", "false")
+    monkeypatch.setenv("LANGCHAIN_TRACING_V2", "false")
+    with pytest.raises(SystemExit):
+        await asyncio.to_thread(study_research.main)
+    assert json.loads(capsys.readouterr().out) == {"error": "research_final_json_invalid",
+                                                   "diagnostic": "research_final_json_invalid", "stage": "final_json"}

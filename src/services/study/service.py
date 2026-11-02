@@ -12,7 +12,7 @@ from langgraph.graph import END, START, StateGraph
 from src.operations import emit_event
 from src.services.study.content import ContentError, PaperContent
 from src.services.study.evidence import evidence_catalog
-from src.services.study.failures import SAFE_DIAGNOSTICS, SAFE_FAILURES, failure_payload
+from src.services.study.failures import SAFE_DIAGNOSTICS, SAFE_FAILURES, SAFE_STAGES, failure_payload, staged
 from src.services.study.intake import StudyInputError, StudyPaper, normalize_input
 from src.services.study.store import StoreConflict, StudyStore
 from src.services.study.tutor import (
@@ -34,6 +34,8 @@ HELP = ("أهلًا! ابعت رابط arXiv أو رقم الورقة، أو /pa
         "بعد الشرح ابعت سؤالك، أو جرّب: بسّطها، مثال، اشرح الطريقة، اختبر فهمي.\n"
         "الشرح بيتولد بالذكاء الاصطناعي؛ راجع المصدر، خصوصًا المعادلات والجداول.")
 BUSY = "في طلب شغّال حاليًا. استنى النتيجة؛ مش هبدأ طلب تاني بالتوازي أو أكرر الاستدعاء تلقائيًا."
+# The worker stops its own agent loop at 95 s; this parent ceiling also covers process start/teardown.
+DEEP_WORKER_TIMEOUT_SECONDS = 105
 
 
 class StudyState(TypedDict, total=False):
@@ -185,9 +187,17 @@ class StudyService:
                 "pdf_processing_failed": "ماقدرتش أقرأ ملف الـPDF. الحد الحالي 45 صفحة و20 MiB؛ الملفات الأطول أو غير المقروءة مش مدعومة في النسخة دي.",
                 "source_cache_full": "مساحة كاش المصادر وصلت للحد الحالي. محتاجين نراجع الملفات المحلية قبل إضافة ورقة جديدة.",
                 "needs_ocr": "الورقة محتاجة OCR. مسار OCR المستضاف لسه اختياري ومش مفعّل؛ مش هشرح ملف مش مقروء.",
+                "research_worker_timeout": "وضع /deep خد وقت أطول من الحد المسموح، فوقفته. الطلب مش هيتكرر تلقائيًا.",
+                "research_worker_unavailable": "ماقدرتش أشغّل بيئة /deep الاختيارية على الجهاز. الشرح العادي لسه متاح.",
+                "research_final_json_invalid": "وضع /deep رجّع إجابة نهائية مش بالشكل المطلوب، فمش هعرضها. مفيش إعادة تلقائية.",
             }
-            self.store.finish_job(job_id, {"text": messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية."),
-                "failure_code": code, "diagnostic": failure.get("diagnostic", code)}, status="failed")
+            reply = messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية.")
+            result = {"failure_code": code, "diagnostic": failure.get("diagnostic", code)}
+            if "stage" in failure:
+                # Deep failures carry a finite stage; show the owner the same safe labels the job stores.
+                result["stage"] = failure["stage"]
+                reply += f"\n\nتشخيص /deep:\nstage={failure['stage']} code={code} diagnostic={result['diagnostic']}"
+            self.store.finish_job(job_id, {"text": reply, **result}, status="failed")
             emit_event("study_job_completed", outcome="failed", error_class=type(exc).__name__)
 
     async def _resolve(self, state: StudyState) -> dict:
@@ -275,28 +285,43 @@ class StudyService:
             raise TutorError("research_environment_required")
         env = {name: value for name, value in os.environ.items() if name.upper() in {"SYSTEMROOT", "WINDIR", "TEMP", "TMP"}}
         env.update(PYTHONUTF8="1", LANGSMITH_TRACING="false", LANGCHAIN_TRACING_V2="false")
-        process = await asyncio.create_subprocess_exec(str(self.research_python), "-m", "src.commands.study_research", "--job", job_id,
-            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL, env=env,
-            creationflags=0x08000000 if os.name == "nt" else 0)
         try:
-            async with asyncio.timeout(105):
-                assert process.stdout is not None
-                body = bytearray()
-                while chunk := await process.stdout.read(4096):
-                    body.extend(chunk)
-                    if len(body) > 65536:
-                        raise TutorError("research_output_limit")
-                await process.wait()
-            raw = json.loads(body)
+            process = await asyncio.create_subprocess_exec(str(self.research_python), "-m", "src.commands.study_research", "--job", job_id,
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL, env=env,
+                creationflags=0x08000000 if os.name == "nt" else 0)
+        except OSError:
+            raise staged(TutorError("research_worker_unavailable", diagnostic="OSError"), "worker_start") from None
+        try:
+            try:
+                async with asyncio.timeout(DEEP_WORKER_TIMEOUT_SECONDS):
+                    assert process.stdout is not None
+                    body = bytearray()
+                    while chunk := await process.stdout.read(4096):
+                        body.extend(chunk)
+                        if len(body) > 65536:
+                            raise staged(TutorError("research_output_limit"), "worker_output")
+                    await process.wait()
+            except TimeoutError:
+                raise staged(TutorError("research_worker_timeout", diagnostic="TimeoutError"), "worker_timeout") from None
+            try:
+                raw = json.loads(body)
+            except ValueError:
+                raw = None
             if type(raw) is dict and type(raw.get("error")) is str and raw["error"] in SAFE_FAILURES:
                 diagnostic = raw.get("diagnostic")
                 if type(diagnostic) is not str or diagnostic not in SAFE_DIAGNOSTICS:
                     diagnostic = None
-                raise TutorError(raw["error"], diagnostic=diagnostic)
-            if process.returncode or len(body) > 65536:
-                raise TutorError("research_worker_failed")
+                stage = raw.get("stage")
+                # A worker error without a known stage stays unknown; never guess a phase.
+                error = TutorError(raw["error"], diagnostic=diagnostic)
+                if type(stage) is str and stage in SAFE_STAGES:
+                    staged(error, stage)
+                raise error
+            if process.returncode:
+                raise staged(TutorError("research_worker_failed"), "worker_exit")
             if type(raw) is not dict or "output" not in raw:
-                raise TutorError("research_output_invalid")
+                raise staged(TutorError("research_output_invalid", diagnostic="JSONDecodeError" if raw is None else "shape"),
+                              "worker_output")
             return raw
         finally:
             if process.returncode is None:

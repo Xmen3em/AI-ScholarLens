@@ -20,20 +20,31 @@ class ResearchSettings(BaseSettings):
         super().__init__(**values)
 
 
+AGENT_TIMEOUT_SECONDS = 95
+
+
 async def run_job(job_id: str) -> dict:
     from src.services.study.deep import HFStudyChat, create_study_research
+    from src.services.study.failures import staged
     from src.services.study.store import StudyStore
     from src.services.study.tools import StudyTools
-    from src.services.study.tutor import SYSTEM, StudyModel, lesson_schema, validate_lesson
+    from src.services.study.tutor import SYSTEM, StudyModel, TutorError, lesson_schema, validate_lesson
 
-    settings = ResearchSettings()
-    store = StudyStore(Path("data/study/sessions.sqlite3"), str(settings.telegram_owner_id))
-    job = store.get_job(job_id)
-    if not job or job["status"] != "running" or not job["payload"].get("text", "").startswith("/deep "):
-        raise ValueError("admitted_research_job_required")
-    tools = StudyTools(store, max_calls=8)
-    transport = StudyModel(settings.hf_token, store)
+    stage = "settings"
     try:
+        settings = ResearchSettings()
+        stage = "admission"
+        store = StudyStore(Path("data/study/sessions.sqlite3"), str(settings.telegram_owner_id))
+        job = store.get_job(job_id)
+        if not job or job["status"] != "running" or not job["payload"].get("text", "").startswith("/deep "):
+            raise ValueError("admitted_research_job_required")
+        stage = "source"
+        tools = StudyTools(store, max_calls=8)
+        transport = StudyModel(settings.hf_token, store)
+    except Exception as exc:
+        raise staged(exc, stage)
+    try:
+        stage = "agent"
         model = HFStudyChat(transport=transport, job_id=job_id)
         system = SYSTEM + "\nYou have read-only paper tools. Use them to verify the answer. No external web research is available. "
         system += ("Answer only the question, in at most three focused sections; do not repeat the introductory lesson. "
@@ -43,17 +54,19 @@ async def run_job(job_id: str) -> dict:
         context = store.context()
         payload = {"question": job["payload"]["text"][6:], "depth": store.preferences()["depth"],
                    "paper": tools.document.paper.arxiv_id, "recent_dialogue_not_evidence": context["turns"][-2:] if context else []}
-        async with asyncio.timeout(95):
+        async with asyncio.timeout(AGENT_TIMEOUT_SECONDS):
             result = await agent.ainvoke({"messages": [{"role": "user", "content": json.dumps(payload, ensure_ascii=False)}]},
                                          config={"recursion_limit": 16, "callbacks": []})
+        stage = "final_json"
         try:
             raw = json.loads(result["messages"][-1].content)
         except (ValueError, TypeError):
-            from src.services.study.tutor import TutorError
-
             raise TutorError("research_final_json_invalid") from None
+        stage = "validation"
         validate_lesson(raw, tools.document.blocks)
         return raw
+    except Exception as exc:
+        raise staged(exc, stage)
     finally:
         await transport.aclose()
 
