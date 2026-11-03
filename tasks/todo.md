@@ -53,6 +53,10 @@ JSON and `tests/unit/test_study_science_fixtures.py`. **Scope:** M, 3 files.
   boundary), stored on the job and shown to the owner. Real-SDK injection covers
   malformed args/IDs, unknown blocks, context limit, timeout, bad final JSON and
   citations. Historic live cause remains unknown; F5 still unapproved.
+  Owner test the same day: 2 deep_research + 1 grounding_review succeeded, then
+  the review rejected every paper section. Parent-side `result_validation` and
+  `review` stages plus review counts/issue labels are now stored; a matching
+  pattern for the historic failure, not proof of its cause.
 
 **Accept:** A failing SDK path retains a bounded stage/category and job identity;
 unknown historic causes stay unknown. No provider output/secret leaks.

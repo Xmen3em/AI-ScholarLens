@@ -111,6 +111,23 @@ Arabic paragraph openings and standalone source/code/link lines for predictable
 reading. Avoid routine directional overrides (`LRO`/`RLO`) and blanket RLM
 insertion. [W3C plain-text isolation](https://www.w3.org/International/questions/qa-bidi-unicode-controls).
 
+**Implemented 3 November 2026 (Telegram lessons, notes).** Owner testing showed
+model lines such as `RAG-Sequence حقق…` laid out left-to-right. A plain-text
+line takes its direction from its first strong character
+([UAX #9 P2/P3](https://www.unicode.org/reports/tr9/#P2)), and Telegram clients
+behave the same way, with LRM/RLM as the known per-message fix
+([tdesktop #3845](https://github.com/telegramdesktop/tdesktop/issues/3845)).
+UAX #9 P2 skips isolate content, so `LRI…PDI` around a leading term would also
+work, but only if each client applies that rule when choosing direction; that is
+unverified. `tutor.rtl_line` therefore adds **one** RLM at the start of a line,
+only when the line contains Arabic and its first strong character is Latin. It
+is not a blanket insertion: Arabic-first lines, English quotations, URLs and
+commands stay byte-identical, and no mark goes inside an identifier. Citations
+now read `↩︎ المصدر: ص 4` (no internal block IDs), and `/notes` puts each English
+quotation on its own LTR line under an Arabic page label. Inline isolates and
+Bot API entities (`<blockquote expandable>`, bold headings) remain the next
+step, and the actual Desktop/mobile client check is still owed.
+
 Split semantic blocks before adding presentation isolates; every delivered part
 must have balanced isolates, even when a long block spans messages. Count the
 inserted controls and part labels within the existing conservative UTF-16 message
