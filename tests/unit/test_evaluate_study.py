@@ -225,6 +225,24 @@ async def test_qualification_fails_on_unusable_output(tmp_path):
     assert result["passed"] is False
 
 
+@pytest.mark.asyncio
+async def test_qualification_fails_a_lesson_that_breaks_the_lesson_shape(tmp_path):
+    def broken(request):
+        messages = json.loads(request.content)["messages"]
+        if "items" in json.loads(messages[-1]["content"]):
+            return honest(request)
+        draft = lesson()
+        for section in draft["sections"]:
+            if section["kind"] == "paper":
+                section["text"] = "A paper section must carry claims, not free text."
+        return reply(draft)
+
+    result = await qualify(replace(QWEN, request_options={}), jobs()[0], root=tmp_path,
+                           service_factory=factory_for(broken), ledger=SpendLedger(tmp_path / "spend.json"),
+                           expected_sha=SHA, memory=lambda: 2000)
+    assert result["passed"] is False
+
+
 def test_cli_without_execute_opens_no_client(monkeypatch, capsys):
     def refuse(*args, **kwargs):
         raise AssertionError("network used without --execute")

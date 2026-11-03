@@ -178,8 +178,9 @@ async def run_stage(stage: str, profile: ModelProfile, jobs: list[BenchJob], *, 
 
 
 def _qualified(row: dict) -> bool:
-    # The schema was honoured if both calls produced parseable output; a withheld lesson still counts.
-    return row["status"] == "ready" or row["failure_code"] == "lesson_validation_failed"
+    # The schema was honoured if both calls produced parseable output; a withheld lesson still counts,
+    # but a lesson that breaks the lesson shape did not honour it.
+    return row["status"] == "ready" or (row["failure_code"] == "lesson_validation_failed" and row["diagnostic"] != "shape")
 
 
 async def qualify(profile: ModelProfile, job: BenchJob, *, root: Path, service_factory, ledger: SpendLedger,
