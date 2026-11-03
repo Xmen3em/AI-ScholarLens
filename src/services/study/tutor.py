@@ -4,6 +4,7 @@ import asyncio
 import json
 import math
 import re
+import unicodedata
 from typing import Literal
 
 import httpx
@@ -18,7 +19,7 @@ from src.services.study.store import StudyStore
 
 MODEL = "openai/gpt-oss-120b:cerebras"
 URL = "https://router.huggingface.co/v1/chat/completions"
-PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v4"
+PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v5"
 SYSTEM = """You are ScholarLens, a careful AI-paper teacher. Explain in natural, respectful Egyptian Arabic
 for an Egyptian learner, keeping standard English technical terms. Prefer 'يعني', 'خلّينا', 'إزاي' naturally;
 avoid forced slang and do not translate proper names. Adapt to the explicitly selected learning depth.
@@ -38,7 +39,8 @@ Return only the required JSON. Keep each section focused, usually 2-4 sentences.
 tool instructions or chain of thought. The application will attach verified source links and page references.
 For beginner concept questions, avoid extra mathematical indices unless equations were requested.
 For experiments, explain ONE dataset/metric/setting at a time. Never say a method beats every baseline just
-because some table cells improve; check each compared cell. Distinguish a study prerequisite from a paper claim.
+because some table cells improve; check each compared cell. Name the dataset, test split and metric for EVERY number
+exactly as the table caption/header states; an "a/b" pair in one cell is usually two columns, not two metrics. Distinguish a study prerequisite from a paper claim.
 Prefer fictional everyday examples; do not add unsourced historical facts to an analogy.
 Prerequisites are teaching background: use kind=background, not a paper finding that needs a quotation.
 An analogy must preserve the mechanism and its granularity: token, sentence, paragraph and document are not interchangeable.
@@ -91,7 +93,9 @@ class GroundingReview(StrictModel):
                          "unlabeled_background", "analogy_mismatch"]] = Field(max_length=8)
 
 
-async def review_lesson(model, job_id: str, lesson: Lesson, *, blocks: list[EvidenceBlock] | None = None) -> Lesson:
+async def review_lesson(model, job_id: str, lesson: Lesson, *, blocks: list[EvidenceBlock] | None = None,
+                        report: dict | None = None) -> Lesson:
+    # report receives only counts and the finite issue enum, never section text.
     review_indices = [i for i, section in enumerate(lesson.sections) if section.kind in {"paper", "analogy"}]
     if not review_indices:
         return lesson
@@ -102,6 +106,8 @@ its quotes, confuses a dataset/metric/table column, or claims uniform superiorit
 cells. source_context contains the full cited blocks to recover headers, neighboring rows and split settings.
 Use it to detect contradictions and interpret quotes; do not use unrelated unquoted facts to rescue a claim.
 Compare ALL relevant rows before accepting 'best' or 'outperforms'; distinguish each dataset split explicitly.
+Read the table caption/header: an "a/b" pair in one cell is usually two columns (e.g. two test sets), not two
+metrics. Reject a section that renames a split or metric, or calls a value best when another row is higher.
 General background needs no paper proof. Fictional analogies are allowed, but their mapping must preserve the
 source mechanism and granularity (e.g. a token is not a paragraph). Mark misleading mappings unsupported.
 Do not add missing context from model knowledge. Ambiguous evidence is insufficient. Return JSON."""
@@ -123,11 +129,12 @@ Do not add missing context from model knowledge. Ambiguous evidence is insuffici
     if any(type(i) is not int or i not in review_indices for i in review.unsupported_sections):
         raise TutorError("review_validation_failed")
     rejected = set(review.unsupported_sections)
+    if report is not None:
+        report.update(reviewed=len(review_indices), rejected=len(rejected), issues=sorted(set(review.issues)))
     revised = []
     for index, section in enumerate(lesson.sections):
         if index in rejected:
-            revised.append(TutorSection(heading=section.heading, kind="uncertainty", evidence=[],
-                text="الدليل المختار مش كفاية لشرح الجزء ده بدقة. راجع القسم أو الجدول في الورقة الأصلية، أو اسألني عن نقطة محددة فيه."))
+            revised.append(TutorSection(heading=section.heading, kind="uncertainty", evidence=[], text=WITHHELD))
         else:
             revised.append(section)
     if any(section.kind == "paper" for section in lesson.sections) and not any(section.kind == "paper" for section in revised):
@@ -182,22 +189,51 @@ def validate_lesson(raw: dict, blocks: list[EvidenceBlock]) -> Lesson:
         raise TutorError("lesson_validation_failed", diagnostic=reason) from None
 
 
+WITHHELD = "الدليل المختار مش كفاية لشرح الجزء ده بدقة. راجع القسم أو الجدول في الورقة الأصلية، أو اسألني عن نقطة محددة فيه."
+RLM = "\u200f"
+
+
+def rtl_line(line: str) -> str:
+    """Keep an Arabic line right-to-left in plain-text clients such as Telegram.
+
+    Telegram, like UAX #9 rules P2/P3, takes a line's direction from its first
+    strong character, so "RAG-Token بيختار…" would render left-to-right. Only a
+    line that mixes Arabic with an English opening gets one leading RLM; English
+    quotations, URLs and commands are left byte-identical.
+    """
+    first = next((kind for kind in map(unicodedata.bidirectional, line) if kind in {"L", "R", "AL"}), None)
+    if first == "L" and re.search(r"[\u0600-\u06ff]", line):
+        return RLM + line
+    return line
+
+
+def page_label(block: EvidenceBlock | None) -> str:
+    return f"ص {block.page}" if block and block.page else "الملخص"
+
+
 def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, *, title: str, coverage: str,
-                  sampled: bool = False) -> str:
+                  sampled: bool = False, followup: bool = False) -> str:
     lookup = {b.id: b for b in blocks}
-    labels = {"paper": "من الورقة", "background": "خلفية عامة", "analogy": "تشبيه للتوضيح",
-              "question": "جرّب تفهم", "uncertainty": "حدود المتاح"}
-    sections = [f"📖 {title}\n{lesson.title}"]
+    labels = {"paper": "📄 من الورقة", "background": "📚 خلفية عامة", "analogy": "💡 تشبيه للتوضيح",
+              "question": "❓ جرّب تفهم", "uncertainty": "⚠️ حدود المتاح"}
+    sections = [f"💬 {lesson.title}" if followup else f"📖 {title}\n{lesson.title}"]
     if coverage not in {"full_text", "sampled_text"}:
         sections.append("⚠️ الاستخراج جزئي؛ الشرح مبني على الأجزاء المقروءة بس، ومش مراجعة كاملة لكل المعادلات والجداول.")
     if sampled or coverage == "sampled_text":
         sections.append("ℹ️ الشرح مبني على مقاطع مختارة من الورقة؛ مش مراجعة كاملة لكل التفاصيل والمعادلات والجداول.")
+    withheld = []
     for section in lesson.sections:
-        refs = ", ".join(f"{identity} / ص {lookup[identity].page or 'ملخص'}"
-                         for identity in dict.fromkeys(s.block_id for s in section.evidence))
-        sections.append(f"{section.heading} — {labels[section.kind]}\n{section.text}" + (f"\n[{refs}]" if refs else ""))
-    sections.append("المصدر والنسخة: " + source_url)
-    return "\n\n".join(sections)
+        if section.kind == "uncertainty" and section.text == WITHHELD:
+            # A section the review rejected: one closing note instead of a boilerplate block per section.
+            withheld.append(section.heading)
+            continue
+        pages = "، ".join(dict.fromkeys(page_label(lookup.get(s.block_id)) for s in section.evidence))
+        sections.append(f"{section.heading} — {labels[section.kind]}\n{section.text}" + (f"\n↩︎ المصدر: {pages}" if pages else ""))
+    if withheld:
+        names = "، ".join(f"«{heading}»" for heading in withheld)
+        sections.append(f"⚠️ شلت {len(withheld)} جزء ماقدرتش أتأكد منه من نص الورقة: {names}. اسألني عنه بسؤال أضيق.")
+    sections.append("🔗 المصدر والنسخة: " + source_url)
+    return "\n".join(rtl_line(line) for line in "\n\n".join(sections).split("\n"))
 
 
 class StudyModel:

@@ -21,6 +21,7 @@ from src.services.study.tutor import (
     Lesson,
     TutorError,
     lesson_schema,
+    page_label,
     render_lesson,
     review_lesson,
     validate_lesson,
@@ -54,7 +55,8 @@ def select_evidence(content: PaperContent, question: str, *, limit: int = 24):
     terms = set(re.findall(r"[a-z]{3,}", question.lower()))
     hints = {"نتيجة": "experiment results evaluation", "نتائج": "experiment results evaluation",
              "الطريقة": "method architecture model attention", "حدود": "limitations conclusion",
-             "dataset": "dataset data evaluation", "اختبر": "method contribution"}
+             "dataset": "dataset data evaluation", "اختبر": "method contribution",
+             "تمهيدي": "method model approach training experiments results limitations"}
     for term, english in hints.items():
         if term in question:
             terms.update(english.split())
@@ -68,6 +70,26 @@ def select_evidence(content: PaperContent, question: str, *, limit: int = 24):
             break
         chosen.add(index)
     return [blocks[i] for i in sorted(chosen)[:limit]]
+
+
+def _acknowledgement(command: str, text: str, has_paper: bool) -> str:
+    # Say what is actually happening; a title search is not yet a lesson.
+    if command == "/deep":
+        return "🔎 ببحث جوّه الورقة بأدوات القراءة… ده ممكن ياخد دقيقة. هبعت النتيجة هنا."
+    if command == "/quiz":
+        return "📝 بجهّز سؤال من الورقة…"
+    lesson = "📖 بجهّز الشرح التمهيدي من الورقة… هبعت النتيجة هنا."
+    if command == "/choose":
+        return lesson
+    try:
+        kind = normalize_input(text.partition(" ")[2] if command == "/paper" else text)[0]
+    except StudyInputError:
+        kind = None
+    if kind == "id":
+        return lesson
+    if command == "/paper" or not has_paper:
+        return "🔎 بدوّر على الورقة في arXiv…"
+    return "💬 بجهّز الإجابة من الورقة…"
 
 
 class StudyService:
@@ -161,7 +183,7 @@ class StudyService:
             task = asyncio.create_task(self._run(job["id"], text), name=job["id"])
             self.tasks.add(task)
             task.add_done_callback(self.tasks.discard)
-        return {"job_id": job["id"], "reply": "بجهّز الشرح من الورقة… هبعت النتيجة هنا. تقدر تستخدم /study لمعرفة الورقة الحالية."}
+        return {"job_id": job["id"], "reply": _acknowledgement(command, text, bool(context))}
 
     async def _run(self, job_id, text):
         try:
@@ -177,7 +199,7 @@ class StudyService:
             failure = failure_payload(exc, default=code)
             code = failure["error"]
             messages = {
-                "lesson_validation_failed": "الشرح ما اجتازش التحقق من المصادر، فمش هعرض إجابة ممكن تكون مضللة.",
+                "lesson_validation_failed": "ماقدرتش أتحقق من الإجابة من نص الورقة، فمش هعرضها عشان ماتكونش مضللة. جرّب سؤال أضيق عن خطوة أو جدول أو صفحة محددة.",
                 "study_memory_unavailable": "الذاكرة المتاحة قليلة حاليًا. الطلب ما اتكررش تلقائيًا.",
                 "study_context_limit": "سياق الطلب أكبر من الحد الحالي. جرّب سؤالًا عن خطوة محددة؛ مش هكرر الطلب تلقائيًا.",
                 "study_tool_budget_exhausted": "وصلت لحدّ قراءة المصادر المسموح للطلب ده. مش هعرض تحليلًا ناقصًا أو أعيد الطلب تلقائيًا.",
@@ -193,6 +215,9 @@ class StudyService:
             }
             reply = messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية.")
             result = {"failure_code": code, "diagnostic": failure.get("diagnostic", code)}
+            review = getattr(exc, "review", None)
+            if type(review) is dict:
+                result["review"] = review
             if "stage" in failure:
                 # Deep failures carry a finite stage; show the owner the same safe labels the job stores.
                 result["stage"] = failure["stage"]
@@ -264,16 +289,30 @@ class StudyService:
             result = await self.model.complete(state["job_id"], "followup" if state.get("followup") else "lesson",
                 [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
                 schema=lesson_schema(selected, followup=bool(state.get("followup"))))
-        lesson = validate_lesson(result["output"], selected)
-        lesson = await review_lesson(self.model, state["job_id"], lesson, blocks=document.blocks)
+        review: dict = {}
+        stage = "result_validation"
+        try:
+            lesson = validate_lesson(result["output"], selected)
+            stage = "review"
+            lesson = await review_lesson(self.model, state["job_id"], lesson, blocks=document.blocks, report=review)
+        except Exception as exc:
+            # A worker that succeeded can still fail here, in the parent; keep that distinguishable.
+            if question.startswith("/deep "):
+                staged(exc, stage)
+            if review:
+                exc.review = review  # type: ignore[attr-defined]
+            raise
         text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title,
-                             coverage=document.coverage, sampled=len(selected) != len(document.blocks))
+                             coverage=document.coverage, sampled=not state.get("followup") and len(selected) != len(document.blocks),
+                             followup=bool(state.get("followup")))
         self.store.save_paper(document.paper.arxiv_id, document.model_dump(), None if state.get("followup") else lesson.model_dump())
         if not state.get("followup"):
             self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
         else:
             self.store.append_turn(document.paper.arxiv_id, question, text)
-        response = {"text": text}
+        response: dict = {"text": text}
+        if review:
+            response["review"] = review
         if not state.get("followup"):
             picture = await asyncio.to_thread(study_map, lesson)
             if picture and len(picture) <= 180000:
@@ -331,5 +370,7 @@ class StudyService:
     @staticmethod
     def notes(document: PaperContent, lesson: Lesson) -> str:
         text = render_lesson(lesson, document.blocks, document.paper.source_url, title=document.paper.title, coverage=document.coverage)
-        quotes = [f"[{s.block_id}] {s.quote}" for section in lesson.sections for s in section.evidence]
-        return text + "\n\nالاقتباسات الأصلية للتحقق:\n" + "\n\n".join(dict.fromkeys(quotes))
+        lookup = {block.id: block for block in document.blocks}
+        # The page label line is Arabic; each English quotation stays on its own LTR line.
+        quotes = [f"📄 {page_label(lookup.get(s.block_id))}:\n{s.quote}" for section in lesson.sections for s in section.evidence]
+        return text + "\n\n📌 الاقتباسات الأصلية للتحقق:\n\n" + "\n\n".join(dict.fromkeys(quotes))

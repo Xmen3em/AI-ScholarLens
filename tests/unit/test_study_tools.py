@@ -36,3 +36,28 @@ def test_total_smoke_budget_is_durable_and_forget_cannot_reset_it(tmp_path):
     second = new.create_job("two", {})
     with pytest.raises(RuntimeError):
         new.reserve_attempt(second["id"], "test", "model")
+
+
+def test_evidence_snippets_never_start_or_end_inside_a_word():
+    from src.services.study.content import EvidenceBlock
+    from src.services.study.evidence import evidence_catalog
+
+    words = [f"word{i:03d}" for i in range(200)]
+    text = " ".join(words)
+    catalog = evidence_catalog([EvidenceBlock(id="p1b0", page=1, section="Method", text=text)])
+    assert len(catalog) > 2
+    for entry in catalog:
+        start = text.index(entry["quote"])
+        end = start + len(entry["quote"])
+        assert len(entry["quote"]) <= 450
+        assert start == 0 or text[start - 1] == " "
+        assert end == len(text) or text[end] == " "
+    assert " ".join(entry["quote"] for entry in catalog).split() == words
+
+
+def test_a_spaceless_run_is_still_bounded():
+    from src.services.study.content import EvidenceBlock
+    from src.services.study.evidence import evidence_catalog
+
+    catalog = evidence_catalog([EvidenceBlock(id="p1b0", page=1, section="Method", text="x" * 1000)])
+    assert [len(entry["quote"]) for entry in catalog] == [450, 450, 100]

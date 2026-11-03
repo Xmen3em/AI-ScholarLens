@@ -14,6 +14,9 @@ from src.policies.ai_scope import AI_CATEGORY_ALLOWLIST, ai_scope_query
 API_URL = "https://export.arxiv.org/api/query"
 XML_LIMIT = 512_000
 ATOM = "{http://www.w3.org/2005/Atom}"
+# Required title terms skip connectors; lowercase operator words also cannot act as operators.
+TITLE_STOPWORDS = frozenset({"a", "an", "and", "andnot", "at", "by", "for", "from", "in", "is", "not", "of", "on", "or",
+                             "the", "to", "via", "with"})
 MODERN = re.compile(r"(\d{4})\.\d{4,5}(?:v[1-9]\d{0,3})?")
 LEGACY = re.compile(r"[A-Za-z][A-Za-z.-]{1,24}/(\d{4})\d{3}(?:v[1-9]\d{0,3})?")
 
@@ -140,10 +143,14 @@ class ArxivIntake:
             params["id_list"] = value
         else:
             # User title tokens cannot introduce an arXiv query operator.
-            title = " ".join(re.findall(r"[^\W_]+", value, re.UNICODE))
-            if not title:
+            # Every word must appear in the title, in any order: an exact phrase misses
+            # "retrieval augmented generation knowledge intensive" because of "for".
+            words = [word.lower() for word in re.findall(r"[^\W_]+", value, re.UNICODE)]
+            if not words:
                 raise StudyInputError("invalid_paper_input")
-            params.update(search_query=f'ti:"{title}" AND ({ai_scope_query()})', sortBy="relevance")
+            words = ([word for word in words if word not in TITLE_STOPWORDS] or words)[:12]
+            title = " AND ".join(f"ti:{word}" for word in words)
+            params.update(search_query=f"({title}) AND ({ai_scope_query()})", sortBy="relevance")
         async with self._lock:
             await asyncio.sleep(max(0, self.delay - (time.monotonic() - self._last_request)))
             self._last_request = time.monotonic()

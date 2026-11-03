@@ -17,14 +17,12 @@ REVIEW_ISSUES = set(GroundingReview.model_json_schema()["properties"]["issues"][
 def locator_blocks() -> list[EvidenceBlock]:
     # Locators are rebuilt from the reviewed fixture, never stored as free text here.
     evidence = {item["id"]: item for item in TRUTH["evidence"]}
-    comparison = TRUTH["reviewed_comparison"]
     blocks = []
     for locator in CASES["locators"]:
         if locator["construction"] == "reviewed_excerpts":
             text = " … ".join(evidence[i]["quote"] for i in locator["evidence_ids"])
         else:
-            values = ", ".join(f"{name} {value}" for name, value in comparison["values"].items())
-            text = f"{comparison['split']} ({comparison['dataset']}), {comparison['metric']}: {values}"
+            text = locator["text"]
         blocks.append(EvidenceBlock(id=locator["block_id"], page=locator["page"], section=locator["section"], text=text))
     return blocks
 
@@ -38,7 +36,7 @@ def test_cases_are_bound_to_the_reviewed_rag_source():
     assert CASES["source"] == {key: TRUTH["source"][key] for key in ("paper_id", "sha256", "parser_revision")}
 
 
-def test_locators_use_only_reviewed_excerpts_or_reviewed_table_metadata():
+def test_locators_use_only_reviewed_excerpts_or_a_verified_native_extract():
     evidence = {item["id"]: item for item in TRUTH["evidence"]}
     comparison = TRUTH["reviewed_comparison"]
     for locator in CASES["locators"]:
@@ -47,8 +45,30 @@ def test_locators_use_only_reviewed_excerpts_or_reviewed_table_metadata():
             for identity in locator["evidence_ids"]:
                 assert (evidence[identity]["block_id"], evidence[identity]["page"]) == (locator["block_id"], locator["page"])
         else:
-            assert locator["construction"] == "reviewed_table_metadata"
+            assert locator["construction"] == "native_extract_excerpt"
             assert (comparison["block_id"], comparison["page"]) == (locator["block_id"], locator["page"])
+            # The reviewed comparison must be readable in the excerpt itself.
+            for value in comparison["values"].values():
+                assert str(value) in locator["text"]
+            assert comparison["split"] in locator["text"] and len(locator["text"]) <= 450
+
+
+LOCAL_PDF = ROOT / "data/study/sources/b4a081248864de48638444aec3a678250d63e10d77b0d824160c77017bccdf39.pdf"
+
+
+@pytest.mark.skipif(not LOCAL_PDF.is_file(), reason="optional ignored source PDF; CI uses the stored excerpt")
+def test_native_excerpts_are_exact_substrings_of_the_reviewed_pdf_extraction():
+    import hashlib
+
+    from src.services.study.content import _worker
+
+    assert hashlib.sha256(LOCAL_PDF.read_bytes()).hexdigest() == CASES["source"]["sha256"]
+    raw = _worker(LOCAL_PDF, "extract")
+    assert raw["parser_revision"] == CASES["source"]["parser_revision"]
+    blocks = {block["id"]: block["text"] for block in raw["blocks"]}
+    for locator in CASES["locators"]:
+        if locator["construction"] == "native_extract_excerpt":
+            assert locator["text"] in blocks[locator["block_id"]]
 
 
 def test_case_records_are_unique_and_inspectable():

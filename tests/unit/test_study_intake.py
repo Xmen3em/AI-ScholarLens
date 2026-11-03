@@ -102,3 +102,19 @@ async def test_redirects_and_provider_error_text_are_not_followed_or_exposed():
             await ArxivIntake(client, delay=0).resolve("1706.03762")
     assert error.value.code == "arxiv_unavailable"
     assert "private" not in str(error.value)
+
+
+@pytest.mark.anyio
+async def test_title_words_are_required_in_any_order_without_connectors():
+    seen = []
+
+    def handler(request):
+        seen.append(request.url.params)
+        return httpx.Response(200, text=feed())
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        await ArxivIntake(client, delay=0).resolve("retrieval augmented generation for knowledge intensive")
+    query = seen[0]["search_query"]
+    # The real title has "for" between the words, so an exact phrase never matched.
+    assert query.startswith("(ti:retrieval AND ti:augmented AND ti:generation AND ti:knowledge AND ti:intensive) AND (")
+    assert "ti:for" not in query and '"' not in query.split(") AND (")[0]

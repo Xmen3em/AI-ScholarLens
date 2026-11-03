@@ -26,7 +26,8 @@ def test_display_collapses_block_references_without_dropping_original_quotes():
     lesson = example_lesson()
     blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text="The model retrieves documents. It then generates an answer.")]
     text = render_lesson(lesson, blocks, "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text")
-    assert text.count("p1b0 / ص 1") == 1
+    assert text.count("↩︎ المصدر: ص 1") == 1
+    assert "p1b0" not in text  # students see pages, not internal block IDs
     assert len(lesson.sections[0].evidence) == 2
 
 
@@ -426,3 +427,83 @@ async def test_research_worker_prints_its_stage(monkeypatch, capsys):
         await asyncio.to_thread(study_research.main)
     assert json.loads(capsys.readouterr().out) == {"error": "research_final_json_invalid",
                                                    "diagnostic": "research_final_json_invalid", "stage": "final_json"}
+
+
+def test_arabic_lines_that_open_with_english_stay_right_to_left():
+    from src.services.study.tutor import RLM, render_lesson
+
+    lesson = Lesson.model_validate({"title": "RAG-Token وRAG-Sequence", "sections": [
+        {"heading": "Sequence وToken", "kind": "paper", "text": "RAG-Token بيختار وثيقة لكل token.\n" + "في RAG-Sequence الوثيقة ثابتة.",
+         "evidence": [{"block_id": "p3b0", "quote": "each target token"}]}]})
+    blocks = [EvidenceBlock(id="p3b0", page=3, section="Models", text="each target token")]
+    text = render_lesson(lesson, blocks, "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text", followup=True)
+    lines = text.split("\n")
+    assert RLM + "💬 RAG-Token وRAG-Sequence" in lines
+    assert RLM + "Sequence وToken — 📄 من الورقة" in lines
+    assert RLM + "RAG-Token بيختار وثيقة لكل token." in lines
+    # Arabic-first lines, the URL line and pure English text get no mark.
+    assert "في RAG-Sequence الوثيقة ثابتة." in lines
+    assert "🔗 المصدر والنسخة: https://arxiv.org/abs/2005.11401v4" in lines
+    assert text.count(RLM) == 3 and "📖" not in text
+
+
+def test_review_rejections_become_one_closing_note():
+    from src.services.study.tutor import WITHHELD, render_lesson
+
+    lesson = Lesson.model_validate({"title": "شرح", "sections": [
+        {"heading": "الفكرة", "kind": "paper", "text": "الطريقة بتسترجع مصادر.", "evidence": [{"block_id": "p1b0", "quote": "The model retrieves documents."}]},
+        {"heading": "الطريقة", "kind": "uncertainty", "text": WITHHELD, "evidence": []},
+        {"heading": "تشبيه", "kind": "uncertainty", "text": WITHHELD, "evidence": []}]})
+    blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text="The model retrieves documents.")]
+    text = render_lesson(lesson, blocks, "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text")
+    assert WITHHELD not in text and "حدود المتاح" not in text
+    assert "⚠️ شلت 2 جزء ماقدرتش أتأكد منه من نص الورقة: «الطريقة»، «تشبيه»." in text
+
+
+@pytest.mark.anyio
+async def test_review_report_carries_only_counts_and_issue_labels():
+    original = example_lesson()
+
+    class Reviewer:
+        async def complete(self, job, purpose, messages, **kwargs):
+            return {"output": {"unsupported_sections": [1], "issues": ["analogy_mismatch", "analogy_mismatch"]}}
+
+    report = {}
+    await review_lesson(Reviewer(), "job", original, blocks=[], report=report)
+    assert report == {"reviewed": 2, "rejected": 1, "issues": ["analogy_mismatch"]}
+
+
+@pytest.mark.anyio
+async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, monkeypatch):
+    blocks_text = Content  # the shared stub source used by the service tests
+
+    class RejectingModel(Model):
+        reject = False
+
+        async def complete(self, job, purpose, messages, **kwargs):
+            if purpose == "grounding_review" and self.reject:
+                return {"output": {"unsupported_sections": [0], "issues": ["missing_support"]}}
+            return await super().complete(job, purpose, messages, **kwargs)
+
+    model = RejectingModel()
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), blocks_text(), model,
+                           research_python=tmp_path / "python.exe")
+    first = service.submit("paper", "/paper 1706.03762")
+    assert (await finished(service, first["job_id"]))["status"] == "ready"
+    document = service.store.paper(service.store.context()["paper_id"])["content"]
+    snippet = document["blocks"][0]["id"] + "s0"
+
+    async def deep(job_id):
+        return {"output": {"title": "شرح أعمق", "sections": [{"heading": "الطريقة", "kind": "paper",
+                "text": "النموذج بيستخدم الانتباه في كل طبقة عشان يفهم العلاقات.", "evidence_ids": [snippet]}]}}
+
+    monkeypatch.setattr(service, "_deep", deep)
+    model.reject = True
+    admitted = service.submit("deep", "/deep اشرح الطريقة")
+    job = await finished(service, admitted["job_id"])
+    assert job["status"] == "failed"
+    assert (job["result"]["failure_code"], job["result"]["diagnostic"], job["result"]["stage"]) == (
+        "lesson_validation_failed", "semantic_support", "review")
+    assert job["result"]["review"] == {"reviewed": 1, "rejected": 1, "issues": ["missing_support"]}
+    assert "stage=review" in job["result"]["text"]
+    await service.aclose()

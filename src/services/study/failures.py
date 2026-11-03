@@ -22,6 +22,8 @@ SAFE_DIAGNOSTICS = SAFE_FAILURES | frozenset({
 SAFE_STAGES = frozenset({
     "settings", "admission", "source", "agent", "final_json", "validation",
     "worker_start", "worker_timeout", "worker_output", "worker_exit",
+    # After a successful worker, back in the parent: re-validation, then grounding review.
+    "result_validation", "review",
 })
 
 
