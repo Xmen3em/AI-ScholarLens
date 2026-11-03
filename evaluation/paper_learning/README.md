@@ -22,9 +22,14 @@ that fixture, except one short verified excerpt of the table itself:
 
 ## Cases and what currently stops them
 
-Since the [claim check](../../docs/specs/claim-check.md) design (3 November
-2026), each paper case is one claim citing one quote, and outcomes read `kept`
-or `withheld:<reason>`. Counts below are claims.
+Since the [claim check](../../docs/specs/claim-check.md) (3 November 2026),
+each paper case is one claim citing one quote, and outcomes read `kept` or
+`withheld:<reason>`. Counts below are claims. The whole-lesson review is gone:
+claims the offline layers admit go to a per-claim check whose "supported" verdict
+must copy spans from that claim's own quote, verified in code. Tests prove each
+admitted critical case reaches that check with its exact quote and is withheld
+when the verdict is false, and that the four correct cases survive an honest
+checker. They still do not prove a live model judges meaning correctly.
 
 Four supported sections must pass. Twelve critical errors cover four of the
 spec's five critical classes and every reviewed rejected claim. Two offline

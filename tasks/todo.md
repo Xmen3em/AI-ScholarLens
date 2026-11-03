@@ -57,6 +57,8 @@ JSON and `tests/unit/test_study_science_fixtures.py`. **Scope:** M, 3 files.
   the review rejected every paper section. Parent-side `result_validation` and
   `review` stages plus review counts/issue labels are now stored; a matching
   pattern for the historic failure, not proof of its cause.
+  Same day: the whole-lesson review was replaced by the per-claim check
+  ([spec](../docs/specs/claim-check.md)); review stages and labels now come from it.
 
 **Accept:** A failing SDK path retains a bounded stage/category and job identity;
 unknown historic causes stay unknown. No provider output/secret leaks.

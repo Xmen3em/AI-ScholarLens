@@ -1,6 +1,10 @@
 # claim-check: per-claim grounding with verifiable proof
 
-Status: design approved section by section, 3 November 2026; not implemented.
+Status: design approved 3 November 2026; implemented offline the same day
+([plan](../../tasks/claim-check-plan.md)); the live check is pending owner approval.
+Two refinements made during implementation: a span may not exceed 200 characters
+(an overlong one is unverified, not fatal), and the minimum is three words or the
+whole quote when the quote itself is shorter.
 Inherits [shared rules](researcher-app.md) and refines
 [paper-tutor](paper-tutor.md) and [study-research](study-research.md).
 Replaces the whole-lesson grounding review in `src/services/study/tutor.py`.
