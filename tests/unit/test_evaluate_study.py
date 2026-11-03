@@ -277,7 +277,7 @@ def test_changed_manifest_is_refused(tmp_path, monkeypatch):
 
 
 def test_default_profile_is_the_baseline():
-    assert DEFAULT_PROFILE.name == "baseline"
+    assert DEFAULT_PROFILE.name == "control"
 
 
 @pytest.mark.asyncio

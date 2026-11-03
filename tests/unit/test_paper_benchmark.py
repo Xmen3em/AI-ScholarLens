@@ -196,14 +196,15 @@ def test_freeze_detects_any_changed_file(tmp_path):
 
 
 def test_models_file_loads_and_matches_spec_routes():
-    from src.services.study.models import DEFAULT_PROFILE, load_profiles
+    from src.services.study.models import DEFAULT_PROFILE, GPT_OSS_PROFILE, load_profiles
 
     profiles = load_profiles(ROOT / "models.v1.json")
     assert {name: profile.route for name, profile in profiles.items()} == {
         "baseline": "openai/gpt-oss-120b:cerebras", "qwen-27b": "Qwen/Qwen3.8-27B:deepinfra",
         "qwen-397b": "Qwen/Qwen3.5-397B-A17B:deepinfra", "control": "zai-org/GLM-5.3:deepinfra",
         "judge": "deepseek-ai/DeepSeek-V4-Pro:deepinfra"}
-    assert profiles["baseline"] == DEFAULT_PROFILE
+    # Production runs exactly the profile the benchmark measured.
+    assert profiles["control"] == DEFAULT_PROFILE and profiles["baseline"] == GPT_OSS_PROFILE
     assert all(profile.input_estimate == "utf8_bytes_div_3" for name, profile in profiles.items() if name != "baseline")
 
 

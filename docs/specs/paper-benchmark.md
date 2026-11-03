@@ -7,8 +7,8 @@ Amended after the first qualification run (3 November 2026, before development):
 qualification also retries once with thinking switched off after an unfinished answer.
 Inherits [shared rules](researcher-app.md) and measures
 [paper-tutor](paper-tutor.md) with the [claim check](claim-check.md).
-Production keeps `openai/gpt-oss-120b:cerebras` until the owner chooses
-otherwise from this benchmark's report.
+Production ran `openai/gpt-oss-120b:cerebras` until the owner chose GLM-5.3 after
+development (3 November 2026; see §6).
 
 ## Why
 
@@ -200,6 +200,16 @@ baseline only if it beats it by at least 10 points of delivered rate or 0.10 of
 factual correctness. Otherwise the baseline stays, because it is the fastest
 and cheapest. With 18 holdout papers the report states counts and makes no
 claims of statistical significance.
+
+**Owner decision, 3 November 2026, after development.** The owner dropped
+gpt-oss-120b and switched production to GLM-5.3 (`zai-org/GLM-5.3:deepinfra`) on
+the development results. In the second development rerun GLM-5.3 delivered 94% of
+36 answers with 100% format compliance and a 68 s p95; gpt-oss-120b delivered 67%
+with thin lessons (a median of 2 kept claims per first lesson against GLM's 9.5).
+Both Qwen models had failed qualification. The holdout therefore measures GLM-5.3
+alone (≤144 calls; judging ≤216): it must meet the format and latency gates above,
+and its unfaithful rate is reported as measured, not against a baseline. The report
+states that the model was chosen on development data.
 
 Switching the production model is a separate, owner-approved change. If one
 model writes best and another checks best, a writer/checker split is proposed

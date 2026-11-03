@@ -1,4 +1,4 @@
-"""Frozen hosted-model profiles; the default reproduces the production request exactly."""
+"""Frozen hosted-model profiles; the default is the production model, as the paper benchmark measured it."""
 
 import json
 import math
@@ -21,8 +21,12 @@ class ModelProfile:
     priced_on: str
 
 
-DEFAULT_PROFILE = ModelProfile("baseline", "openai/gpt-oss-120b:cerebras", "gpt_oss_tokenizer",
+GPT_OSS_PROFILE = ModelProfile("baseline", "openai/gpt-oss-120b:cerebras", "gpt_oss_tokenizer",
                                {"reasoning_effort": "low"}, 0.35, 0.75, "2026-11-03")
+# The owner chose GLM-5.3 after the paper benchmark's development runs (3 Nov 2026): 94% delivered,
+# full format compliance and a 68 s p95 on 12 papers, against 67% for gpt-oss-120b.
+DEFAULT_PROFILE = ModelProfile("control", "zai-org/GLM-5.3:deepinfra", "utf8_bytes_div_3",
+                               {"reasoning_effort": "low"}, 0.90, 4.00, "2026-11-03")
 
 
 def estimate_input(profile: ModelProfile, serialized: str) -> int:

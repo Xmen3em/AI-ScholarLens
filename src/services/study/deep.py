@@ -16,6 +16,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.tools import tool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from pydantic import Field
+from src.services.study.models import DEFAULT_PROFILE
 from src.services.study.tools import StudyTools
 
 ALLOWED = frozenset({"paper_overview", "search_evidence", "read_evidence"})
@@ -24,7 +25,7 @@ ALLOWED = frozenset({"paper_overview", "search_evidence", "read_evidence"})
 class HFStudyChat(BaseChatModel):
     transport: Any = Field(exclude=True, repr=False)
     job_id: str
-    model_name: str = "gpt-oss-120b"
+    model_name: str = DEFAULT_PROFILE.route
 
     @property
     def _llm_type(self):
