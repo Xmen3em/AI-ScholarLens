@@ -218,6 +218,13 @@ alone (≤144 calls; judging ≤216): it must meet the format and latency gates 
 and its unfaithful rate is reported as measured, not against a baseline. The report
 states that the model was chosen on development data.
 
+**Holdout result and owner decision, 3 November 2026.** On the 18 holdout papers
+GLM-5.3 delivered 87% (47 of 54 first lessons, Q1 and Q2) with 98.5% format
+compliance, but its p95 latency was 94.5 s, missing the 90 s gate: 4 of 69 jobs took
+longer, three of them two-call first lessons (median 60 s). The owner kept GLM-5.3.
+The report states the latency miss; reducing first-lesson latency, and showing the
+student progress while a lesson is written, are follow-ups outside this benchmark.
+
 Switching the production model is a separate, owner-approved change. If one
 model writes best and another checks best, a writer/checker split is proposed
 as a follow-up, not decided here.
