@@ -24,6 +24,8 @@ MIN_MEMORY_MIB = 1024
 OWNER = "paper-benchmark"
 # Rejections of a request field, which qualification retries once without options.
 OPTION_REJECTED = {"study_provider_http_400", "study_provider_http_422"}
+# A provider's switch to disable thinking, tried once when an answer stops before it is finished.
+THINKING_OFF: dict[str, object] = {"chat_template_kwargs": {"enable_thinking": False}}
 FORMAT_FAILURES = {"study_response_invalid_or_unavailable", "review_validation_failed"}
 PROVIDER_PREFIX = "study_provider_http_"
 
@@ -186,12 +188,18 @@ async def qualify(profile: ModelProfile, job: BenchJob, *, root: Path, service_f
     rows = await run_stage("qualify", profile, [job], root=root, service_factory=service_factory, ledger=ledger,
                            call_ceiling=ceiling, expected_sha=expected_sha, memory=memory)
     row, options = rows[0], profile.request_options
+    used = len(row["calls"])
     if row["failure_code"] in OPTION_REJECTED and profile.request_options:
         plain = replace(profile, request_options={})
-        used = len(row["calls"])
         rows = await run_stage("qualify-plain", plain, [job], root=root, service_factory=service_factory,
                                ledger=ledger, call_ceiling=ceiling - used, expected_sha=expected_sha, memory=memory)
         row, options = rows[0], {}
+        used += len(row["calls"])
+    if row["diagnostic"] == "incomplete_output":
+        quiet = replace(profile, request_options=THINKING_OFF)
+        rows = await run_stage("qualify-thinking-off", quiet, [job], root=root, service_factory=service_factory,
+                               ledger=ledger, call_ceiling=ceiling - used, expected_sha=expected_sha, memory=memory)
+        row, options = rows[0], THINKING_OFF
     result = {"model": profile.name, "passed": _qualified(row), "request_options": options}
     path = root / "qualification.json"
     recorded = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}

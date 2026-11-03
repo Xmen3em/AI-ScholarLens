@@ -3,6 +3,8 @@
 Status: approved 3 November 2026; implementation in progress
 ([plan](../../tasks/paper-benchmark-plan.md)). Amended while planning: the AI-scope
 rule, the license exception, four qualification calls per model, and the judge's path.
+Amended after the first qualification run (3 November 2026, before development):
+qualification also retries once with thinking switched off after an unfinished answer.
 Inherits [shared rules](researcher-app.md) and measures
 [paper-tutor](paper-tutor.md) with the [claim check](claim-check.md).
 Production keeps `openai/gpt-oss-120b:cerebras` until the owner chooses
@@ -121,7 +123,7 @@ are sequential, resumable by job, and never retry a counted call.
 
 | Stage | Calls (ceiling) | What it decides |
 | --- | --- | --- |
-| Q: qualification | 4 per non-baseline model (12): one first lesson, one retry without options after HTTP 400/422 | strict schema honoured; request options |
+| Q: qualification | 4 per non-baseline model (12): one first lesson, one retry without options after HTTP 400/422, one retry with thinking off (`chat_template_kwargs: {"enable_thinking": false}`) after an unfinished answer | strict schema honoured; request options |
 | D: development | 12 papers × 4 jobs × ≤2 calls × 4 models (384) | fix model-agnostic defects only |
 | H: holdout | 18 × 4 × ≤2 × 4 (576) | the reported numbers |
 | J: judging | holdout answers only: ≤2 per lesson, ≤5 per Q1/Q2 answer, 4 models (864), plus calibration (≤80) | RAGAS scores |

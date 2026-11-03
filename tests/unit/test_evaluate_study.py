@@ -180,6 +180,43 @@ async def test_qualification_retries_once_without_options_after_http_400(tmp_pat
     assert json.loads((tmp_path / "qualification.json").read_text(encoding="utf-8"))["qwen-27b"] == result
 
 
+def cut_short(request):
+    # A thinking model that spends its output limit on reasoning stops with finish_reason "length".
+    if "chat_template_kwargs" in json.loads(request.content):
+        return honest(request)
+    body = {"choices": [{"index": 0, "finish_reason": "length", "message": {"role": "assistant", "content": "{"}}],
+            "usage": USAGE}
+    return httpx.Response(200, json=body)
+
+
+@pytest.mark.asyncio
+async def test_qualification_retries_once_with_thinking_off_after_an_incomplete_answer(tmp_path):
+    from src.commands.evaluate_study import THINKING_OFF
+
+    seen: list[ModelProfile] = []
+    result = await qualify(QWEN, jobs()[0], root=tmp_path, service_factory=factory_for(cut_short, seen),
+                           ledger=SpendLedger(tmp_path / "spend.json"), expected_sha=SHA, memory=lambda: 2000)
+    assert THINKING_OFF == {"chat_template_kwargs": {"enable_thinking": False}}
+    assert result == {"model": "qwen-27b", "passed": True, "request_options": THINKING_OFF}
+    assert [profile.request_options for profile in seen] == [{"reasoning_effort": "low"}, THINKING_OFF]
+
+
+@pytest.mark.asyncio
+async def test_rerunning_qualification_never_repeats_a_settled_attempt(tmp_path):
+    requests: list[dict] = []
+
+    def counted(request):
+        requests.append(json.loads(request.content))
+        return cut_short(request)
+
+    kwargs = dict(root=tmp_path, service_factory=factory_for(counted), ledger=SpendLedger(tmp_path / "spend.json"),
+                  expected_sha=SHA, memory=lambda: 2000)
+    first = await qualify(QWEN, jobs()[0], **kwargs)
+    made = len(requests)
+    assert await qualify(QWEN, jobs()[0], **kwargs) == first
+    assert len(requests) == made
+
+
 @pytest.mark.asyncio
 async def test_qualification_fails_on_unusable_output(tmp_path):
     result = await qualify(replace(QWEN, request_options={}), jobs()[0], root=tmp_path,

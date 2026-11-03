@@ -30,7 +30,9 @@ with [papers](papers.v1.json), [questions](questions.v1.json) and
 - No counted call is ever retried. An interrupted job is `unknown`, and its
   calls still count.
 - Stages and call ceilings per model: qualification 4 (one first lesson,
-  with one retry without request options after HTTP 400/422); development 96;
+  with one retry without request options after HTTP 400/422, and one retry
+  with thinking off, `chat_template_kwargs: {"enable_thinking": false}`,
+  after an answer that stops unfinished); development 96;
   holdout 144. The judge: ≤2 calls per lesson and ≤5 per Q1/Q2 answer, on
   holdout only, plus ≤80 for calibration.
 - Price ceiling: $40 across all stages, charged from each response's usage. A
