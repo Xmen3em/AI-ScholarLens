@@ -105,6 +105,8 @@ celerybeat.pid
 # bin/python, Windows venvs have Scripts/python.exe, and each uv run replaces the
 # other. PowerShell users set UV_PROJECT_ENVIRONMENT=.venv-win instead.
 .venv-win/
+# RAGAS judging runs in its own environment so the bot never imports it.
+.venv-eval/
 env/
 venv/
 ENV/
