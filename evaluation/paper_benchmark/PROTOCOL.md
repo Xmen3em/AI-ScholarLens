@@ -41,6 +41,8 @@ with [papers](papers.v1.json), [questions](questions.v1.json) and
 - Development may fix only defects that affect all models equally, and is rerun
   at most twice (`dev-rerun`, `dev-rerun-2`). Holdout runs once, after development
   is closed.
+- A run voided by the host memory gate (jobs refused before any model call) is
+  kept under a `void-memory-` prefix and rerun in full; its spend still counts.
 
 ## Metrics
 
