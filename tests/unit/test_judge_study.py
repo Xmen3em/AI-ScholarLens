@@ -4,7 +4,7 @@ import sys
 
 import httpx
 import pytest
-from src.commands.judge_study import CallCounter, agreement, calibrated, calibration_rows, score_rows
+from src.commands.judge_study import agreement, calibrated, calibration_rows, score_rows
 
 ROWS = [
     {"model": "qwen", "paper": "a", "job": "L", "question": "q", "answer": "ans", "contexts": ["ctx"], "reference": None},
@@ -33,18 +33,6 @@ def test_agreement_and_kappa_by_hand():
     assert agreement([True] * 4, [True] * 4)["kappa"] == 1.0
 
 
-@pytest.mark.asyncio
-async def test_call_counter_stops_at_its_ceiling():
-    counter = CallCounter(2)
-    transport = httpx.MockTransport(lambda request: httpx.Response(200, json={}))
-    async with httpx.AsyncClient(transport=transport, event_hooks={"request": [counter]}) as client:
-        await client.get("https://example.test/a")
-        await client.get("https://example.test/b")
-        with pytest.raises(RuntimeError, match="judge_call_ceiling"):
-            await client.get("https://example.test/c")
-    assert counter.count == 3
-
-
 def test_calibration_starts_from_the_science_cases():
     rows = calibration_rows()
     assert len(rows) == 16
@@ -55,3 +43,106 @@ def test_importing_the_judge_does_not_import_ragas():
     code = "import sys, src.commands.judge_study; print('ragas' in sys.modules)"
     output = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
     assert json.loads(output.strip().lower()) is False
+
+
+def judge_profile():
+    from src.services.study.models import ModelProfile
+
+    return ModelProfile("judge", "deepseek-ai/DeepSeek-V4-Pro:deepinfra", "utf8_bytes_div_3", {}, 1.30, 2.60, "2026-11-03")
+
+
+def usage_body(usage):
+    body = {"choices": [{"index": 0, "message": {"role": "assistant", "content": "{}"}, "finish_reason": "stop"}]}
+    if usage is not None:
+        body["usage"] = usage
+    return body
+
+
+@pytest.mark.asyncio
+async def test_judge_calls_are_charged_to_the_shared_ledger(tmp_path):
+    from src.commands.evaluate_study import SpendLedger
+    from src.commands.judge_study import JudgeMeter, worst_judge_usd
+
+    ledger = SpendLedger(tmp_path / "spend.json")
+    meter = JudgeMeter(judge_profile(), ledger, ceiling=10, state=tmp_path / "judge-calls.json")
+    bodies = [usage_body({"prompt_tokens": 1000, "completion_tokens": 100}), usage_body(None)]
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json=bodies.pop(0)))
+    async with httpx.AsyncClient(transport=transport, event_hooks=meter.hooks()) as client:
+        await client.post("https://example.test/v1/chat/completions", json={})
+        await client.post("https://example.test/v1/chat/completions", json={})
+    # Real usage when the provider reports it, the worst case when it does not.
+    assert ledger.spent() == pytest.approx((1000 * 1.30 + 100 * 2.60) / 1e6 + worst_judge_usd(judge_profile()))
+    assert json.loads((tmp_path / "judge-calls.json").read_text(encoding="utf-8"))["calls"] == 2
+
+
+@pytest.mark.asyncio
+async def test_judge_refuses_a_call_the_ledger_cannot_afford(tmp_path):
+    from src.commands.evaluate_study import SpendLedger
+    from src.commands.judge_study import JudgeMeter, worst_judge_usd
+
+    ledger = SpendLedger(tmp_path / "spend.json", ceiling_usd=worst_judge_usd(judge_profile()) / 2)
+    meter = JudgeMeter(judge_profile(), ledger, ceiling=10, state=tmp_path / "judge-calls.json")
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json=usage_body(None)))
+    async with httpx.AsyncClient(transport=transport, event_hooks=meter.hooks()) as client:
+        with pytest.raises(RuntimeError, match="judge_price_ceiling"):
+            await client.post("https://example.test/v1/chat/completions", json={})
+    assert ledger.spent() == 0
+
+
+@pytest.mark.asyncio
+async def test_judge_call_count_survives_a_restart(tmp_path):
+    from src.commands.evaluate_study import SpendLedger
+    from src.commands.judge_study import JudgeMeter
+
+    state = tmp_path / "judge-calls.json"
+    state.write_text(json.dumps({"calls": 2}), encoding="utf-8")
+    meter = JudgeMeter(judge_profile(), SpendLedger(tmp_path / "spend.json"), ceiling=2, state=state)
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json=usage_body(None)))
+    async with httpx.AsyncClient(transport=transport, event_hooks=meter.hooks()) as client:
+        with pytest.raises(RuntimeError, match="judge_call_ceiling"):
+            await client.post("https://example.test/v1/chat/completions", json={})
+
+
+@pytest.mark.asyncio
+async def test_judged_rows_are_saved_as_they_finish_and_skipped_on_rerun(tmp_path):
+    from src.commands.judge_study import judge_into
+
+    calls, failing = [], {"Q1"}
+
+    async def faithful(row):
+        calls.append(row["job"])
+        if row["job"] in failing:
+            raise RuntimeError("judge_call_ceiling")
+        return 0.8
+
+    metrics = {"faithfulness": faithful, "factual_correctness": faithful, "context_recall": faithful}
+    output = tmp_path / "judged.jsonl"
+    with pytest.raises(RuntimeError):
+        await judge_into(ROWS, metrics, output)
+    assert [json.loads(line)["job"] for line in output.read_text(encoding="utf-8").splitlines()] == ["L"]
+    calls.clear()
+    failing.clear()
+    await judge_into(ROWS, metrics, output)
+    # The paid-for L score is kept; only Q1 is judged again.
+    assert [json.loads(line)["job"] for line in output.read_text(encoding="utf-8").splitlines()] == ["L", "Q1"]
+    assert calls == ["Q1", "Q1", "Q1"]
+
+
+def test_judge_client_never_retries(tmp_path):
+    from src.commands.evaluate_study import SpendLedger
+    from src.commands.judge_study import JudgeMeter, judge_client
+
+    meter = JudgeMeter(judge_profile(), SpendLedger(tmp_path / "spend.json"), ceiling=1, state=tmp_path / "c.json")
+    assert judge_client("private-test", meter).max_retries == 0
+
+
+def test_calibration_rows_never_come_from_the_private_paper():
+    from src.commands.judge_study import check_calibration
+
+    rows = calibration_rows()
+    assert all(row["paper"] == "2005.11401v4" for row in rows)
+    check_calibration(rows)
+    with pytest.raises(ValueError, match="private_paper"):
+        check_calibration(rows + [{**rows[0], "paper": "2510.26807v1"}])
+    committed = json.loads(open("evaluation/paper_benchmark/calibration.v1.json", encoding="utf-8").read())["rows"]
+    check_calibration(committed)

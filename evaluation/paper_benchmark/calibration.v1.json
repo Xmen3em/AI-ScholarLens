@@ -3,96 +3,112 @@
   "rows": [
     {
       "id": "training-roles-supported",
+      "paper": "2005.11401v4",
       "claim_ar": "أثناء التدريب بيتعدّل query encoder والـBART generator، أما document encoder والفهرس فبيفضلوا ثابتين.",
       "quote_en": "keep the document encoder (and index) fixed … only fine-tuning the query encoder … the BART generator",
       "owner_faithful": null
     },
     {
       "id": "retrieval-supported",
+      "paper": "2005.11401v4",
       "claim_ar": "النموذج بيجيب top-K documents للسؤال الأول، وبعدها بيولّد الإجابة وهو شايفها.",
       "quote_en": "top-K documents",
       "owner_faithful": null
     },
     {
       "id": "token-sequence-supported",
+      "paper": "2005.11401v4",
       "claim_ar": "RAG-Sequence بيعتمد على نفس الوثيقة للتسلسل كله، وRAG-Token ممكن يعتمد على وثيقة مختلفة لكل token من نفس الوثائق اللي اتجابت.",
       "quote_en": "the complete sequence … each target token",
       "owner_faithful": null
     },
     {
       "id": "tqa-wiki-comparison-supported",
+      "paper": "2005.11401v4",
       "claim_ar": "في TQA-Wiki بمقياس EM، RAG-Sequence سجّل 68.0 وRAG-Token سجّل 66.1، يعني الـSequence أعلى في الإعداد ده تحديدًا.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "document-encoder-updated",
+      "paper": "2005.11401v4",
       "claim_ar": "أثناء التدريب بيتعدّل document encoder مع query encoder، فالفهرس بيتحسّن مع كل خطوة.",
       "quote_en": "keep the document encoder (and index) fixed … only fine-tuning the query encoder … the BART generator",
       "owner_faithful": null
     },
     {
       "id": "token-is-paragraph-analogy",
+      "paper": "2005.11401v4",
       "claim_ar": "تخيّل إن كل token فقرة كاملة، وإنك بتروح المكتبة تدوّر من جديد عند كل فقرة.",
       "quote_en": "top-K documents the complete sequence … each target token keep the document encoder (and index) fixed … only fine-tuning the query encoder … the BART generator Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "retrieval-per-token",
+      "paper": "2005.11401v4",
       "claim_ar": "RAG-Token بيعمل بحث جديد في الفهرس عند كل token عشان يجيب وثائق جديدة.",
       "quote_en": "the complete sequence … each target token",
       "owner_faithful": null
     },
     {
       "id": "token-best-tqa-wiki",
+      "paper": "2005.11401v4",
       "claim_ar": "في TQA-Wiki بمقياس EM، RAG-Token هو الأفضل بـ66.1 قدام 68.0 للـSequence.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "invented-token-score",
+      "paper": "2005.11401v4",
       "claim_ar": "RAG-Token سجّل 70.2 بمقياس EM في TQA-Wiki، وده أعلى رقم في الجدول.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "invented-score-after-arabic-prefix",
+      "paper": "2005.11401v4",
       "claim_ar": "في TQA-Wiki بمقياس EM، RAG-Token هو الأفضل بـ71 نقطة.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "wrong-trivia-split",
+      "paper": "2005.11401v4",
       "claim_ar": "RAG-Sequence سجّل 68.0 EM على split الاختبار العادي بتاع TriviaQA.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "wrong-metric-name",
+      "paper": "2005.11401v4",
       "claim_ar": "في TQA-Wiki، نموذج RAG-Sequence وصل لـ68.0 بمقياس F1، وده أعلى من الطريقة التانية.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "score-read-as-percent-gain",
+      "paper": "2005.11401v4",
       "claim_ar": "RAG-Sequence حسّن الأداء بنسبة 68.0% مقارنة بـRAG-Token في TQA-Wiki.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "paper-claim-without-evidence",
+      "paper": "2005.11401v4",
       "claim_ar": "الورقة بتدرّب كل أجزاء النموذج مع بعض من الأول للآخر من غير ما تثبّت أي جزء.",
       "quote_en": "top-K documents the complete sequence … each target token keep the document encoder (and index) fixed … only fine-tuning the query encoder … the BART generator Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "observed-tqa-cell-read-as-em-recall",
+      "paper": "2005.11401v4",
       "claim_ar": "في TriviaQA، RAG-Token وصل 55.2%/66.1% (EM/Recall) متفوقًا على النماذج السابقة.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
     },
     {
       "id": "observed-tqa-pair-as-one-result",
+      "paper": "2005.11401v4",
       "claim_ar": "في اختبار Open‑Domain QA على Natural Questions (NQ) وTriviaQA (TQA) وWebQuestions (WQ) وCuratedTrec (CT)، حقق RAG‑Sequence 44.5 EM على NQ و56.8/68.0 EM على TQA (العمود اليمين)، متفوقًا على نماذج “Closed‑Book” وREALM وDPR.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null

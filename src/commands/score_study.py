@@ -66,18 +66,23 @@ def model_metrics(rows: list[dict]) -> dict:
     }
 
 
+def _finite(value) -> float | None:
+    # RAGAS can return NaN (for example an answer with no statements); NaN must never pass a gate.
+    return float(value) if isinstance(value, (int, float)) and math.isfinite(value) else None
+
+
 def decide(metrics: dict[str, dict], *, baseline: str = "baseline", judged: dict | None,
            owner_unfaithful: dict | None, rubric: dict | None = None) -> dict:
     calibrated = bool(judged and judged.get("calibrated"))
 
     def unfaithful(model: str):
         if calibrated:
-            return judged["models"].get(model, {}).get("unfaithful")  # type: ignore[index]
-        return (owner_unfaithful or {}).get(model)
+            return _finite(judged["models"].get(model, {}).get("unfaithful"))  # type: ignore[index]
+        return _finite((owner_unfaithful or {}).get(model))
 
     def factual(model: str) -> float:
         # Factual correctness is judge-made too, so it counts only when the judge passed calibration.
-        return judged["models"].get(model, {}).get("factual") or 0.0 if calibrated else 0.0  # type: ignore[index]
+        return _finite(judged["models"].get(model, {}).get("factual")) or 0.0 if calibrated else 0.0  # type: ignore[index]
 
     reasons: dict[str, list[str]] = {}
     for model, values in metrics.items():
@@ -164,10 +169,12 @@ def judged_summary(path: Path, calibration: Path) -> dict:
     models: dict[str, dict] = {}
     for model in {row["model"] for row in rows}:
         mine = [row for row in rows if row["model"] == model]
-        faithful = [row["faithfulness"] for row in mine if row.get("faithfulness") is not None]
-        factual = [row["factual_correctness"] for row in mine if row.get("factual_correctness") is not None]
+        raw = [row.get(key) for row in mine for key in ("faithfulness", "factual_correctness") if key in row]
+        faithful = [value for value in (_finite(row.get("faithfulness")) for row in mine) if value is not None]
+        factual = [value for value in (_finite(row.get("factual_correctness")) for row in mine) if value is not None]
         models[model] = {"unfaithful": 1 - statistics.mean(faithful) if faithful else None,
-                         "factual": statistics.mean(factual) if factual else None}
+                         "factual": statistics.mean(factual) if factual else None,
+                         "dropped": len(raw) - len(faithful) - len(factual)}
     calibrated = calibration.exists() and json.loads(calibration.read_text(encoding="utf-8")).get("calibrated") is True
     return {"calibrated": calibrated, "models": models}
 

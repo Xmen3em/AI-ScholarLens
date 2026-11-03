@@ -10,7 +10,8 @@ import sys
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 
-from src.commands.build_benchmark import DATA, ROOT, write_json
+from src.commands.build_benchmark import DATA, PRIVATE_PAPER, ROOT, base_id, write_json
+from src.services.study.models import ModelProfile, call_cost_usd
 
 SCIENCE_CASES = Path("evaluation/paper_learning/science-cases.v1.json")
 CALIBRATION = ROOT / "calibration.v1.json"
@@ -45,16 +46,75 @@ def calibrated(result: dict) -> bool:
     return result["agreement"] >= GATE_AGREEMENT and result["kappa"] >= GATE_KAPPA
 
 
-class CallCounter:
-    """httpx request hook: the judge stops at its ceiling instead of spending past it."""
+WORST_JUDGE_INPUT = 21_000
+JUDGE_MAX_TOKENS = 3000
 
-    def __init__(self, ceiling: int):
-        self.ceiling, self.count = ceiling, 0
 
-    async def __call__(self, request) -> None:
-        self.count += 1
-        if self.count > self.ceiling:
+def worst_judge_usd(profile: ModelProfile) -> float:
+    return call_cost_usd(profile, None, estimate=WORST_JUDGE_INPUT, max_tokens=JUDGE_MAX_TOKENS)
+
+
+class JudgeMeter:
+    """httpx hooks: every judge call counts against the same $40 ledger as the runner, and against a
+    call ceiling that survives restarts. A call the ledger cannot afford at its worst case is never sent."""
+
+    def __init__(self, profile: ModelProfile, ledger, *, ceiling: int, state: Path):
+        self.profile, self.ledger, self.ceiling, self.state = profile, ledger, ceiling, state
+
+    def calls(self) -> int:
+        return json.loads(self.state.read_text(encoding="utf-8"))["calls"] if self.state.exists() else 0
+
+    async def on_request(self, request) -> None:
+        if self.calls() >= self.ceiling:
             raise RuntimeError("judge_call_ceiling")
+        if not self.ledger.allows(worst_judge_usd(self.profile)):
+            raise RuntimeError("judge_price_ceiling")
+        self.state.parent.mkdir(parents=True, exist_ok=True)
+        self.state.write_text(json.dumps({"calls": self.calls() + 1}), encoding="utf-8")
+
+    async def on_response(self, response) -> None:
+        await response.aread()
+        try:
+            usage = response.json().get("usage")
+            usage = usage if type(usage) is dict and {"prompt_tokens", "completion_tokens"} <= set(usage) else None
+        except ValueError:
+            usage = None
+        # No usage means the worst case is charged, never zero.
+        self.ledger.charge(call_cost_usd(self.profile, usage, estimate=WORST_JUDGE_INPUT, max_tokens=JUDGE_MAX_TOKENS))
+
+    def hooks(self) -> dict:
+        return {"request": [self.on_request], "response": [self.on_response]}
+
+
+def judge_client(token: str, meter: JudgeMeter):
+    import httpx
+    from openai import AsyncOpenAI
+
+    # No client retries: each retry would be a paid call the protocol does not allow.
+    return AsyncOpenAI(api_key=token, base_url="https://router.huggingface.co/v1", max_retries=0,
+                       http_client=httpx.AsyncClient(event_hooks=meter.hooks(), timeout=120))  # type: ignore[arg-type]
+
+
+async def judge_into(rows: list[dict], metrics: dict[str, Metric], output: Path) -> None:
+    """Append each judged row as it finishes; rows already judged are skipped, so a rerun never pays twice."""
+    done = set()
+    if output.exists():
+        done = {(row["model"], row["paper"], row["job"]) for row in map(json.loads, output.read_text(encoding="utf-8").splitlines()) if row}
+    for row in rows:
+        if (row["model"], row["paper"], row["job"]) in done:
+            continue
+        scored = (await score_rows([row], metrics))[0]
+        with output.open("a", encoding="utf-8", newline="") as handle:
+            handle.write(json.dumps(scored, ensure_ascii=False) + chr(10))
+
+
+def check_calibration(rows: list[dict]) -> None:
+    # Calibration is committed and published; the unpublished paper's text must never enter it.
+    for row in rows:
+        if base_id(row.get("paper", "")) == PRIVATE_PAPER:
+            raise ValueError("private_paper")
+        if not row.get("paper"):
+            raise ValueError("paper_required")
 
 
 def calibration_rows() -> list[dict]:
@@ -77,19 +137,16 @@ def calibration_rows() -> list[dict]:
         claim = claims[0]["text"] if claims else case["section"]["text"]
         # A claim without a citation (or an analogy) is judged against all reviewed excerpts.
         quote = quotes.get(claims[0]["evidence_id"], everything) if claims else everything
-        rows.append({"id": case["id"], "claim_ar": claim, "quote_en": quote, "owner_faithful": None})
+        rows.append({"id": case["id"], "paper": cases["source"]["paper_id"], "claim_ar": claim, "quote_en": quote,
+                     "owner_faithful": None})
     return rows
 
 
-def build_metrics(profile, token: str, counter: CallCounter) -> dict[str, Metric]:  # pragma: no cover - needs .venv-eval
-    import httpx
-    from openai import AsyncOpenAI
+def build_metrics(profile, token: str, meter: JudgeMeter) -> dict[str, Metric]:  # pragma: no cover - needs .venv-eval
     from ragas.llms import llm_factory
     from ragas.metrics.collections import ContextRecall, FactualCorrectness, Faithfulness
 
-    client = AsyncOpenAI(api_key=token, base_url="https://router.huggingface.co/v1",
-                         http_client=httpx.AsyncClient(event_hooks={"request": [counter]}, timeout=120))  # type: ignore[arg-type]
-    llm = llm_factory(profile.route, client=client, temperature=0, max_tokens=3000)
+    llm = llm_factory(profile.route, client=judge_client(token, meter), temperature=0, max_tokens=JUDGE_MAX_TOKENS)
     faithfulness, factual, recall = Faithfulness(llm=llm), FactualCorrectness(llm=llm, mode="recall"), ContextRecall(llm=llm)
 
     async def faithful(row: dict) -> float:
@@ -122,15 +179,18 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring
     if not args.execute:
         print(f"{args.command}: up to {CEILINGS[args.command]} judge calls. Re-run with --execute.")
         return 0
+    from src.commands.evaluate_study import SpendLedger
     from src.commands.study_research import ResearchSettings
     from src.services.study.models import load_profiles
 
     profiles = load_profiles(ROOT / "models.v1.json")
     judge = profiles[json.loads((ROOT / "models.v1.json").read_text(encoding="utf-8"))["judge"]]
-    counter = CallCounter(CEILINGS[args.command])
-    metrics = build_metrics(judge, ResearchSettings().hf_token.get_secret_value(), counter)
+    meter = JudgeMeter(judge, SpendLedger(DATA / "spend.json"), ceiling=CEILINGS[args.command],
+                       state=DATA / f"judge-calls-{args.command}.json")
+    metrics = build_metrics(judge, ResearchSettings().hf_token.get_secret_value(), meter)
     if args.command == "calibrate":
         rows = json.loads(CALIBRATION.read_text(encoding="utf-8"))["rows"]
+        check_calibration(rows)
         if len(rows) != 40 or any(row["owner_faithful"] is None for row in rows):
             raise SystemExit("calibration needs 40 rows, all labelled by the owner")
         verdicts = asyncio.run(score_rows([{"question": "", "answer": row["claim_ar"], "contexts": [row["quote_en"]],
@@ -141,11 +201,8 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring
         print(json.dumps(result))
         return 0
     rows = [json.loads(line) for line in (DATA / "ragas-input.jsonl").read_text(encoding="utf-8").splitlines() if line]
-    scored = asyncio.run(score_rows(rows, metrics))
-    with (DATA / "judged.jsonl").open("w", encoding="utf-8", newline="") as handle:
-        for row in scored:
-            handle.write(json.dumps(row, ensure_ascii=False) + chr(10))
-    print("judged", len(scored), "answers in", counter.count, "calls")
+    asyncio.run(judge_into(rows, metrics, DATA / "judged.jsonl"))
+    print("judged", len(rows), "answers;", meter.calls(), "judge calls so far; spent $%.2f" % meter.ledger.spent())
     return 0
 
 

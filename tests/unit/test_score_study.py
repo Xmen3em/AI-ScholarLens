@@ -116,3 +116,27 @@ def test_rubric_sheet_hides_models_and_keys_every_code():
     for model in rows_by_model:
         assert model not in sheet
     assert {entry["model"] for entry in key.values()} == set(rows_by_model)
+
+
+def test_non_finite_judge_scores_are_dropped_not_averaged(tmp_path):
+    import json
+    import math
+
+    from src.commands.score_study import judged_summary
+
+    judged = tmp_path / "judged.jsonl"
+    rows = [{"model": "qwen", "faithfulness": math.nan}, {"model": "qwen", "faithfulness": 0.8, "factual_correctness": math.nan},
+            {"model": "qwen", "faithfulness": 0.6, "factual_correctness": 0.5}]
+    judged.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
+    summary = judged_summary(judged, tmp_path / "missing.json")["models"]["qwen"]
+    assert summary["unfaithful"] == pytest.approx(0.3) and summary["factual"] == pytest.approx(0.5)
+    assert summary["dropped"] == 2
+
+
+def test_a_nan_rate_cannot_pass_the_faithfulness_gate():
+    import math
+
+    judged = {"calibrated": True, "models": {"baseline": {"unfaithful": 0.10, "factual": 0.5},
+                                            "qwen": {"unfaithful": math.nan, "factual": math.nan}}}
+    result = decide({"baseline": base(), "qwen": base(delivered=0.9)}, judged=judged, owner_unfaithful=None)
+    assert result["choice"] == "baseline" and "unfaithful_not_measured" in result["reasons"]["qwen"]

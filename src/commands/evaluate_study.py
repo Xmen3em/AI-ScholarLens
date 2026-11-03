@@ -245,8 +245,12 @@ def main(argv: list[str] | None = None) -> int:
                                                           "manifest_sha256": digest}), encoding="utf-8")
         print("development closed")
         return 0
-    if args.stage == "holdout" and not (DATA / "dev-closed.json").exists():
-        raise SystemExit("refused: development is not closed (--close-dev)")
+    if args.stage == "holdout":
+        if not (DATA / "dev-closed.json").exists():
+            raise SystemExit("refused: development is not closed (--close-dev)")
+        # Holdout must run on exactly the files development closed with.
+        if json.loads((DATA / "dev-closed.json").read_text(encoding="utf-8"))["manifest_sha256"] != digest:
+            raise SystemExit("refused: the frozen manifest changed after development closed")
     if args.stage == "qualify" and args.model == "baseline":
         raise SystemExit("refused: the baseline needs no qualification")
     if args.stage != "qualify" and args.model != "baseline":

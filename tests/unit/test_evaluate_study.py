@@ -238,3 +238,11 @@ async def test_runs_resolve_papers_from_the_frozen_content_cache(tmp_path):
     assert papers == [document.paper]
     with pytest.raises(StudyInputError):
         await ManifestIntake(tmp_path).resolve("2005.11401v4")
+
+
+def test_holdout_refuses_a_manifest_that_changed_after_development_closed(tmp_path, monkeypatch):
+    monkeypatch.setattr(evaluate_study, "DATA", tmp_path)
+    monkeypatch.setattr(evaluate_study, "verify_frozen", lambda *args: "new-hash")
+    (tmp_path / "dev-closed.json").write_text(json.dumps({"manifest_sha256": "old-hash"}), encoding="utf-8")
+    with pytest.raises(SystemExit, match="manifest changed"):
+        evaluate_study.main(["--stage", "holdout", "--model", "baseline", "--execute"])
