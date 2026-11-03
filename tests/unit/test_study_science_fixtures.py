@@ -5,7 +5,15 @@ from pathlib import Path
 
 import pytest
 from src.services.study.content import EvidenceBlock
-from src.services.study.tutor import GroundingReview, TutorError, review_lesson, validate_lesson
+from src.services.study.tutor import (
+    GroundingReview,
+    TutorError,
+    accept_draft,
+    review_lesson,
+    screen_claims,
+    validate_draft,
+    validate_lesson,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = json.loads((ROOT / "evaluation/paper_learning/science-cases.v1.json").read_text(encoding="utf-8"))
@@ -79,12 +87,12 @@ def test_case_records_are_unique_and_inspectable():
         assert case["class"] in CRITICAL_CLASSES
         expected = case["expected"]
         if case["polarity"] == "supported":
-            assert expected == {"deterministic": "accepted", "review": "accept"}
-        elif expected["deterministic"] == "accepted":
+            assert expected == {"deterministic": "kept", "review": "accept"}
+        elif expected["deterministic"] == "kept":
             # A critical error the offline gate admits must name what the review has to catch.
             assert expected["review"] == "reject" and set(expected["issues"]) <= REVIEW_ISSUES and expected["issues"]
         else:
-            assert expected["deterministic"].startswith("rejected:") and "review" not in expected
+            assert expected["deterministic"].startswith("withheld:") and "review" not in expected
 
 
 def test_every_reviewed_rejected_claim_has_a_critical_case():
@@ -114,13 +122,18 @@ def test_development_cases_do_not_claim_a_holdout():
 @pytest.mark.parametrize("case", CASES["cases"], ids=lambda case: case["id"])
 def test_offline_validation_matches_the_frozen_outcome(case):
     expected = case["expected"]["deterministic"]
-    if expected == "accepted":
-        lesson = validate_lesson(draft(case), locator_blocks())
-        assert lesson.sections[0].text == case["section"]["text"]
+    checked = validate_draft(draft(case), locator_blocks())
+    claims = checked.sections[0].claims
+    if expected == "kept":
+        lesson, withheld = accept_draft(checked)
+        written = case["section"]["claims"][0]["text"] if claims else case["section"]["text"]
+        assert lesson.sections[0].text == written and withheld == {}
     else:
+        reason = expected.removeprefix("withheld:")
+        assert [claim.withheld for claim in claims] == [reason]
         with pytest.raises(TutorError, match="lesson_validation_failed") as captured:
-            validate_lesson(draft(case), locator_blocks())
-        assert captured.value.diagnostic == expected.removeprefix("rejected:")
+            accept_draft(checked)
+        assert captured.value.diagnostic == reason
 
 
 SEMANTIC_ONLY = [case for case in CASES["cases"] if case["expected"].get("review") == "reject"]
@@ -154,21 +167,19 @@ async def test_errors_the_offline_gate_admits_reach_review_with_their_full_sourc
         assert block["text"] == next(b.text for b in blocks if b.id == block["id"])
 
 
-ADMITTED = [case for case in CASES["cases"] if case["expected"]["deterministic"] == "accepted"]
+ADMITTED = [case for case in CASES["cases"] if case["expected"]["deterministic"] == "kept"]
 
 
 @pytest.mark.parametrize("case", ADMITTED, ids=lambda case: case["id"])
 def test_first_lesson_screen_matches_the_frozen_outcome(case):
-    from src.services.study.tutor import screen_sections
+    def screened(question):
+        result = screen_claims(validate_draft(draft(case), locator_blocks()), question=question)
+        return [claim.withheld for claim in result.sections[0].claims]
 
-    lesson = validate_lesson(draft(case), locator_blocks())
     expected = case["expected"].get("screen")
-    if expected:
-        # A single paper section that is withheld leaves nothing to teach from.
-        with pytest.raises(TutorError) as captured:
-            screen_sections(lesson, question="ابدأ درس تمهيدي متكامل عن الورقة.")
-        assert captured.value.diagnostic == expected
-        # The same claim is allowed through to the review when the learner asked who is better.
-        assert screen_sections(lesson, question="مين الأحسن في TQA-Wiki؟")[1] == []
+    if case["section"]["kind"] != "paper":
+        assert screened("ابدأ درس تمهيدي متكامل عن الورقة.") == [] and not expected
     else:
-        assert screen_sections(lesson, question="ابدأ درس تمهيدي متكامل عن الورقة.")[1] == []
+        assert screened("ابدأ درس تمهيدي متكامل عن الورقة.") == [expected]
+        # The same claim is allowed through to the check when the learner asked who is better.
+        assert screened("مين الأحسن في TQA-Wiki؟") == [None]

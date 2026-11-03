@@ -494,8 +494,9 @@ async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, m
     snippet = document["blocks"][0]["id"] + "s0"
 
     async def deep(job_id):
-        return {"output": {"title": "شرح أعمق", "sections": [{"heading": "الطريقة", "kind": "paper",
-                "text": "النموذج بيستخدم الانتباه في كل طبقة عشان يفهم العلاقات.", "evidence_ids": [snippet]}]}}
+        return {"output": {"title": "شرح أعمق", "sections": [{"heading": "الطريقة", "kind": "paper", "text": "",
+                "evidence_ids": [], "claims": [{"text": "النموذج بيستخدم الانتباه في كل طبقة عشان يفهم العلاقات.",
+                                                "evidence_id": snippet}]}]}}
 
     monkeypatch.setattr(service, "_deep", deep)
     model.reject = True
@@ -504,7 +505,8 @@ async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, m
     assert job["status"] == "failed"
     assert (job["result"]["failure_code"], job["result"]["diagnostic"], job["result"]["stage"]) == (
         "lesson_validation_failed", "semantic_support", "review")
-    assert job["result"]["review"] == {"reviewed": 1, "rejected": 1, "rejected_sections": [0], "issues": ["missing_support"]}
+    assert job["result"]["review"] == {"claims": 1, "kept": 1, "withheld": {}, "reviewed": 1, "rejected": 1,
+                                       "rejected_sections": [0], "issues": ["missing_support"]}
     assert "stage=review" in job["result"]["text"]
     await service.aclose()
 
@@ -554,27 +556,68 @@ def paper_for_selection():
     return paper()
 
 
+CLEAN = "النموذج بيستخدم آلية الانتباه عشان يربط الكلمات ببعض."
+PROUD = "النموذج متفوق على كل الطرق التانية في الانتباه."
+
+
+def three_claims(degenerate):
+    return {"output": {"title": "شرح تمهيدي", "sections": [
+        {"heading": "الطريقة", "kind": "paper", "text": "", "evidence_ids": [], "claims": [
+            {"text": CLEAN, "evidence_id": "p1b1s0"},
+            {"text": degenerate, "evidence_id": "p1b1s0"},
+            {"text": PROUD, "evidence_id": "p1b1s0"}]}]}}
+
+
+class ThreeClaims(Model):
+    async def complete(self, job, purpose, messages, **kwargs):
+        if purpose == "grounding_review":
+            return {"output": {"unsupported_sections": [], "issues": []}}
+        return three_claims("النموذج بيستخدم المسترج" + "َـ" * 180)
+
+
 @pytest.mark.anyio
 async def test_degenerate_and_unrequested_superiority_sections_are_withheld_not_shown(tmp_path):
-    repeated = "َـ" * 700
-
-    class Screened(Model):
-        async def complete(self, job, purpose, messages, **kwargs):
-            if purpose == "grounding_review":
-                return {"output": {"unsupported_sections": [], "issues": []}}
-            return {"output": {"title": "شرح تمهيدي", "sections": [
-                {"heading": "الطريقة", "kind": "paper", "text": "النموذج بيستخدم آلية الانتباه عشان يربط الكلمات ببعض.",
-                 "evidence_ids": ["p1b1s0"]},
-                {"heading": "تكرار", "kind": "paper", "text": "النموذج بيستخدم المسترج" + repeated, "evidence_ids": ["p1b1s0"]},
-                {"heading": "النتيجة", "kind": "paper", "text": "النموذج متفوق على كل الطرق التانية في الانتباه.",
-                 "evidence_ids": ["p1b1s0"]}]}}
-
-    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), Screened())
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), ThreeClaims())
     admitted = service.submit("paper", "/paper 1706.03762")
     job = await finished(service, admitted["job_id"])
     assert job["status"] == "ready"
-    assert job["result"]["review"]["screened"] == ["degenerate_text", "unrequested_comparison"]
+    assert job["result"]["review"]["withheld"] == {"degenerate_text": 1, "unrequested_comparison": 1}
+    assert (job["result"]["review"]["claims"], job["result"]["review"]["kept"]) == (3, 1)
     text = job["result"]["text"]
-    assert "ـ" * 6 not in text and "متفوق" not in text
-    assert "⚠️ شلت 2 جزء" in text and "آلية الانتباه" in text
+    assert CLEAN in text and "ـ" * 6 not in text and "متفوق" not in text
+    assert "⚠️ شلت 2 جمل ماقدرتش أتأكد منها من نص الورقة (في «الطريقة»)." in text
     await service.aclose()
+
+
+@pytest.mark.anyio
+async def test_withheld_claim_text_never_reaches_reply_notes_or_storage(tmp_path):
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), ThreeClaims())
+    admitted = service.submit("paper", "/paper 1706.03762")
+    job = await finished(service, admitted["job_id"])
+    saved = service.store.paper("1706.03762v1")
+    notes = StudyService.notes(PaperContent.model_validate(saved["content"]), Lesson.model_validate(saved["lesson"]))
+    for place in (job["result"]["text"], notes, json.dumps(saved["lesson"], ensure_ascii=False)):
+        assert PROUD not in place and "المسترج" not in place
+    assert CLEAN in notes
+    await service.aclose()
+
+
+def test_one_withheld_claim_reads_as_a_single_sentence():
+    from src.services.study.tutor import render_lesson
+
+    text = render_lesson(example_lesson(), [EvidenceBlock(id="p1b0", page=1, section="Method",
+                         text="The model retrieves documents. It then generates an answer.")],
+                         "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text", withheld={"الفكرة": 1})
+    assert "⚠️ شلت جملة واحدة ماقدرتش أتأكد منها من نص الورقة (في «الفكرة»)." in text
+
+
+def test_lessons_stored_before_v7_still_render():
+    from src.services.study.tutor import WITHHELD, render_lesson
+
+    stored = Lesson.model_validate({"title": "شرح", "sections": [
+        {"heading": "الفكرة", "kind": "paper", "text": "الطريقة بتسترجع مصادر.",
+         "evidence": [{"block_id": "p1b0", "quote": "The model retrieves documents."}]},
+        {"heading": "الطريقة", "kind": "uncertainty", "text": WITHHELD, "evidence": []}]})
+    blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text="The model retrieves documents.")]
+    text = render_lesson(stored, blocks, "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text")
+    assert "⚠️ شلت 1 جزء ماقدرتش أتأكد منه من نص الورقة: «الطريقة»." in text

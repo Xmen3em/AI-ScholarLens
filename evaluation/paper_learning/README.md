@@ -22,6 +22,10 @@ that fixture, except one short verified excerpt of the table itself:
 
 ## Cases and what currently stops them
 
+Since the [claim check](../../docs/specs/claim-check.md) design (3 November
+2026), each paper case is one claim citing one quote, and outcomes read `kept`
+or `withheld:<reason>`. Counts below are claims.
+
 Four supported sections must pass. Twelve critical errors cover four of the
 spec's five critical classes and every reviewed rejected claim. Two offline
 layers run before the model review: validation (numbers, citations) and, since

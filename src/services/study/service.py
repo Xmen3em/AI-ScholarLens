@@ -20,12 +20,14 @@ from src.services.study.tutor import (
     SYSTEM,
     Lesson,
     TutorError,
+    accept_draft,
+    draft_report,
     lesson_schema,
     page_label,
     render_lesson,
     review_lesson,
-    screen_sections,
-    validate_lesson,
+    screen_claims,
+    validate_draft,
 )
 from src.services.study.visuals import study_map
 
@@ -318,10 +320,9 @@ class StudyService:
         review: dict = {}
         stage = "result_validation"
         try:
-            lesson = validate_lesson(result["output"], selected)
-            lesson, screened = screen_sections(lesson, question=question)
-            if screened:
-                review["screened"] = screened
+            draft = screen_claims(validate_draft(result["output"], selected), question=question)
+            review.update(draft_report(draft))
+            lesson, withheld = accept_draft(draft)
             stage = "review"
             lesson = await review_lesson(self.model, state["job_id"], lesson, blocks=document.blocks, report=review)
         except Exception as exc:
@@ -333,7 +334,7 @@ class StudyService:
             raise
         text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title,
                              coverage=document.coverage, sampled=not state.get("followup") and len(selected) != len(document.blocks),
-                             followup=bool(state.get("followup")))
+                             followup=bool(state.get("followup")), withheld=withheld)
         self.store.save_paper(document.paper.arxiv_id, document.model_dump(), None if state.get("followup") else lesson.model_dump())
         if not state.get("followup"):
             self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})

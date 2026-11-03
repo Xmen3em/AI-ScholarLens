@@ -5,6 +5,7 @@ import json
 import math
 import re
 import unicodedata
+from dataclasses import dataclass
 from typing import Literal
 
 import httpx
@@ -19,7 +20,7 @@ from src.services.study.store import StudyStore
 
 MODEL = "openai/gpt-oss-120b:cerebras"
 URL = "https://router.huggingface.co/v1/chat/completions"
-PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v6"
+PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v7"
 SYSTEM = """You are ScholarLens, a careful AI-paper teacher. Explain in natural, respectful Egyptian Arabic
 for an Egyptian learner, keeping standard English technical terms. Prefer 'يعني', 'خلّينا', 'إزاي' naturally;
 avoid forced slang and do not translate proper names. Adapt to the explicitly selected learning depth.
@@ -29,8 +30,9 @@ Only the original source_evidence snippets are evidence. Previous assistant repl
 For the first lesson teach: research problem, prerequisite, contribution, method, a reported experiment (only if
 its metric/dataset/setting are visible together), limitations, a clearly labeled analogy, and one comprehension question.
 For follow-up answer the actual question; ask a clarification for an ambiguous reference; acknowledge missing evidence.
-Use kind=paper for every paper-specific claim. Every such section MUST have 1-3 evidence_ids chosen EXACTLY
-from the supplied catalog (IDs such as p1b0s0). Select snippets that substantiate the whole section.
+Use kind=paper for every paper-specific claim. A paper section leaves text empty and evidence_ids empty and gives
+1-5 claims: each claim is ONE Egyptian Arabic sentence with exactly one evidence_id chosen EXACTLY from the supplied
+catalog (IDs such as p1b0s0) whose snippet states that sentence. Other kinds use text and leave claims empty.
 Do not generate or abbreviate quotations; the server attaches their original text. Never invent an ID.
 Preserve numbers and experimental context. Never invent results or infer a missing table. Use background for general
 knowledge (explicitly distinguish it), analogy for an illustration, question for a comprehension check, uncertainty
@@ -50,6 +52,9 @@ Do not imply a new retrieval happens per token when the source marginalizes over
 """
 
 
+SectionKind = Literal["paper", "background", "analogy", "question", "uncertainty"]
+
+
 class TutorError(RuntimeError):
     def __init__(self, code: str, *, diagnostic: str | None = None):
         self.diagnostic = diagnostic
@@ -67,9 +72,10 @@ class Support(StrictModel):
 
 class TutorSection(StrictModel):
     heading: str = Field(min_length=1, max_length=90)
-    kind: Literal["paper", "background", "analogy", "question", "uncertainty"]
-    text: str = Field(min_length=1, max_length=1500)
-    evidence: list[Support] = Field(max_length=3)
+    kind: SectionKind
+    # Up to five joined claims (5 x 400 characters), each with its own quote.
+    text: str = Field(min_length=1, max_length=2100)
+    evidence: list[Support] = Field(max_length=5)
 
 
 class Lesson(StrictModel):
@@ -77,11 +83,18 @@ class Lesson(StrictModel):
     sections: list[TutorSection] = Field(min_length=1, max_length=8)
 
 
+class DraftClaim(StrictModel):
+    text: str = Field(min_length=1, max_length=400)
+    evidence_id: str = Field(max_length=40)
+
+
 class DraftSection(StrictModel):
+    # Strict provider schemas need one shape: paper sections use claims, others use text.
     heading: str = Field(min_length=1, max_length=90)
-    kind: Literal["paper", "background", "analogy", "question", "uncertainty"]
-    text: str = Field(min_length=1, max_length=1500)
+    kind: SectionKind
+    text: str = Field(max_length=1500)
     evidence_ids: list[str] = Field(max_length=3)
+    claims: list[DraftClaim] = Field(max_length=5)
 
 
 class LessonDraft(StrictModel):
@@ -158,32 +171,14 @@ COMPARISON_REQUEST = re.compile(r"أحسن|أفضل|أعلى|الأعلى|قار
                                 re.IGNORECASE)
 
 
-def screen_sections(lesson: Lesson, *, question: str = "") -> tuple[Lesson, list[str]]:
-    """Withhold degenerate sections, and superiority claims the learner did not ask for."""
-    allow_comparison = bool(COMPARISON_REQUEST.search(question))
-    reasons, sections = [], []
-    for section in lesson.sections:
-        reason = None
-        if DEGENERATE.search(section.text) or DEGENERATE.search(section.heading):
-            reason = "degenerate_text"
-        elif section.kind == "paper" and not allow_comparison and SUPERIORITY.search(section.text):
-            reason = "unrequested_comparison"
-        if reason:
-            reasons.append(reason)
-            heading = section.heading if not DEGENERATE.search(section.heading) else "جزء محذوف"
-            sections.append(TutorSection(heading=heading, kind="uncertainty", evidence=[], text=WITHHELD))
-        else:
-            sections.append(section)
-    if any(s.kind == "paper" for s in lesson.sections) and not any(s.kind == "paper" for s in sections):
-        raise TutorError("lesson_validation_failed", diagnostic=reasons[0])
-    return Lesson(title=lesson.title, sections=sections), reasons
-
-
 def lesson_schema(blocks: list[EvidenceBlock], *, followup: bool = False) -> dict:
     schema = LessonDraft.model_json_schema()
     if followup:
         schema["properties"]["sections"]["maxItems"] = 3
-    schema["$defs"]["DraftSection"]["properties"]["evidence_ids"]["items"]["enum"] = [e["id"] for e in evidence_catalog(blocks)]
+    identities = [e["id"] for e in evidence_catalog(blocks)]
+    schema["$defs"]["DraftSection"]["properties"]["evidence_ids"]["items"]["enum"] = identities
+    # "" keeps a claim without a valid source representable, so it is withheld rather than invented.
+    schema["$defs"]["DraftClaim"]["properties"]["evidence_id"]["enum"] = identities + [""]
     return schema
 
 
@@ -196,34 +191,132 @@ def _numbers(text: str) -> set[str]:
     return set(re.findall(r"(?<![A-Za-z0-9_.])\d+(?:[.,]\d+)*(?:e[+-]?\d+)?", normalized))
 
 
-def validate_lesson(raw: dict, blocks: list[EvidenceBlock]) -> Lesson:
+@dataclass
+class Claim:
+    text: str
+    support: Support | None
+    withheld: str | None = None
+
+
+@dataclass
+class ClaimSection:
+    heading: str
+    kind: SectionKind
+    text: str
+    evidence: list[Support]
+    claims: list[Claim]
+    dropped: str | None = None  # a whole non-paper section withheld by a screen
+
+
+@dataclass
+class ClaimDraft:
+    """A validated draft between writing and acceptance; claims never reach storage."""
+    title: str
+    sections: list[ClaimSection]
+
+
+def _shape() -> TutorError:
+    return TutorError("lesson_validation_failed", diagnostic="shape")
+
+
+def validate_draft(raw: dict, blocks: list[EvidenceBlock]) -> ClaimDraft:
     try:
         draft = LessonDraft.model_validate(raw)
-        catalog = {e["id"]: e for e in evidence_catalog(blocks)}
-        sections = []
-        for draft_section in draft.sections:
-            if len(set(draft_section.evidence_ids)) != len(draft_section.evidence_ids) or any(i not in catalog for i in draft_section.evidence_ids):
-                raise ValueError("unsupported_quote")
-            sections.append(TutorSection(heading=draft_section.heading, kind=draft_section.kind, text=draft_section.text,
-                evidence=[Support(block_id=catalog[i]["block_id"], quote=catalog[i]["quote"]) for i in draft_section.evidence_ids]))
-        lesson = Lesson(title=draft.title, sections=sections)
-        lookup = {block.id: block for block in blocks}
-        for section in lesson.sections:
-            if section.kind == "paper" and not section.evidence:
-                raise ValueError("missing_evidence")
-            for support in section.evidence:
-                if support.block_id not in lookup or support.quote not in lookup[support.block_id].text:
-                    raise ValueError("unsupported_quote")
-            if section.kind == "paper" and not _numbers(section.text) <= _numbers(" ".join(s.quote for s in section.evidence)):
-                raise ValueError("unsupported_number")
-        if len(re.findall(r"[\u0621-\u064a]", " ".join(s.text for s in lesson.sections))) < 15:
-            raise ValueError("arabic_output_required")
-        return lesson
     except ValidationError:
-        raise TutorError("lesson_validation_failed", diagnostic="shape") from None
-    except (ValueError, TypeError) as exc:
-        reason = str(exc) if str(exc) in {"missing_evidence", "unsupported_quote", "unsupported_number", "arabic_output_required"} else "invalid"
-        raise TutorError("lesson_validation_failed", diagnostic=reason) from None
+        raise _shape() from None
+    catalog = {e["id"]: e for e in evidence_catalog(blocks)}
+    lookup = {block.id: block for block in blocks}
+    sections = []
+    for item in draft.sections:
+        if item.kind == "paper":
+            if item.text or item.evidence_ids or not item.claims:
+                raise _shape()
+            claims = []
+            for draft_claim in item.claims:
+                entry = catalog.get(draft_claim.evidence_id)
+                if entry is None or entry["block_id"] not in lookup or entry["quote"] not in lookup[entry["block_id"]].text:
+                    claims.append(Claim(draft_claim.text, None, "unsupported_quote"))
+                    continue
+                support = Support(block_id=entry["block_id"], quote=entry["quote"])
+                # Numbers must appear in this claim's own quote, not anywhere in the section.
+                reason = None if _numbers(draft_claim.text) <= _numbers(support.quote) else "unsupported_number"
+                claims.append(Claim(draft_claim.text, support, reason))
+            sections.append(ClaimSection(item.heading, item.kind, "", [], claims))
+        else:
+            if item.claims or not item.text.strip():
+                raise _shape()
+            if len(set(item.evidence_ids)) != len(item.evidence_ids) or any(i not in catalog for i in item.evidence_ids):
+                raise TutorError("lesson_validation_failed", diagnostic="unsupported_quote")
+            evidence = [Support(block_id=catalog[i]["block_id"], quote=catalog[i]["quote"]) for i in item.evidence_ids]
+            sections.append(ClaimSection(item.heading, item.kind, item.text, evidence, []))
+    return ClaimDraft(draft.title, sections)
+
+
+def screen_claims(draft: ClaimDraft, *, question: str = "") -> ClaimDraft:
+    """Withhold degenerate claims, and superiority claims the learner did not ask for."""
+    allow_comparison = bool(COMPARISON_REQUEST.search(question))
+    for item in draft.sections:
+        if DEGENERATE.search(item.heading):
+            item.heading = "جزء محذوف"
+        if item.kind != "paper":
+            if DEGENERATE.search(item.text):
+                item.text, item.dropped = "", "degenerate_text"
+            continue
+        for claim in item.claims:
+            if claim.withheld:
+                continue
+            if DEGENERATE.search(claim.text):
+                claim.withheld = "degenerate_text"
+            elif not allow_comparison and SUPERIORITY.search(claim.text):
+                claim.withheld = "unrequested_comparison"
+    return draft
+
+
+def draft_report(draft: ClaimDraft) -> dict:
+    """Label counts only, for the job record and the failure ledger; never claim text."""
+    claims = [claim for item in draft.sections for claim in item.claims]
+    reasons = [claim.withheld for claim in claims if claim.withheld] + [item.dropped for item in draft.sections if item.dropped]
+    return {"claims": len(claims), "kept": sum(claim.withheld is None for claim in claims),
+            "withheld": {reason: reasons.count(reason) for reason in dict.fromkeys(reasons)}}
+
+
+def accept_draft(draft: ClaimDraft) -> tuple[Lesson, dict[str, int]]:
+    """Join kept claims into today's Lesson shape; return withheld counts per heading."""
+    sections: list[TutorSection] = []
+    withheld: dict[str, int] = {}
+    reasons: list[str] = []
+    had_paper = False
+    try:
+        for item in draft.sections:
+            if item.dropped:
+                reasons.append(item.dropped)
+                withheld[item.heading] = withheld.get(item.heading, 0) + 1
+            if item.kind != "paper":
+                if item.text:
+                    sections.append(TutorSection(heading=item.heading, kind=item.kind, text=item.text, evidence=item.evidence))
+                continue
+            had_paper = True
+            kept = [claim for claim in item.claims if claim.withheld is None and claim.support is not None]
+            dropped = [claim.withheld or "unsupported_quote" for claim in item.claims if claim not in kept]
+            reasons += dropped
+            if dropped:
+                withheld[item.heading] = withheld.get(item.heading, 0) + len(dropped)
+            if kept:
+                evidence = list({(c.support.block_id, c.support.quote): c.support for c in kept if c.support}.values())
+                sections.append(TutorSection(heading=item.heading, kind="paper", text=" ".join(c.text for c in kept),
+                                             evidence=evidence))
+        if (had_paper and not any(s.kind == "paper" for s in sections)) or not sections:
+            raise TutorError("lesson_validation_failed", diagnostic=reasons[0] if reasons else "missing_evidence")
+        lesson = Lesson(title=draft.title, sections=sections)
+    except ValidationError:
+        raise _shape() from None
+    if len(re.findall(r"[\u0621-\u064a]", " ".join(s.text for s in lesson.sections))) < 15:
+        raise TutorError("lesson_validation_failed", diagnostic="arabic_output_required")
+    return lesson, withheld
+
+
+def validate_lesson(raw: dict, blocks: list[EvidenceBlock]) -> Lesson:
+    return accept_draft(validate_draft(raw, blocks))[0]
 
 
 WITHHELD = "الدليل المختار مش كفاية لشرح الجزء ده بدقة. راجع القسم أو الجدول في الورقة الأصلية، أو اسألني عن نقطة محددة فيه."
@@ -249,7 +342,7 @@ def page_label(block: EvidenceBlock | None) -> str:
 
 
 def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, *, title: str, coverage: str,
-                  sampled: bool = False, followup: bool = False) -> str:
+                  sampled: bool = False, followup: bool = False, withheld: dict[str, int] | None = None) -> str:
     lookup = {b.id: b for b in blocks}
     labels = {"paper": "📄 من الورقة", "background": "📚 خلفية عامة", "analogy": "💡 تشبيه للتوضيح",
               "question": "❓ جرّب تفهم", "uncertainty": "⚠️ حدود المتاح"}
@@ -258,17 +351,23 @@ def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, 
         sections.append("⚠️ الاستخراج جزئي؛ الشرح مبني على الأجزاء المقروءة بس، ومش مراجعة كاملة لكل المعادلات والجداول.")
     if sampled or coverage == "sampled_text":
         sections.append("ℹ️ الشرح مبني على مقاطع مختارة من الورقة؛ مش مراجعة كاملة لكل التفاصيل والمعادلات والجداول.")
-    withheld = []
+    legacy = []
     for section in lesson.sections:
         if section.kind == "uncertainty" and section.text == WITHHELD:
             # A section the review rejected: one closing note instead of a boilerplate block per section.
-            withheld.append(section.heading)
+            legacy.append(section.heading)
             continue
         pages = "، ".join(dict.fromkeys(page_label(lookup.get(s.block_id)) for s in section.evidence))
         sections.append(f"{section.heading} — {labels[section.kind]}\n{section.text}" + (f"\n↩︎ المصدر: {pages}" if pages else ""))
+    if legacy:
+        names = "، ".join(f"«{heading}»" for heading in legacy)
+        sections.append(f"⚠️ شلت {len(legacy)} جزء ماقدرتش أتأكد منه من نص الورقة: {names}. اسألني عنه بسؤال أضيق.")
     if withheld:
+        # Withheld claims are never shown; only how many, and where.
+        count = sum(withheld.values())
+        amount = "جملة واحدة" if count == 1 else f"{count} جمل"
         names = "، ".join(f"«{heading}»" for heading in withheld)
-        sections.append(f"⚠️ شلت {len(withheld)} جزء ماقدرتش أتأكد منه من نص الورقة: {names}. اسألني عنه بسؤال أضيق.")
+        sections.append(f"⚠️ شلت {amount} ماقدرتش أتأكد منها من نص الورقة (في {names}). اسألني عنها بسؤال أضيق.")
     sections.append("🔗 المصدر والنسخة: " + source_url)
     return "\n".join(rtl_line(line) for line in "\n\n".join(sections).split("\n"))
 

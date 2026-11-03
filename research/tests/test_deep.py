@@ -98,8 +98,9 @@ class DeepHarnessTests(unittest.TestCase):
                     else:
                         assert "p1b1s0" in messages[-1]["content"]
                         message = {"role": "assistant", "content": json.dumps({"title": "شرح الطريقة", "sections": [
-                            {"heading": "الفكرة", "kind": "paper", "text": "النموذج بيستخدم آلية الانتباه عشان يعالج المعلومات.",
-                             "evidence_ids": ["p1b1s0"]}]}, ensure_ascii=False)}
+                            {"heading": "الفكرة", "kind": "paper", "text": "", "evidence_ids": [], "claims": [
+                                {"text": "النموذج بيستخدم آلية الانتباه عشان يعالج المعلومات.", "evidence_id": "p1b1s0"}]}]},
+                            ensure_ascii=False)}
                     self.store.settle_attempt(identity, attempt, "succeeded")
                     return {"message": message, "usage": {"prompt_tokens": 100, "completion_tokens": 50}}
 
@@ -108,7 +109,7 @@ class DeepHarnessTests(unittest.TestCase):
                     patch("src.services.study.store.StudyStore", return_value=store), \
                     patch("src.services.study.tutor.StudyModel", Transport):
                 result = asyncio.run(run_job(job["id"]))
-            assert result["sections"][0]["evidence_ids"] == ["p1b1s0"]
+            assert result["sections"][0]["claims"][0]["evidence_id"] == "p1b1s0"
             assert len(store.attempts(job["id"])) == Transport.calls == 2
 
 
@@ -120,8 +121,8 @@ def _tool_call(name="search_evidence", arguments='{"query":"attention","limit":1
 def _answer(evidence_id="p1b1s0", content=None):
     if content is None:
         content = json.dumps({"title": "شرح الطريقة", "sections": [
-            {"heading": "الفكرة", "kind": "paper", "text": "النموذج بيستخدم آلية الانتباه عشان يعالج المعلومات.",
-             "evidence_ids": [evidence_id]}]}, ensure_ascii=False)
+            {"heading": "الفكرة", "kind": "paper", "text": "", "evidence_ids": [], "claims": [
+                {"text": "النموذج بيستخدم آلية الانتباه عشان يعالج المعلومات.", "evidence_id": evidence_id}]}]}, ensure_ascii=False)
     return {"role": "assistant", "content": content}
 
 

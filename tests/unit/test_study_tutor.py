@@ -10,9 +10,9 @@ from src.services.study.tutor import Lesson, StudyModel, TutorError, review_less
 
 def lesson():
     return {"title": "شرح الورقة", "sections": [
-        {"heading": "الفكرة", "kind": "paper", "text": "الطريقة بتستخدم attention عشان تفهم العلاقات بين الكلمات.",
-         "evidence_ids": ["p1b1s0"]},
-        {"heading": "فكّر فيها", "kind": "question", "text": "إيه الفرق بين الطريقة دي والتكرار؟", "evidence_ids": []}]}
+        {"heading": "الفكرة", "kind": "paper", "text": "", "evidence_ids": [], "claims": [
+            {"text": "الطريقة بتستخدم attention عشان تفهم العلاقات بين الكلمات.", "evidence_id": "p1b1s0"}]},
+        {"heading": "فكّر فيها", "kind": "question", "text": "إيه الفرق بين الطريقة دي والتكرار؟", "evidence_ids": [], "claims": []}]}
 
 
 def test_paper_sections_require_real_exact_evidence_and_preserve_numbers():
@@ -20,25 +20,25 @@ def test_paper_sections_require_real_exact_evidence_and_preserve_numbers():
     assert validate_lesson(lesson(), blocks).title == "شرح الورقة"
     for support in ("p9b9s0", "invented"):
         bad = lesson()
-        bad["sections"][0]["evidence_ids"] = [support]
+        bad["sections"][0]["claims"][0]["evidence_id"] = support
         with pytest.raises(TutorError):
             validate_lesson(bad, blocks)
     bad = lesson()
-    bad["sections"][0]["text"] += " والنتيجة 99.9 بالمية."
+    bad["sections"][0]["claims"][0]["text"] += " والنتيجة 99.9 بالمية."
     with pytest.raises(TutorError):
         validate_lesson(bad, blocks)
 
 
 def test_paper_claim_cannot_drop_its_citation():
     bad = lesson()
-    bad["sections"][0]["evidence_ids"] = []
+    bad["sections"][0]["claims"][0]["evidence_id"] = ""
     with pytest.raises(TutorError):
         validate_lesson(bad, [])
 
 
 def test_a_percentage_can_use_the_units_from_the_table_header():
     raw = lesson()
-    raw["sections"][0]["text"] = "النتيجة على مجموعة الاختبار كانت 92.5% في مقياس الدقة."
+    raw["sections"][0]["claims"][0]["text"] = "النتيجة على مجموعة الاختبار كانت 92.5% في مقياس الدقة."
     blocks = [EvidenceBlock(id="p1b1", page=1, section="Results", text="Test accuracy (%) 92.5")]
     assert validate_lesson(raw, blocks).sections[0].evidence
 
