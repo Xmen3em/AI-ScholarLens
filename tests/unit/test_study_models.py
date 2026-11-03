@@ -67,10 +67,13 @@ async def test_profile_route_is_recorded_on_attempts(tmp_path):
     assert store.attempts(job["id"])[0]["model"] == "Qwen/Qwen3.8-27B:deepinfra"
 
 
-def test_profiles_choose_their_input_estimate():
+def test_profiles_choose_their_input_estimate(tmp_path, monkeypatch):
+    from src.services.study import glm_tokenizer
+
     unused = object()
     assert StudyModel(SecretStr("x"), unused, client=unused, profile=GPT_OSS_PROFILE).counter is count_input_tokens  # type: ignore[arg-type]
-    # GLM-5.3, the production default, has no local tokenizer and uses the byte estimate.
+    # GLM-5.3, the production default, counts with its own tokenizer and falls back to the byte estimate.
+    monkeypatch.setattr(glm_tokenizer, "GLM_TOKENIZER_PATH", tmp_path / "missing.json")
     assert StudyModel(SecretStr("x"), unused, client=unused).counter("abcdef") == 2  # type: ignore[arg-type]
     assert StudyModel(SecretStr("x"), unused, client=unused, profile=QWEN).counter("abcdef") == 2  # type: ignore[arg-type]
 

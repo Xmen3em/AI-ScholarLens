@@ -94,6 +94,13 @@ ModelProfile { route: "org/model:provider", input_estimate: gpt_oss_tokenizer | 
 - Models without a local tokenizer use `ceil(utf8 bytes / 3)` as the input
   estimate against the same 20,000-token admission limit. This over-estimates
   both English and Arabic, so it only refuses early, never admits too much.
+- GLM-5.3 counts with its own tokenizer (amended 3 November 2026, before holdout):
+  `tokenizer.json` pinned to commit `ba32f8c` and its published SHA-256, prepared once by
+  `python -m src.commands.prepare_glm_tokenizer --download`, never fetched at runtime; a
+  missing or unverified file falls back to bytes / 3. Measured offline on the 12 dev
+  first lessons, its count of the serialized request exceeds GLM's reported
+  `prompt_tokens` by about 15%, while bytes / 3 exceeded it by a further 12–24% and
+  refused three follow-ups (20,059–20,400 estimated) that count 17,479–17,960.
 - `request_options` holds per-model request fields (for example whether
   `reasoning_effort` is sent, or a provider's switch to disable thinking).
   They are fixed by the qualification stage below and frozen with the profile.

@@ -21,6 +21,7 @@ dependencies = [
     "pypdfium2==5.14.0",
     "jsonschema==4.25.0",
     "pillow==12.3.0",
+    "tokenizers==0.22.1",
 ]
 readme = "README.md"
 

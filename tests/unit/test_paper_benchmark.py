@@ -205,7 +205,9 @@ def test_models_file_loads_and_matches_spec_routes():
         "judge": "deepseek-ai/DeepSeek-V4-Pro:deepinfra"}
     # Production runs exactly the profile the benchmark measured.
     assert profiles["control"] == DEFAULT_PROFILE and profiles["baseline"] == GPT_OSS_PROFILE
-    assert all(profile.input_estimate == "utf8_bytes_div_3" for name, profile in profiles.items() if name != "baseline")
+    assert profiles["control"].input_estimate == "glm_tokenizer"
+    assert all(profile.input_estimate == "utf8_bytes_div_3" for name, profile in profiles.items()
+               if name not in {"baseline", "control"})
 
 
 RAW = ('<?xml version="1.0"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><GetRecord><record><metadata>'

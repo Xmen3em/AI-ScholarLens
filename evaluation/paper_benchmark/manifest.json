@@ -5,8 +5,8 @@
     "PROTOCOL.md": "c969dcd580daf2bbb07fb482c4c2b33fc05edeedf469e7f4e98d5fab3b9cbeaa",
     "papers.v1.json": "458d3456a91d973556c878e51fb7e3475dd1cee5386d87286db22f05622c0d7c",
     "questions.v1.json": "59e0e483f22da8ae148d37afbe3a13453b38ffe160b4eeec86ffcb2b62de5764",
-    "models.v1.json": "6e54c5e804cb68379cdefe7938697dd72d8c10d652a35fdd87c6fd278d9ac5b8",
+    "models.v1.json": "030725647c8bd09efaaf91d396d7b1e67b0dd604bce4bef05f07608a440cf9e2",
     "private-questions.json": "f6bf4089866a8fc9b92fad81eae3a93c88c551d8d42df13bd2195503e4dbf613"
   },
-  "manifest_sha256": "93b7e782839141a211b2d2c1ea956ed283680a34aab23dd52e17af842bdaee72"
+  "manifest_sha256": "fd88c8bc0705947a3c8c493dc87bebf6c2af60a080b7339dda6348c79732a3f7"
 }

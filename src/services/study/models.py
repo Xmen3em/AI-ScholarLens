@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-InputEstimate = Literal["gpt_oss_tokenizer", "utf8_bytes_div_3"]
-ESTIMATES = ("gpt_oss_tokenizer", "utf8_bytes_div_3")
+InputEstimate = Literal["gpt_oss_tokenizer", "glm_tokenizer", "utf8_bytes_div_3"]
+ESTIMATES = ("gpt_oss_tokenizer", "glm_tokenizer", "utf8_bytes_div_3")
 
 
 @dataclass(frozen=True)
@@ -25,7 +25,7 @@ GPT_OSS_PROFILE = ModelProfile("baseline", "openai/gpt-oss-120b:cerebras", "gpt_
                                {"reasoning_effort": "low"}, 0.35, 0.75, "2026-11-03")
 # The owner chose GLM-5.3 after the paper benchmark's development runs (3 Nov 2026): 94% delivered,
 # full format compliance and a 68 s p95 on 12 papers, against 67% for gpt-oss-120b.
-DEFAULT_PROFILE = ModelProfile("control", "zai-org/GLM-5.3:deepinfra", "utf8_bytes_div_3",
+DEFAULT_PROFILE = ModelProfile("control", "zai-org/GLM-5.3:deepinfra", "glm_tokenizer",
                                {"reasoning_effort": "low"}, 0.90, 4.00, "2026-11-03")
 
 
@@ -34,7 +34,13 @@ def estimate_input(profile: ModelProfile, serialized: str) -> int:
         from src.services.hf.tokenizer import count_input_tokens
 
         return count_input_tokens(serialized)
-    # No local tokenizer: three UTF-8 bytes per token over-counts English and Arabic alike.
+    if profile.input_estimate == "glm_tokenizer":
+        from src.services.study.glm_tokenizer import count_glm_tokens
+
+        counted = count_glm_tokens(serialized)
+        if counted is not None:
+            return counted
+    # No (verified) local tokenizer: three UTF-8 bytes per token over-counts English and Arabic alike.
     return math.ceil(len(serialized.encode()) / 3)
 
 

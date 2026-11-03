@@ -35,7 +35,7 @@
     },
     "control": {
       "route": "zai-org/GLM-5.3:deepinfra",
-      "input_estimate": "utf8_bytes_div_3",
+      "input_estimate": "glm_tokenizer",
       "request_options": {
         "reasoning_effort": "low"
       },
