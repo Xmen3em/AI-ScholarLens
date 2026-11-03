@@ -44,15 +44,17 @@ fields and the application enforces which is used):
 ```text
 DraftClaim   { text: str (Arabic sentence, ≤400 chars), evidence_id: catalog snippet ID }
 DraftSection { heading, kind, text, evidence_ids: [≤3], claims: [DraftClaim] }
-  kind = paper            → text == "" and evidence_ids == [] and 1 ≤ len(claims) ≤ 5
-  kind ≠ paper            → claims == [] and text non-empty (evidence_ids optional, as today)
+  kind = paper            → 1 ≤ len(claims) ≤ 5; text and evidence_ids are ignored
+  kind ≠ paper            → text non-empty (evidence_ids optional, as today); claims are ignored
 ```
 
-Mixing the two forms is a `shape` failure of the lesson, as today. One exception
-(amended 3 November 2026, from the paper benchmark's development run): a paper
-section whose `text` only repeats its own claims, in order (whitespace aside), and
-whose `evidence_ids` are among its claims' IDs is accepted, and both fields are
-ignored. gpt-oss-120b writes every paper section that way.
+The kind decides which field is read (amended 3 November 2026, from the paper
+benchmark's development runs): a paper section's `text` and `evidence_ids` are
+ignored, and so are claims on any other kind; none of them reaches the student.
+A paper section without claims, or another kind without text, is a `shape`
+failure. gpt-oss-120b fills every field (a fuller sentence in `text`, extra IDs,
+claims on background sections), and the earlier mixed-form rule failed 11 of 12
+of its first lessons.
 
 Before any model check, each claim is withheld (the lesson continues) when:
 
@@ -147,7 +149,7 @@ existing `screened` list), for the failure ledger (Q0).
 
 Offline, zero model calls, before any live run:
 
-- Writer format: paper/claims and other/text rules; mixed form is `shape`.
+- Writer format: paper sections read claims, others read text; a missing own field is `shape`.
 - Per-claim deterministic checks withhold only the offending claim; the lesson
   fails only when no paper claim remains.
 - Proof verification with scripted checkers: honest spans kept; span not in the

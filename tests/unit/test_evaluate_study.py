@@ -234,7 +234,7 @@ async def test_qualification_fails_a_lesson_that_breaks_the_lesson_shape(tmp_pat
         draft = lesson()
         for section in draft["sections"]:
             if section["kind"] == "paper":
-                section["text"] = "A paper section must carry claims, not free text."
+                section["claims"] = []  # a paper section must carry claims
         return reply(draft)
 
     result = await qualify(replace(QWEN, request_options={}), jobs()[0], root=tmp_path,

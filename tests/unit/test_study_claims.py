@@ -23,33 +23,31 @@ def draft(*sections):
     return {"title": "شرح النتايج", "sections": list(sections)}
 
 
-def test_paper_sections_must_use_claims_and_others_must_use_text():
-    with_text = paper(claim("النموذج بيسجّل 66.1 في الجدول ده.", "p6b0s0"))
-    with_text["text"] = "نص حر من غير جمل منفصلة."
-    empty = paper()
+def test_the_kind_decides_which_field_is_read_and_the_rest_is_ignored():
+    # gpt-oss-120b fills every field: a fuller sentence in a paper section's text, the claim IDs (and
+    # more) in evidence_ids, and claims on background sections (dev benchmark, 3 Nov 2026).
+    kept = claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0")
+    rich = paper(kept)
+    rich["text"] = "نموذج RAG-Token سجّل 66.1 في الجدول ده، وده أعلى من أي نموذج تاني في الورقة."
+    rich["evidence_ids"] = ["p6b0s0", "p6b1s0"]
     background = {"heading": "خلفية", "kind": "background", "text": "خلفية عامة عن الموضوع.", "evidence_ids": [],
                   "claims": [claim("جملة مش مكانها هنا خالص.", "p6b0s0")]}
-    for bad in (with_text, empty, background):
+    result = validate_draft(draft(rich, background), BLOCKS)
+    paper_section, background_section = result.sections
+    assert [c.text for c in paper_section.claims] == [kept["text"]]
+    assert paper_section.text == "" and paper_section.evidence == []
+    assert background_section.text == "خلفية عامة عن الموضوع." and background_section.claims == []
+
+
+def test_a_section_missing_its_own_field_is_a_shape_failure():
+    empty_paper = paper()
+    empty_paper["text"] = "نص حر من غير جمل منفصلة."
+    empty_background = {"heading": "خلفية", "kind": "background", "text": "  ", "evidence_ids": [],
+                        "claims": [claim("جملة مش مكانها هنا خالص.", "p6b0s0")]}
+    for bad in (empty_paper, empty_background):
         with pytest.raises(TutorError) as captured:
             validate_draft(draft(bad), BLOCKS)
         assert captured.value.diagnostic == "shape"
-
-
-def test_a_paper_section_that_only_echoes_its_claims_is_accepted():
-    # gpt-oss-120b copies each claim into text and its ID into evidence_ids (dev benchmark, 3 Nov 2026).
-    first, second = claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0"), claim("نموذج RAG-Sequence سجّل 68.0.", "p6b1s0")
-    echo = paper(first, second)
-    echo["text"] = " " + first["text"] + "  " + second["text"]
-    echo["evidence_ids"] = ["p6b1s0", "p6b0s0"]
-    result = validate_draft(draft(echo), BLOCKS)
-    assert [c.text for c in result.sections[0].claims] == [first["text"], second["text"]]
-    assert result.sections[0].text == "" and result.sections[0].evidence == []
-    stray = paper(first)
-    stray["text"] = first["text"]
-    stray["evidence_ids"] = ["p6b1s0"]
-    with pytest.raises(TutorError) as captured:
-        validate_draft(draft(stray), BLOCKS)
-    assert captured.value.diagnostic == "shape"
 
 
 def test_unknown_claim_quote_is_withheld_not_fatal():

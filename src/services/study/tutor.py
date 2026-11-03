@@ -184,10 +184,8 @@ def validate_draft(raw: dict, blocks: list[EvidenceBlock]) -> ClaimDraft:
     sections = []
     for item in draft.sections:
         if item.kind == "paper":
-            # Text and evidence_ids that only repeat the section's own claims are ignored, not fatal.
-            echoed = " ".join(" ".join(c.text for c in item.claims).split())
-            if (not item.claims or " ".join(item.text.split()) not in {"", echoed}
-                    or not set(item.evidence_ids) <= {c.evidence_id for c in item.claims}):
+            # The kind decides which field is read: a paper section's text and evidence_ids are ignored.
+            if not item.claims:
                 raise _shape()
             claims = []
             for draft_claim in item.claims:
@@ -201,7 +199,8 @@ def validate_draft(raw: dict, blocks: list[EvidenceBlock]) -> ClaimDraft:
                 claims.append(Claim(draft_claim.text, support, reason))
             sections.append(ClaimSection(item.heading, item.kind, "", [], claims))
         else:
-            if item.claims or not item.text.strip():
+            # Claims on another kind are ignored; only the text is shown, as for any non-paper section.
+            if not item.text.strip():
                 raise _shape()
             if len(set(item.evidence_ids)) != len(item.evidence_ids) or any(i not in catalog for i in item.evidence_ids):
                 raise TutorError("lesson_validation_failed", diagnostic="unsupported_quote")
