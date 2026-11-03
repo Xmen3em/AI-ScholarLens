@@ -14,7 +14,7 @@ change does not activate features, inference, external writes or deployment.
 | `paper-content` | Isolated native PDF extraction; OCR adapter disabled | [Structured content and OCR](docs/specs/paper-content.md) |
 | `paper-evidence` | Exact snippets and bounded selection; scientific validity still needs work | [Evidence and claims](docs/specs/paper-evidence.md) |
 | `learning-session` | Owner SQLite state, four recent turns, explicit depth, forget; five memory layers specified, not built | [Learning state and memory](docs/specs/learning-session.md) |
-| `paper-tutor` | Egyptian lessons/follow-ups; real scientific mistakes documented | [Interactive teaching](docs/specs/paper-tutor.md) |
+| `paper-tutor` | Egyptian lessons/follow-ups; real scientific mistakes documented; per-claim check designed, not built | [Interactive teaching](docs/specs/paper-tutor.md), [claim check](docs/specs/claim-check.md) |
 | `learning-visuals` | Reading map plus curated offline RAG method viewer/exports; general planning pending | [Visual teaching](docs/specs/learning-visuals.md) |
 | `study-research` | Isolated Deep Agents/MCP; live Deep failure unresolved | [Bounded research](docs/specs/study-research.md) |
 | `learning-delivery` | Private Telegram and local API; rich study view planned | [Telegram and study workspace](docs/specs/learning-delivery.md) |
