@@ -18,6 +18,7 @@ SAFE_DIAGNOSTICS = SAFE_FAILURES | frozenset({
     "ValueError", "TypeError", "KeyError", "TimeoutError", "JSONDecodeError", "ValidationError",
     "NotImplementedError", "RuntimeError", "StoreConflict", "OSError",
     "degenerate_text", "unrequested_comparison",
+    "unsupported", "unverified_support", "missing_verdict",
 })
 # Where a Deep job stopped: worker phases, then the parent's process boundary.
 SAFE_STAGES = frozenset({
