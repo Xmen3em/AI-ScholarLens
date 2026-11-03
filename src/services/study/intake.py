@@ -145,6 +145,8 @@ class ArxivIntake:
             # User title tokens cannot introduce an arXiv query operator.
             # Every word must appear in the title, in any order: an exact phrase misses
             # "retrieval augmented generation knowledge intensive" because of "for".
+            # A pasted result line such as "1. Title" keeps only the title.
+            value = re.sub(r"^\s*\d{1,2}[.)]\s+", "", value)
             words = [word.lower() for word in re.findall(r"[^\W_]+", value, re.UNICODE)]
             if not words:
                 raise StudyInputError("invalid_paper_input")

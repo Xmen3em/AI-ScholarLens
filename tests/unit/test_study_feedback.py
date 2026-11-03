@@ -3,7 +3,7 @@ import json
 import httpx
 import pytest
 from pydantic import SecretStr
-from src.services.study.content import EvidenceBlock
+from src.services.study.content import EvidenceBlock, PaperContent
 from src.services.study.service import StudyService
 from src.services.study.store import StudyStore
 from src.services.study.tutor import Lesson, render_lesson, review_lesson
@@ -507,3 +507,48 @@ async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, m
     assert job["result"]["review"] == {"reviewed": 1, "rejected": 1, "issues": ["missing_support"]}
     assert "stage=review" in job["result"]["text"]
     await service.aclose()
+
+
+@pytest.mark.anyio
+async def test_a_pasted_result_line_or_bare_number_chooses_from_the_pending_list(tmp_path):
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), Model())
+    listed = service.submit("search", "/paper attention is all you need")
+    assert (await finished(service, listed["job_id"]))["status"] == "ready"
+    assert len(service.store.selection()) == 2
+    assert service.submit("bare", "/choose")["reply"].startswith("اكتب /choose ورقم الورقة")
+    chosen = service.submit("pasted", "1. Attention Is All You Need")
+    assert service.store.get_job(chosen["job_id"])["payload"]["text"] == "/choose 1"
+    assert chosen["reply"].startswith("📖")
+    assert (await finished(service, chosen["job_id"]))["status"] == "ready"
+    # The list is consumed, so a later "2" (say, a quiz answer) is not a paper choice.
+    assert service.store.selection() == []
+    assert service.submit("plain", "/choose")["reply"].startswith("مفيش قائمة نتايج حالية")
+    await service.aclose()
+
+
+@pytest.mark.anyio
+async def test_arabic_follow_up_without_an_open_paper_is_not_sent_to_arxiv(tmp_path):
+    intake = Intake()
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), intake, Content(), Model())
+    reply = service.submit("simplify", "بسّطها")
+    assert "job_id" not in reply and reply["reply"].startswith("لسه مفيش ورقة مفتوحة")
+    await service.aclose()
+
+
+def test_first_lessons_keep_the_opening_where_the_method_usually_is():
+    from src.services.study.service import select_evidence
+
+    blocks = [EvidenceBlock(id=f"p{i // 3 + 1}b{i % 3}", page=i // 3 + 1, section="S", text=f"block {i} text")
+              for i in range(51)]
+    document = PaperContent(paper=paper_for_selection(), source_sha256="a" * 64, parser_revision="t", page_count=17,
+                            blocks=blocks, missing_pages=[], coverage="full_text")
+    first = [b.id for b in select_evidence(document, "ابدأ درس تمهيدي", opening=12)]
+    assert first[:12] == [b.id for b in blocks[:12]] and len(first) == 24
+    followup = [b.id for b in select_evidence(document, "سؤال")]
+    assert "p4b0" not in followup[:4]
+
+
+def paper_for_selection():
+    from tests.unit.test_study_service import paper
+
+    return paper()

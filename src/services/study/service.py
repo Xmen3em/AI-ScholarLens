@@ -48,7 +48,7 @@ class StudyState(TypedDict, total=False):
     result: dict
 
 
-def select_evidence(content: PaperContent, question: str, *, limit: int = 24):
+def select_evidence(content: PaperContent, question: str, *, limit: int = 24, opening: int = 4):
     blocks = content.blocks
     if len(blocks) <= limit:
         return blocks
@@ -60,8 +60,9 @@ def select_evidence(content: PaperContent, question: str, *, limit: int = 24):
     for term, english in hints.items():
         if term in question:
             terms.update(english.split())
-    # Include opening and closing context plus a spread across the document.
-    chosen = set(range(min(4, len(blocks)))) | set(range(max(0, len(blocks) - 3), len(blocks)))
+    # Include opening and closing context plus a spread across the document. A first
+    # lesson keeps a longer opening: the problem and method usually come first.
+    chosen = set(range(min(opening, len(blocks)))) | set(range(max(0, len(blocks) - 3), len(blocks)))
     for i in range(8):
         chosen.add(round(i * (len(blocks) - 1) / 7))
     ranked = sorted(range(len(blocks)), key=lambda i: sum(t in blocks[i].text.lower() for t in terms), reverse=True)
@@ -122,8 +123,16 @@ class StudyService:
         if capability_question in {"what you can make now", "what can you do", "what can you do now",
                                    "what can you help me with", "تقدر تعمل إيه", "تقدر تعمل ايه", "بتعمل ايه"}:
             return {"reply": HELP}
+        if not text.startswith("/"):
+            choice = self._pending_choice(text)
+            if choice:
+                text = f"/choose {choice}"
         command, _, argument = text.partition(" ")
         command = command.lower()
+        if command == "/choose" and not argument.strip():
+            if self.store.selection():
+                return {"reply": "اكتب /choose ورقم الورقة من القائمة، مثلًا: /choose 1"}
+            return {"reply": "مفيش قائمة نتايج حالية. ابعت /paper واسم الورقة بالإنجليزي الأول."}
         if command == "/deep":
             example = "/deep اشرح طريقة التدريب خطوة بخطوة من الدليل"
             if not argument.strip():
@@ -175,6 +184,8 @@ class StudyService:
                 if any(not task.done() for task in self.tasks):
                     return {"reply": BUSY}
                 return {"fallback": True}
+            if command != "/ask" and not re.search(r"[A-Za-z0-9]", text):
+                return {"reply": "لسه مفيش ورقة مفتوحة. ابعت رقم arXiv (زي 2005.11401) أو /paper واسم الورقة بالإنجليزي، وبعدها اسألني."}
         try:
             job = self.store.create_job(intent, {"text": text}, max_calls=4)
         except StoreConflict:
@@ -184,6 +195,19 @@ class StudyService:
             self.tasks.add(task)
             task.add_done_callback(self.tasks.discard)
         return {"job_id": job["id"], "reply": _acknowledgement(command, text, bool(context))}
+
+    def _pending_choice(self, text: str) -> int | None:
+        options = self.store.selection()
+        if not options:
+            return None
+        match = re.fullmatch(r"\s*(\d{1,2})\s*[.)\-:]?\s*(.*?)\s*", text, re.DOTALL)
+        if match:
+            number, rest = int(match.group(1)), match.group(2).casefold()
+            if 1 <= number <= len(options) and (not rest or rest in options[number - 1]["title"].casefold()):
+                return number
+            return None
+        titles = [option["title"].casefold() for option in options]
+        return titles.index(text.casefold()) + 1 if text.casefold() in titles else None
 
     async def _run(self, job_id, text):
         try:
@@ -232,6 +256,7 @@ class StudyService:
             options = self.store.selection()
             if not argument.isdecimal() or not 1 <= int(argument) <= len(options):
                 raise StudyInputError("invalid_selection")
+            self.store.selection([])
             return {"paper": StudyPaper.model_validate(options[int(argument) - 1]), "followup": False}
         context = self.store.context()
         is_paper = command.lower() == "/paper"
@@ -268,7 +293,7 @@ class StudyService:
     async def _teach(self, state: StudyState) -> dict:
         document = state["content"]
         question = state["text"] if state.get("followup") else "ابدأ درس تمهيدي متكامل عن الورقة."
-        selected = select_evidence(document, question)
+        selected = select_evidence(document, question, opening=4 if state.get("followup") else 12)
         context = self.store.context()
         recent = context["turns"] if context and context["paper_id"] == document.paper.arxiv_id and state.get("followup") else []
         payload = {"prompt_revision": PROMPT_REVISION, "task": "followup" if state.get("followup") else "first_lesson",
