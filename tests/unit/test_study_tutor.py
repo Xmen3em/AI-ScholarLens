@@ -104,6 +104,32 @@ async def test_transport_rejects_truncation_missing_usage_and_tool_calls(tmp_pat
 
 
 @pytest.mark.asyncio
+async def test_transport_failures_keep_a_safe_diagnostic(tmp_path):
+    from src.services.study.failures import failure_payload
+
+    cases = {"length": "incomplete_output", "usage": "invalid_usage", "json": "JSONDecodeError", "schema": "ValidationError"}
+    for index, (change, diagnostic) in enumerate(cases.items()):
+        store = StudyStore(tmp_path / f"diag-{index}.sqlite3", "owner")
+        job = store.create_job("test", {})
+        raw = {"choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "{}"}}],
+               "usage": {"prompt_tokens": 100, "completion_tokens": 20}}
+        if change == "length":
+            # A thinking model can spend its whole budget on reasoning and stop mid-answer.
+            raw["choices"][0]["finish_reason"] = "length"
+        elif change == "usage":
+            raw.pop("usage")
+        elif change == "json":
+            raw["choices"][0]["message"]["content"] = "{not json"
+        schema = {"type": "object", "required": ["a"]} if change == "schema" else {"type": "object"}
+        async with httpx.AsyncClient(transport=httpx.MockTransport(lambda _: httpx.Response(200, json=raw))) as client:
+            model = StudyModel(SecretStr("private-test"), store, client=client, memory=lambda: 2000, counter=lambda _: 100)
+            with pytest.raises(TutorError) as caught:
+                await model.complete(job["id"], "lesson", [{"role": "user", "content": "test"}], schema=schema)
+        assert str(caught.value) == "study_response_invalid_or_unavailable"
+        assert failure_payload(caught.value)["diagnostic"] == diagnostic, change
+
+
+@pytest.mark.asyncio
 async def test_low_ram_blocks_before_attempt_reservation(tmp_path):
     store = StudyStore(tmp_path / "state.sqlite3", "owner")
     job = store.create_job("test", {})

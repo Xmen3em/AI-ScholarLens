@@ -121,3 +121,18 @@ async def test_explicit_questions_keep_the_existing_assistant_when_no_paper_is_s
     service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), None, None, None)
     assert service.submit("question", question) == {"fallback": True}
     assert not service.tasks
+
+
+@pytest.mark.asyncio
+async def test_observer_sees_the_accepted_lesson_and_the_writer_catalog(tmp_path):
+    store = StudyStore(tmp_path / "state.sqlite3", "owner")
+    seen = []
+    service = StudyService(store, Intake(), Content(), Model(), observer=lambda *args: seen.append(args))
+    job = await finished(service, service.submit("tg:1", "/paper 1706.03762")["job_id"])
+    assert job["status"] == "ready"
+    job_id, accepted, catalog = seen[0]
+    assert job_id == job["id"] and accepted.sections[0].kind == "paper"
+    assert catalog[0]["id"] == "p1b1s0" and catalog[0]["quote"] == "The model uses attention."
+    # The benchmark sees the lesson; the stored result and the local API stay as they were.
+    assert "lesson" not in job["result"]
+    await service.aclose()

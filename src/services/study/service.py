@@ -5,6 +5,7 @@ import base64
 import json
 import os
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import TypedDict
 
@@ -97,8 +98,11 @@ def _acknowledgement(command: str, text: str, has_paper: bool) -> str:
 
 
 class StudyService:
-    def __init__(self, store: StudyStore, intake, content, model, *, research_python: Path | None = None, ocr=None):
+    def __init__(self, store: StudyStore, intake, content, model, *, research_python: Path | None = None, ocr=None,
+                 observer: Callable[[str, Lesson, list[dict]], None] | None = None):
         self.store, self.intake, self.content, self.model = store, intake, content, model
+        # Evaluation hook: sees each accepted lesson and the catalog the writer was given. Production passes none.
+        self.observer = observer
         self.research_python, self.ocr = research_python, ocr
         self.tasks: set[asyncio.Task] = set()
         graph = StateGraph(StudyState)
@@ -332,6 +336,8 @@ class StudyService:
             if review:
                 exc.review = review  # type: ignore[attr-defined]
             raise
+        if self.observer is not None:
+            self.observer(state["job_id"], lesson, evidence_catalog(selected))
         text = render_lesson(lesson, selected, document.paper.source_url, title=document.paper.title,
                              coverage=document.coverage, sampled=not state.get("followup") and len(selected) != len(document.blocks),
                              followup=bool(state.get("followup")), withheld=withheld)

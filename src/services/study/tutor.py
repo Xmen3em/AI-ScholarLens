@@ -62,6 +62,19 @@ class TutorError(RuntimeError):
         super().__init__(code)
 
 
+TRANSPORT_DIAGNOSTICS = frozenset({"incomplete_output", "invalid_usage", "invalid_choices", "invalid_message",
+                                   "invalid_tools", "invalid_output"})
+
+
+def _transport_diagnostic(exc: Exception) -> str | None:
+    # Labels only; never the provider body or the exception text beyond these fixed codes.
+    if type(exc).__name__ in {"JSONDecodeError", "ValidationError"}:
+        return type(exc).__name__
+    if type(exc) is ValueError and str(exc) in TRANSPORT_DIAGNOSTICS:
+        return str(exc)
+    return None
+
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, hide_input_in_errors=True)
 
@@ -462,7 +475,9 @@ class StudyModel:
                                 raise TutorError("study_response_limit")
                             body.extend(part)
                 raw = json.loads(body, object_pairs_hook=_unique_object)
-                usage = raw["usage"]
+                usage = raw.get("usage")
+                if type(usage) is not dict:
+                    raise ValueError("invalid_usage")
                 for key, limit in (("prompt_tokens", 21000), ("completion_tokens", max_tokens)):
                     if type(usage.get(key)) is not int or not 0 < usage[key] <= limit:
                         raise ValueError("invalid_usage")
@@ -498,7 +513,7 @@ class StudyModel:
                 raise
             except TutorError:
                 raise
-            except Exception:
-                raise TutorError("study_response_invalid_or_unavailable") from None
+            except Exception as exc:
+                raise TutorError("study_response_invalid_or_unavailable", diagnostic=_transport_diagnostic(exc)) from None
             finally:
                 self.store.settle_attempt(job_id, attempt, state)
