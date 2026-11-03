@@ -35,6 +35,23 @@ def test_paper_sections_must_use_claims_and_others_must_use_text():
         assert captured.value.diagnostic == "shape"
 
 
+def test_a_paper_section_that_only_echoes_its_claims_is_accepted():
+    # gpt-oss-120b copies each claim into text and its ID into evidence_ids (dev benchmark, 3 Nov 2026).
+    first, second = claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0"), claim("نموذج RAG-Sequence سجّل 68.0.", "p6b1s0")
+    echo = paper(first, second)
+    echo["text"] = " " + first["text"] + "  " + second["text"]
+    echo["evidence_ids"] = ["p6b1s0", "p6b0s0"]
+    result = validate_draft(draft(echo), BLOCKS)
+    assert [c.text for c in result.sections[0].claims] == [first["text"], second["text"]]
+    assert result.sections[0].text == "" and result.sections[0].evidence == []
+    stray = paper(first)
+    stray["text"] = first["text"]
+    stray["evidence_ids"] = ["p6b1s0"]
+    with pytest.raises(TutorError) as captured:
+        validate_draft(draft(stray), BLOCKS)
+    assert captured.value.diagnostic == "shape"
+
+
 def test_unknown_claim_quote_is_withheld_not_fatal():
     kept = "نموذج RAG-Token سجّل 66.1 في الجدول ده بالظبط."
     result = validate_draft(draft(paper(claim(kept, "p6b0s0"), claim("جملة بمصدر مش موجود في الورقة.", "p9b9s0"))), BLOCKS)

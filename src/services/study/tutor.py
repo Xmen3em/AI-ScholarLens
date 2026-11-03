@@ -184,7 +184,10 @@ def validate_draft(raw: dict, blocks: list[EvidenceBlock]) -> ClaimDraft:
     sections = []
     for item in draft.sections:
         if item.kind == "paper":
-            if item.text or item.evidence_ids or not item.claims:
+            # Text and evidence_ids that only repeat the section's own claims are ignored, not fatal.
+            echoed = " ".join(" ".join(c.text for c in item.claims).split())
+            if (not item.claims or " ".join(item.text.split()) not in {"", echoed}
+                    or not set(item.evidence_ids) <= {c.evidence_id for c in item.claims}):
                 raise _shape()
             claims = []
             for draft_claim in item.claims:

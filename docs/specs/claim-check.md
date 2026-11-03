@@ -48,7 +48,11 @@ DraftSection { heading, kind, text, evidence_ids: [≤3], claims: [DraftClaim] }
   kind ≠ paper            → claims == [] and text non-empty (evidence_ids optional, as today)
 ```
 
-Mixing the two forms is a `shape` failure of the lesson, as today.
+Mixing the two forms is a `shape` failure of the lesson, as today. One exception
+(amended 3 November 2026, from the paper benchmark's development run): a paper
+section whose `text` only repeats its own claims, in order (whitespace aside), and
+whose `evidence_ids` are among its claims' IDs is accepted, and both fields are
+ignored. gpt-oss-120b writes every paper section that way.
 
 Before any model check, each claim is withheld (the lesson continues) when:
 
