@@ -51,6 +51,24 @@ false. It passed the live grounding review and reached the owner. Case
 lesson and the review to name the split and metric of every number and to read
 an `a/b` cell as two columns; that is a mitigation, not a proven fix.
 
+## Review A/B, owner-approved 2 calls (3 November 2026)
+
+After every live first lesson came back with all sections rejected, the review
+alone ran once with the v4 prompt and once with v5 (v5 adds only the two
+table-split lines). Input: one lesson made of the four supported sections above,
+over the same locators. Separate diagnostic store, ceiling 2, no Telegram.
+
+| Prompt | Kept | Rejected | Issue |
+| --- | --- | --- | --- |
+| v4 | 3 of 4 | 1 | `missing_support` |
+| v5 | 3 of 4 | 1 | `missing_support` |
+
+So the v5 lines did not cause the live rejections. The reviewer did wrongly
+reject one verified-correct section with either prompt. That's one run, not a
+rate. Which section isn't known: the report then stored counts only. It now also
+stores `rejected_sections` (indices). The live failures point at the lesson
+text or its evidence; a full lesson run would need its own approval.
+
 ## Defect found while freezing these cases
 
 The unsupported-number check skipped digits glued to Arabic letters. `و70.2`

@@ -470,7 +470,7 @@ async def test_review_report_carries_only_counts_and_issue_labels():
 
     report = {}
     await review_lesson(Reviewer(), "job", original, blocks=[], report=report)
-    assert report == {"reviewed": 2, "rejected": 1, "issues": ["analogy_mismatch"]}
+    assert report == {"reviewed": 2, "rejected": 1, "rejected_sections": [1], "issues": ["analogy_mismatch"]}
 
 
 @pytest.mark.anyio
@@ -504,7 +504,7 @@ async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, m
     assert job["status"] == "failed"
     assert (job["result"]["failure_code"], job["result"]["diagnostic"], job["result"]["stage"]) == (
         "lesson_validation_failed", "semantic_support", "review")
-    assert job["result"]["review"] == {"reviewed": 1, "rejected": 1, "issues": ["missing_support"]}
+    assert job["result"]["review"] == {"reviewed": 1, "rejected": 1, "rejected_sections": [0], "issues": ["missing_support"]}
     assert "stage=review" in job["result"]["text"]
     await service.aclose()
 
