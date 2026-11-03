@@ -33,6 +33,10 @@ live calls just because a task lists qualification as a prerequisite.
 ### F1 — Reviewed science and acceptance fixtures
 
 - [ ] Freeze the documented mechanism/comparison failures and evaluation rubric.
+  3 Nov 2026 progress: [science cases](../evaluation/paper_learning/README.md) freeze
+  10 critical errors + 4 supported sections from the reviewed RAG facts; offline
+  gate stops 3/10, the rest are proven to reach review. Fixed Arabic-prefix number
+  bypass. Still open: equation-sign case (no reviewed fact), rubric, holdout.
 
 **Accept:** Reviewed positive/negative claims, source identity and expected
 outcomes are inspectable; reserve a distinct 12-paper/48-question holdout without
@@ -44,7 +48,11 @@ JSON and `tests/unit/test_study_science_fixtures.py`. **Scope:** M, 3 files.
 
 ### F2 — Offline Deep failure diagnosis coverage
 
-- [ ] Exercise each worker/transport/validation failure boundary with safe traces.
+- [x] Exercise each worker/transport/validation failure boundary with safe traces.
+  3 Nov 2026: every failure carries a finite stage (worker phases + process
+  boundary), stored on the job and shown to the owner. Real-SDK injection covers
+  malformed args/IDs, unknown blocks, context limit, timeout, bad final JSON and
+  citations. Historic live cause remains unknown; F5 still unapproved.
 
 **Accept:** A failing SDK path retains a bounded stage/category and job identity;
 unknown historic causes stay unknown. No provider output/secret leaks.
@@ -91,7 +99,9 @@ prepare a revised scope first; do not spend the old pending request on new sourc
 
 ### P1 — Measure local memory and latency
 
-- [ ] Capture cold/warm startup, native extraction and render resource envelopes.
+- [x] Capture cold/warm startup, native extraction and render resource envelopes.
+  3 Nov 2026: [resource profile](../docs/resource-profile-20261103.md) via
+  `src.commands.profile_resources`; first run is warm-cache, not post-reboot cold.
 
 **Accept:** A reproducible report identifies import/worker peaks and hardware;
 startup/live floors and original ledgers/configuration remain unchanged.
