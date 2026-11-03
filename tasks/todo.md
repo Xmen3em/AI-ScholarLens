@@ -180,7 +180,8 @@ reported; no model rewrite, vector service or silent provider fallback is enable
 - [ ] Save/open owner-scoped goals, bookmarks and accepted artifact positions.
 
 **Accept:** A→B→A and restart restore the right version/step with no generation;
-wrong owner and stale artifact IDs fail safely.
+wrong owner and stale artifact IDs fail safely. Includes the append-only
+`StudyEvent` log (episodic layer, LS-4).
 **Verify:** New `test_study_progress.py` and existing `test_study_store.py` with
 real temporary SQLite, migration/rollback and interrupted writes.
 **Depends:** C1. **Files:** new `session_state.py`, `store.py`, new progress test,
@@ -212,7 +213,8 @@ test and `test_study_tutor.py`. **Scope:** M, 5 files.
 - [ ] Add one task-bound comprehension attempt/feedback loop.
 
 **Accept:** Correct paraphrases are accepted; a reviewed misconception receives
-specific source-based correction, with skip/back and saved state.
+specific source-based correction, with skip/back and saved state. Graded attempts
+are the only writer of `LearnerConcept` status (semantic layer, LS-4/LS-5).
 **Verify:** New `test_study_comprehension.py` plus teaching tests and reviewed
 correct/incorrect learner fixtures; budget exhaustion leaves a useful result.
 **Depends:** T1, S2, F3. **Files:** new comprehension module, teaching integration,
@@ -261,6 +263,20 @@ explicitly by route; current Cerebras wire settings remain frozen and compatible
 no live request or provider fallback is sent.
 **Depends:** F3, V2. **Files:** capability model, isolated adapter, tests and
 synthetic fixture. **Scope:** M, 4 files. Hosted comparison remains canonical V8.
+
+### Q0 — Failure ledger and reviewed improvement loop
+
+- [ ] Aggregate stored review/screen/stage labels into an offline failure report.
+
+**Accept:** A read-only command summarizes, per prompt revision and day, review
+rejections (`rejected_sections`, issues), screen reasons and failure stages from
+the job store, with label counts only and no learner or provider text. A person
+turns patterns into fixtures, prompt or screen changes; nothing updates prompts
+automatically. See [memory layers](../docs/specs/learning-session.md#memory-layers-added-3-november-2026).
+**Verify:** New ledger test over a temporary store with synthetic jobs, plus a
+`/forget` case proving no learner text survives; zero inference.
+**Depends:** F2 (stored labels). **Files:** new report command and its test.
+**Scope:** S, 2 files.
 
 ### Q1 — Scientific and teaching evaluation harness
 

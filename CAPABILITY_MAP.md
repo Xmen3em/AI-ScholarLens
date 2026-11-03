@@ -13,7 +13,7 @@ change does not activate features, inference, external writes or deployment.
 | `paper-intake` | Versioned arXiv resolution and explicit title selection | [Paper identity and intake](docs/specs/paper-intake.md) |
 | `paper-content` | Isolated native PDF extraction; OCR adapter disabled | [Structured content and OCR](docs/specs/paper-content.md) |
 | `paper-evidence` | Exact snippets and bounded selection; scientific validity still needs work | [Evidence and claims](docs/specs/paper-evidence.md) |
-| `learning-session` | Owner SQLite state, four recent turns, explicit depth, forget | [Learning state and memory](docs/specs/learning-session.md) |
+| `learning-session` | Owner SQLite state, four recent turns, explicit depth, forget; five memory layers specified, not built | [Learning state and memory](docs/specs/learning-session.md) |
 | `paper-tutor` | Egyptian lessons/follow-ups; real scientific mistakes documented | [Interactive teaching](docs/specs/paper-tutor.md) |
 | `learning-visuals` | Reading map plus curated offline RAG method viewer/exports; general planning pending | [Visual teaching](docs/specs/learning-visuals.md) |
 | `study-research` | Isolated Deep Agents/MCP; live Deep failure unresolved | [Bounded research](docs/specs/study-research.md) |

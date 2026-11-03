@@ -40,6 +40,45 @@ new attempts on restart. [LangGraph memory scopes](https://docs.langchain.com/os
   access to their results. It does not reset attempt ceilings or resurrect old
   intents. Document retained source-cache/nonpersonal audit/tombstone data.
 
+## Memory layers (added 3 November 2026)
+
+Five layers, after the common agent-memory split (working, episodic, semantic,
+procedural, meta). One rule spans all of them: the **paper is never memory**.
+Source text stays the only truth; memory holds facts about the learner and the
+study. A model-written claim saved as memory would be served back later as
+truth, which is the contradiction failure this design exists to avoid.
+
+| Layer | ScholarLens contract | Written by | Read when | Task |
+| --- | --- | --- | --- | --- |
+| Working | Selected evidence, last four turns (24 h), depth, question. Prior replies are not evidence. | Each request | That request only | Existing |
+| Episodic | `StudyEvent`: append-only, owner/PaperRef-scoped, finite types (opened, section studied, question asked, attempt graded, bookmark, artifact accepted), time, references to artifacts/attempts. No provider text. | The application after each terminal job or action | Resume ("you stopped at the training step") and a bounded deterministic summary for the tutor | S1 |
+| Semantic | `LearnerConcept`: one record per (PaperRef, concept ID): `new`/`shaky`/`understood`, misconception labels, and the attempt + source quote behind each change. Updated in place; history stays in episodes. | Graded attempts (T2) and explicit learner confirmation only | Choosing quiz targets and the next step; adapting depth | T2 |
+| Procedural | Failure ledger: review rejections (`rejected_sections`, issue labels), screen reasons, failure stages and prompt revision per job, already stored as finite labels. | Offline aggregation command | A person reviewing patterns before changing a prompt, screen or fixture | Q0 |
+| Meta | One retention table across layers, deterministic compaction of old episodes into counts/last position, and `/forget` deleting every learner layer. | Scheduled/threshold maintenance plus `/forget` | Never by the model | S2 |
+
+Constraints:
+
+- Concept IDs come from accepted artifacts or a graded task's own concept
+  field, never from free-text matching of model output. A concept from an old
+  paper version stays attached to that version.
+- No runtime self-modifying prompts. Procedural changes are versioned
+  (`PROMPT_REVISION`, screens, fixtures), reviewed by a person, and regression
+  tested against the frozen science cases before shipping. The 3 November loop
+  (observed error → fixture → prompt v6 and screen) is the manual baseline.
+- Summaries for the tutor are built deterministically from events and concept
+  records; a model-made summary still follows the rule above (generated context,
+  admitted budget, user correction wins).
+- Memory never admits a model call, changes owner/source identity, or counts as
+  evidence in a lesson. A learner correction overrides any stored status.
+
+LS-4: Study A, answer one graded question wrong, restart, open A: the bot offers
+the saved position and targets the missed concept with zero extra generation;
+paper B shows none of A's concepts.
+
+LS-5: `/forget` removes every episodic and semantic learner record and the tutor
+summary; the failure ledger keeps only label counts with no learner text, and
+spent-call accounting is unchanged.
+
 ## Implementation, style and commands
 
 Existing `store.py` is the charging/state baseline. Prefer a small new
