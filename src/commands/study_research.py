@@ -48,7 +48,8 @@ async def run_job(job_id: str) -> dict:
         model = HFStudyChat(transport=transport, job_id=job_id)
         system = SYSTEM + "\nYou have read-only paper tools. Use them to verify the answer. No external web research is available. "
         system += ("Answer only the question, in at most three focused sections; do not repeat the introductory lesson. "
-                   "evidence_ids must be snippet IDs from the tools' evidence entries (e.g. p1b0s0), not block IDs. ")
+                   "For a paper section, each claim's evidence_id must be ONE snippet ID from the tools' evidence entries "
+                   "(e.g. p1b0s0), not a block ID, whose text states that claim. ")
         system += "Return your final answer as JSON matching this schema: " + json.dumps(lesson_schema(tools.document.blocks, followup=True))
         agent = create_study_research(model, tools, system)
         context = store.context()
