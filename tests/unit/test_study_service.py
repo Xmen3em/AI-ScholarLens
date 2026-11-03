@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 from src.services.study.content import EvidenceBlock, PaperContent
@@ -33,8 +34,25 @@ class Model:
     async def complete(self, job, purpose, messages, **kwargs):
         self.calls.append(messages)
         if purpose == "grounding_review":
-            return {"output": {"unsupported_sections": [], "issues": []}}
+            return {"output": honest_verdicts(messages)}
         return {"output": lesson()}
+
+
+def honest_spans(quote):
+    # Exact pieces of the quote, each at most 200 characters, cut at spaces.
+    spans, words = [], quote.split()
+    while words and len(spans) < 3:
+        piece = ""
+        while words and len(piece) + len(words[0]) + 1 <= 200:
+            piece = (piece + " " + words.pop(0)).strip()
+        spans.append(piece or words.pop(0)[:200])
+    return spans
+
+
+def honest_verdicts(messages):
+    items = json.loads(messages[-1]["content"])["items"]
+    return {"verdicts": [{"id": item["id"], "supported": True, "issue": "none",
+                          "support_spans": honest_spans(item["quote"]) if "quote" in item else []} for item in items]}
 
 
 async def finished(service, identity):

@@ -179,3 +179,20 @@ async def test_repeated_block_is_sent_once():
     await check_claims(checker, "job", draft, blocks=BLOCKS)
     assert [block["id"] for block in checker.calls[0]["payload"]["source_context"]] == ["p6b1"]
     assert len(checker.calls[0]["payload"]["items"]) == 15
+
+
+@pytest.mark.anyio
+async def test_overlong_span_is_unverified_not_fatal():
+    long_row = "RAG-Seq. 44.5 56.8/68.0 " + "with a long caption about the open-domain test sets " * 6
+    blocks = [EvidenceBlock(id="p6b1", page=6, section="Table 1", text=long_row.strip())]
+    span = long_row[:230].strip()  # an exact piece of the quote, but over the 200-character limit
+    result, _, _ = await checked([claim(SEQ, "p6b1s0")], [verdict("c0", spans=(span,))], blocks=blocks)
+    assert result.sections[0].claims[0].withheld == "unverified_support"
+
+
+@pytest.mark.anyio
+async def test_a_whole_short_quote_is_enough_proof():
+    short = [EvidenceBlock(id="p2b0", page=2, section="Figure 1", text="top-K documents")]
+    result, _, _ = await checked([claim("النموذج بيجيب top-K documents للسؤال قبل التوليد.", "p2b0s0")],
+                                 [verdict("c0", spans=("top-K documents",))], blocks=short)
+    assert result.sections[0].claims[0].withheld is None

@@ -6,11 +6,11 @@ from pydantic import SecretStr
 from src.services.study.content import EvidenceBlock, PaperContent
 from src.services.study.service import StudyService
 from src.services.study.store import StudyStore
-from src.services.study.tutor import Lesson, render_lesson, review_lesson
+from src.services.study.tutor import Lesson, accept_draft, check_claims, render_lesson, validate_draft
 from src.services.study.visuals import _map_nodes
 from src.services.telegram_bot import OffsetStore, PrivateTelegramBot
 
-from tests.unit.test_study_service import Content, Intake, Model, finished
+from tests.unit.test_study_service import Content, Intake, Model, finished, honest_spans
 from tests.unit.test_telegram_bot import KEY, settings
 
 
@@ -66,45 +66,62 @@ async def test_partial_extraction_and_sampling_are_both_reported(tmp_path):
     await service.aclose()
 
 
+def claim_draft(*sections):
+    return {"title": "شرح", "sections": list(sections)}
+
+
+def claim_section(heading, *claims):
+    return {"heading": heading, "kind": "paper", "text": "", "evidence_ids": [],
+            "claims": [{"text": text, "evidence_id": identity} for text, identity in claims]}
+
+
+class Scripted:
+    def __init__(self, verdicts, inspect=None):
+        self.verdicts, self.inspect = verdicts, inspect
+
+    async def complete(self, job, purpose, messages, **kwargs):
+        if self.inspect:
+            self.inspect(json.loads(messages[-1]["content"]), kwargs["schema"])
+        return {"output": {"verdicts": self.verdicts}}
+
+
 @pytest.mark.anyio
-async def test_reviewer_receives_table_context_and_can_reject_a_misleading_analogy():
-    original = example_lesson()
-    blocks = [EvidenceBlock(id="p1b0", page=1, section="Method",
-                            text="The model retrieves documents. It then generates an answer. Different documents per TOKEN, not paragraph.")]
+async def test_checker_receives_table_context_and_can_reject_a_misleading_analogy():
+    text = "The model retrieves documents. It then generates an answer. Different documents per TOKEN, not paragraph."
+    blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text=text)]
+    analogy = {"heading": "تشبيه", "kind": "analogy", "text": "تخيّل مكتبة بتساعدك تختار مصدر لكل فقرة.",
+               "evidence_ids": [], "claims": []}
+    draft = validate_draft(claim_draft(claim_section("الفكرة", ("الطريقة بتسترجع مصادر وبعدين بتولّد الإجابة.", "p1b0s0")),
+                                       analogy), blocks)
 
-    class Reviewer:
-        async def complete(self, job, purpose, messages, **kwargs):
-            payload = json.loads(messages[-1]["content"])
-            assert payload["source_context"][0]["text"] == blocks[0].text
-            assert kwargs["schema"]["properties"]["unsupported_sections"]["items"]["enum"] == [0, 1]
-            return {"output": {"unsupported_sections": [1], "issues": ["analogy_mismatch"]}}
+    def inspect(payload, schema):
+        assert payload["source_context"][0]["text"] == text
+        assert schema["$defs"]["ClaimVerdict"]["properties"]["id"]["enum"] == ["c0", "a0"]
 
-    revised = await review_lesson(Reviewer(), "job", original, blocks=blocks)
-    assert revised.sections[0] == original.sections[0]
-    assert revised.sections[1].kind == "uncertainty"
-    assert "فقرة" not in revised.sections[1].text
+    checker = Scripted([{"id": "c0", "supported": True, "support_spans": honest_spans(text), "issue": "none"},
+                        {"id": "a0", "supported": False, "support_spans": [], "issue": "analogy_mismatch"}], inspect)
+    lesson, withheld = accept_draft(await check_claims(checker, "job", draft, blocks=blocks))
+    assert [s.kind for s in lesson.sections] == ["paper"] and withheld == {"تشبيه": 1}
+    assert "فقرة" not in " ".join(s.text for s in lesson.sections)
 
 
 @pytest.mark.anyio
-async def test_review_can_see_the_competing_table_row_beyond_the_chosen_quote():
-    original = example_lesson()
-    original.sections[1] = original.sections[0].model_copy(update={"heading": "النتائج", "kind": "paper",
-        "text": "RAG-Token حقق أفضل نتيجة على TQA-Wiki: 66.1.",
-        "evidence": [original.sections[0].evidence[0].model_copy(update={"block_id": "p6b0",
-                     "quote": "RAG-Token 44.1 55.2/66.1 45.5 50.0"})]})
+async def test_checker_sees_the_competing_table_row_and_withholds_a_false_best():
     table = "Table 1: TQA standard/TQA-Wiki. RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2"
-    blocks = [EvidenceBlock(id="p6b0", page=6, section="Results", text=table)]
+    blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text="The model retrieves documents."),
+              EvidenceBlock(id="p6b0", page=6, section="Results", text=table)]
+    draft = validate_draft(claim_draft(
+        claim_section("الفكرة", ("الطريقة بتسترجع مصادر وبتستخدمها.", "p1b0s0")),
+        claim_section("النتائج", ("RAG-Token حقق أفضل نتيجة على TQA-Wiki: 66.1.", "p6b0s0"))), blocks)
 
-    class Reviewer:
-        async def complete(self, job, purpose, messages, **kwargs):
-            payload = json.loads(messages[-1]["content"])
-            assert payload["source_context"][0]["text"] == table
-            assert "68.0" not in payload["lesson"]["sections"][1]["evidence"][0]["quote"]
-            return {"output": {"unsupported_sections": [1], "issues": ["overgeneralized_comparison"]}}
+    def inspect(payload, schema):
+        assert table in [block["text"] for block in payload["source_context"]]
 
-    result = await review_lesson(Reviewer(), "job", original, blocks=blocks)
-    assert result.sections[1].kind == "uncertainty"
-    assert "66.1" not in result.sections[1].text
+    checker = Scripted([{"id": "c0", "supported": True, "support_spans": ["The model retrieves documents."], "issue": "none"},
+                        {"id": "c1", "supported": False, "support_spans": [], "issue": "overgeneralized_comparison"}],
+                       inspect)
+    lesson, withheld = accept_draft(await check_claims(checker, "job", draft, blocks=blocks))
+    assert "66.1" not in " ".join(s.text for s in lesson.sections) and withheld == {"النتائج": 1}
 
 
 @pytest.mark.anyio
@@ -461,16 +478,18 @@ def test_review_rejections_become_one_closing_note():
 
 
 @pytest.mark.anyio
-async def test_review_report_carries_only_counts_and_issue_labels():
-    original = example_lesson()
-
-    class Reviewer:
-        async def complete(self, job, purpose, messages, **kwargs):
-            return {"output": {"unsupported_sections": [1], "issues": ["analogy_mismatch", "analogy_mismatch"]}}
-
+async def test_check_report_carries_only_counts_and_issue_labels():
+    blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text="The model retrieves documents.")]
+    analogy = {"heading": "تشبيه", "kind": "analogy", "text": "تخيّل مكتبة بتساعدك تختار مصدر لكل فقرة.",
+               "evidence_ids": [], "claims": []}
+    draft = validate_draft(claim_draft(claim_section("الفكرة", ("الطريقة بتسترجع مصادر وبتستخدمها.", "p1b0s0")), analogy),
+                           blocks)
     report = {}
-    await review_lesson(Reviewer(), "job", original, blocks=[], report=report)
-    assert report == {"reviewed": 2, "rejected": 1, "rejected_sections": [1], "issues": ["analogy_mismatch"]}
+    await check_claims(Scripted([{"id": "c0", "supported": True, "support_spans": ["The model retrieves documents."],
+                                  "issue": "none"},
+                                 {"id": "a0", "supported": False, "support_spans": [], "issue": "analogy_mismatch"}]),
+                       "job", draft, blocks=blocks, report=report)
+    assert report == {"checked": 2, "issues": ["analogy_mismatch"]}
 
 
 @pytest.mark.anyio
@@ -482,7 +501,8 @@ async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, m
 
         async def complete(self, job, purpose, messages, **kwargs):
             if purpose == "grounding_review" and self.reject:
-                return {"output": {"unsupported_sections": [0], "issues": ["missing_support"]}}
+                return {"output": {"verdicts": [{"id": "c0", "supported": False, "support_spans": [],
+                                                 "issue": "missing_support"}]}}
             return await super().complete(job, purpose, messages, **kwargs)
 
     model = RejectingModel()
@@ -504,9 +524,9 @@ async def test_deep_answer_rejected_by_review_names_the_review_stage(tmp_path, m
     job = await finished(service, admitted["job_id"])
     assert job["status"] == "failed"
     assert (job["result"]["failure_code"], job["result"]["diagnostic"], job["result"]["stage"]) == (
-        "lesson_validation_failed", "semantic_support", "review")
-    assert job["result"]["review"] == {"claims": 1, "kept": 1, "withheld": {}, "reviewed": 1, "rejected": 1,
-                                       "rejected_sections": [0], "issues": ["missing_support"]}
+        "lesson_validation_failed", "unsupported", "review")
+    assert job["result"]["review"] == {"checked": 1, "issues": ["missing_support"], "claims": 1, "kept": 0,
+                                       "withheld": {"unsupported": 1}}
     assert "stage=review" in job["result"]["text"]
     await service.aclose()
 
@@ -571,7 +591,7 @@ def three_claims(degenerate):
 class ThreeClaims(Model):
     async def complete(self, job, purpose, messages, **kwargs):
         if purpose == "grounding_review":
-            return {"output": {"unsupported_sections": [], "issues": []}}
+            return await super().complete(job, purpose, messages, **kwargs)
         return three_claims("النموذج بيستخدم المسترج" + "َـ" * 180)
 
 
@@ -621,3 +641,24 @@ def test_lessons_stored_before_v7_still_render():
     blocks = [EvidenceBlock(id="p1b0", page=1, section="Method", text="The model retrieves documents.")]
     text = render_lesson(stored, blocks, "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text")
     assert "⚠️ شلت 1 جزء ماقدرتش أتأكد منه من نص الورقة: «الطريقة»." in text
+
+
+@pytest.mark.anyio
+async def test_a_first_lesson_uses_two_calls_and_a_question_only_quiz_one(tmp_path):
+    class Counting(Model):
+        purposes: list = []
+
+        async def complete(self, job, purpose, messages, **kwargs):
+            self.purposes.append(purpose)
+            if purpose == "followup":
+                return {"output": {"title": "سؤال", "sections": [{"heading": "سؤال الفهم", "kind": "question",
+                        "text": "إيه الفرق بين الطريقة دي والتكرار في معالجة الجمل؟", "evidence_ids": [], "claims": []}]}}
+            return await super().complete(job, purpose, messages, **kwargs)
+
+    model = Counting()
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), model)
+    lesson = await finished(service, service.submit("paper", "/paper 1706.03762")["job_id"])
+    assert lesson["status"] == "ready" and model.purposes == ["lesson", "grounding_review"]
+    quiz = await finished(service, service.submit("quiz", "/quiz")["job_id"])
+    assert quiz["status"] == "ready" and model.purposes == ["lesson", "grounding_review", "followup"]
+    await service.aclose()

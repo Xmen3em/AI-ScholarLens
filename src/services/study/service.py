@@ -21,11 +21,11 @@ from src.services.study.tutor import (
     Lesson,
     TutorError,
     accept_draft,
+    check_claims,
     draft_report,
     lesson_schema,
     page_label,
     render_lesson,
-    review_lesson,
     screen_claims,
     validate_draft,
 )
@@ -321,10 +321,10 @@ class StudyService:
         stage = "result_validation"
         try:
             draft = screen_claims(validate_draft(result["output"], selected), question=question)
+            stage = "review"
+            draft = await check_claims(self.model, state["job_id"], draft, blocks=document.blocks, report=review)
             review.update(draft_report(draft))
             lesson, withheld = accept_draft(draft)
-            stage = "review"
-            lesson = await review_lesson(self.model, state["job_id"], lesson, blocks=document.blocks, report=review)
         except Exception as exc:
             # A worker that succeeded can still fail here, in the parent; keep that distinguishable.
             if question.startswith("/deep "):

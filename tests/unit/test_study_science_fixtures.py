@@ -6,20 +6,21 @@ from pathlib import Path
 import pytest
 from src.services.study.content import EvidenceBlock
 from src.services.study.tutor import (
-    GroundingReview,
+    ClaimVerdict,
     TutorError,
     accept_draft,
-    review_lesson,
+    check_claims,
     screen_claims,
     validate_draft,
-    validate_lesson,
 )
+
+from tests.unit.test_study_service import honest_spans
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = json.loads((ROOT / "evaluation/paper_learning/science-cases.v1.json").read_text(encoding="utf-8"))
 TRUTH = json.loads((ROOT / CASES["truth_source"]["fixture"]).read_text(encoding="utf-8"))
 CRITICAL_CLASSES = {"best_result", "units_splits", "training_updates", "equation_signs", "token_paragraph_mechanism"}
-REVIEW_ISSUES = set(GroundingReview.model_json_schema()["properties"]["issues"]["items"]["enum"])
+REVIEW_ISSUES = set(ClaimVerdict.model_json_schema()["properties"]["issue"]["enum"]) - {"none"}
 
 
 def locator_blocks() -> list[EvidenceBlock]:
@@ -139,32 +140,48 @@ def test_offline_validation_matches_the_frozen_outcome(case):
 SEMANTIC_ONLY = [case for case in CASES["cases"] if case["expected"].get("review") == "reject"]
 
 
+class Checker:
+    """Scripted claim checker: records the payload and answers every item the same way."""
+
+    def __init__(self, supported, issue="none"):
+        self.supported, self.issue, self.payload = supported, issue, None
+
+    async def complete(self, job, purpose, messages, **kwargs):
+        self.payload = json.loads(messages[-1]["content"])
+        return {"output": {"verdicts": [
+            {"id": item["id"], "supported": self.supported, "issue": self.issue,
+             "support_spans": honest_spans(item["quote"]) if self.supported and "quote" in item else []}
+            for item in self.payload["items"]]}}
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize("case", SEMANTIC_ONLY, ids=lambda case: case["id"])
-async def test_errors_the_offline_gate_admits_reach_review_with_their_full_source(case):
+async def test_errors_the_offline_gate_admits_reach_the_check_with_their_exact_quote(case):
     blocks = locator_blocks()
-    lesson = validate_lesson(draft(case), blocks)
-    seen = {}
-
-    class Reviewer:
-        async def complete(self, job, purpose, messages, **kwargs):
-            seen["payload"] = json.loads(messages[-1]["content"])
-            seen["reviewable"] = kwargs["schema"]["properties"]["unsupported_sections"]["items"]["enum"]
-            return {"output": {"unsupported_sections": [0], "issues": case["expected"]["issues"][:1]}}
-
+    checked = validate_draft(draft(case), blocks)
+    checker = Checker(False, case["expected"]["issues"][0])
+    result = await check_claims(checker, "science-case", checked, blocks=blocks)
+    item = checker.payload["items"][0]
     if case["section"]["kind"] == "paper":
-        # The only paper claim was rejected, so the whole lesson is withheld.
-        with pytest.raises(TutorError, match="lesson_validation_failed") as captured:
-            await review_lesson(Reviewer(), "science-case", lesson, blocks=blocks)
-        assert captured.value.diagnostic == "semantic_support"
+        claim = result.sections[0].claims[0]
+        assert item["quote"] == claim.support.quote and claim.withheld == "unsupported"
+        assert [block["id"] for block in checker.payload["source_context"]] == [claim.support.block_id]
+        with pytest.raises(TutorError, match="lesson_validation_failed"):
+            accept_draft(result)
     else:
-        revised = await review_lesson(Reviewer(), "science-case", lesson, blocks=blocks)
-        assert revised.sections[0].kind == "uncertainty" and revised.sections[0].evidence == []
-    assert seen["reviewable"] == [0]
-    cited = {support.block_id for support in lesson.sections[0].evidence}
-    assert {block["id"] for block in seen["payload"]["source_context"]} == cited
-    for block in seen["payload"]["source_context"]:
-        assert block["text"] == next(b.text for b in blocks if b.id == block["id"])
+        assert "analogy" in item and result.sections[0].dropped == "unsupported"
+
+
+SUPPORTED = [case for case in CASES["cases"] if case["polarity"] == "supported"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("case", SUPPORTED, ids=lambda case: case["id"])
+async def test_verified_correct_sections_survive_an_honest_checker(case):
+    blocks = locator_blocks()
+    result = await check_claims(Checker(True), "science-case", validate_draft(draft(case), blocks), blocks=blocks)
+    lesson, withheld = accept_draft(result)
+    assert withheld == {} and lesson.sections[0].text == case["section"]["claims"][0]["text"]
 
 
 ADMITTED = [case for case in CASES["cases"] if case["expected"]["deterministic"] == "kept"]

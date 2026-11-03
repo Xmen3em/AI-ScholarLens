@@ -5,7 +5,7 @@ import pytest
 from pydantic import SecretStr
 from src.services.study.content import EvidenceBlock
 from src.services.study.store import StudyStore
-from src.services.study.tutor import Lesson, StudyModel, TutorError, review_lesson, validate_lesson
+from src.services.study.tutor import StudyModel, TutorError, accept_draft, check_claims, validate_draft, validate_lesson
 
 
 def lesson():
@@ -96,19 +96,24 @@ async def test_low_ram_blocks_before_attempt_reservation(tmp_path):
 
 
 @pytest.mark.anyio
-async def test_semantic_review_removes_a_bad_comparison_without_rewriting_it():
-    original = Lesson.model_validate({"title": "شرح", "sections": [
-        {"heading": "الفكرة", "kind": "paper", "text": "الطريقة بتسترجع مصادر وتستخدمها في التوليد.",
-         "evidence": [{"block_id": "p1b1", "quote": "The model retrieves documents."}]},
-        {"heading": "المقارنة", "kind": "paper", "text": "الطريقة أحسن من كل النماذج في كل المقاييس.",
-         "evidence": [{"block_id": "p2b1", "quote": "Some metrics improve; other metrics decline."}]}]})
-    class Reviewer:
+async def test_claim_check_removes_a_bad_comparison_without_rewriting_it():
+    blocks = [EvidenceBlock(id="p1b1", page=1, section="Method", text="The model retrieves documents."),
+              EvidenceBlock(id="p2b1", page=2, section="Results", text="Some metrics improve; other metrics decline.")]
+    raw = {"title": "شرح", "sections": [
+        {"heading": "الفكرة", "kind": "paper", "text": "", "evidence_ids": [], "claims": [
+            {"text": "الطريقة بتسترجع مصادر وتستخدمها في التوليد.", "evidence_id": "p1b1s0"}]},
+        {"heading": "المقارنة", "kind": "paper", "text": "", "evidence_ids": [], "claims": [
+            {"text": "الطريقة أحسن من كل النماذج في كل المقاييس.", "evidence_id": "p2b1s0"}]}]}
+
+    class Checker:
         async def complete(self, *args, **kwargs):
-            return {"output": {"unsupported_sections": [1], "issues": ["overgeneralized_comparison"]}}
-    revised = await review_lesson(Reviewer(), "job", original)
-    assert revised.sections[0] == original.sections[0]
-    assert revised.sections[1].kind == "uncertainty" and revised.sections[1].evidence == []
-    assert "كل النماذج" not in revised.sections[1].text
+            return {"output": {"verdicts": [
+                {"id": "c0", "supported": True, "support_spans": ["The model retrieves documents."], "issue": "none"},
+                {"id": "c1", "supported": False, "support_spans": [], "issue": "overgeneralized_comparison"}]}}
+
+    lesson, withheld = accept_draft(await check_claims(Checker(), "job", validate_draft(raw, blocks), blocks=blocks))
+    assert [s.heading for s in lesson.sections] == ["الفكرة"] and withheld == {"المقارنة": 1}
+    assert "كل النماذج" not in " ".join(s.text for s in lesson.sections)
 
 
 def test_server_copies_the_original_quote_instead_of_asking_a_model_to_reproduce_it():
