@@ -22,9 +22,9 @@
             "quote": "For example, if pgold = 0.5, then each piece of gold knowledge has a 50% chance to be sampled."
           },
           {
-            "fact": "Because RAG is a retriever-selector-generator pipeline, knowledge recall can only be improved by the retriever.",
-            "block": "p5b1",
-            "quote": "Due to the pipeline nature of the retriever, selector, and generator components of RAG, knowledge recall can only be improved by the retriever."
+            "fact": "Gold and distractor knowledge are sampled at varying rates pgold and pnoise, covering everything from noise only to gold knowledge only.",
+            "block": "p3b0",
+            "quote": "we sample gold knowledge and distractor knowledge at varying rates pgold and pnoise to precisely simulate a wide range of quality for the retrieved and selected knowledge K′ , from noise only to gold knowledge only."
           }
         ]
       },
