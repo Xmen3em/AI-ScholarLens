@@ -152,3 +152,23 @@ async def test_errors_the_offline_gate_admits_reach_review_with_their_full_sourc
     assert {block["id"] for block in seen["payload"]["source_context"]} == cited
     for block in seen["payload"]["source_context"]:
         assert block["text"] == next(b.text for b in blocks if b.id == block["id"])
+
+
+ADMITTED = [case for case in CASES["cases"] if case["expected"]["deterministic"] == "accepted"]
+
+
+@pytest.mark.parametrize("case", ADMITTED, ids=lambda case: case["id"])
+def test_first_lesson_screen_matches_the_frozen_outcome(case):
+    from src.services.study.tutor import screen_sections
+
+    lesson = validate_lesson(draft(case), locator_blocks())
+    expected = case["expected"].get("screen")
+    if expected:
+        # A single paper section that is withheld leaves nothing to teach from.
+        with pytest.raises(TutorError) as captured:
+            screen_sections(lesson, question="ابدأ درس تمهيدي متكامل عن الورقة.")
+        assert captured.value.diagnostic == expected
+        # The same claim is allowed through to the review when the learner asked who is better.
+        assert screen_sections(lesson, question="مين الأحسن في TQA-Wiki؟")[1] == []
+    else:
+        assert screen_sections(lesson, question="ابدأ درس تمهيدي متكامل عن الورقة.")[1] == []

@@ -210,7 +210,8 @@
         "issues": [
           "missing_support",
           "overgeneralized_comparison"
-        ]
+        ],
+        "screen": "unrequested_comparison"
       }
     },
     {
@@ -283,7 +284,8 @@
         "review": "reject",
         "issues": [
           "metric_setting_mismatch"
-        ]
+        ],
+        "screen": "unrequested_comparison"
       }
     },
     {
@@ -335,6 +337,30 @@
       },
       "expected": {
         "deterministic": "accepted",
+        "review": "reject",
+        "issues": [
+          "metric_setting_mismatch",
+          "overgeneralized_comparison"
+        ],
+        "screen": "unrequested_comparison"
+      }
+    },
+    {
+      "id": "observed-tqa-pair-as-one-result",
+      "polarity": "critical_error",
+      "class": "best_result",
+      "observed": "2026-11-03 second live first lesson; the live review kept all 6 sections",
+      "section": {
+        "heading": "تجربة موثقة",
+        "kind": "paper",
+        "text": "في اختبار Open‑Domain QA على Natural Questions (NQ) وTriviaQA (TQA) وWebQuestions (WQ) وCuratedTrec (CT)، حقق RAG‑Sequence 44.5 EM على NQ و56.8/68.0 EM على TQA (العمود اليمين)، متفوقًا على نماذج “Closed‑Book” وREALM وDPR.",
+        "evidence_ids": [
+          "p6b0s0"
+        ]
+      },
+      "expected": {
+        "deterministic": "accepted",
+        "screen": "unrequested_comparison",
         "review": "reject",
         "issues": [
           "metric_setting_mismatch",

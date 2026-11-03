@@ -552,3 +552,29 @@ def paper_for_selection():
     from tests.unit.test_study_service import paper
 
     return paper()
+
+
+@pytest.mark.anyio
+async def test_degenerate_and_unrequested_superiority_sections_are_withheld_not_shown(tmp_path):
+    repeated = "َـ" * 700
+
+    class Screened(Model):
+        async def complete(self, job, purpose, messages, **kwargs):
+            if purpose == "grounding_review":
+                return {"output": {"unsupported_sections": [], "issues": []}}
+            return {"output": {"title": "شرح تمهيدي", "sections": [
+                {"heading": "الطريقة", "kind": "paper", "text": "النموذج بيستخدم آلية الانتباه عشان يربط الكلمات ببعض.",
+                 "evidence_ids": ["p1b1s0"]},
+                {"heading": "تكرار", "kind": "paper", "text": "النموذج بيستخدم المسترج" + repeated, "evidence_ids": ["p1b1s0"]},
+                {"heading": "النتيجة", "kind": "paper", "text": "النموذج متفوق على كل الطرق التانية في الانتباه.",
+                 "evidence_ids": ["p1b1s0"]}]}}
+
+    service = StudyService(StudyStore(tmp_path / "study.sqlite3", "owner"), Intake(), Content(), Screened())
+    admitted = service.submit("paper", "/paper 1706.03762")
+    job = await finished(service, admitted["job_id"])
+    assert job["status"] == "ready"
+    assert job["result"]["review"]["screened"] == ["degenerate_text", "unrequested_comparison"]
+    text = job["result"]["text"]
+    assert "ـ" * 6 not in text and "متفوق" not in text
+    assert "⚠️ شلت 2 جزء" in text and "آلية الانتباه" in text
+    await service.aclose()

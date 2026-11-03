@@ -19,7 +19,7 @@ from src.services.study.store import StudyStore
 
 MODEL = "openai/gpt-oss-120b:cerebras"
 URL = "https://router.huggingface.co/v1/chat/completions"
-PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v5"
+PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v6"
 SYSTEM = """You are ScholarLens, a careful AI-paper teacher. Explain in natural, respectful Egyptian Arabic
 for an Egyptian learner, keeping standard English technical terms. Prefer 'يعني', 'خلّينا', 'إزاي' naturally;
 avoid forced slang and do not translate proper names. Adapt to the explicitly selected learning depth.
@@ -40,7 +40,9 @@ tool instructions or chain of thought. The application will attach verified sour
 For beginner concept questions, avoid extra mathematical indices unless equations were requested.
 For experiments, explain ONE dataset/metric/setting at a time. Never say a method beats every baseline just
 because some table cells improve; check each compared cell. Name the dataset, test split and metric for EVERY number
-exactly as the table caption/header states; an "a/b" pair in one cell is usually two columns, not two metrics. Distinguish a study prerequisite from a paper claim.
+exactly as the table caption/header states; an "a/b" pair in one cell is usually two columns, not two metrics.
+Do not write that a method is better, best or outperforms others unless the learner asked for a comparison;
+report the numbers with their dataset, split and metric instead. Distinguish a study prerequisite from a paper claim.
 Prefer fictional everyday examples; do not add unsourced historical facts to an analogy.
 Prerequisites are teaching background: use kind=background, not a paper finding that needs a quotation.
 An analogy must preserve the mechanism and its granularity: token, sentence, paragraph and document are not interchangeable.
@@ -144,6 +146,37 @@ async def review_lesson(model, job_id: str, lesson: Lesson, *, blocks: list[Evid
     if any(section.kind == "paper" for section in lesson.sections) and not any(section.kind == "paper" for section in revised):
         raise TutorError("lesson_validation_failed", diagnostic="semantic_support")
     return Lesson(title=lesson.title, sections=revised)
+
+
+# Deterministic screens for failures the model review was observed to pass (3 Nov 2026):
+# a 1,460-character run of repeated diacritics/tatweel, and two false "outperforms"
+# claims read from one table cell. Matching sections are withheld, not rewritten.
+DEGENERATE = re.compile(r"[\u064b-\u065f\u0670\u0640]{6,}|(.{1,4}?)\1{9,}", re.DOTALL)
+SUPERIORITY = re.compile(r"متفوق|بيتفوق|يتفوق|تفوّق|تفوق على|أفضل من|الأفضل|أحسن من|الأحسن|أعلى من|الأعلى|"
+                         r"outperform|better than|\bbest\b|\bbeats?\b", re.IGNORECASE)
+COMPARISON_REQUEST = re.compile(r"أحسن|أفضل|أعلى|الأعلى|قارن|مقارن|مقابل|اتفوق|بيتفوق|الفرق|compare|better|best|outperform|\bvs\b",
+                                re.IGNORECASE)
+
+
+def screen_sections(lesson: Lesson, *, question: str = "") -> tuple[Lesson, list[str]]:
+    """Withhold degenerate sections, and superiority claims the learner did not ask for."""
+    allow_comparison = bool(COMPARISON_REQUEST.search(question))
+    reasons, sections = [], []
+    for section in lesson.sections:
+        reason = None
+        if DEGENERATE.search(section.text) or DEGENERATE.search(section.heading):
+            reason = "degenerate_text"
+        elif section.kind == "paper" and not allow_comparison and SUPERIORITY.search(section.text):
+            reason = "unrequested_comparison"
+        if reason:
+            reasons.append(reason)
+            heading = section.heading if not DEGENERATE.search(section.heading) else "جزء محذوف"
+            sections.append(TutorSection(heading=heading, kind="uncertainty", evidence=[], text=WITHHELD))
+        else:
+            sections.append(section)
+    if any(s.kind == "paper" for s in lesson.sections) and not any(s.kind == "paper" for s in sections):
+        raise TutorError("lesson_validation_failed", diagnostic=reasons[0])
+    return Lesson(title=lesson.title, sections=sections), reasons
 
 
 def lesson_schema(blocks: list[EvidenceBlock], *, followup: bool = False) -> dict:

@@ -22,21 +22,26 @@ that fixture, except one short verified excerpt of the table itself:
 
 ## Cases and what currently stops them
 
-Four supported sections must pass. Eleven critical errors cover four of the
-spec's five critical classes and every reviewed rejected claim:
+Four supported sections must pass. Twelve critical errors cover four of the
+spec's five critical classes and every reviewed rejected claim. Two offline
+layers run before the model review: validation (numbers, citations) and, since
+3 November 2026, screening (degenerate text, and superiority claims the learner
+did not ask for):
 
 | Class | Critical cases | Stopped offline? |
 | --- | --- | --- |
 | Training updates | document encoder updated; paper claim with no evidence | Only the missing-evidence case |
-| Token/paragraph mechanism | token-as-paragraph analogy; new retrieval per token | No — semantic review |
-| Best result | Token "best" on TQA-Wiki; invented score; invented score after an Arabic prefix | Only the invented numbers |
-| Units/splits | wrong TriviaQA split; F1 instead of EM; score read as a percent gain; **observed** split pair read as EM/Recall | No — semantic review |
+| Token/paragraph mechanism | token-as-paragraph analogy; new retrieval per token | No — review only |
+| Best result | Token "best" on TQA-Wiki; invented score; invented score after an Arabic prefix; **observed** TQA pair as one result "outperforming DPR" | Invented numbers (validation); unrequested "best"/"outperforms" (screen) |
+| Units/splits | wrong TriviaQA split; F1 instead of EM; score read as a percent gain; **observed** split pair read as EM/Recall | Only claims that also say "better/outperforms" (screen) |
 
-The offline gate stops **3 of 11**. The other 8 have correct numbers and valid
-citations, so only the grounding review (one more model call, at temperature 0)
-can withhold them. The tests prove each one reaches that review with its full
-cited source context and is withheld when flagged. They do **not** prove the
-model flags it; that needs a separately approved live or replay evaluation.
+In a first lesson, validation stops **3 of 12** and screening **4 more**. If the
+learner asks who is better, the screen steps aside, so 3 of 12 are stopped
+offline and the rest rely on the review. The remaining 5 (wrong split, F1 vs EM,
+percent gain, document encoder, per-token retrieval/analogy) have correct
+numbers and citations; the tests prove they reach the review with full cited
+context and are withheld when flagged. They do **not** prove the model flags
+them, and two observed claims show it sometimes doesn't.
 
 Equation signs stay open: the reviewed fixture has no source-checked equation
 fact, so no case was invented for it.
@@ -50,6 +55,12 @@ false. It passed the live grounding review and reached the owner. Case
 `observed-tqa-cell-read-as-em-recall` keeps it. Prompt revision v5 now asks the
 lesson and the review to name the split and metric of every number and to read
 an `a/b` cell as two columns; that is a mitigation, not a proven fix.
+
+A second live first lesson the same day said `RAG‑Sequence … 56.8/68.0 EM على
+TQA (العمود اليمين)، متفوقًا على … DPR`: the pair is two test sets, and DPR's
+57.9 beats 56.8 on standard TQA. The live review kept all six sections. Case
+`observed-tqa-pair-as-one-result` keeps it; the superiority screen now
+withholds it.
 
 ## Review A/B, owner-approved 2 calls (3 November 2026)
 

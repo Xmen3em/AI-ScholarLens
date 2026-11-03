@@ -24,6 +24,7 @@ from src.services.study.tutor import (
     page_label,
     render_lesson,
     review_lesson,
+    screen_sections,
     validate_lesson,
 )
 from src.services.study.visuals import study_map
@@ -318,6 +319,9 @@ class StudyService:
         stage = "result_validation"
         try:
             lesson = validate_lesson(result["output"], selected)
+            lesson, screened = screen_sections(lesson, question=question)
+            if screened:
+                review["screened"] = screened
             stage = "review"
             lesson = await review_lesson(self.model, state["job_id"], lesson, blocks=document.blocks, report=review)
         except Exception as exc:
