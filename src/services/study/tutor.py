@@ -147,7 +147,9 @@ def _numbers(text: str) -> set[str]:
     normalized = text.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩٫", "0123456789."))
     # Compare numeric literals. Units/percent scale and metric context are checked
     # separately by the semantic review; tables often print the % only in a header.
-    return set(re.findall(r"(?<![\w])\d+(?:[.,]\d+)*(?:e[+-]?\d+)?", normalized))
+    # Only ASCII identifiers (F1, p6b0) hide a digit: Arabic prefixes such as و/بـ/لـ
+    # attach directly to numbers and must not let an invented score escape.
+    return set(re.findall(r"(?<![A-Za-z0-9_.])\d+(?:[.,]\d+)*(?:e[+-]?\d+)?", normalized))
 
 
 def validate_lesson(raw: dict, blocks: list[EvidenceBlock]) -> Lesson:

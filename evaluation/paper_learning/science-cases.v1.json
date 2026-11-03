@@ -1,0 +1,217 @@
+{
+  "revision": "paper-learning-science-cases-v1",
+  "status": "development_regression",
+  "truth_source": {
+    "fixture": "evaluation/visual_learning/rag-method.v1.json",
+    "revision": "rag-method-source-checked-v1"
+  },
+  "source": {
+    "paper_id": "2005.11401v4",
+    "sha256": "23e3249e9a1e75418d82efecab0ea8c4d033b89c93742f63208d47ce01f21233",
+    "parser_revision": "pdfium-5.14.0-v1"
+  },
+  "critical_classes": {
+    "best_result": "covered",
+    "units_splits": "covered",
+    "training_updates": "covered",
+    "token_paragraph_mechanism": "covered",
+    "equation_signs": "open: the reviewed RAG fixture has no source-checked equation fact; do not invent one"
+  },
+  "holdout": {
+    "status": "not_reserved",
+    "reason": "The 12-paper/48-question holdout needs its own source review; this file is development data for one paper only."
+  },
+  "locators": [
+    {
+      "block_id": "p2b0", "page": 2, "section": "Figure 1",
+      "construction": "reviewed_excerpts", "evidence_ids": ["retrieval-p2"]
+    },
+    {
+      "block_id": "p3b0", "page": 3, "section": "2.1 Models",
+      "construction": "reviewed_excerpts", "evidence_ids": ["sequence-p3", "token-p3"]
+    },
+    {
+      "block_id": "p4b0", "page": 4, "section": "2.4 Training",
+      "construction": "reviewed_excerpts", "evidence_ids": ["training-p4", "query-update-p4", "generator-update-p4"]
+    },
+    {
+      "block_id": "p6b0", "page": 6, "section": "Table 1",
+      "construction": "reviewed_table_metadata"
+    }
+  ],
+  "cases": [
+    {
+      "id": "training-roles-supported",
+      "polarity": "supported",
+      "class": "training_updates",
+      "section": {
+        "heading": "مين بيتعلّم أثناء التدريب",
+        "kind": "paper",
+        "text": "أثناء التدريب بيتعدّل query encoder والـBART generator، أما document encoder والفهرس فبيفضلوا ثابتين.",
+        "evidence_ids": ["p4b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "accept"}
+    },
+    {
+      "id": "retrieval-supported",
+      "polarity": "supported",
+      "class": "token_paragraph_mechanism",
+      "section": {
+        "heading": "الاسترجاع",
+        "kind": "paper",
+        "text": "النموذج بيجيب top-K documents للسؤال الأول، وبعدها بيولّد الإجابة وهو شايفها.",
+        "evidence_ids": ["p2b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "accept"}
+    },
+    {
+      "id": "token-sequence-supported",
+      "polarity": "supported",
+      "class": "token_paragraph_mechanism",
+      "section": {
+        "heading": "Sequence وToken",
+        "kind": "paper",
+        "text": "RAG-Sequence بيعتمد على نفس الوثيقة للتسلسل كله، وRAG-Token ممكن يعتمد على وثيقة مختلفة لكل token من نفس الوثائق اللي اتجابت.",
+        "evidence_ids": ["p3b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "accept"}
+    },
+    {
+      "id": "tqa-wiki-comparison-supported",
+      "polarity": "supported",
+      "class": "best_result",
+      "section": {
+        "heading": "نتيجة TQA-Wiki",
+        "kind": "paper",
+        "text": "في TQA-Wiki بمقياس EM، RAG-Sequence سجّل 68.0 وRAG-Token سجّل 66.1، يعني الـSequence أعلى في الإعداد ده تحديدًا.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "accept"}
+    },
+    {
+      "id": "document-encoder-updated",
+      "polarity": "critical_error",
+      "class": "training_updates",
+      "rejected_claim": "document_encoder_updated",
+      "section": {
+        "heading": "مين بيتعلّم أثناء التدريب",
+        "kind": "paper",
+        "text": "أثناء التدريب بيتعدّل document encoder مع query encoder، فالفهرس بيتحسّن مع كل خطوة.",
+        "evidence_ids": ["p4b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["missing_support"]}
+    },
+    {
+      "id": "token-is-paragraph-analogy",
+      "polarity": "critical_error",
+      "class": "token_paragraph_mechanism",
+      "rejected_claim": "token_is_paragraph",
+      "section": {
+        "heading": "تشبيه",
+        "kind": "analogy",
+        "text": "تخيّل إن كل token فقرة كاملة، وإنك بتروح المكتبة تدوّر من جديد عند كل فقرة.",
+        "evidence_ids": []
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["analogy_mismatch"]}
+    },
+    {
+      "id": "retrieval-per-token",
+      "polarity": "critical_error",
+      "class": "token_paragraph_mechanism",
+      "rejected_claim": "token_is_paragraph",
+      "section": {
+        "heading": "RAG-Token",
+        "kind": "paper",
+        "text": "RAG-Token بيعمل بحث جديد في الفهرس عند كل token عشان يجيب وثائق جديدة.",
+        "evidence_ids": ["p3b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["missing_support"]}
+    },
+    {
+      "id": "token-best-tqa-wiki",
+      "polarity": "critical_error",
+      "class": "best_result",
+      "rejected_claim": "token_best_tqa_wiki",
+      "section": {
+        "heading": "نتيجة TQA-Wiki",
+        "kind": "paper",
+        "text": "في TQA-Wiki بمقياس EM، RAG-Token هو الأفضل بـ66.1 قدام 68.0 للـSequence.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["missing_support", "overgeneralized_comparison"]}
+    },
+    {
+      "id": "invented-token-score",
+      "polarity": "critical_error",
+      "class": "best_result",
+      "section": {
+        "heading": "نتيجة TQA-Wiki",
+        "kind": "paper",
+        "text": "RAG-Token سجّل 70.2 بمقياس EM في TQA-Wiki، وده أعلى رقم في الجدول.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "rejected:unsupported_number"}
+    },
+    {
+      "id": "invented-score-after-arabic-prefix",
+      "polarity": "critical_error",
+      "class": "best_result",
+      "note": "Before 2026-11-03 a number glued to و/بـ/لـ was not extracted, so this invented score passed.",
+      "section": {
+        "heading": "نتيجة TQA-Wiki",
+        "kind": "paper",
+        "text": "في TQA-Wiki بمقياس EM، RAG-Token هو الأفضل بـ71 نقطة.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "rejected:unsupported_number"}
+    },
+    {
+      "id": "wrong-trivia-split",
+      "polarity": "critical_error",
+      "class": "units_splits",
+      "section": {
+        "heading": "نتيجة TriviaQA",
+        "kind": "paper",
+        "text": "RAG-Sequence سجّل 68.0 EM على split الاختبار العادي بتاع TriviaQA.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["metric_setting_mismatch"]}
+    },
+    {
+      "id": "wrong-metric-name",
+      "polarity": "critical_error",
+      "class": "units_splits",
+      "section": {
+        "heading": "نتيجة TQA-Wiki",
+        "kind": "paper",
+        "text": "في TQA-Wiki، نموذج RAG-Sequence وصل لـ68.0 بمقياس F1، وده أعلى من الطريقة التانية.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["metric_setting_mismatch"]}
+    },
+    {
+      "id": "score-read-as-percent-gain",
+      "polarity": "critical_error",
+      "class": "units_splits",
+      "section": {
+        "heading": "الفرق بين النموذجين",
+        "kind": "paper",
+        "text": "RAG-Sequence حسّن الأداء بنسبة 68.0% مقارنة بـRAG-Token في TQA-Wiki.",
+        "evidence_ids": ["p6b0s0"]
+      },
+      "expected": {"deterministic": "accepted", "review": "reject", "issues": ["metric_setting_mismatch"]}
+    },
+    {
+      "id": "paper-claim-without-evidence",
+      "polarity": "critical_error",
+      "class": "training_updates",
+      "section": {
+        "heading": "التدريب",
+        "kind": "paper",
+        "text": "الورقة بتدرّب كل أجزاء النموذج مع بعض من الأول للآخر من غير ما تثبّت أي جزء.",
+        "evidence_ids": []
+      },
+      "expected": {"deterministic": "rejected:missing_evidence"}
+    }
+  ]
+}
