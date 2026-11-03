@@ -196,3 +196,15 @@ async def test_a_whole_short_quote_is_enough_proof():
     result, _, _ = await checked([claim("النموذج بيجيب top-K documents للسؤال قبل التوليد.", "p2b0s0")],
                                  [verdict("c0", spans=("top-K documents",))], blocks=short)
     assert result.sections[0].claims[0].withheld is None
+
+
+@pytest.mark.anyio
+async def test_repeating_one_span_is_not_three_words_of_proof():
+    result, _, _ = await checked([claim(SEQ, "p6b1s0")], [verdict("c0", spans=("68.0", "68.0", "68.0"))])
+    assert result.sections[0].claims[0].withheld == "unverified_support"
+
+
+def test_check_prompt_asks_for_the_shortest_proof():
+    from src.services.study.tutor import CLAIM_PROMPT
+
+    assert "SHORTEST" in CLAIM_PROMPT

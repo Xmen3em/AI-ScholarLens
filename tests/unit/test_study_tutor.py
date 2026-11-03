@@ -66,6 +66,25 @@ async def test_new_transport_reserves_before_network_and_never_retries(tmp_path)
 
 
 @pytest.mark.asyncio
+async def test_the_claim_check_gets_room_for_copied_spans(tmp_path):
+    store = StudyStore(tmp_path / "state.sqlite3", "owner")
+    job = store.create_job("test", {}, max_calls=1)
+    sent = []
+
+    def respond(request):
+        sent.append(json.loads(request.content))
+        return httpx.Response(503)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(respond))
+    model = StudyModel(SecretStr("private-test"), store, client=client, memory=lambda: 2000, counter=lambda _: 100)
+    with pytest.raises((TutorError, RuntimeError)):
+        await model.complete(job["id"], "grounding_review", [{"role": "user", "content": "test"}], schema={"type": "object"})
+    # Verdicts now carry up to three 200-character spans each; 1,000 tokens truncated real lessons.
+    assert sent[0]["max_tokens"] == 3000
+    await client.aclose()
+
+
+@pytest.mark.asyncio
 async def test_transport_rejects_truncation_missing_usage_and_tool_calls(tmp_path):
     for index, change in enumerate(("length", "usage", "tools")):
         store = StudyStore(tmp_path / f"state-{index}.sqlite3", "owner")
