@@ -1,0 +1,560 @@
+{
+  "version": "paper-benchmark-papers-v1",
+  "papers": [
+    {
+      "id": "2410.13258v4",
+      "field": "ml_nlp",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CL"
+      ],
+      "pages": 18,
+      "blocks": 38,
+      "sha256": "a649c16a7e123bcaf0791001306801d5e1e37d1afa5efb0d585339228bc28c7a",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2502.03275v2",
+      "field": "ml_nlp",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG",
+        "cs.LO"
+      ],
+      "pages": 20,
+      "blocks": 52,
+      "sha256": "2cf25013f5ed25e4f112d6ccbda8c771a646fba31bbffeeb6632eaec0ef37120",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result",
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2412.03679v2",
+      "field": "ml_nlp",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CL"
+      ],
+      "pages": 19,
+      "blocks": 50,
+      "sha256": "143412f39c7e8225e4f6f451499383643033e1c5ade78f2b4d1cd9afac67beda",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2404.07851v2",
+      "field": "ml_nlp",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "pages": 21,
+      "blocks": 54,
+      "sha256": "73088fa6824e594ab6b6124e9730f824881ebe5eebdf9a066e36a0417c42e8f1",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2409.15664v2",
+      "field": "ml_nlp",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "pages": 18,
+      "blocks": 40,
+      "sha256": "cce8efa86a51c815cdcaf9e73613811f2091fcffd784879fa366e5c8c6dbcb19",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2510.26807v1",
+      "field": "medicine",
+      "split": "dev",
+      "license": "http://arxiv.org/licenses/nonexclusive-distrib/1.0/",
+      "publish": false,
+      "categories": [
+        "stat.AP",
+        "cs.LG"
+      ],
+      "pages": 32,
+      "blocks": 39,
+      "sha256": "2de8f2a9ce647f8a84cbaf318850b22c1752de2303ddaac102ad4aae805b0cd9",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.00711v1",
+      "field": "medicine",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+      "publish": true,
+      "categories": [
+        "eess.IV",
+        "cs.CE",
+        "cs.LG"
+      ],
+      "pages": 12,
+      "blocks": 41,
+      "sha256": "6748ea834a08c1a0c4a7f8876c9de63cebc695210c365152e5da9e16d6f64327",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.00900v1",
+      "field": "medicine",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+      "publish": true,
+      "categories": [
+        "eess.IV",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "pages": 10,
+      "blocks": 19,
+      "sha256": "af832622262d1590cdca71e4116418938b42310eabb490162b73185cac8f509c",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2509.02710v1",
+      "field": "medicine",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "physics.med-ph",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "pages": 5,
+      "blocks": 12,
+      "sha256": "aec488b533f190daa2bd6668f9987be5611f0951abe778a4cbea089cd0b3a047",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": []
+    },
+    {
+      "id": "2509.00026v1",
+      "field": "medicine",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "cs.CY"
+      ],
+      "pages": 6,
+      "blocks": 22,
+      "sha256": "05856a8d587aa2bd50eff1a3c8356c0f2cc49c3d168ff52da4248c83332daff6",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": []
+    },
+    {
+      "id": "2504.10453v2",
+      "field": "physics",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "astro-ph.CO",
+        "astro-ph.IM",
+        "cs.LG",
+        "gr-qc"
+      ],
+      "pages": 24,
+      "blocks": 45,
+      "sha256": "b4100983f75f247f447f25f3d30b9067f7f20e9ebd286cd14e4cdd6038125253",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result",
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.00010v1",
+      "field": "physics",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by-sa/4.0/",
+      "publish": true,
+      "categories": [
+        "physics.ao-ph",
+        "cs.LG"
+      ],
+      "pages": 20,
+      "blocks": 41,
+      "sha256": "766d7f1013b9c862a2a08089feda9edb2207ef000a11006ed4e81a86a228b262",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": []
+    },
+    {
+      "id": "2508.21529v1",
+      "field": "physics",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CV",
+        "cond-mat.mtrl-sci"
+      ],
+      "pages": 23,
+      "blocks": 49,
+      "sha256": "877a497ee59c9190ec4d63a175043a03064b697c844ab55267edc2bd9bf97e8e",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2506.05657v2",
+      "field": "physics",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "astro-ph.HE",
+        "cs.LG",
+        "gr-qc"
+      ],
+      "pages": 19,
+      "blocks": 55,
+      "sha256": "ac291eb9348e1bca39eadb5409743500adf5f375e13037f4b51cc0c73a525b8a",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.01754v1",
+      "field": "physics",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.CV",
+        "physics.comp-ph"
+      ],
+      "pages": 18,
+      "blocks": 47,
+      "sha256": "d3af5f3b3c007fa97b7994eba01c940841119ffa8341895eee83e4d58a275388",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2509.02069v1",
+      "field": "biology",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "q-bio.QM"
+      ],
+      "pages": 6,
+      "blocks": 15,
+      "sha256": "76dba44ba09d12d6b3ae602619b24b12803c9862b20d4c5e6b3fe9360f27af60",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.00524v1",
+      "field": "biology",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "q-bio.MN"
+      ],
+      "pages": 5,
+      "blocks": 9,
+      "sha256": "b974003be3b127a0dc83e099b98509aca71d87a80696b6db39379615ade236bb",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2509.06465v4",
+      "field": "biology",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "cs.CE",
+        "q-bio.BM"
+      ],
+      "pages": 14,
+      "blocks": 32,
+      "sha256": "e4b3f1cc76317e956115db3574cb8b2b464eebc8785bfe11dd75d077623ad260",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result",
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2506.09076v3",
+      "field": "biology",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "q-bio.GN",
+        "cs.LG",
+        "q-bio.PE"
+      ],
+      "pages": 10,
+      "blocks": 34,
+      "sha256": "4c4c0ab1a978b790df5fa412ad9cb0eef26bcfcf01b3399b1af4ce0b54f58a41",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2509.03425v1",
+      "field": "biology",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "q-bio.QM"
+      ],
+      "pages": 18,
+      "blocks": 39,
+      "sha256": "81d4c1f97f28356aa19125249908e06d89cca54095ac5d4f301b12289103fed9",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.24254v2",
+      "field": "economics",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "q-fin.CP",
+        "cs.CE",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "pages": 9,
+      "blocks": 30,
+      "sha256": "0ef8cd030771349988dd4a179f8ffeedf1776ff40a5905b6edbf36a5200a1e1f",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result",
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.05820v1",
+      "field": "economics",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "q-fin.MF",
+        "cs.LG"
+      ],
+      "pages": 9,
+      "blocks": 18,
+      "sha256": "7f9566edaf8593d39f9b36b2cbdc4a157bc24511cdc63ed98ca6fe850160d25c",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2510.19203v1",
+      "field": "economics",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "q-fin.CP",
+        "cs.CL"
+      ],
+      "pages": 6,
+      "blocks": 19,
+      "sha256": "57fb2246ae4491c8dda94ef994828c40ed4da76d93c36461ddd8abb2e9c62638",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2507.02698v1",
+      "field": "economics",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "econ.EM"
+      ],
+      "pages": 19,
+      "blocks": 56,
+      "sha256": "568ae5c5b6ff69185dec59301310f2f1d393761121b670f787030f28d8b6f81f",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result",
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2510.11616v1",
+      "field": "economics",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "q-fin.CP"
+      ],
+      "pages": 9,
+      "blocks": 31,
+      "sha256": "b3fe6e6828d5e473073110d5bd139869f09f7ee20b7f01abc7fe51a43b9edc32",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result",
+        "equation_method"
+      ]
+    },
+    {
+      "id": "2509.02480v1",
+      "field": "systems",
+      "split": "dev",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.DC",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "pages": 12,
+      "blocks": 50,
+      "sha256": "9d68f19f1c67ee1bc356bae9e13e14f62344726a821c68d36cc0e20c34277147",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2509.00764v1",
+      "field": "systems",
+      "split": "dev",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "publish": true,
+      "categories": [
+        "cs.AR",
+        "cs.AI"
+      ],
+      "pages": 13,
+      "blocks": 21,
+      "sha256": "dda91df4f84b73a18878acef5682472f2e08b2867ab32ccbad73d62733e34d9b",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2508.16700v2",
+      "field": "systems",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.AR",
+        "cs.AI",
+        "cs.DC",
+        "cs.PF"
+      ],
+      "pages": 14,
+      "blocks": 28,
+      "sha256": "a2f01fb4d88d8505096b8c949c95b6eb0c27b87ee0f411cbe8437b4ea4409b1f",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "table_result"
+      ]
+    },
+    {
+      "id": "2509.00701v1",
+      "field": "systems",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.NI",
+        "cs.AI"
+      ],
+      "pages": 3,
+      "blocks": 7,
+      "sha256": "6e6b420a2e75cb4b3428b1bed23b26339d8b743ebef4cb95ed84b32f24774fe7",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": []
+    },
+    {
+      "id": "2504.06996v2",
+      "field": "systems",
+      "split": "holdout",
+      "license": "http://creativecommons.org/licenses/by/4.0/",
+      "publish": true,
+      "categories": [
+        "cs.AR",
+        "cs.HC",
+        "cs.LG"
+      ],
+      "pages": 15,
+      "blocks": 53,
+      "sha256": "780fc6e02aefb0e4b0a2ce2fe13f466e4e492eb1d3c248395a215916d22729db",
+      "parser_revision": "pdfium-5.14.0-v1",
+      "features": [
+        "equation_method"
+      ]
+    }
+  ],
+  "rejected": [],
+  "features_rule": "Recomputed from parsed text: table_result = at least 3 'Table N' mentions; equation_method = at least 40 math marks (=, sum, element-of, lambda, theta, <=, proportional, nabla, argmax)."
+}

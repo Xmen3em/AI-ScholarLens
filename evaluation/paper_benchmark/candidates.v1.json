@@ -1,0 +1,391 @@
+{
+  "version": "paper-benchmark-candidates-v1",
+  "source": "arXiv OAI-PMH ListRecords, sets physics/q-bio/econ/q-fin/cs/eess, Jun-Oct 2025, CC licenses, AI-allowlist cross-listing; features judged from title/abstract, rechecked against parsed text",
+  "candidates": [
+    {
+      "id": "2410.13258",
+      "field": "ml_nlp",
+      "features": [
+        "table_result"
+      ],
+      "reason": "RAG knowledge selection, results tables"
+    },
+    {
+      "id": "2502.03275",
+      "field": "ml_nlp",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "latent/text token mixing, method equations"
+    },
+    {
+      "id": "2412.03679",
+      "field": "ml_nlp",
+      "features": [
+        "table_result"
+      ],
+      "reason": "LMs as synthetic data generators, benchmark tables"
+    },
+    {
+      "id": "2404.07851",
+      "field": "ml_nlp",
+      "features": [
+        "table_result"
+      ],
+      "reason": "LLM post-editing MT, results tables"
+    },
+    {
+      "id": "2409.15664",
+      "field": "ml_nlp",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "orthogonality constraint for cross-lingual embeddings"
+    },
+    {
+      "id": "2503.12608",
+      "field": "ml_nlp",
+      "features": [
+        "table_result"
+      ],
+      "reason": "UniBERT adversarial training"
+    },
+    {
+      "id": "2504.05058",
+      "field": "ml_nlp",
+      "features": [
+        "table_result"
+      ],
+      "reason": "unlearning difficulty study"
+    },
+    {
+      "id": "2505.22771",
+      "field": "ml_nlp",
+      "features": [
+        "table_result"
+      ],
+      "reason": "automated essay scoring, 10 pages"
+    },
+    {
+      "id": "2510.26807",
+      "field": "medicine",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "owner's first other paper; RL for diabetes lifestyle medicine (private if not CC)",
+      "allow_private": true
+    },
+    {
+      "id": "2509.00711",
+      "field": "medicine",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "quantum time-series transformer for resting-state fMRI"
+    },
+    {
+      "id": "2509.00900",
+      "field": "medicine",
+      "features": [
+        "table_result"
+      ],
+      "reason": "five-year breast cancer risk forecasting"
+    },
+    {
+      "id": "2509.02710",
+      "field": "medicine",
+      "features": [
+        "table_result"
+      ],
+      "reason": "lesion detection in breast DCE-MRI"
+    },
+    {
+      "id": "2509.00026",
+      "field": "medicine",
+      "features": [
+        "table_result"
+      ],
+      "reason": "LLM and ML models for psychiatric diagnosis"
+    },
+    {
+      "id": "2507.05063",
+      "field": "medicine",
+      "features": [
+        "table_result"
+      ],
+      "reason": "CytoDiff cytomorphology synthesis, 8 pages"
+    },
+    {
+      "id": "2509.00745",
+      "field": "medicine",
+      "features": [
+        "table_result"
+      ],
+      "reason": "fairness in skin lesion classification"
+    },
+    {
+      "id": "2509.02582",
+      "field": "medicine",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "quantum CNN for MRI tumor detection"
+    },
+    {
+      "id": "2504.10453",
+      "field": "physics",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "peculiar velocities constrain H0, 23 pages"
+    },
+    {
+      "id": "2509.00010",
+      "field": "physics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "ML generalization to changed climates"
+    },
+    {
+      "id": "2508.21529",
+      "field": "physics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "feature upsampling for materials micrographs"
+    },
+    {
+      "id": "2506.05657",
+      "field": "physics",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "emulating binary population synthesis"
+    },
+    {
+      "id": "2509.01754",
+      "field": "physics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "transfer learning for additive manufacturing defects"
+    },
+    {
+      "id": "2508.21252",
+      "field": "physics",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "QML for entanglement distribution"
+    },
+    {
+      "id": "2509.01397",
+      "field": "physics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "double descent in particle physics data, 4 pages"
+    },
+    {
+      "id": "2509.00015",
+      "field": "physics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "Mediterranean Sea forecasting, 29 pages"
+    },
+    {
+      "id": "2509.02069",
+      "field": "biology",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "data-dependent smoothing for protein walk-jump sampling"
+    },
+    {
+      "id": "2509.00524",
+      "field": "biology",
+      "features": [
+        "table_result"
+      ],
+      "reason": "pathway-informed graph attention networks"
+    },
+    {
+      "id": "2509.06465",
+      "field": "biology",
+      "features": [
+        "table_result"
+      ],
+      "reason": "antibody binding site prediction"
+    },
+    {
+      "id": "2506.09076",
+      "field": "biology",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "probabilistic imputation of genetic distances"
+    },
+    {
+      "id": "2509.03425",
+      "field": "biology",
+      "features": [
+        "table_result"
+      ],
+      "reason": "functional group and residue interactions"
+    },
+    {
+      "id": "2508.21082",
+      "field": "biology",
+      "features": [
+        "table_result"
+      ],
+      "reason": "antibody discovery with gradient boosting, 6 pages"
+    },
+    {
+      "id": "2504.11249",
+      "field": "biology",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "cryo-EM images are low dimensional"
+    },
+    {
+      "id": "2509.02982",
+      "field": "biology",
+      "features": [
+        "table_result"
+      ],
+      "reason": "test-time adaptation for sleep staging"
+    },
+    {
+      "id": "2509.24254",
+      "field": "economics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "press-release structure for earnings returns, 6 tables"
+    },
+    {
+      "id": "2509.05820",
+      "field": "economics",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "EWMA time-dependent Hurst volatility model"
+    },
+    {
+      "id": "2510.19203",
+      "field": "economics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "multilingual news for stock returns, 4 tables"
+    },
+    {
+      "id": "2507.02698",
+      "field": "economics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "MARL dynamic pricing benchmark"
+    },
+    {
+      "id": "2510.11616",
+      "field": "economics",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "attention factors for statistical arbitrage"
+    },
+    {
+      "id": "2508.20108",
+      "field": "economics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "return-volatility normalization for stock data"
+    },
+    {
+      "id": "2504.14345",
+      "field": "economics",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "LLM-enhanced Black-Litterman portfolios"
+    },
+    {
+      "id": "2510.15929",
+      "field": "economics",
+      "features": [
+        "table_result"
+      ],
+      "reason": "LLMs for financial news sentiment"
+    },
+    {
+      "id": "2509.02480",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "multi-path offloading for LLM pre-training"
+    },
+    {
+      "id": "2509.00764",
+      "field": "systems",
+      "features": [
+        "equation_method"
+      ],
+      "reason": "approximate multiplier architecture for DNNs"
+    },
+    {
+      "id": "2508.16700",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "GPT-OSS-20B deployment analysis"
+    },
+    {
+      "id": "2509.00701",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "dataset cleaning for encrypted traffic classification"
+    },
+    {
+      "id": "2504.06996",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "tinyML accelerator for neural signal compression"
+    },
+    {
+      "id": "2509.00883",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "AI-assisted fine-grained parallelization"
+    },
+    {
+      "id": "2509.02440",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "gigapixel image analysis on a modest cluster"
+    },
+    {
+      "id": "2509.01168",
+      "field": "systems",
+      "features": [
+        "table_result"
+      ],
+      "reason": "rug-pull detection on TON"
+    }
+  ]
+}
