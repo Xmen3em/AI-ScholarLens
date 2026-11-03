@@ -19,7 +19,7 @@ async def test_study_auth_schema_generation_quota_and_claim_are_shared(tmp_path)
     def submit(intent, text):
         calls.append((intent, text))
         return {"reply": "ok"}
-    app.state.study = SimpleNamespace(store=store, submit=submit)
+    app.state.study = SimpleNamespace(store=store, submit=submit, progress={})
     app.add_middleware(OperationalMiddleware, settings=settings)
     add_study_routes(app)
     headers = {"X-API-Key": settings.api_key.get_secret_value()}
@@ -46,3 +46,15 @@ async def test_caller_cannot_override_the_configured_owner(tmp_path):
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://local") as client:
         response = await client.post("/api/v1/study/messages", json={"intent": "x", "text": "paper", "owner": "other"})
     assert response.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_pending_lists_running_jobs_with_their_stage_but_never_their_text(tmp_path):
+    app = FastAPI()
+    store = StudyStore(tmp_path / "study.sqlite3", "trusted-owner")
+    running = store.create_job("running", {"text": "private question"})
+    app.state.study = SimpleNamespace(store=store, progress={running["id"]: "checking"})
+    add_study_routes(app)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://local") as client:
+        body = (await client.post("/api/v1/study/pending")).json()
+    assert body == {"jobs": [], "running": [{"id": running["id"], "stage": "checking"}]}

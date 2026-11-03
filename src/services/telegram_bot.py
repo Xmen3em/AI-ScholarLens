@@ -26,6 +26,14 @@ STUDY_API_FAILURE = (
     "مش هكرر الطلب تلقائيًا."
 )
 MAX_BODY_BYTES = 262_144
+# Fixed progress lines for the finite stages the study API reports; its text is never shown.
+STUDY_PROGRESS = {
+    "reading": (1, "📄 بقرأ الورقة…"),
+    "writing_lesson": (2, "✍️ بكتب الشرح التمهيدي… أول شرح بياخد حوالي دقيقة."),
+    "writing_answer": (2, "✍️ بكتب الإجابة من الورقة…"),
+    "researching": (2, "🔎 ببحث جوّه الورقة بأدوات القراءة…"),
+    "checking": (3, "🔍 براجع كل معلومة في الشرح على نص الورقة…"),
+}
 LEARNING_HELP = (
     "Ask me to explain AI/ML concepts or ask about the stored research papers. "
     "Try 'What is RAG?' or 'Explain ML systems.' General explanations use model knowledge; paper answers include citations. "
@@ -181,6 +189,8 @@ class PrivateTelegramBot:
         self._log_filter = _SuppressHTTPLogs()
         self._loggers: list[logging.Logger] = []
         self._active = False
+        # The one acknowledgement being edited with the running job's stage; None when no job is tracked.
+        self.progress: dict | None = None
 
     async def __aenter__(self):
         # Telegram embeds its token in request URLs. HTTP client DEBUG/INFO logs
@@ -236,7 +246,9 @@ class PrivateTelegramBot:
 
     async def poll(self) -> list[dict]:
         values = await self._call_telegram(
-            "getUpdates", {"offset": self.store.offset, "limit": 10, "timeout": 20, "allowed_updates": ["message"]}
+            # A shorter wait while a job runs lets its progress and result arrive within seconds.
+            "getUpdates", {"offset": self.store.offset, "limit": 10, "timeout": 3 if self.progress else 20,
+                           "allowed_updates": ["message"]}
         )
         if (
             type(values) is not list
@@ -269,10 +281,15 @@ class PrivateTelegramBot:
                         return "reply_failed"
                     return "api_failed"
                 if result.get("fallback") is not True:
+                    job_id = str(result.get("job_id", ""))
+                    tracked = re.fullmatch(r"[a-f0-9]{32}", job_id) is not None
                     try:
-                        await self._study_text(result.get("reply", "الطلب اتسجّل."))
+                        # Telegram edits only messages sent without a reply keyboard; the result brings it back.
+                        message_id = await self._study_text(result.get("reply", "الطلب اتسجّل."), keyboard=not tracked)
                     except (BotError, ValueError, TypeError):
                         return "reply_failed"
+                    if tracked:
+                        self.progress = {"job_id": job_id, "message_id": message_id, "stage": None}
                     return "study_admitted"
             action = parse_update(update, self.owner_id)
             if action is None:
@@ -312,11 +329,11 @@ class PrivateTelegramBot:
                     return "reply_failed"
             return status
 
-    async def _study_text(self, text: str) -> None:
+    async def _study_text(self, text: str, *, keyboard: bool = True) -> int:
         if type(text) is not str or not 0 < len(text) <= 30000:
             raise BotError("invalid_study_reply")
-        keyboard = {"keyboard": [["بسّطها", "مثال"], ["اشرح الطريقة", "اختبر فهمي"], ["/study", "/notes"]],
-                    "resize_keyboard": True, "is_persistent": True}
+        markup = {"keyboard": [["بسّطها", "مثال"], ["اشرح الطريقة", "اختبر فهمي"], ["/study", "/notes"]],
+                  "resize_keyboard": True, "is_persistent": True}
         # Keep paragraphs together where possible and reserve space for part labels.
         # Telegram measures its cap in UTF-16 units, including astral characters.
         parts, remaining = [], text
@@ -340,10 +357,13 @@ class PrivateTelegramBot:
             remaining = remaining[end:]
         for index, part in enumerate(parts, 1):
             label = f"[{index}/{len(parts)}]\n" if len(parts) > 1 else ""
-            sent = await self._call_telegram("sendMessage", {"chat_id": self.owner_id, "text": label + part,
-                                            "reply_markup": keyboard})
+            payload = {"chat_id": self.owner_id, "text": label + part}
+            if keyboard:
+                payload["reply_markup"] = markup
+            sent = await self._call_telegram("sendMessage", payload)
             if type(sent) is not dict or type(sent.get("message_id")) is not int or sent["message_id"] <= 0:
                 raise BotError("invalid_message_acknowledgement")
+        return sent["message_id"]
 
     async def deliver_study(self) -> None:
         if not self.study:
@@ -353,6 +373,7 @@ class PrivateTelegramBot:
         jobs = pending.get("jobs")
         if type(jobs) is not list or len(jobs) > 5:
             raise BotError("invalid_study_jobs")
+        await self._show_progress(pending.get("running"))
         for job in jobs:
             if type(job) is not dict or not re.fullmatch(r"[a-f0-9]{32}", str(job.get("id", ""))):
                 raise BotError("invalid_study_job")
@@ -363,6 +384,25 @@ class PrivateTelegramBot:
             await self._study_text(result.get("text"))
             if result.get("image"):
                 await self._study_photo(result["image"])
+
+    async def _show_progress(self, running) -> None:
+        # Progress is a courtesy: a malformed report or a failed edit never blocks delivery and is not retried.
+        if self.progress is None:
+            return
+        stages = {row.get("id"): row.get("stage") for row in running if type(row) is dict} if type(running) is list else {}
+        if self.progress["job_id"] not in stages:
+            self.progress = None
+            return
+        stage = stages[self.progress["job_id"]]
+        if stage not in STUDY_PROGRESS or stage == self.progress["stage"] or self.progress["message_id"] is None:
+            return
+        self.progress["stage"] = stage
+        step, line = STUDY_PROGRESS[stage]
+        try:
+            await self._call_telegram("editMessageText", {"chat_id": self.owner_id, "message_id": self.progress["message_id"],
+                                                          "text": f"{line}\n\nالخطوة {step} من 3"})
+        except BotError:
+            self.progress["message_id"] = None
 
     async def _study_photo(self, encoded: str) -> None:
         try:

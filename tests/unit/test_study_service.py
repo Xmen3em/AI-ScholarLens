@@ -136,3 +136,30 @@ async def test_observer_sees_the_accepted_lesson_and_the_writer_catalog(tmp_path
     # The benchmark sees the lesson; the stored result and the local API stay as they were.
     assert "lesson" not in job["result"]
     await service.aclose()
+
+
+@pytest.mark.asyncio
+async def test_a_running_job_reports_each_stage_and_forgets_it_when_finished(tmp_path):
+    seen = []
+
+    class Reading(Content):
+        async def acquire(self, source):
+            seen.append(("acquire", service.progress.get(job_id)))
+            return await super().acquire(source)
+
+    class Watching(Model):
+        async def complete(self, job, purpose, messages, **kwargs):
+            seen.append((purpose, service.progress.get(job)))
+            return await super().complete(job, purpose, messages, **kwargs)
+
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Reading(), Watching())
+    job_id = service.submit("tg:1", "/paper 1706.03762")["job_id"]
+    assert service.progress[job_id] == "started"
+    assert (await finished(service, job_id))["status"] == "ready"
+    followup = service.submit("tg:2", "اشرح الطريقة بمثال")["job_id"]
+    assert (await finished(service, followup))["status"] == "ready"
+    await asyncio.sleep(0)
+    assert seen == [("acquire", "reading"), ("lesson", "writing_lesson"), ("grounding_review", "checking"),
+                    ("followup", "writing_answer"), ("grounding_review", "checking")]
+    assert service.progress == {}
+    await service.aclose()

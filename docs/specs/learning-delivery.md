@@ -11,6 +11,18 @@ without unnecessary generation. Current paired private Telegram, local API,
 progress text, study commands and PNG maps work. Polling accepts message updates;
 callback-query handling and a phone-accessible study viewer are not implemented.
 
+**Staged progress (3 November 2026).** While a lesson or follow-up job runs, the
+bot edits its own acknowledgement message once per stage and sends no other message:
+`reading` (1 of 3), `writing_lesson` / `writing_answer` / `researching` (2 of 3)
+and `checking` (3 of 3, the claim check). The service keeps the stage of each running
+job in memory only, `/study/pending` lists it as `running: [{id, stage}]`, and the
+bot maps known stage names to fixed Egyptian Arabic lines, so no paper, model or
+provider text reaches the progress message. Telegram can edit only a message sent
+without a reply keyboard, so the acknowledgement of an admitted job goes without
+one; the result restores it. Progress is best effort: a failed edit is not retried
+and never blocks delivery. While a job runs, `getUpdates` waits 3 s instead of 20 s,
+so progress and the result reach the student within seconds of each stage.
+
 ## Contracts and API behavior
 
 `StudyView`: selected source/version, coverage, goal/position, accepted artifact,

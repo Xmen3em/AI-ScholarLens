@@ -25,7 +25,9 @@ def add_study_routes(app: FastAPI) -> None:
 
     @app.post("/api/v1/study/pending")
     async def pending():
-        return {"jobs": [{"id": row["id"], "status": row["status"]} for row in app.state.study.store.pending_deliveries()]}
+        study = app.state.study
+        return {"jobs": [{"id": row["id"], "status": row["status"]} for row in study.store.pending_deliveries()],
+                "running": [{"id": job_id, "stage": stage} for job_id, stage in list(study.progress.items())[:5]]}
 
     @app.post("/api/v1/study/claim")
     async def claim(request: DeliveryClaim):

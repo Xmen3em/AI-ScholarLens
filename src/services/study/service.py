@@ -105,6 +105,8 @@ class StudyService:
         self.observer = observer
         self.research_python, self.ocr = research_python, ocr
         self.tasks: set[asyncio.Task] = set()
+        # Finite stage names per running job, shown to the student as progress; never paper or model text.
+        self.progress: dict[str, str] = {}
         graph = StateGraph(StudyState)
         graph.add_node("resolve", self._resolve)
         graph.add_node("extract", self._extract)
@@ -200,7 +202,9 @@ class StudyService:
         if job["status"] == "running" and not any(task.get_name() == job["id"] for task in self.tasks):
             task = asyncio.create_task(self._run(job["id"], text), name=job["id"])
             self.tasks.add(task)
+            self.progress[job["id"]] = "started"
             task.add_done_callback(self.tasks.discard)
+            task.add_done_callback(lambda done: self.progress.pop(done.get_name(), None))
         return {"job_id": job["id"], "reply": _acknowledgement(command, text, bool(context))}
 
     def _pending_choice(self, text: str) -> int | None:
@@ -290,6 +294,7 @@ class StudyService:
         return {"paper": papers[0], "followup": False}
 
     async def _extract(self, state: StudyState) -> dict:
+        self.progress[state["job_id"]] = "reading"
         document = state.get("content") or await self.content.acquire(state["paper"])
         if self.ocr is not None and document.missing_pages:
             document = await self.ocr.enrich(document, self.content.source_path(document.paper), state["job_id"])
@@ -310,6 +315,7 @@ class StudyService:
                        {"question": turn["question"][:600], "answer": turn["answer"][:1800]} for turn in recent[-4:]],
                    "source_evidence": evidence_catalog(selected)}
         if question.startswith("/deep "):
+            self.progress[state["job_id"]] = "researching"
             result = await self._deep(state["job_id"])
             selected = document.blocks
         else:
@@ -318,6 +324,7 @@ class StudyService:
                 system += ("\nCURRENT TASK: answer ONLY this follow-up question in at most THREE focused sections. "
                            "Do not repeat the introductory lesson. Do not add experiments/results unless the user asks for them. "
                            "For a simple explanation use a short supported explanation, an explicitly labeled example, and optionally one question.")
+            self.progress[state["job_id"]] = "writing_answer" if state.get("followup") else "writing_lesson"
             result = await self.model.complete(state["job_id"], "followup" if state.get("followup") else "lesson",
                 [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}],
                 schema=lesson_schema(selected, followup=bool(state.get("followup"))))
@@ -326,6 +333,7 @@ class StudyService:
         try:
             draft = screen_claims(validate_draft(result["output"], selected), question=question)
             stage = "review"
+            self.progress[state["job_id"]] = "checking"
             draft = await check_claims(self.model, state["job_id"], draft, blocks=document.blocks, report=review)
             review.update(draft_report(draft))
             lesson, withheld = accept_draft(draft)
