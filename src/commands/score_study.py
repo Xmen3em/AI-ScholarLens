@@ -27,6 +27,11 @@ def _format_failed(row: dict) -> bool:
     return row["failure_code"] in FORMAT_FAILURES or row["diagnostic"] == "shape"
 
 
+def _answers(row: dict) -> bool:
+    # A delivered answer counts as answering only if it keeps a paper section; "the paper is silent" declines.
+    return row["status"] == "ready" and any(section["kind"] == "paper" for section in (row["lesson"] or {}).get("sections", []))
+
+
 def model_metrics(rows: list[dict]) -> dict:
     papers = {row["paper"] for row in rows}
     delivered = sum(row["status"] == "ready" for row in rows if row["job"] in ANSWERED)
@@ -40,7 +45,7 @@ def model_metrics(rows: list[dict]) -> dict:
             withheld[reason] = withheld.get(reason, 0) + count
     q3 = [row for row in rows if row["job"] == "Q3" and row["status"] in {"ready", "failed"}
           and not _format_failed(row) and not str(row["failure_code"] or "").startswith("study_provider_http_")]
-    declined = [row for row in q3 if row["failure_code"] == "lesson_validation_failed"]
+    declined = [row for row in q3 if row["failure_code"] == "lesson_validation_failed" or not _answers(row)]
     seconds = [float(row["seconds"]) for row in rows if row["status"] not in {"blocked", "stopped"} and row["seconds"] is not None]
     cost = sum(call["cost_usd"] for row in rows for call in row["calls"])
     failures: dict[str, int] = {}
@@ -55,7 +60,7 @@ def model_metrics(rows: list[dict]) -> dict:
         "kept": sum(review.get("kept", 0) for review in reviews),
         "withheld": withheld,
         "q3_decline": len(declined) / len(q3) if q3 else 0.0,
-        "q3_answered": sorted(row["paper"] for row in q3 if row["status"] == "ready"),
+        "q3_answered": sorted(row["paper"] for row in q3 if _answers(row)),
         "latency_median": statistics.median(seconds) if seconds else None,
         "latency_p95": nearest_rank(seconds, 0.95) if seconds else None,
         "cost_usd": cost,

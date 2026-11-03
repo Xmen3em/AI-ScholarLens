@@ -57,6 +57,16 @@ def test_a_q3_with_a_kept_claim_is_listed_for_reading():
     assert metrics["q3_decline"] == 0 and metrics["q3_answered"] == ["a"]
 
 
+def test_a_q3_that_only_says_the_paper_is_silent_counts_as_declined():
+    # A delivered answer with no paper section is a decline, not an answer (dev rerun 2, 3 Nov 2026).
+    silent = {"title": "t", "sections": [{"heading": "مش موجود", "kind": "uncertainty",
+                                          "text": "الورقة ما فيهاش أي إشارة للموضوع ده.", "evidence": []}]}
+    rows = two_papers()
+    rows[3] = row("a", "Q3", "ready", review={"claims": 0, "kept": 0, "withheld": {}}, lesson=silent)
+    metrics = model_metrics(rows)
+    assert metrics["q3_decline"] == pytest.approx(1.0) and metrics["q3_answered"] == []
+
+
 def base(**changes):
     return {"delivered": 0.6, "format_compliance": 0.99, "latency_p95": 30.0, "cost_per_delivered": 0.01, **changes}
 
