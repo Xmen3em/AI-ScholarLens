@@ -1,8 +1,9 @@
 # First-lesson latency on GLM-5.3: where the time goes
 
-Status: investigation for the owner, 3 November 2026. No paid calls were made, and
-none of the options below is implemented; each needs the owner's approval, and
-most need a paid development rerun before production.
+Status: investigation for the owner, 3 November 2026. The analysis made no paid
+calls. The owner later approved one qualification call for option A; its result
+is at the end. None of the options is implemented: each needs the owner's
+approval, and most need a paid development rerun before production.
 
 Sources: `data/eval/paper-benchmark/holdout-control/jobs.jsonl` (69 timed jobs on
 18 papers) and `dev-rerun-2-control/jobs.jsonl` (48 jobs on 12 papers). They hold
@@ -87,15 +88,50 @@ Notes on each option:
   speed matters as much as any code change. Measuring other providers is a paid
   qualification and would change the benchmarked configuration.
 
+## Qualification call for option A (owner-approved, 3 November 2026)
+
+One paid call, $0.0097. It replayed the claim check of dev-rerun-2 lesson
+`2504.10453v2` through the production `check_claims` and `StudyModel` code, with
+the request options replaced by the benchmark's thinking-off switch,
+`chat_template_kwargs: {"enable_thinking": false}`. The original check had reasoned
+for 1,427 tokens. Its writer drafts were never saved, so I rebuilt the items from
+the lesson's 12 kept claims, each with its own quote, plus its one analogy. I added
+two negative controls: real claims paired with another claim's quote. A fresh store
+allowed exactly one attempt.
+
+| | Original check (thinking on) | This call (thinking off) |
+| --- | --- | --- |
+| Input tokens | 6,999 | 6,701 |
+| Output tokens | 2,275, of them 1,427 reasoning | 907, of them 0 reasoning |
+| Time | about 40 s (fit estimate) | 9.8 s (measured) |
+| Real claims kept | 12 of 12 | 9 of 12 |
+| Negative controls | — | 2 of 2 rejected (`unsupported`, `contradiction`) |
+
+- **The switch works.** DeepInfra honours it for GLM-5.3: no reasoning tokens, a
+  valid strict-schema answer, and roughly a quarter of the time.
+- **Bad claims were still caught.** Both swapped quotes were rejected.
+- **But it kept fewer good claims.** Three claims the thinking-on check had verified
+  came back `unverified_support`. The model called them supported, but the spans it
+  copied failed the application's proof check. None of the three contains a number,
+  so the spans were not exact substrings of the quote, or had fewer than three
+  words. The audit saves usage, not the verdicts, so I cannot say which. Lessons
+  would be thinner: about 75% of the kept claims in this one sample, and kept claims
+  are part of why GLM-5.3 was chosen.
+
+This is one sample, not a measurement. The record is in the ignored folder
+`data/eval/latency-check/` of the main checkout: `thinking-off-call.json`, its store,
+and the script that made the call.
+
 ## Recommendation
 
-Approve one paid qualification call for option A. If the provider honours the
-switch, approve a dev rerun of A, and of C if A alone misses the gate. Judge its
-unfaithful rate against the current dev result before any production change. B is
-the lowest-risk saving that needs no model behaviour change, but it costs code and
-spec work. Start it only if A fails qualification or loses faithfulness. The
+A dev rerun of option A is the next decision. It runs 48 jobs on the 12 dev papers,
+up to 96 calls, plus judging. It would show whether the lost claims (finding above) are a
+pattern and what thinking-off does to the unfaithful rate. If it goes ahead, the
+verdict spans of each check should be saved, so that a failed proof can be traced.
+If the rerun keeps too few claims, B (two parallel checks with reasoning on) is the
+saving that leaves model behaviour alone, at the price of code and spec work. The
 progress messages and the shorter poll (finding 6) already lower the wait the
 student feels, with no change to the model calls.
 
-The analysis scripts are local and not committed. They read only the two
-`jobs.jsonl` files and make no network calls.
+The analysis scripts are not committed. They read only the two `jobs.jsonl` files
+and make no network calls; copies are in the same `data/eval/latency-check/` folder.
