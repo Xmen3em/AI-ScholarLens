@@ -1,6 +1,8 @@
 # paper-benchmark: multi-paper evaluation and model bake-off
 
-Status: draft for owner review, 3 November 2026; not implemented.
+Status: approved 3 November 2026; implementation in progress
+([plan](../../tasks/paper-benchmark-plan.md)). Amended while planning: the AI-scope
+rule, the license exception, four qualification calls per model, and the judge's path.
 Inherits [shared rules](researcher-app.md) and measures
 [paper-tutor](paper-tutor.md) with the [claim check](claim-check.md).
 Production keeps `openai/gpt-oss-120b:cerebras` until the owner chooses
@@ -37,13 +39,18 @@ physics; biology; economics and finance; computer systems and networking.
 
 Selection rules, applied in this order and recorded per paper:
 
+0. At least one arXiv category the app accepts (`AI_CATEGORY_ALLOWLIST`), since
+   the intake rejects anything else; the fields are therefore AI applied to each
+   domain (for example ML for biology), not the pure domain.
 1. License CC BY, CC BY-SA or CC0 (from arXiv metadata), so questions and short
    reference quotes may be published in this repository.
 2. Native text extraction succeeds with the current parser revision, at most
    40 pages; the PDF SHA256 and parser revision are frozen in the manifest.
 3. Per field: at least one paper whose main result is a table, and at least one
    whose method is mainly equations.
-4. 2510.26807 is in medicine (development set, since it was already seen).
+4. 2510.26807 is in medicine (development set, since it was already seen). Its
+   arXiv license is not CC, so it is the one unpublished paper: its questions live
+   in an ignored private file and only aggregates mention it.
    2005.11401 is excluded from both sets: the system was tuned on it.
 
 Split: two papers per field go to development (12), three to holdout (18),
@@ -114,7 +121,7 @@ are sequential, resumable by job, and never retry a counted call.
 
 | Stage | Calls (ceiling) | What it decides |
 | --- | --- | --- |
-| Q: qualification | 2 per non-baseline model (6) | strict schema honoured; request options |
+| Q: qualification | 4 per non-baseline model (12): one first lesson, one retry without options after HTTP 400/422 | strict schema honoured; request options |
 | D: development | 12 papers × 4 jobs × ≤2 calls × 4 models (384) | fix model-agnostic defects only |
 | H: holdout | 18 × 4 × ≤2 × 4 (576) | the reported numbers |
 | J: judging | holdout answers only: ≤2 per lesson, ≤5 per Q1/Q2 answer, 4 models (864), plus calibration (≤80) | RAGAS scores |
@@ -205,7 +212,7 @@ as a follow-up, not decided here.
 | `src/services/study/models.py` | `ModelProfile` and the default profile |
 | `src/commands/evaluate_study.py` | runner: plan by default, `--execute` per stage |
 | `src/commands/score_study.py` | app measurements and JSONL export |
-| `evaluation/paper_benchmark/ragas_judge.py` | RAGAS judging, run only from `.venv-eval` |
+| `src/commands/judge_study.py` | RAGAS judging, run only from `.venv-eval`; `ragas` imported lazily |
 
 Raw outputs stay in ignored `data/eval/paper-benchmark/`. Published files carry
 paper IDs, questions, short reference quotes and aggregate results, never full
