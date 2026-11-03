@@ -112,6 +112,174 @@
       "claim_ar": "في اختبار Open‑Domain QA على Natural Questions (NQ) وTriviaQA (TQA) وWebQuestions (WQ) وCuratedTrec (CT)، حقق RAG‑Sequence 44.5 EM على NQ و56.8/68.0 EM على TQA (العمود اليمين)، متفوقًا على نماذج “Closed‑Book” وREALM وDPR.",
       "quote_en": "Table 1: Open-Domain QA Test Scores. For TQA, left column uses the standard test set for OpenDomain QA, right column uses the TQA-Wiki test set. See Appendix D for further details. Model NQ TQA WQ CT Closed Book T5-11B [52] 34.5 - /50.1 37.4 - T5-11B+SSM[52] 36.6 - /60.5 44.7 - Open Book REALM [20] 40.4 - / - 40.7 46.8 DPR [26] 41.5 57.9/ - 41.1 50.6 RAG-Token 44.1 55.2/66.1 45.5 50.0 RAG-Seq. 44.5 56.8/68.0 45.2 52.2",
       "owner_faithful": null
+    },
+    {
+      "id": "dev-2410.13258v4-Q3-0",
+      "paper": "2410.13258v4",
+      "claim_ar": "الورقة حددت شروط لاختيار الداتاسيت، إنها لازم يكون عندها gold knowledge متعلم من بني آدم، والمخرجات المطلوبة تكون قصيرة وواضحة وسهلة التقييم بمقاييس أوتوماتيكية زي F1.",
+      "quote_en": "provide highquality, human-annotated gold knowledge. Furthermore, the target outputs should be relatively short, unambiguous, and easily evaluated with automatic metrics such as F1 scores. These conditions narrow down the choices to two popular and representative datasets, Wizard of Wikipedia (WoW; Dinan et al., 2019) and HotpotQA (Yang et al., 2018). WoW is an open-domain dialogue dataset based on Wikipedia knowledge that has been widely used in",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2502.03275v2-L-2",
+      "paper": "2502.03275v2",
+      "claim_ar": "في نفس التجربة، عدد الـ tokens المتولدة لطريقة Latent كان 374.6 token مقارنة بـ 1312.0 token لطريقة CoT على Keys-Finding Maze.",
+      "quote_en": "Token Assorted: Mixing Latent and Text Tokens for Improved Language Model Reasoning Model Keys-Finding Maze ProntoQA ProsQA 1-Feasible-10 (%) Num. Tokens Accuracy Num. Tokens Accuracy Num. Tokens Sol-Only 3 645 93.8 3.0 76.7 8.2 CoT 43 1312.0 98.8 92.5 77.5 49.4 Latent (ours) 62.8 (↑ +19.8) 374.6 100 (↑ +1.2) 7.7 96.2 (↑ +18.7) 10.9 Table 4.1: Our latent approach surpasses the other baselines on Keys-Finding Maze, ProntoQA and ProsQA with a large",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2504.10453v2-Q2-0",
+      "paper": "2504.10453v2",
+      "claim_ar": "المشكلة الأساسية كانت إن كل عنصر في الـcovariance matrix محتاج integral مكلف، وعدد الـintegrals بيزيد تربيعياً مع عدد الـsupernovae في المسح. بدل ما يحسبوا الـintegral ده كل مرة، درّبوا neural network emulator مبني على CosmoPower يتنبأ بقيمة الـintegral لكل عنصر في الـcovariance matrix.",
+      "quote_en": "integral, with the number increasing quadratically with the number of objects in the survey. For this reason, we develop an emulator to evaluate the integral, computing each element of the covariance matrix using a neural network based on the CosmoPower emulation framework [43]. We first randomly select one million combinations of redshift pairs and angles from the Pantheon+ dataset, and concatenate them with cosmological parameters sampled",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00010v1-Q2-0",
+      "paper": "2509.00010v1",
+      "claim_ar": "الـ MLP predictor بياخد الجزء المتحاذي بس من الـ latent وبيحوّله لمخرجات 148-dimensional، وهو شبكة خمس طبقات fully connected بـ 128 neurons وleaky ReLU.",
+      "quote_en": "predictor. This partitioning is found to slightly improve the generalization for the outputs related to ice (HL phase and qT sed). The MLP predictor takes only the aligned subset of Z as input and maps it to a 148-dimensional output vector representing vertically resolved subgrid fluxes and tendencies. The MLP predictor is a five-layer fully connected neural network with 128 neurons per hidden layer and leaky ReLU activations. We adapted the",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00524v1-L-2",
+      "paper": "2509.00524v1",
+      "claim_ar": "الورقة بتقترح طريقة جديدة تشفّر الـ biological pathways على مستوى الجين نفسه باستخدام Graph Attention Networks (GATs). الورقة بتقول إن تشفير الـ pathways المعروفة كـ mechanistic prior بيخلي الموديل يتعلم ديناميكيات أكثر متانة وقابلية للتفسير والتعميم. كمان بياقترحوا إن صيغة الـ GAT دي ممكن تكتشف insights بيولوجية جديدة زي مسارات مرشحة وتفاعلات جين-جين جديدة.",
+      "quote_en": "propose a novel method to explicitly encode biological pathways at the gene level using Graph Attention Networks (GATs). 2. We show that encoding known biological pathways as a mechanistic prior allows models to learn a more robust, interpretable, and generalizable set of pathway dynamics. 3. We suggest the potential of our GAT formulation to discover new biological insights, such as candidate pathways and novel gene-gene interactions. 2 Related",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00711v1-Q3-0",
+      "paper": "2509.00711v1",
+      "claim_ar": "البيانات اللي الموديل بياخدها هي إشارات من مناطق الدماغ عبر الزمن، مش إشارات كهربائية من فروة الراس.",
+      "quote_en": "Sequence Embedding The Quantum Time-series Transformer begins by converting classical spatio-temporal data (e.g., signals from brain regions across time) into quantum embeddings. Specifically, classical vector embeddings representing individual spatio-temporal sequences are linearly transformed into angular parameters, which are then used to parameterize quantum gates within VQCs. Each sequence thus obtains a unique quantum circuit",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00764v1-Q2-1",
+      "paper": "2509.00764v1",
+      "claim_ar": "الـ multiplier المقترح بيستخدم approximate compressors في كل الأعمدة عشان يقلل تعقيد الـ hardware، والخطأ الكلي بيفضل واطي لأن الـ compressor بيضيف خطأ واحد بس باحتمال P(1/255).",
+      "quote_en": "2 (c) uses only approximate compressors throughout the design to further reduce hardware complexity. Although it relies more heavily on approximation, the overall error remains low. This is because the proposed compressor introduces only one combination error with a very low probability of occurrence P(1/255). As a result, error metrics such as NMED and MRED show only minimal increase, ensuring that the accuracy of the multiplier is not",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.02069v1-L-1",
+      "paper": "2509.02069v1",
+      "claim_ar": "الناس لاحظت إن درجة التفرق نفسها بتختلف من منطقة لتانية في فضاء البيانات، فمستوى σ واحد عام مش كفاية لالتقاط التفاوت ده. في dWJS الأصلي، لو σ كبير بيحصل oversmoothing ولو صغير بيحصل مناطق حادة ومفتتة، وده بيأثر على الأداء.",
+      "quote_en": "efficient, the performance of dWJS is highly sensitive to the choice of σ. A large σ oversmooths the data manifold, while a small σ leads to sharp, fragmented regions, both of which might degrade performance. Careful tuning of this hyperparameter is therefore critical. Although existing models acknowledge the sparsity of protein data, we empirically observe that the degree of sparsity itself varies across the data space. Thus, a single global",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.02480v1-L-2",
+      "paper": "2509.02480v1",
+      "claim_ar": "الورقة بتقترح MLP-Offload، وده engine جديد لعمل offloading متعدد المستويات ومتعدد المسارات مصمم عشان يدرّب LLMs على أجهزة محدودة الموارد عن طريق تخفيف الـ I/O bottlenecks. المؤلفين لاحظوا إن الـ I/O overhead وقت الـ update هو اللي بيسيطر على زمن الـ iteration، وإن bandwidth التخزين الخارجي (المستوى التالت) بيفضل غير مستغل، وإن المنافسة بين عمليات الـ offloading المتزامنة بتضخّم المشكلة.",
+      "quote_en": "propose MLP-Offload, a novel multi-level, multi-path offloading engine specifically designed for optimizing LLM training on resourceconstrained setups by mitigating I/O bottlenecks. We make several key observations that drive the design of MLP-Offload, such as I/O overheads during the update dominate the iteration time; I/O bandwidth of the third-level remote storage tier remains unutilized; and, contention due to concurrent offloading amplifies",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.05820v1-L-2",
+      "paper": "2509.05820v1",
+      "claim_ar": "الابتكار الأساسي إن مسار معامل Hurst بيتحدد بمتوسط أُسّي موزون للتقلب الماضي، فالتقلب الحديث بيبقى تأثيره أقوى من البعيد، وطول الذاكرة بيتحكم فيه معامل decay.",
+      "quote_en": "mathematical foundation via rough path theory. Our key innovation lies in the Hurst path, which we define by linking it to an exponentially weighted moving average of past volatility. This ensures that recent market variance has a stronger influence than the distant past, with the effective memory length controlled by a decay parameter. The resulting process is then smoothly transformed and clipped so that the Hurst parameter remains within the",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.24254v2-L-5",
+      "paper": "2509.24254v2",
+      "claim_ar": "زيادة بمقدار انحراف معياري واحد في Soft (0.016) مرتبطة بزيادة 1% في العوائد حسب العمود (6).",
+      "quote_en": "Across all model specifications, Soft is positive and statistically significant at the 1%, increasing the 𝑅 2 up to 4.4%.3 The soft model estimated through FinBERT corresponds to the largest increase in 𝑅 2 relative to the univariate analysis in Column (1). Column (6) reports that a one standard deviation increase in Soft (0.016) is associated with an increase of 1% in returns (0.016 × 0.60 ≈ 1%). While earnings surprise dominates when using",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2410.13258v4-L-5",
+      "paper": "2410.13258v4",
+      "claim_ar": "عدد الـ RAG datasets اللي فيها معرفة موثقة من البشر قليل جدًا، وده بيحد إعدادات التجارب.",
+      "quote_en": "similar reason, we only chose three LLMs for our experiments. As a result, we may have missed out on more subtle phenomena that can only be seen from results on a larger number of generators. Datasets for in-depth analysis. In addition to the cost issue, there are very few RAG datasets with human-annotated knowledge (Friel et al., 2024), which further limits our simulation experiment settings. Furthermore, even though we regard WoW as a",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2504.10453v2-Q3-0",
+      "paper": "2504.10453v2",
+      "claim_ar": "لأ، الورقة دي ماعملتش أي حاجة بموجات الجاذبية ولا standard sirens؛ هي طورت طريقة جديدة لتقييد H0 و As باستخدام بيانات type Ia supernovae. الفكرة إنهم اعتبروا الـ SNIa مؤشرات (tracers) لحقل الـ peculiar velocity، فنمذجوا المسافات والـ covariance بتاعتهم كدالة في الـ cosmological parameters من غير أي calibrators زي الـ Cepheids.",
+      "quote_en": "E-mail: davide.piras@unige.ch, francesco.sorrenti@unige.ch, ruth.durrer@unige.ch, martin.kunz@unige.ch Abstract. We develop a novel approach to constrain the Hubble parameter H0 and the primordial power spectrum amplitude As using type Ia supernovae (SNIa) data. By considering SNIa as tracers of the peculiar velocity field, we can model their distance and their covariance as a function of cosmological parameters without the need of calibrators",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00010v1-L-4",
+      "paper": "2509.00010v1",
+      "claim_ar": "كل النماذج اتدربت على خمس random seeds عشان يقيّموا الـ robustness.",
+      "quote_en": "(CERA-noAlign). To assess robustness, all models were trained using five independent random seeds (Haynes et al., 2023). 3 Results 3.1 Autoencoding and Latent Alignment Enable Climate-Invariant Representations We evaluate the predictive performance of four models on five key subgrid tendency outputs (Figure 2). Averaging R2 over all output variables, CERA achieves the highest overall accuracy, with a mean R2 of 0.75 in the control climate and",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00524v1-Q3-0",
+      "paper": "2509.00524v1",
+      "claim_ar": "لأ، الورقة استخدمت بيانات time-series mRNA expression لجينات TP53 وMDM2 وMDM4 من Hafner et al. (GEO: GSE100099)، ومش مذكور في النص إنها بيانات single-cell sequencing.",
+      "quote_en": "generates oscillatory dynamics, presenting a richer challenge than linear signaling pathways. Dataset. We use time-series mRNA expression for TP53, MDM2, and MDM4 from Hafner et al. [6] (GEO: GSE100099). Experiments cover three treatment conditions: Wild-type (WT) with no intervention; TP53-sh, a knock-down that dampens TP53 expression; and Nutlin, a drug that blocks the MDM2-TP53 interaction. For each condition there are two independent",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00711v1-Q1-1",
+      "paper": "2509.00711v1",
+      "claim_ar": "في التقسيمة دي، الـ Quantum Time-series Transformer كسب على كل الموديلات الكلاسيكية في كل من ABCD وUKB.",
+      "quote_en": "intelligence regression in the UKB dataset, the Quantum Time-series Transformer demonstrated comparable performance to classical models, with the classical BolT model achieving slightly better results in these tasks (Table II). When the sample size was reduced to N = 100 (i.e., 70 for training, 15 for validation, and 15 for testing), the Quantum Time-series Transformer outperformed all classical counterparts across both the ABCD and UKB datasets.",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00764v1-L-0",
+      "paper": "2509.00764v1",
+      "claim_ar": "الدوائر الحسابية الدقيقة التقليدية بتفرض تكاليف كبيرة في المساحة والتأخير واستهلاك الطاقة، فبقت أقل ملاءمة للمهام الكبيرة وتطبيقات الـ edge.",
+      "quote_en": "ability to extract complex features from large datasets. With the rapid expansion of real-time and edge-based applications, particularly in resource-constrained environments, the demand for highly efficient hardware implementations has intensified. Traditional exact arithmetic circuits impose significant overheads in terms of area, delay, and power consumption [1], making them less favorable for large-scale data processing tasks and edge-based",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.02069v1-Q1-0",
+      "paper": "2509.02069v1",
+      "claim_ar": "DDS-dWJS مشي وراه قريب جدًا وحقق أداء قابل للمقارنة في الـ fidelity من غير مشاكل عدم الاستقرار اللي بتحصل مع قيم σ الكبيرة.",
+      "quote_en": "baselines, dWJS with σ = 0.25 achieves the lowest L1 values overall; however, our DDS-dWJS closely follows its performance, providing comparable fidelity while avoiding the instability observed with larger σ settings. . True mode recovery: The ability of the models to recover known and discover new modes is shown in Figure 3 (b). Both our model and the dWJS baselines recover the majority of ground-truth modes, including held-out ones, as seeds",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.02480v1-Q2-0",
+      "paper": "2509.02480v1",
+      "claim_ar": "كمان لما الذاكرات مش كفاية، بيحتاجوا offload لطبقة تالتة زي NVMe، ودي bandwidth بتاعتها أقل بكتير فبتضيق العنق أكتر.",
+      "quote_en": "host memory (DRAM) [26]. When memory constraints are even tighter, the aggregated GPU and host memory capacity are not enough, prompting the need to further offload the data structures to third-level storage tiers (e.g., NVMe devices) [21, 30, 32]. While the slower memory and storage tiers have significantly higher capacities, they also have significantly lower I/O bandwidth. For example, when pre-training a 20B LLaMA model without offloading",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.05820v1-L-4",
+      "paper": "2509.05820v1",
+      "claim_ar": "المعاملات اتحسّنت بتقليل الـ JS distance على بيانات التدريب، بتقسيم (752 تدريب و165 اختبار) للأصول غير العملات الرقمية و(1095 تدريب و242 اختبار) للعملات الرقمية.",
+      "quote_en": "including the 2022 volatility spike and subsequent stabilization. To determine parameters for all the models (EWMA-rBergomi, rBergomi, Heston), we minimize JS distance on training data. Namely (752 training, 165 test) for non-cryptocurrency asset classes and a (1095 training, 242 test) split for cryptocurrencies. These parameters are used for Section 5 and Section 6. Asset EWMArBergomi rBergomi Heston SPY 0.0655 0.1486 0.1133 VOO 0.0707 0.1293",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.24254v2-Q1-0",
+      "paper": "2509.24254v2",
+      "claim_ar": "الـ taxonomy بتاعة BKMX بتحدد 180 topic عبر 3,592 phrase، وبتغطي الاقتصاد والسياسة.",
+      "quote_en": "topics. This vector quantifies the degree to which article 𝑎 attends to the topic 𝑖. We use the BKMX taxonomy from [7] as benchmark, which defines 180 topics across 3,592 phrases, spanning economics and politics. Each article is encoded as a 180-dimensional topic vector, and topics are grouped into hierarchical metatopics. In our experiments, we chose 11 metatopics of interest. However, the BKMX model, trained on Wall Street Journal articles from",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2504.10453v2-Q1-0",
+      "paper": "2504.10453v2",
+      "claim_ar": "لما طبقوا الطريقة على بيانات Pantheon+ من غير Cepheids وبتثبيت As على قيمة Planck، قدرو يقيّدوا H0 عند مستوى 15% تقريباً.",
+      "quote_en": "We then test our pipeline with SNIa from an N-body simulation, obtaining 6%-level unbiased constraints on H0 with a moderate noise level. We finally apply our method to Pantheon+ data, constraining H0 at the 15% level without Cepheids when fixing As to its Planck value. On the other hand, we obtain 20%-level constraints on log 1010As in agreement with Planck when including Cepheids in the analysis. In light of upcoming observations of low",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00010v1-L-2",
+      "paper": "2509.00010v1",
+      "claim_ar": "الورقة بتقدم إطار اسمه CERA بيتعلم تمثيلات climate-invariant من البيانات نفسها من غير خبرة بشرية ولا labels من مناخ أدفى.",
+      "quote_en": "be available in practice, especially when using real-world observations. In this study, we introduce a third path: learning climate-invariant structure directly from data, without relying on expert-designed features or supervision from warmerclimate labels. Our model consists of an autoencoder (AE) and a multilayer perceptron (MLP) trained jointly in an end-to-end fashion. The AE learns a latent representation of the input profiles, while the MLP",
+      "owner_faithful": null
+    },
+    {
+      "id": "dev-2509.00524v1-L-6",
+      "paper": "2509.00524v1",
+      "claim_ar": "الدراسة مركّزة على pathway واحد بعدد قليل من الجينات، وبتعتمد على dataset محدود نسبيًا.",
+      "quote_en": "4.4 Limitations Our study focuses on a single pathway with few genes, and relies on a relatively limited dataset. Nonetheless, our results strongly suggest that encoding pathways at the gene level with GATs yields substantial improvements over MLP baselines, warranting further exploration. 5 Conclusion We introduced a Graph Attention Network (GAT) framework that encodes biological pathways at the gene level, serving as a mechanistic prior. Our",
+      "owner_faithful": null
     }
   ]
 }

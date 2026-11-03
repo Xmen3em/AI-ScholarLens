@@ -117,6 +117,31 @@ def check_calibration(rows: list[dict]) -> None:
             raise ValueError("paper_required")
 
 
+def dev_calibration_rows(rows: list[dict], *, count: int = 24, seed: int = 20261103) -> list[dict]:
+    """Kept development claims beside their source, spread round-robin across public papers."""
+    import random
+
+    candidates: dict[str, list[dict]] = {}
+    for row in rows:
+        if row["status"] != "ready" or not row.get("lesson") or base_id(row["paper"]) == PRIVATE_PAPER:
+            continue
+        for index, section in enumerate(row["lesson"]["sections"]):
+            # A single source keeps the claim beside exactly the quote that supports it.
+            if section["kind"] == "paper" and len(section["evidence"]) == 1:
+                candidates.setdefault(row["paper"], []).append({
+                    "id": f"dev-{row['paper']}-{row['job']}-{index}", "paper": row["paper"],
+                    "claim_ar": section["text"], "quote_en": section["evidence"][0]["quote"], "owner_faithful": None})
+    shuffler = random.Random(seed)
+    for paper in sorted(candidates):
+        shuffler.shuffle(candidates[paper])
+    picked: list[dict] = []
+    while len(picked) < count and any(candidates.values()):
+        for paper in sorted(candidates):
+            if candidates[paper] and len(picked) < count:
+                picked.append(candidates[paper].pop(0))
+    return picked
+
+
 def calibration_rows() -> list[dict]:
     from src.services.study.content import EvidenceBlock
     from src.services.study.evidence import evidence_catalog
@@ -167,7 +192,7 @@ def build_metrics(profile, token: str, meter: JudgeMeter) -> dict[str, Metric]: 
 
 def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring, needs .venv-eval to execute
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["calibration-sheet", "calibrate", "judge"])
+    parser.add_argument("command", choices=["calibration-sheet", "add-dev-claims", "calibrate", "judge"])
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "calibration-sheet":
@@ -175,6 +200,16 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring
             raise SystemExit("calibration.v1.json exists; the owner's labels are never overwritten")
         write_json(CALIBRATION, {"version": "paper-benchmark-calibration-v1", "rows": calibration_rows()})
         print("wrote", CALIBRATION, "- the owner adds 24 development claims and labels all 40")
+        return 0
+    if args.command == "add-dev-claims":
+        sheet = json.loads(CALIBRATION.read_text(encoding="utf-8"))
+        if any(row["id"].startswith("dev-") for row in sheet["rows"]):
+            raise SystemExit("development claims are already in calibration.v1.json")
+        run = DATA / "dev-rerun-2-control" / "jobs.jsonl"
+        added = dev_calibration_rows([json.loads(line) for line in run.read_text(encoding="utf-8").splitlines() if line.strip()])
+        check_calibration(sheet["rows"] + added)
+        write_json(CALIBRATION, {**sheet, "rows": sheet["rows"] + added})
+        print("added", len(added), "development claims; label owner_faithful true/false on all", len(sheet["rows"]) + len(added))
         return 0
     if not args.execute:
         print(f"{args.command}: up to {CEILINGS[args.command]} judge calls. Re-run with --execute.")

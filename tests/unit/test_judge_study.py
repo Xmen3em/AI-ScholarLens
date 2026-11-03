@@ -146,3 +146,25 @@ def test_calibration_rows_never_come_from_the_private_paper():
         check_calibration(rows + [{**rows[0], "paper": "2510.26807v1"}])
     committed = json.loads(open("evaluation/paper_benchmark/calibration.v1.json", encoding="utf-8").read())["rows"]
     check_calibration(committed)
+
+
+def test_development_claims_for_calibration_are_spread_and_public():
+    from src.commands.judge_study import dev_calibration_rows
+
+    def lesson(paper, n):
+        return {"paper": paper, "job": "L", "status": "ready", "lesson": {"title": "t", "sections": [
+            {"heading": f"h{i}", "kind": "paper", "text": f"جملة {paper} رقم {i}.",
+             "evidence": [{"block_id": f"p{i}b0", "quote": f"Quote {paper} {i} from the paper."}]} for i in range(n)] + [
+            {"heading": "two", "kind": "paper", "text": "جملتين.", "evidence": [{"block_id": "a", "quote": "q one"},
+                                                                                {"block_id": "b", "quote": "q two"}]},
+            {"heading": "bg", "kind": "background", "text": "خلفية.", "evidence": []}]}}
+
+    rows = [lesson("1111.00001v1", 9), lesson("2222.00002v1", 9), lesson("2510.26807v1", 9),
+            {"paper": "3333.00003v1", "job": "L", "status": "failed", "lesson": None}]
+    picked = dev_calibration_rows(rows, count=6)
+    assert len(picked) == 6 and [row["paper"] for row in picked].count("1111.00001v1") == 3
+    assert all(row["paper"] != "2510.26807v1" and row["owner_faithful"] is None for row in picked)
+    # Only single-source paper sections, so each claim sits beside exactly the quote that supports it.
+    assert all(row["quote_en"].startswith("Quote ") and row["claim_ar"].startswith("جملة") for row in picked)
+    assert picked == dev_calibration_rows(rows, count=6)
+    assert len({row["id"] for row in picked}) == 6
