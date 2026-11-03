@@ -16,9 +16,10 @@ from src.services.hf.client import _unique_object
 from src.services.hf.tokenizer import count_input_tokens
 from src.services.study.content import EvidenceBlock
 from src.services.study.evidence import evidence_catalog
+from src.services.study.models import DEFAULT_PROFILE, ModelProfile, estimate_input
 from src.services.study.store import StudyStore
 
-MODEL = "openai/gpt-oss-120b:cerebras"
+MODEL = DEFAULT_PROFILE.route
 URL = "https://router.huggingface.co/v1/chat/completions"
 PROMPT_REVISION = "egyptian-grounded-tutor-context-review-v7"
 SYSTEM = """You are ScholarLens, a careful AI-paper teacher. Explain in natural, respectful Egyptian Arabic
@@ -407,8 +408,12 @@ def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, 
 
 class StudyModel:
     def __init__(self, token: SecretStr, store: StudyStore, *, client: httpx.AsyncClient | None = None,
-                 memory=host_memory_mib, counter=count_input_tokens, audit=None):
-        self.store, self.memory, self.counter = store, memory, counter
+                 memory=host_memory_mib, counter=None, audit=None, profile: ModelProfile = DEFAULT_PROFILE):
+        self.store, self.memory, self.profile = store, memory, profile
+        if counter is None:
+            counter = count_input_tokens if profile.input_estimate == "gpt_oss_tokenizer" else (
+                lambda serialized: estimate_input(profile, serialized))
+        self.counter = counter
         self.client = client or httpx.AsyncClient(headers={"Authorization": "Bearer " + token.get_secret_value()},
             timeout=httpx.Timeout(80, connect=5), follow_redirects=False, trust_env=False,
             limits=httpx.Limits(max_connections=1, max_keepalive_connections=1))
@@ -431,8 +436,9 @@ class StudyModel:
             raise TutorError("one_output_contract_required")
         # The claim check returns copied spans per claim; it needs the same room as a lesson.
         max_tokens = 3000
-        payload = {"model": MODEL, "messages": messages, "temperature": 0, "max_tokens": max_tokens,
-                   "reasoning_effort": "low", "stream": False}
+        # Options sit where reasoning_effort always was, so the default request stays byte-identical.
+        payload = {"model": self.profile.route, "messages": messages, "temperature": 0, "max_tokens": max_tokens,
+                   **self.profile.request_options, "stream": False}
         if schema:
             payload["response_format"] = {"type": "json_schema", "json_schema": {
                 "name": "study_output", "strict": True, "schema": schema}}
@@ -442,7 +448,7 @@ class StudyModel:
         if len(serialized.encode()) > 128_000 or self.counter(serialized) > 20000:
             raise TutorError("study_context_limit")
         async with self._lock:
-            attempt = self.store.reserve_attempt(job_id, purpose, MODEL)
+            attempt = self.store.reserve_attempt(job_id, purpose, self.profile.route)
             state = "unknown"
             try:
                 async with asyncio.timeout(85):
@@ -485,7 +491,7 @@ class StudyModel:
                 if self.audit is not None:
                     self.audit({"purpose": purpose, "result": {"output": result.get("output"), "usage": result["usage"]}})
                 state = "succeeded"
-                emit_event("study_generation", purpose=purpose, outcome=state, model=MODEL,
+                emit_event("study_generation", purpose=purpose, outcome=state, model=self.profile.route,
                            input_tokens=usage["prompt_tokens"], output_tokens=usage["completion_tokens"])
                 return result
             except asyncio.CancelledError:
