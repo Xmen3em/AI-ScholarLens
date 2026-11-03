@@ -301,3 +301,9 @@ def test_holdout_refuses_a_manifest_that_changed_after_development_closed(tmp_pa
     (tmp_path / "dev-closed.json").write_text(json.dumps({"manifest_sha256": "old-hash"}), encoding="utf-8")
     with pytest.raises(SystemExit, match="manifest changed"):
         evaluate_study.main(["--stage", "holdout", "--model", "baseline", "--execute"])
+
+
+def test_a_second_development_rerun_has_the_development_ceiling(monkeypatch, capsys):
+    # Protocol amendment, 3 Nov 2026: the first rerun's format fix was incomplete.
+    assert evaluate_study.main(["--stage", "dev-rerun-2", "--model", "baseline"]) == 0
+    assert "call ceiling 96" in capsys.readouterr().out

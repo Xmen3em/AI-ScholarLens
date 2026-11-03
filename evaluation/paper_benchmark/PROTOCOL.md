@@ -39,7 +39,8 @@ with [papers](papers.v1.json), [questions](questions.v1.json) and
   call without usage is charged its worst case (its input estimate plus 3,000
   output tokens).
 - Development may fix only defects that affect all models equally, and is rerun
-  at most once. Holdout runs once, after development is closed.
+  at most twice (`dev-rerun`, `dev-rerun-2`). Holdout runs once, after development
+  is closed.
 
 ## Metrics
 

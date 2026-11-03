@@ -2,11 +2,11 @@
   "version": "paper-benchmark-v1",
   "frozen_on": "2026-11-03",
   "sha256": {
-    "PROTOCOL.md": "61171cbc7a688a08ac4d1e7f525ebd796adc3747024e92b345d395541d473483",
+    "PROTOCOL.md": "9463259085fb7fa1528a928628d7c789bd43f7f4fc4fb96a7c267f10fcb1a0a5",
     "papers.v1.json": "458d3456a91d973556c878e51fb7e3475dd1cee5386d87286db22f05622c0d7c",
     "questions.v1.json": "59e0e483f22da8ae148d37afbe3a13453b38ffe160b4eeec86ffcb2b62de5764",
     "models.v1.json": "6e54c5e804cb68379cdefe7938697dd72d8c10d652a35fdd87c6fd278d9ac5b8",
     "private-questions.json": "f6bf4089866a8fc9b92fad81eae3a93c88c551d8d42df13bd2195503e4dbf613"
   },
-  "manifest_sha256": "1c72ca69ee495420f0d36edd5198a09155d15e6318c0113590fdf3c255f16b2d"
+  "manifest_sha256": "078616ef9ff759a877e3381cc5b85d0512749b240f956b13e67adc54479a9dd9"
 }

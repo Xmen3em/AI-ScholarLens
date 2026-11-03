@@ -131,7 +131,10 @@ are sequential, resumable by job, and never retry a counted call.
 A qualification failure removes that model from the bake-off; it is reported,
 not worked around. Development may change code that affects all models equally
 (for example a profile option or a parser bug), after which development is rerun
-once. Nothing changes after holdout starts.
+once. Amended 3 November 2026: a second rerun is allowed, because the first
+rerun's fix to the lesson-format rule was checked against one gpt-oss draft and
+missed the other ways it breaks the rule (11 of 12 first lessons still failed).
+Nothing changes after holdout starts.
 
 Each paper runs as one session per model, in the order L, Q1, Q2, Q3, so
 follow-ups see the same dialogue context a student would. Today a failed first

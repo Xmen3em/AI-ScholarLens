@@ -17,7 +17,7 @@ from src.resources import free_memory_mib as host_memory_mib
 from src.services.study.models import ModelProfile, call_cost_usd, load_profiles
 from src.services.study.store import StoreConflict, StudyStore
 
-STAGE_CEILINGS = {"qualify": 4, "dev": 96, "dev-rerun": 96, "holdout": 144}
+STAGE_CEILINGS = {"qualify": 4, "dev": 96, "dev-rerun": 96, "dev-rerun-2": 96, "holdout": 144}
 WORST_INPUT_TOKENS = 20_000
 CALLS_PER_JOB = 2
 MIN_MEMORY_MIB = 1024
