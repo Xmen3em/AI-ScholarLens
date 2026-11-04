@@ -5,6 +5,7 @@ import json
 import math
 import re
 import unicodedata
+from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import Literal
 
@@ -423,16 +424,18 @@ def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, 
 
 class StudyModel:
     def __init__(self, token: SecretStr, store: StudyStore, *, client: httpx.AsyncClient | None = None,
-                 memory=host_memory_mib, counter=None, audit=None, profile: ModelProfile = DEFAULT_PROFILE):
-        self.store, self.memory, self.profile = store, memory, profile
+                 memory=host_memory_mib, counter=None, audit=None, profile: ModelProfile = DEFAULT_PROFILE, pool=None):
+        self.store, self.memory, self.profile, self.pool = store, memory, profile, pool
         if counter is None:
             counter = count_input_tokens if profile.input_estimate == "gpt_oss_tokenizer" else (
                 lambda serialized: estimate_input(profile, serialized))
         self.counter = counter
-        self.client = client or httpx.AsyncClient(headers={"Authorization": "Bearer " + token.get_secret_value()},
+        # A pooled model shares the pool's client and waits for one of its slots (multi-user beta).
+        shared = client or (pool.client if pool is not None else None)
+        self.client = shared or httpx.AsyncClient(headers={"Authorization": "Bearer " + token.get_secret_value()},
             timeout=httpx.Timeout(80, connect=5), follow_redirects=False, trust_env=False,
             limits=httpx.Limits(max_connections=1, max_keepalive_connections=1))
-        self._owned = client is None
+        self._owned = shared is None
         self.audit = audit
         self._lock = asyncio.Lock()
 
@@ -462,7 +465,10 @@ class StudyModel:
         serialized = json.dumps(payload, ensure_ascii=False, allow_nan=False)
         if len(serialized.encode()) > 128_000 or self.counter(serialized) > 20000:
             raise TutorError("study_context_limit")
-        async with self._lock:
+        async with self._lock, (self.pool.slot(job_id) if self.pool is not None else nullcontext()):
+            # A queued call re-checks memory once its slot arrives; the attempt is reserved only then.
+            if self.pool is not None and not (math.isfinite(free := self.memory()) and free >= 600):
+                raise TutorError("study_memory_unavailable")
             attempt = self.store.reserve_attempt(job_id, purpose, self.profile.route)
             state = "unknown"
             try:
