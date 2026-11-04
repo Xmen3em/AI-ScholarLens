@@ -1,4 +1,4 @@
-"""Invite-only beta access: members, invites and once-a-day notes (docs/specs/multi-user.md §2).
+"""Invite-only beta access: members, invites, notes, daily limits and the dollar ledger (docs/specs/multi-user.md §2–3).
 
 The tables live beside the study store in the same SQLite file. Invite codes are stored only
 as SHA-256; a code is trimmed and upper-cased before it is checked.
@@ -8,6 +8,7 @@ import hashlib
 import secrets
 import sqlite3
 import time
+from collections import deque
 from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import datetime
@@ -15,13 +16,17 @@ from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo
 
+from src.services.study import access_text
 from src.services.study.access_settings import AccessSettings
+from src.services.study.models import DEFAULT_PROFILE, call_cost_usd
 
 CAIRO = ZoneInfo("Africa/Cairo")
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 CODE_LENGTH = 10
 INVITE_SECONDS = 7 * 86400
+WORST_INPUT_TOKENS = 20000
 Role = Literal["owner", "student"]
+Kind = Literal["paper", "question", "other"]
 
 
 def _hash(code: str) -> str:
@@ -34,6 +39,7 @@ class AccessGate:
             raise ValueError("invalid_access_store")
         path.parent.mkdir(parents=True, exist_ok=True)
         self.path, self.settings, self.owner_id, self.now = path, settings, owner_id, now
+        self._messages: dict[int, deque[float]] = {}
         with self._db() as db:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS members (
@@ -43,6 +49,13 @@ class AccessGate:
                     hash TEXT PRIMARY KEY, created REAL NOT NULL, expires REAL NOT NULL, used_by INTEGER);
                 CREATE TABLE IF NOT EXISTS notes (
                     user INTEGER NOT NULL, day TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY(user, day, kind));
+                CREATE TABLE IF NOT EXISTS usage_day (
+                    user INTEGER NOT NULL, day TEXT NOT NULL, papers INTEGER NOT NULL DEFAULT 0,
+                    questions INTEGER NOT NULL DEFAULT 0, usd REAL NOT NULL DEFAULT 0, PRIMARY KEY(user, day));
+                -- A reservation exists before its job does: it is keyed by the request and bound to the job later.
+                CREATE TABLE IF NOT EXISTS reservations (
+                    key TEXT PRIMARY KEY, job TEXT UNIQUE, user INTEGER NOT NULL, day TEXT NOT NULL,
+                    kind TEXT NOT NULL, reserved REAL NOT NULL);
             """)
             db.execute("INSERT INTO members(user, role, joined, last_active) VALUES(?, 'owner', ?, ?) "
                        "ON CONFLICT(user) DO UPDATE SET role='owner', revoked=0", (owner_id, self.now(), self.now()))
@@ -129,3 +142,104 @@ class AccessGate:
         with self._db() as db:
             return [dict(row) for row in db.execute(
                 "SELECT user, role, joined, last_active, revoked, inactive FROM members ORDER BY joined")]
+
+    # Limits and the dollar ledger (spec §3).
+
+    def worst_call_usd(self) -> float:
+        return call_cost_usd(DEFAULT_PROFILE, None, estimate=WORST_INPUT_TOKENS)
+
+    def allow_message(self, user: int) -> bool:
+        window = self._messages.setdefault(user, deque())
+        while window and window[0] <= self.now() - 60:
+            window.popleft()
+        if len(window) >= self.settings.messages_per_minute:
+            return False
+        window.append(self.now())
+        return True
+
+    def _day_row(self, db, user: int, day: str) -> sqlite3.Row:
+        db.execute("INSERT OR IGNORE INTO usage_day(user, day) VALUES(?, ?)", (user, day))
+        return db.execute("SELECT * FROM usage_day WHERE user=? AND day=?", (user, day)).fetchone()
+
+    @staticmethod
+    def _day_totals(db, day: str) -> tuple[float, float]:
+        spent = db.execute("SELECT COALESCE(SUM(usd), 0) FROM usage_day WHERE day=?", (day,)).fetchone()[0]
+        reserved = db.execute("SELECT COALESCE(SUM(reserved), 0) FROM reservations WHERE day=?", (day,)).fetchone()[0]
+        return spent, reserved
+
+    def admit(self, user: int, kind: Kind, key: str, max_calls: int) -> str | None:
+        """None when admitted (a reservation is recorded under key), else the refusal text."""
+        day, amount = self.cairo_day(), max_calls * self.worst_call_usd()
+        with self._db() as db:
+            role = db.execute("SELECT role FROM members WHERE user=? AND revoked=0", (user,)).fetchone()
+            if role is not None and role["role"] == "student":
+                row = self._day_row(db, user, day)
+                if kind == "paper" and row["papers"] >= self.settings.daily_papers:
+                    return access_text.PAPERS_USED.format(P=self.settings.daily_papers)
+                if kind == "question" and row["questions"] >= self.settings.daily_questions:
+                    return access_text.QUESTIONS_USED.format(Q=self.settings.daily_questions)
+            spent, reserved = self._day_totals(db, day)
+            if spent + reserved + amount > self.settings.daily_usd_ceiling + 1e-9:
+                return access_text.CEILING
+            db.execute("INSERT INTO reservations(key, user, day, kind, reserved) VALUES(?, ?, ?, ?, ?)",
+                       (key, user, day, kind, amount))
+        return None
+
+    @staticmethod
+    def _reservation(db, ref: str) -> sqlite3.Row | None:
+        return db.execute("SELECT * FROM reservations WHERE key=? OR job=?", (ref, ref)).fetchone()
+
+    def bind(self, key: str, job: str) -> None:
+        with self._db() as db:
+            db.execute("UPDATE reservations SET job=? WHERE key=?", (job, key))
+
+    def charge(self, ref: str, usd: float) -> None:
+        with self._db() as db:
+            reservation = self._reservation(db, ref)
+            if reservation is None:
+                return
+            self._day_row(db, reservation["user"], reservation["day"])
+            db.execute("UPDATE usage_day SET usd=usd+? WHERE user=? AND day=?",
+                       (usd, reservation["user"], reservation["day"]))
+            db.execute("UPDATE reservations SET reserved=MAX(0, reserved-?) WHERE key=?", (usd, reservation["key"]))
+
+    def settle(self, ref: str, *, delivered_kind: Literal["paper", "question"] | None) -> None:
+        with self._db() as db:
+            reservation = self._reservation(db, ref)
+            if reservation is None:
+                return
+            role = db.execute("SELECT role FROM members WHERE user=?", (reservation["user"],)).fetchone()
+            if delivered_kind in ("paper", "question") and role is not None and role["role"] == "student":
+                self._day_row(db, reservation["user"], reservation["day"])
+                column = "papers" if delivered_kind == "paper" else "questions"
+                db.execute(f"UPDATE usage_day SET {column}={column}+1 WHERE user=? AND day=?",
+                           (reservation["user"], reservation["day"]))
+            db.execute("DELETE FROM reservations WHERE key=?", (reservation["key"],))
+
+    def release(self, ref: str) -> None:
+        with self._db() as db:
+            db.execute("DELETE FROM reservations WHERE key=? OR job=?", (ref, ref))
+
+    def open_reservations(self) -> list[dict]:
+        with self._db() as db:
+            return [dict(row) for row in db.execute("SELECT * FROM reservations")]
+
+    def usage(self, user: int) -> dict:
+        with self._db() as db:
+            row = self._day_row(db, user, self.cairo_day())
+        return {"papers_left": max(0, self.settings.daily_papers - row["papers"]),
+                "questions_left": max(0, self.settings.daily_questions - row["questions"])}
+
+    def day_usage(self, user: int) -> dict:
+        with self._db() as db:
+            row = self._day_row(db, user, self.cairo_day())
+        return {"papers": row["papers"], "questions": row["questions"], "usd": row["usd"]}
+
+    def owner_usage(self) -> dict:
+        day = self.cairo_day()
+        with self._db() as db:
+            spent, reserved = self._day_totals(db, day)
+            top = [{"user": row["user"], "usd": row["usd"], "papers": row["papers"], "questions": row["questions"]}
+                   for row in db.execute("SELECT u.* FROM usage_day u JOIN members m ON m.user=u.user "
+                                         "WHERE u.day=? AND m.role='student' ORDER BY u.usd DESC LIMIT 5", (day,))]
+        return {"spent": spent, "reserved": reserved, "ceiling": self.settings.daily_usd_ceiling, "top": top}
