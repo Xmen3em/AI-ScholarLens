@@ -98,3 +98,43 @@ def test_retention_and_forget_preserve_admission_without_retaining_the_question(
     clock[0] += 31 * 86400
     store.create_job("three", {})
     assert store.get_job(second["id"])["payload"] == {} and store.get_job(second["id"])["result"] is None
+
+
+def test_recovery_covers_every_owner(tmp_path):
+    import json
+
+    from src.services.study.store import recover_all_interrupted
+
+    path = tmp_path / "s.sqlite3"
+    stores = [StudyStore(path, owner) for owner in ("1", "2")]
+    jobs = [store.create_job(f"t{index}", {}, max_calls=2) for index, store in enumerate(stores)]
+    stores[0].reserve_attempt(jobs[0]["id"], "lesson", "m")
+    assert recover_all_interrupted(path) == 2
+    for store, job in zip(stores, jobs):
+        assert store.get_job(job["id"])["status"] == "interrupted"
+    assert stores[0].attempts(jobs[0]["id"])[0]["state"] == "unknown"
+    assert "مش هيتعاد" in json.dumps(stores[1].get_job(jobs[1]["id"])["result"], ensure_ascii=False)
+
+
+def test_pending_deliveries_span_owners_oldest_first(tmp_path):
+    from src.services.study.store import pending_deliveries_all
+
+    path = tmp_path / "s.sqlite3"
+    clock = iter(range(100, 200))
+    stores = {owner: StudyStore(path, owner, now=lambda: next(clock)) for owner in ("1", "2")}
+    ids = []
+    for owner in ("2", "1", "2", "1", "2", "1"):
+        job = stores[owner].create_job(f"t{len(ids)}", {}, max_calls=1)
+        stores[owner].finish_job(job["id"], {"text": "x"})
+        ids.append((owner, job["id"]))
+    pending = pending_deliveries_all(path)
+    assert [(row["owner"], row["id"]) for row in pending] == ids[:5]
+    stores["2"].claim_delivery(ids[0][1])
+    assert pending_deliveries_all(path)[0]["id"] == ids[1][1]
+
+
+def test_store_uses_wal(tmp_path):
+    import sqlite3
+
+    StudyStore(tmp_path / "s.sqlite3", "1")
+    assert sqlite3.connect(tmp_path / "s.sqlite3").execute("PRAGMA journal_mode").fetchone()[0] == "wal"

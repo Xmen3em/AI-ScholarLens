@@ -5,9 +5,11 @@ import json
 import sqlite3
 import time
 import uuid
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 from typing import Any, Callable
+
+RECOVERED_TEXT = "الطلب اتوقف مع إعادة التشغيل. ابعت طلب جديد لو تحب تكمل؛ مش هيتعاد تلقائيًا."
 
 
 class StoreConflict(RuntimeError):
@@ -27,6 +29,9 @@ class StudyStore:
             raise StoreConflict("invalid_store")
         path.parent.mkdir(parents=True, exist_ok=True)
         self.path, self.owner, self.now = path, owner, now
+        # WAL lets several students' jobs read while one writes; it persists in the file.
+        with closing(sqlite3.connect(path, timeout=5)) as db:
+            db.execute("PRAGMA journal_mode=WAL")
         with self._db() as db:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS jobs (
@@ -107,7 +112,7 @@ class StudyStore:
             db.execute("UPDATE attempts SET state='unknown' WHERE state='reserved' AND job IN "
                        "(SELECT id FROM jobs WHERE owner=?)", (self.owner,))
             db.execute("UPDATE jobs SET status='interrupted',result=? WHERE owner=? AND status='running'",
-                       (_json({"text": "الطلب اتوقف مع إعادة التشغيل. ابعت طلب جديد لو تحب تكمل؛ مش هيتعاد تلقائيًا."}), self.owner))
+                       (_json({"text": RECOVERED_TEXT}), self.owner))
 
     def reserve_attempt(self, job_id: str, purpose: str, model: str) -> int:
         with self._db() as db:
@@ -226,3 +231,21 @@ class StudyStore:
 
     def fingerprint(self) -> str:
         return hashlib.sha256(self.owner.encode()).hexdigest()[:12]
+
+
+def recover_all_interrupted(path: Path) -> int:
+    """recover_interrupted for every owner in the file; returns the jobs it ended."""
+    with closing(sqlite3.connect(path, timeout=5)) as db, db:
+        db.execute("UPDATE attempts SET state='unknown' WHERE state='reserved' AND job IN "
+                   "(SELECT id FROM jobs WHERE status='running')")
+        return db.execute("UPDATE jobs SET status='interrupted',result=? WHERE status='running'",
+                          (_json({"text": RECOVERED_TEXT}),)).rowcount
+
+
+def pending_deliveries_all(path: Path, limit: int = 5) -> list[dict]:
+    """Undelivered finished jobs across owners, oldest first, each with its owner."""
+    with closing(sqlite3.connect(path, timeout=5)) as db:
+        db.row_factory = sqlite3.Row
+        rows = db.execute("SELECT * FROM jobs WHERE delivery=0 AND status!='running' ORDER BY created LIMIT ?",
+                          (limit,)).fetchall()
+    return [{**StudyStore._job(row), "owner": row["owner"]} for row in rows]
