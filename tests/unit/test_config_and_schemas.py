@@ -65,7 +65,10 @@ def declared_names(env_file: Path) -> set[str]:
 def application_env_names() -> set[str]:
     # The standalone bot reads its own prefixed settings. Keep both consumers
     # covered so private .env values cannot leak into tests through missing keys.
-    return settings_env_names(Settings) | settings_env_names(TelegramSettings, TelegramSettings.model_config["env_prefix"])
+    from src.services.study.access_settings import AccessSettings
+
+    return (settings_env_names(Settings) | settings_env_names(TelegramSettings, TelegramSettings.model_config["env_prefix"])
+            | settings_env_names(AccessSettings, AccessSettings.model_config["env_prefix"]))
 
 
 @pytest.mark.parametrize("env_file", [ENV_EXAMPLE, ENV_TEST], ids=["env.example", "env.test"])
