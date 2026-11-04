@@ -163,3 +163,28 @@ async def test_a_running_job_reports_each_stage_and_forgets_it_when_finished(tmp
                     ("followup", "writing_answer"), ("grounding_review", "checking")]
     assert service.progress == {}
     await service.aclose()
+
+
+@pytest.mark.asyncio
+async def test_request_kind_tells_papers_from_questions(tmp_path):
+    store = StudyStore(tmp_path / "study.sqlite3", "owner")
+    service = StudyService(store, Intake(), Content(), Model())
+    assert service.request_kind("1706.03762") == "paper"
+    assert service.request_kind("/paper 1706.03762") == "paper"
+    assert service.request_kind("/paper attention is all you need") == "other"
+    assert service.request_kind("attention is all you need") == "other"
+    assert service.request_kind("/help") == "other" and service.request_kind("/usage") == "other"
+    await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
+    assert service.request_kind("اشرح الطريقة بمثال") == "question"
+    assert service.request_kind("/quiz") == "question" and service.request_kind("/ask what is attention") == "question"
+    assert service.request_kind("1706.03762v2") == "paper"
+    assert service.request_kind("/notes") == "other"
+
+
+@pytest.mark.asyncio
+async def test_ready_results_say_whether_they_were_a_paper_or_a_question(tmp_path):
+    store = StudyStore(tmp_path / "study.sqlite3", "owner")
+    service = StudyService(store, Intake(), Content(), Model())
+    lesson_job = await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
+    answer_job = await finished(service, service.submit("tg:2", "اشرح الطريقة بمثال")["job_id"])
+    assert lesson_job["result"]["kind"] == "paper" and answer_job["result"]["kind"] == "question"

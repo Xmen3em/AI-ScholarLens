@@ -1,5 +1,6 @@
 """Explicit owner development runtime; never claims evaluation acceptance."""
 
+import asyncio
 import math
 from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
@@ -21,6 +22,7 @@ from src.services.hf.tokenizer import CerebrasInputAdmission, verify_vocabulary
 from src.services.pc_clients import make_embedder, make_search_client
 from src.services.pc_configuration import preview_settings
 from src.services.search import SearchService
+from src.services.study.access_settings import AccessSettings
 
 MODEL = "openai/gpt-oss-120b:cerebras"
 ADMISSION_MIB = 1024
@@ -93,6 +95,48 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
             or settings.answer_cache_enabled or settings.local_tracing_enabled or settings.monitoring_directory is not None):
         raise ValueError("Development requires isolated authenticated HF settings")
 
+    async def _start_multi_user(app, owned, access, root, public, research_python):
+        """The invite-only beta (docs/specs/multi-user.md): gate, shared pool, one service per student."""
+        from src.services.study.access import AccessGate
+        from src.services.study.api import install_multi_user
+        from src.services.study.content import PaperContentService
+        from src.services.study.intake import ArxivIntake
+        from src.services.study.pool import ModelPool
+        from src.services.study.registry import ServiceRegistry, settle_interrupted
+        from src.services.study.store import recover_all_interrupted
+
+        assert study_owner is not None
+        path = root / "sessions.sqlite3"
+        gate = AccessGate(path, access, study_owner)
+        pool = ModelPool(settings.hf_token, access.parallel_jobs)
+        owned.push_async_callback(pool.aclose)
+        registry = ServiceRegistry(path, pool, gate, ArxivIntake(public), PaperContentService(root / "sources", public),
+                                   owner_id=study_owner, research_python=research_python, token=settings.hf_token)
+        owned.push_async_callback(registry.aclose)
+        recover_all_interrupted(path)
+        settle_interrupted(gate, path)
+        registry.sweep(access.retention_days)
+        install_multi_user(app, gate, registry, path, study_owner)
+        app.state.study = registry.service(study_owner)
+
+        async def maintain():
+            # Close idle students' services every minute; sweep retention once a day.
+            last_sweep = anyio.current_time()
+            while True:
+                await anyio.sleep(60)
+                await registry.close_idle()
+                if anyio.current_time() - last_sweep >= 86400:
+                    registry.sweep(access.retention_days)
+                    last_sweep = anyio.current_time()
+
+        task = asyncio.create_task(maintain())
+
+        async def stop():
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+        owned.push_async_callback(stop)
+
     @asynccontextmanager
     async def lifespan(app):
         owned = AsyncExitStack()
@@ -120,16 +164,20 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
                     headers={"User-Agent": "ScholarLens-private-study/0.1"},
                     limits=httpx.Limits(max_connections=1, max_keepalive_connections=1))
                 owned.push_async_callback(public.aclose)
-                store = StudyStore(root / "sessions.sqlite3", str(study_owner))
-                store.recover_interrupted()
-                tutor = StudyModel(settings.hf_token, store)
-                owned.push_async_callback(tutor.aclose)
                 research_python = workspace / ".venv-study-research/Scripts/python.exe"
                 if not research_python.is_file() or research_python.is_symlink():
                     research_python = None
-                app.state.study = StudyService(store, ArxivIntake(public), PaperContentService(root / "sources", public), tutor,
-                                               research_python=research_python)
-                owned.push_async_callback(app.state.study.aclose)
+                access = AccessSettings()
+                if access.multi_user:
+                    await _start_multi_user(app, owned, access, root, public, research_python)
+                else:
+                    store = StudyStore(root / "sessions.sqlite3", str(study_owner))
+                    store.recover_interrupted()
+                    tutor = StudyModel(settings.hf_token, store)
+                    owned.push_async_callback(tutor.aclose)
+                    app.state.study = StudyService(store, ArxivIntake(public), PaperContentService(root / "sources", public),
+                                                   tutor, research_python=research_python)
+                    owned.push_async_callback(app.state.study.aclose)
             yield
         finally:
             with anyio.CancelScope(shield=True):

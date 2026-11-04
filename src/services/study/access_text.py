@@ -28,3 +28,15 @@ OWNER_HELP_LINES = (
     "/revoke ID — إلغاء عضوية ومسح محتواها",
     "/usage — التكلفة النهارده والحد اليومي",
 )
+
+# Owner-facing replies (not in spec §5, which fixes the student copy).
+INVITES = "أكواد الدعوة (كل كود لمرة واحدة، صالح 7 أيام):\n{codes}\n\nالطالب يبعت: /start الكود"
+INVITE_HOW = "اكتب /invite أو /invite ورقم من 1 لـ 10."
+REVOKE_HOW = "اكتب /revoke ورقم الطالب من /members."
+REVOKE_DONE = "اتلغت عضوية {user} واتمسح محتواها. سجل الاستخدام بيفضل من غير محتوى."
+NO_SUCH_MEMBER = "مفيش طالب نشط بالرقم ده."
+MEMBER_LINE = "{user} — {role} — آخر نشاط {last_active} — النهارده: {papers} ورقة، {questions} سؤال، ${usd:.2f}"
+OWNER_USAGE = "النهارده: اتصرف ${spent:.2f} ومحجوز ${reserved:.2f} من الحد اليومي ${ceiling:.2f}."
+OWNER_TOP = "{user}: ${usd:.2f} — {papers} ورقة، {questions} سؤال"
+# A student without a paper gets this instead of the owner's general-knowledge fallback.
+NO_PAPER_YET = "لسه مفيش ورقة مفتوحة. ابعت رقم arXiv (زي 2005.11401) أو /paper واسم الورقة بالإنجليزي، وبعدها اسألني."

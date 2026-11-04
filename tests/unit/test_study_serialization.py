@@ -77,3 +77,32 @@ async def test_legacy_api_respects_an_active_study_job(tmp_path, monkeypatch):
             result = await client.post("/api/v1/agent/ask", headers={"X-API-Key": settings.api_key.get_secret_value()},
                                        json={"query": "Explain AI"})
         assert result.status_code == 503 and calls == []
+
+
+@pytest.mark.anyio
+async def test_multi_user_mode_wires_the_gate_registry_and_startup_recovery(tmp_path, monkeypatch):
+    from src.services.study.store import StudyStore
+
+    class HF:
+        attempts = 0
+        def __init__(self, settings): pass
+        async def aclose(self): pass
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("STUDY_MULTI_USER", "true")
+    monkeypatch.setattr(runtime, "make_search_client", lambda _: SimpleNamespace(close=lambda: None))
+    monkeypatch.setattr(runtime, "make_embedder", lambda _: None)
+    monkeypatch.setattr(runtime, "DevelopmentHF", HF)
+    stale = StudyStore(tmp_path / "data/study/sessions.sqlite3", "777")
+    crashed = stale.create_job("crashed", {}, max_calls=2)
+    settings = config(tmp_path)
+    app = runtime.create_development_app(settings, study_owner=123)
+    async with app.router.lifespan_context(app):
+        assert app.state.gate.role(123) == "owner" and app.state.study is app.state.registry.service(123)
+        assert stale.get_job(crashed["id"])["status"] == "interrupted"
+        headers = {"X-API-Key": settings.api_key.get_secret_value()}
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://local") as client:
+            reply = await client.post("/api/v1/study/messages", headers=headers,
+                                      json={"intent": "t:1", "text": "1706.03762", "user_id": 999})
+            status = await client.get("/api/v1/development", headers=headers)
+        assert reply.json() == {"reply": "البوت ده في تجربة محدودة بالدعوة. لو معاك كود دعوة ابعت: /start الكود"}
+        assert status.json()["study_enabled"] is True

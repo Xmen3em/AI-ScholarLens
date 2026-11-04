@@ -7,7 +7,7 @@ import os
 import re
 from collections.abc import Callable
 from pathlib import Path
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from src.operations import emit_event
@@ -207,6 +207,26 @@ class StudyService:
             task.add_done_callback(lambda done: self.progress.pop(done.get_name(), None))
         return {"job_id": job["id"], "reply": _acknowledgement(command, text, bool(context))}
 
+    def request_kind(self, text: str) -> Literal["paper", "question", "other"]:
+        """What a message will cost before it runs: a new paper, a follow-up, or no model call (mirrors _resolve)."""
+        text = text.strip()
+        if not text.startswith("/") and self._pending_choice(text):
+            return "paper"
+        command, _, argument = text.partition(" ")
+        command = command.lower()
+        if command == "/choose":
+            return "paper"
+        if command.startswith("/") and command not in {"/paper", "/ask", "/quiz", "/deep"}:
+            return "other"
+        is_paper = command == "/paper"
+        try:
+            identity = normalize_input(argument if is_paper else text)[0] == "id"
+        except StudyInputError:
+            identity = False
+        if identity:
+            return "paper"
+        return "question" if self.store.context() and not is_paper else "other"
+
     def _pending_choice(self, text: str) -> int | None:
         options = self.store.selection()
         if not options:
@@ -224,7 +244,11 @@ class StudyService:
         try:
             async with asyncio.timeout(160):
                 state = await self.graph.ainvoke({"job_id": job_id, "text": text}, config={"recursion_limit": 8})
-            self.store.finish_job(job_id, state["result"])
+            result = state["result"]
+            if "followup" in state:
+                # The multi-user beta counts a delivered answer by what it was.
+                result = {**result, "kind": "question" if state["followup"] else "paper"}
+            self.store.finish_job(job_id, result)
             emit_event("study_job_completed", outcome="ready")
         except asyncio.CancelledError:
             # Startup recovery marks any reserved attempt unknown; no automatic resume.
