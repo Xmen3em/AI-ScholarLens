@@ -183,7 +183,7 @@ def measure(name: str, pdf: Path | None) -> dict:
     try:
         process = subprocess.Popen(command, cwd=ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.DEVNULL,
-                                   creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+                                   creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         try:
             output, _ = process.communicate(b"go\n", timeout=CHILD_TIMEOUT_SECONDS)
         except subprocess.TimeoutExpired:

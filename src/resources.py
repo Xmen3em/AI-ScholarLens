@@ -2,10 +2,11 @@
 
 import ctypes
 import os
+import sys
 
 
 def free_memory_mib() -> float:
-    if os.name != "nt":
+    if sys.platform != "win32":
         sysconf = getattr(os, "sysconf")
         return sysconf("SC_AVPHYS_PAGES") * sysconf("SC_PAGE_SIZE") / 1048576
 

@@ -77,7 +77,7 @@ def _windows_png(scene: Scene) -> bytes | None:
         result = subprocess.run([str(executable), "-NoProfile", "-NonInteractive", "-File",
                                  str(Path(__file__).with_name("render_scene.ps1"))],
                                 input=json.dumps(payload, ensure_ascii=True).encode("ascii"), capture_output=True,
-                                timeout=15, creationflags=subprocess.CREATE_NO_WINDOW, env=worker_env)
+                                timeout=15, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), env=worker_env)
         if result.returncode or len(result.stdout) > 700000:
             return None
         data = base64.b64decode(result.stdout, validate=True)

@@ -6,7 +6,6 @@ Both paths are uncached. Existing API, databases, containers and quotas are unto
 
 import argparse
 import asyncio
-import ctypes
 import hashlib
 import json
 import logging
@@ -23,6 +22,7 @@ from src.commands.evaluate_retrieval import digest, snapshot
 from src.commands.validate_agent_evaluation import validate_freeze, validate_suite
 from src.config import Settings
 from src.operations import request_context
+from src.resources import free_memory_mib as host_free_memory_mib
 from src.schemas.api.rag import AskRequest
 from src.services.embeddings.ollama import OllamaEmbedder
 from src.services.ollama.client import OllamaClient, normalize_model_name
@@ -37,14 +37,7 @@ MODEL_DIGESTS = {
 
 
 def free_memory_mib() -> float:
-    class Memory(ctypes.Structure):
-        _fields_ = [("length", ctypes.c_ulong), ("load", ctypes.c_ulong),
-                    *[(name, ctypes.c_ulonglong) for name in ("physical", "available", "page", "available_page", "virtual", "available_virtual", "extended")]]
-    state = Memory()
-    state.length = ctypes.sizeof(state)
-    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(state)):
-        raise OSError("host memory inspection failed")
-    return state.available / 1048576
+    return host_free_memory_mib()
 
 
 def _count(key: str) -> None:

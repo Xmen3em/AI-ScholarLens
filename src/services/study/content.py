@@ -56,7 +56,7 @@ def _worker(path: Path, action: str, page: int | None = None, *, timeout: float 
         arguments.append(str(page))
     try:
         result = subprocess.run(arguments, capture_output=True, timeout=timeout, env=env,
-                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         if result.returncode or len(result.stdout) > 3_000_000:
             raise ContentError("pdf_processing_failed")
         raw = json.loads(result.stdout)

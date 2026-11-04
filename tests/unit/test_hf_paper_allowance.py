@@ -10,7 +10,6 @@ from src.commands.agent_collection import build_jobs
 from src.commands.hf_paper_profile import CEREBRAS_PROFILE, CEREBRAS_TASK_SHA256
 
 
-
 def setup(tmp_path, monkeypatch, *, approved=True):
     metadata = {"split": "development", "hosted_manifest_sha256": CEREBRAS_TASK_SHA256,
                 "configuration": {"model": "openai/gpt-oss-120b:cerebras", "policy": CEREBRAS_PROFILE},

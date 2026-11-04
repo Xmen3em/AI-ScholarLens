@@ -129,6 +129,7 @@ async def test_judged_rows_are_saved_as_they_finish_and_skipped_on_rerun(tmp_pat
 
 
 def test_judge_client_never_retries(tmp_path):
+    pytest.importorskip("openai", reason="the judge runs in .venv-eval; openai is not in the main lock")
     from src.commands.evaluate_study import SpendLedger
     from src.commands.judge_study import JudgeMeter, judge_client
 

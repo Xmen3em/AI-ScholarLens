@@ -67,7 +67,7 @@ def _windows_map(lesson: Lesson) -> bytes | None:
     try:
         result = subprocess.run([str(executable), "-NoProfile", "-NonInteractive", "-File", str(Path(__file__).with_name("render_map.ps1"))],
             input=json.dumps(payload, ensure_ascii=True).encode("ascii"), capture_output=True, timeout=15,
-            creationflags=subprocess.CREATE_NO_WINDOW)
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         if result.returncode or len(result.stdout) > 240000:
             return None
         data = base64.b64decode(result.stdout, validate=True)

@@ -59,10 +59,10 @@ def test_malformed_duplicate_or_reasoning_content_is_never_repaired(generation):
 
 
 def test_recursive_generated_json_is_bounded_without_propagating_the_parser_error():
-    # Python 3.12's C JSON decoder permits 1100 levels independently of the
-    # Python recursion limit; 3000 reproduces its RecursionError within 8 KiB.
+    # 3000 levels fit in 8 KiB. Whether the C JSON decoder raises RecursionError on them depends on the
+    # build (Windows 3.12.6 does, Linux 3.12.3 parses them); either way nothing propagates and nothing is accepted.
     result = inspect('[' * 3000 + '0' + ']' * 3000)
-    assert result["generation_json_valid"] is False and result["schema_valid"] is None
+    assert result["schema_valid"] is not True and result["expected_match"] is not True
 
 
 @pytest.mark.parametrize("value,string", [(None, False), (True, False), ({"secret": TOKEN}, False), ([], False), (42, False)])
