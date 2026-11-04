@@ -11,6 +11,12 @@ from src.config import Settings
 from src.schemas.arxiv.paper import ArxivPaper, PaperCreate
 
 
+def pytest_configure(config):
+    # A fresh clone has no tests/test_output; pytest creates --basetemp without its parents,
+    # and the HF pilot commands only write under this folder.
+    (Path(__file__).parent / "test_output").mkdir(exist_ok=True)
+
+
 @pytest.fixture
 def settings() -> Settings:
     """Return deterministic settings without reading the developer's .env."""
