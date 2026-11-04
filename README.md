@@ -29,7 +29,7 @@ The [complete researcher-app specification](docs/specs/researcher-app.md), [impl
 | Optional research | Isolated Deep Agents with source read tools; optional read-only local MCP |
 | General AI/ML questions | Simple explanations, explicitly labeled as model knowledge |
 | Paper questions | Retrieval, bounded LangGraph decisions, exact quotations and source citations |
-| Private Telegram | Paired owner only; polling on the owner's PC |
+| Private Telegram | Paired owner by default; an opt-in invite-only beta with daily limits and a dollar ceiling |
 | Hosted generation | HF routes requests to Cerebras; no local generation weights needed for this mode |
 | Low-memory development | One API/bot process; BM25 search avoids local query embeddings |
 | Existing platform | arXiv ingestion, Docling parsing, PostgreSQL, keyword/hybrid search, JSON/SSE answers and Gradio |
@@ -93,6 +93,19 @@ For a configured, paired installation with indexed passages:
 ```
 
 This mode serves the agent API at `127.0.0.1:8002`, uses remote HF generation, and reports `accepted:false`. It requires 1,024 MiB free host RAM at startup and retains a 600 MiB live floor. It does not initialize SQL or load a local embedding model. These are free-RAM admission checks, not a total system RAM recommendation; Docker and the other services also consume memory.
+
+### Invite-only beta
+
+The study bot answers only its owner until you set `STUDY_MULTI_USER=true` in `.env` and restart. Then:
+
+- `/invite` (or `/invite 5`) gives one-time codes valid for 7 days; a student sends `/start CODE`.
+- Each student gets `STUDY_DAILY_PAPERS` new papers and `STUDY_DAILY_QUESTIONS` questions per Cairo day (`/usage` shows what is left); only delivered answers count.
+- `STUDY_DAILY_USD_CEILING` caps everyone's spend for the day, counted from the provider's reported usage; each job reserves its worst case first, so parallel jobs cannot overshoot it.
+- Up to `STUDY_PARALLEL_JOBS` model calls run at once; others wait in line and see their place.
+- `/members`, `/usage` and `/revoke ID` are owner-only; `/deep` stays owner-only in the beta.
+- `/privacy` tells students what is kept: content is deleted after `STUDY_RETENTION_DAYS` days without use, or at once with `/forget`.
+
+The design and its limits are in [docs/specs/multi-user.md](docs/specs/multi-user.md).
 
 For the broader Docker platform, start with `docker compose up --build -d` and follow [TESTING.md](TESTING.md). That is a separate mode with PostgreSQL, Airflow, and Ollama dependencies; it does not activate this private bot.
 

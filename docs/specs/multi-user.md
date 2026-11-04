@@ -1,6 +1,7 @@
 # multi-user: an invite-only beta with daily limits and a dollar ceiling
 
-Status: design approved 4 November 2026; spec awaiting owner review.
+Status: design approved and implemented 4 November 2026 ([plan](../../tasks/multi-user-plan.md)), behind
+`STUDY_MULTI_USER` (off by default); the owner's live Telegram test is pending.
 Inherits [shared rules](researcher-app.md) and extends
 [learning-delivery](learning-delivery.md) and [paper-tutor](paper-tutor.md).
 Production model: GLM-5.3 ([paper-benchmark](paper-benchmark.md) §6).
