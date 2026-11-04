@@ -88,3 +88,16 @@ async def test_unicode_message_splitting_is_bounded_and_lossless():
     parts = format_reply(response)
     assert "".join(parts).startswith(response.answer) and len(parts) == 2
     assert all(len(part.encode("utf-16-le")) // 2 <= 4000 for part in parts)
+
+
+def test_sender_text_accepts_any_private_sender_and_marks_groups():
+    from src.services.telegram_policy import Sender, sender_text
+
+    other = update("hello", **{"from": {"id": 42, "is_bot": False}, "chat": {"id": 42, "type": "private"}})
+    assert sender_text(other) == Sender(chat_id=42, user_id=42, text="hello")
+    group = update("hello", chat={"id": -5, "type": "supergroup"})
+    assert sender_text(group) == Sender(chat_id=-5, user_id=None, text=None)
+    assert sender_text(update("hi", **{"from": {"id": 42, "is_bot": True}, "chat": {"id": 42, "type": "private"}})) is None
+    assert sender_text(update("hi", forward_origin={})) is None
+    assert sender_text(update("hi", **{"from": {"id": 42, "is_bot": False}, "chat": {"id": 43, "type": "private"}})) is None
+    assert sender_text({"update_id": 1}) is None

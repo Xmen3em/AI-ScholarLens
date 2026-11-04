@@ -94,3 +94,35 @@ async def test_poll_reconnect_does_not_repeat_question_or_log_sensitive_content(
         await command.run_bot(config, Settings(_env_file=None, api_key=SecretStr("synthetic-private-api-key-1234567890")))
     output = capsys.readouterr().out
     assert sleeps == [1] and "private-provider-error" not in output and config.bot_token.get_secret_value() not in output
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("enabled", [True, False])
+async def test_study_bot_follows_the_multi_user_setting(tmp_path, monkeypatch, enabled):
+    from contextlib import nullcontext
+
+    from pydantic import SecretStr
+    from src.config import Settings
+    from src.services.telegram_bot import TelegramSettings
+
+    seen = {}
+
+    class FakeBot:
+        def __init__(self, *args, **kwargs):
+            seen.update(kwargs)
+
+        async def __aenter__(self):
+            raise asyncio.CancelledError
+
+        async def __aexit__(self, *args):
+            pass
+
+    monkeypatch.setenv("STUDY_MULTI_USER", "true" if enabled else "false")
+    monkeypatch.setattr(command, "PrivateTelegramBot", FakeBot)
+    monkeypatch.setattr(command, "single_instance", lambda path: nullcontext())
+    config = TelegramSettings(_env_file=None, enabled=True, bot_token="12345:synthetic-private-token-1234567890", owner_id=5,
+                              offset_path=tmp_path / "offset.json")
+    with pytest.raises(asyncio.CancelledError):
+        await command.run_bot(config, Settings(_env_file=None, api_key=SecretStr("synthetic-private-api-key-1234567890")),
+                              study=True)
+    assert seen == {"study": True, "multi_user": enabled}

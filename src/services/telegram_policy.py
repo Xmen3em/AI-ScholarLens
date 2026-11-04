@@ -40,6 +40,37 @@ def owner_text(update, owner_id: int) -> str | None:
     return message["text"].strip()
 
 
+@dataclass(frozen=True)
+class Sender:
+    chat_id: int
+    user_id: int | None
+    text: str | None
+
+
+def sender_text(update) -> Sender | None:
+    """The multi-user gate: any private human sender, or a group to refuse once (user_id None)."""
+    if type(update) is not dict or type(update.get("message")) is not dict:
+        return None
+    message = update["message"]
+    sender, chat = message.get("from"), message.get("chat")
+    if type(chat) is not dict or type(chat.get("id")) is not int:
+        return None
+    if chat.get("type") in {"group", "supergroup", "channel"}:
+        return Sender(chat_id=chat["id"], user_id=None, text=None)
+    if (
+        type(sender) is not dict
+        or type(sender.get("id")) is not int
+        or sender.get("is_bot") is not False
+        or chat["id"] != sender["id"]
+        or chat.get("type") != "private"
+        or "forward_origin" in message
+        or "via_bot" in message
+        or type(message.get("text")) is not str
+    ):
+        return None
+    return Sender(chat_id=chat["id"], user_id=sender["id"], text=message["text"].strip())
+
+
 def parse_update(update, owner_id: int) -> BotAction | None:
     text = owner_text(update, owner_id)
     if text is None:

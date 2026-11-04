@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import sys
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -18,7 +19,8 @@ from src.config import DefaultSettings
 from src.schemas.api.agent import AgentResponse
 from src.schemas.api.assistant import LearningResponse
 from src.services.rag.service import _unique_object
-from src.services.telegram_policy import HELP_TEXT, format_reply, owner_text, parse_update
+from src.services.study.access_text import GROUP_CHAT, QUEUED
+from src.services.telegram_policy import HELP_TEXT, format_reply, owner_text, parse_update, sender_text
 
 API_FAILURE = "The research service is unavailable or could not validate an answer. This question was not retried."
 STUDY_API_FAILURE = (
@@ -43,6 +45,11 @@ LEARNING_HELP = (
 
 class BotError(RuntimeError):
     """Fixed local failure categories; provider text and URLs never become messages."""
+
+    def __init__(self, code: str = "", *, status: int | None = None):
+        super().__init__(code)
+        # The HTTP status, when there was one: a Telegram 403 means the student blocked the bot.
+        self.status = status
 
 
 class TelegramSettings(DefaultSettings):
@@ -168,7 +175,8 @@ def _invalid_constant(value):
 
 
 class PrivateTelegramBot:
-    def __init__(self, settings: TelegramSettings, api_key: SecretStr, store: OffsetStore, *, development_assistant=False, study=False):
+    def __init__(self, settings: TelegramSettings, api_key: SecretStr, store: OffsetStore, *, development_assistant=False, study=False,
+                 multi_user=False):
         if (
             not settings.enabled
             or settings.owner_id is None
@@ -191,6 +199,12 @@ class PrivateTelegramBot:
         self._active = False
         # The one acknowledgement being edited with the running job's stage; None when no job is tracked.
         self.progress: dict | None = None
+        # Multi-user beta (docs/specs/multi-user.md): one acknowledgement per running job, each in its own chat.
+        self.multi_user = multi_user and study
+        self.jobs: dict[str, dict] = {}
+        self._refused_chats: set[int] = set()
+        self._last_send = 0.0
+        self._last_edit: dict[int, float] = {}
 
     async def __aenter__(self):
         # Telegram embeds its token in request URLs. HTTP client DEBUG/INFO logs
@@ -217,7 +231,7 @@ class PrivateTelegramBot:
         try:
             async with client.stream("POST", url, json=payload) as response:
                 if response.status_code != 200:
-                    raise BotError("request_failed")
+                    raise BotError("request_failed", status=response.status_code)
                 body = bytearray()
                 async for chunk in response.aiter_bytes(chunk_size=8192):
                     if len(body) + len(chunk) > MAX_BODY_BYTES:
@@ -232,6 +246,12 @@ class PrivateTelegramBot:
 
     async def _call_telegram(self, method: str, payload: dict):
         assert self.settings.bot_token is not None
+        if self.multi_user:
+            # Keep sends at least 40 ms apart across every chat (Telegram allows about 30 a second).
+            wait = 0.04 - (time.monotonic() - self._last_send)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last_send = time.monotonic()
         raw = await self._post(
             self._telegram, f"https://api.telegram.org/bot{self.settings.bot_token.get_secret_value()}/{method}", payload
         )
@@ -247,7 +267,7 @@ class PrivateTelegramBot:
     async def poll(self) -> list[dict]:
         values = await self._call_telegram(
             # A shorter wait while a job runs lets its progress and result arrive within seconds.
-            "getUpdates", {"offset": self.store.offset, "limit": 10, "timeout": 3 if self.progress else 20,
+            "getUpdates", {"offset": self.store.offset, "limit": 10, "timeout": 3 if self.progress or self.jobs else 20,
                            "allowed_updates": ["message"]}
         )
         if (
@@ -269,7 +289,11 @@ class PrivateTelegramBot:
             # Durable admission precedes all inference and messaging. Interrupted
             # or uncertain work stays consumed instead of being replayed on restart.
             self.store.advance(update_id + 1)
-            text = owner_text(update, self.owner_id)
+            if self.multi_user:
+                status = await self._handle_member(update, update_id)
+                if status is not None:
+                    return status
+            text = None if self.multi_user else owner_text(update, self.owner_id)
             if self.study and text is not None and len(text) <= 512:
                 try:
                     result = await self._post(self._api, self.settings.api_base_url.rstrip("/") + "/study/messages",
@@ -329,7 +353,47 @@ class PrivateTelegramBot:
                     return "reply_failed"
             return status
 
-    async def _study_text(self, text: str, *, keyboard: bool = True) -> int:
+    async def _handle_member(self, update: dict, update_id: int) -> str | None:
+        """Multi-user study dispatch; None hands the owner's general fallback to the legacy path."""
+        sender = sender_text(update)
+        if sender is None:
+            return "ignored"
+        if sender.user_id is None:
+            if sender.chat_id in self._refused_chats:
+                return "ignored"
+            self._refused_chats.add(sender.chat_id)
+            try:
+                await self._study_text(GROUP_CHAT, keyboard=False, chat_id=sender.chat_id)
+            except BotError:
+                return "reply_failed"
+            return "group_refused"
+        if not sender.text or len(sender.text) > 512:
+            return "ignored"
+        try:
+            result = await self._post(self._api, self.settings.api_base_url.rstrip("/") + "/study/messages",
+                                      {"intent": f"telegram:{update_id}", "text": sender.text, "user_id": sender.user_id})
+        except (BotError, ValueError, TypeError):
+            try:
+                await self._study_text(STUDY_API_FAILURE, chat_id=sender.chat_id)
+            except BotError:
+                return "reply_failed"
+            return "api_failed"
+        if result.get("fallback") is True and sender.user_id == self.owner_id:
+            return None
+        job_id = str(result.get("job_id", ""))
+        tracked = re.fullmatch(r"[a-f0-9]{32}", job_id) is not None
+        reply = result.get("reply")
+        if reply is None and not tracked:
+            return "study_silent"
+        try:
+            message_id = await self._study_text(reply or "الطلب اتسجّل.", keyboard=not tracked, chat_id=sender.chat_id)
+        except (BotError, ValueError, TypeError):
+            return "reply_failed"
+        if tracked:
+            self.jobs[job_id] = {"chat_id": sender.chat_id, "message_id": message_id, "stage": None}
+        return "study_admitted"
+
+    async def _study_text(self, text: str, *, keyboard: bool = True, chat_id: int | None = None) -> int:
         if type(text) is not str or not 0 < len(text) <= 30000:
             raise BotError("invalid_study_reply")
         markup = {"keyboard": [["بسّطها", "مثال"], ["اشرح الطريقة", "اختبر فهمي"], ["/study", "/notes"]],
@@ -357,7 +421,7 @@ class PrivateTelegramBot:
             remaining = remaining[end:]
         for index, part in enumerate(parts, 1):
             label = f"[{index}/{len(parts)}]\n" if len(parts) > 1 else ""
-            payload = {"chat_id": self.owner_id, "text": label + part}
+            payload = {"chat_id": self.owner_id if chat_id is None else chat_id, "text": label + part}
             if keyboard:
                 payload["reply_markup"] = markup
             sent = await self._call_telegram("sendMessage", payload)
@@ -373,6 +437,10 @@ class PrivateTelegramBot:
         jobs = pending.get("jobs")
         if type(jobs) is not list or len(jobs) > 5:
             raise BotError("invalid_study_jobs")
+        if self.multi_user:
+            await self._show_member_progress(pending.get("running"))
+            await self._deliver_members(origin, jobs)
+            return
         await self._show_progress(pending.get("running"))
         for job in jobs:
             if type(job) is not dict or not re.fullmatch(r"[a-f0-9]{32}", str(job.get("id", ""))):
@@ -384,6 +452,54 @@ class PrivateTelegramBot:
             await self._study_text(result.get("text"))
             if result.get("image"):
                 await self._study_photo(result["image"])
+
+    async def _deliver_members(self, origin: str, jobs: list) -> None:
+        for job in jobs:
+            if type(job) is not dict or not re.fullmatch(r"[a-f0-9]{32}", str(job.get("id", ""))) \
+                    or type(job.get("user")) is not int or job["user"] <= 0:
+                raise BotError("invalid_study_job")
+            user = job["user"]
+            claimed = await self._post(self._api, origin + "/study/claim", {"job_id": job["id"], "user_id": user})
+            if claimed.get("claimed") is not True:
+                continue
+            result = claimed.get("result", {})
+            try:
+                # A private chat's id is its user's id.
+                await self._study_text(result.get("text"), chat_id=user)
+                if result.get("image"):
+                    await self._study_photo(result["image"], chat_id=user)
+            except BotError as exc:
+                if exc.status != 403:
+                    raise
+                # The student blocked the bot: drop this delivery and keep delivering to everyone else.
+                await self._post(self._api, origin + "/study/undeliverable", {"user_id": user})
+
+    async def _show_member_progress(self, running) -> None:
+        # Like _show_progress, per job and chat; edits to one chat stay at least 1 s apart.
+        rows = {row.get("id"): row for row in running if type(row) is dict} if type(running) is list else {}
+        for job_id, entry in list(self.jobs.items()):
+            row = rows.get(job_id)
+            if row is None:
+                del self.jobs[job_id]
+                continue
+            stage, position = row.get("stage"), row.get("position")
+            marker: tuple[str, int | None]
+            if stage == "queued" and type(position) is int and position > 0:
+                marker, text = ("queued", position), QUEUED.format(n=position)
+            elif stage in STUDY_PROGRESS:
+                step, line = STUDY_PROGRESS[stage]
+                marker, text = (stage, None), f"{line}\n\nالخطوة {step} من 3"
+            else:
+                continue
+            chat = entry["chat_id"]
+            if marker == entry["stage"] or entry["message_id"] is None or time.monotonic() - self._last_edit.get(chat, -1.0) < 1:
+                continue
+            entry["stage"] = marker
+            self._last_edit[chat] = time.monotonic()
+            try:
+                await self._call_telegram("editMessageText", {"chat_id": chat, "message_id": entry["message_id"], "text": text})
+            except BotError:
+                entry["message_id"] = None
 
     async def _show_progress(self, running) -> None:
         # Progress is a courtesy: a malformed report or a failed edit never blocks delivery and is not retried.
@@ -404,14 +520,14 @@ class PrivateTelegramBot:
         except BotError:
             self.progress["message_id"] = None
 
-    async def _study_photo(self, encoded: str) -> None:
+    async def _study_photo(self, encoded: str, chat_id: int | None = None) -> None:
         try:
             data = base64.b64decode(encoded, validate=True)
             if len(data) > 180000 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
                 raise ValueError
             assert self.settings.bot_token is not None
             url = f"https://api.telegram.org/bot{self.settings.bot_token.get_secret_value()}/sendPhoto"
-            async with self._telegram.stream("POST", url, data={"chat_id": str(self.owner_id), "caption": "خريطة للمذاكرة — ترتيب الشرح، مش علاقات سببية."},
+            async with self._telegram.stream("POST", url, data={"chat_id": str(self.owner_id if chat_id is None else chat_id), "caption": "خريطة للمذاكرة — ترتيب الشرح، مش علاقات سببية."},
                                               files={"photo": ("study-map.png", data, "image/png")}) as response:
                 body = bytearray()
                 async for chunk in response.aiter_bytes(chunk_size=8192):

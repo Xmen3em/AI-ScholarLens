@@ -25,7 +25,10 @@ async def run_bot(config: TelegramSettings, settings: Settings, *, development_a
         store = OffsetStore(config.offset_path)
         extra = {"development_assistant": True} if development_assistant else {}
         if study:
+            from src.services.study.access_settings import AccessSettings
+
             extra["study"] = True
+            extra["multi_user"] = AccessSettings().multi_user
         async with PrivateTelegramBot(config, settings.api_key, store, **extra) as bot:
             await bot.check_webhook()
             print(json.dumps({"status": "polling_private_bot"}), flush=True)
