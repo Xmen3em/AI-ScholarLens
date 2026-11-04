@@ -100,7 +100,7 @@ The study bot answers only its owner until you set `STUDY_MULTI_USER=true` in `.
 
 - `/invite` (or `/invite 5`) gives one-time codes valid for 7 days; a student sends `/start CODE`.
 - Each student gets `STUDY_DAILY_PAPERS` new papers and `STUDY_DAILY_QUESTIONS` questions per Cairo day (`/usage` shows what is left); only delivered answers count.
-- `STUDY_DAILY_USD_CEILING` caps everyone's spend for the day, counted from the provider's reported usage; each job reserves its worst case first, so parallel jobs cannot overshoot it.
+- `STUDY_DAILY_USD_CEILING` caps study spend for the day, counted from the provider's reported usage (calls without usage, including the owner's `/deep` worker, at their worst case); each job reserves its worst case before it starts, so parallel jobs stay under it. The owner's general-knowledge answers before a paper is open use the older assistant path and are not counted.
 - Up to `STUDY_PARALLEL_JOBS` model calls run at once; others wait in line and see their place.
 - `/members`, `/usage` and `/revoke ID` are owner-only; `/deep` stays owner-only in the beta.
 - `/privacy` tells students what is kept: content is deleted after `STUDY_RETENTION_DAYS` days without use, or at once with `/forget`.

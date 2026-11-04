@@ -121,10 +121,14 @@ async def _multi_message(app: FastAPI, request: StudyMessage) -> dict:
     elif command == "/deep":
         return {"reply": access_text.DEEP_OWNER_ONLY}
     service = registry.service(user)
-    if registry.busy(user):
+    kind = service.request_kind(text)
+    # Commands that never call the model (/forget, /study, /notes, /level, title search) reserve
+    # nothing and keep the service's own replies, including /forget's refusal while a job runs.
+    calls = 0 if kind == "other" else CALLS.get(command, DEFAULT_CALLS)
+    if calls and registry.busy(user):
         return {"reply": BUSY}
     key = f"{user}:{request.intent}"
-    refusal = gate.admit(user, service.request_kind(text), key, CALLS.get(command, DEFAULT_CALLS))
+    refusal = gate.admit(user, kind, key, calls)
     if refusal is not None:
         return {"reply": refusal}
     result = service.submit(request.intent, text)

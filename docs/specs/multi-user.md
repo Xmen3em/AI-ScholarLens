@@ -108,7 +108,10 @@ A day is the calendar day in `Africa/Cairo` (the `tzdata` package, already in
 - **Dollars.** Each call costs `call_cost_usd(DEFAULT_PROFILE, usage)`: reported
   usage at the profile's prices, or the worst case (input estimate plus 3,000
   output tokens) when a response carries no usage. Every caller, the owner
-  included, counts toward the ceiling.
+  included, counts toward the ceiling. A succeeded call the ledger never saw (the
+  owner's `/deep` worker runs its own model) is charged its worst case when the job
+  ends. Exception: the owner's general-knowledge fallback before a paper is open
+  runs on the older assistant path and is not counted; students never reach it.
 - **Reservations.** At admission a job reserves `max_calls × worst call` (about
   $0.06 for a two-call lesson on GLM-5.3) against today's ceiling,
   `STUDY_DAILY_USD_CEILING` (default `2.00`). As each call settles its real cost
@@ -122,7 +125,9 @@ A day is the calendar day in `Africa/Cairo` (the `tzdata` package, already in
 
 ## 4. Queue and progress
 
-- When all slots are busy, an admitted job waits in arrival order. Its progress
+- When all slots are busy, an admitted job waits in arrival order; a job's later
+  call (the claim check) goes ahead of jobs that have not started, and the job's
+  160 s limit pauses while it waits. Its progress
   message reads `في الطابور: إنت رقم N` and is edited as N changes, then moves on
   to the existing reading / writing / checking stages
   ([learning-delivery](learning-delivery.md)).

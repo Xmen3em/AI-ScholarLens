@@ -188,3 +188,14 @@ async def test_ready_results_say_whether_they_were_a_paper_or_a_question(tmp_pat
     lesson_job = await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
     answer_job = await finished(service, service.submit("tg:2", "اشرح الطريقة بمثال")["job_id"])
     assert lesson_job["result"]["kind"] == "paper" and answer_job["result"]["kind"] == "question"
+
+
+@pytest.mark.asyncio
+async def test_ask_with_an_arxiv_id_is_a_new_paper(tmp_path):
+    # Final review, Important 1: /ask <id> opened a paper while being admitted as a question.
+    store = StudyStore(tmp_path / "study.sqlite3", "owner")
+    service = StudyService(store, Intake(), Content(), Model())
+    assert service.request_kind("/ask 1706.03762") == "paper"
+    await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
+    assert service.request_kind("/ask 1706.03762v2") == "paper"
+    assert service.request_kind("/ask what is attention") == "question"

@@ -6,12 +6,14 @@ to is that student's current job.
 """
 
 import asyncio
+import logging
 import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from pydantic import SecretStr
+from src.operations import emit_event
 from src.services.study.access import WORST_INPUT_TOKENS, AccessGate
 from src.services.study.models import DEFAULT_PROFILE, call_cost_usd
 from src.services.study.pool import ModelPool
@@ -35,6 +37,7 @@ class ServiceRegistry:
         self._models: dict[int, Any] = {}
         self._used: dict[int, float] = {}
         self._current: dict[int, str] = {}
+        self._audited: dict[str, int] = {}
 
     def _study_model(self, store: StudyStore, audit: Callable[[dict], None]):
         from src.services.study.tutor import StudyModel
@@ -58,6 +61,7 @@ class ServiceRegistry:
         job = self._current.get(user)
         usage = record.get("result", {}).get("usage")
         if job is not None:
+            self._audited[job] = self._audited.get(job, 0) + 1
             self.gate.charge(job, call_cost_usd(DEFAULT_PROFILE, usage, estimate=WORST_INPUT_TOKENS))
 
     def track(self, user: int, job_id: str) -> bool:
@@ -71,15 +75,25 @@ class ServiceRegistry:
         return True
 
     def _finish(self, user: int, job_id: str) -> None:
-        store = StudyStore(self.path, str(user))
-        unsettled = sum(attempt["state"] in UNSETTLED for attempt in store.attempts(job_id))
-        if unsettled:
-            self.gate.charge(job_id, unsettled * self.gate.worst_call_usd())
-        job = store.get_job(job_id)
-        kind = (job["result"] or {}).get("kind") if job and job["status"] == "ready" else None
-        self.gate.settle(job_id, delivered_kind=kind if kind in ("paper", "question") else None)
-        if self._current.get(user) == job_id:
-            del self._current[user]
+        try:
+            store = StudyStore(self.path, str(user))
+            attempts = store.attempts(job_id)
+            # Unsettled attempts may have reached the provider; succeeded ones the audit hook never saw
+            # (the /deep worker runs its own model) are priced at their worst case too.
+            unseen = sum(attempt["state"] == "succeeded" for attempt in attempts) - self._audited.get(job_id, 0)
+            extra = sum(attempt["state"] in UNSETTLED for attempt in attempts) + max(0, unseen)
+            if extra:
+                self.gate.charge(job_id, extra * self.gate.worst_call_usd())
+            job = store.get_job(job_id)
+            kind = (job["result"] or {}).get("kind") if job and job["status"] == "ready" else None
+            self.gate.settle(job_id, delivered_kind=kind if kind in ("paper", "question") else None)
+        except Exception as exc:  # noqa: BLE001 - startup settlement closes what this could not
+            emit_event("study_settle_failed", level=logging.ERROR, error_class=type(exc).__name__,
+                       user=StudyStore(self.path, str(user)).fingerprint())
+        finally:
+            self._audited.pop(job_id, None)
+            if self._current.get(user) == job_id:
+                del self._current[user]
 
     def busy(self, user: int) -> bool:
         service = self._services.get(user)

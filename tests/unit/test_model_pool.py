@@ -124,3 +124,57 @@ async def test_a_pooled_call_waits_for_a_slot(tmp_path):
     await holder
     await model.client.aclose()
     await pool.aclose()
+
+
+async def test_a_started_jobs_next_call_goes_ahead_of_new_jobs():
+    # Final review, Important 4: a lesson's check call must not queue behind newer lessons' writer calls.
+    from src.services.study.pool import ModelPool
+
+    pool, order, release = ModelPool(TOKEN, 1), [], asyncio.Event()
+
+    async def call(job, hold=False):
+        async with pool.slot(job):
+            order.append(job)
+            if hold:
+                await release.wait()
+
+    await call("a")                       # job a has had a slot (its writer call)
+    holder = asyncio.create_task(call("x", hold=True))
+    await asyncio.sleep(0)
+    newcomer = asyncio.create_task(call("b"))
+    await asyncio.sleep(0)
+    continuation = asyncio.create_task(call("a"))
+    await asyncio.sleep(0)
+    assert pool.position("a") == 1 and pool.position("b") == 2
+    release.set()
+    await asyncio.gather(holder, newcomer, continuation)
+    assert order == ["a", "x", "a", "b"]
+    await pool.aclose()
+
+
+async def test_time_spent_waiting_extends_the_jobs_deadline():
+    # Final review, Important 4: queue time must not count toward the job's 160 s limit.
+    from src.services.study.pool import JOB_DEADLINE, ModelPool
+
+    pool, release = ModelPool(TOKEN, 1), asyncio.Event()
+
+    async def hold():
+        async with pool.slot("other"):
+            await release.wait()
+
+    holder = asyncio.create_task(hold())
+    await asyncio.sleep(0)
+
+    async def job():
+        async with asyncio.timeout(0.1) as deadline:
+            JOB_DEADLINE.set(deadline)
+            async with pool.slot("mine"):
+                await asyncio.sleep(0.05)
+        return "done"
+
+    task = asyncio.create_task(job())
+    await asyncio.sleep(0.15)
+    release.set()
+    assert await task == "done"
+    await holder
+    await pool.aclose()

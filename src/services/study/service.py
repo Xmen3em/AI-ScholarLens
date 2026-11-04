@@ -15,6 +15,7 @@ from src.services.study.content import ContentError, PaperContent
 from src.services.study.evidence import evidence_catalog
 from src.services.study.failures import SAFE_DIAGNOSTICS, SAFE_FAILURES, SAFE_STAGES, failure_payload, staged
 from src.services.study.intake import StudyInputError, StudyPaper, normalize_input
+from src.services.study.pool import JOB_DEADLINE
 from src.services.study.store import StoreConflict, StudyStore
 from src.services.study.tutor import (
     PROMPT_REVISION,
@@ -214,9 +215,12 @@ class StudyService:
             return "paper"
         command, _, argument = text.partition(" ")
         command = command.lower()
+        if command == "/ask":
+            # submit runs /ask's argument, which may itself be an arXiv ID.
+            text, command, argument = argument.strip(), "", ""
         if command == "/choose":
             return "paper"
-        if command.startswith("/") and command not in {"/paper", "/ask", "/quiz", "/deep"}:
+        if command.startswith("/") and command not in {"/paper", "/quiz", "/deep"}:
             return "other"
         is_paper = command == "/paper"
         try:
@@ -242,7 +246,9 @@ class StudyService:
 
     async def _run(self, job_id, text):
         try:
-            async with asyncio.timeout(160):
+            async with asyncio.timeout(160) as deadline:
+                # Time spent waiting for a model slot does not count toward the 160 s (multi-user beta).
+                JOB_DEADLINE.set(deadline)
                 state = await self.graph.ainvoke({"job_id": job_id, "text": text}, config={"recursion_limit": 8})
             result = state["result"]
             if "followup" in state:

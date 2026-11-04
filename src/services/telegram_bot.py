@@ -467,7 +467,12 @@ class PrivateTelegramBot:
                 # A private chat's id is its user's id.
                 await self._study_text(result.get("text"), chat_id=user)
                 if result.get("image"):
-                    await self._study_photo(result["image"], chat_id=user)
+                    try:
+                        await self._study_photo(result["image"], chat_id=user)
+                    except BotError as exc:
+                        if exc.status == 403:
+                            raise
+                        # The study map is optional once the lesson text is delivered.
             except BotError as exc:
                 if exc.status != 403:
                     raise
@@ -535,7 +540,9 @@ class PrivateTelegramBot:
                         raise BotError("study_photo_failed")
                     body.extend(chunk)
                 raw = json.loads(body, object_pairs_hook=_unique_object)
-            if (response.status_code != 200 or type(raw) is not dict or raw.get("ok") is not True
+            if response.status_code != 200:
+                raise BotError("study_photo_failed", status=response.status_code)
+            if (type(raw) is not dict or raw.get("ok") is not True
                     or type(raw.get("result")) is not dict or type(raw["result"].get("message_id")) is not int
                     or raw["result"]["message_id"] <= 0):
                 raise BotError("study_photo_failed")

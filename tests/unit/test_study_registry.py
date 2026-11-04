@@ -10,7 +10,7 @@ from src.services.study.access_settings import AccessSettings
 from src.services.study.api import add_study_routes, install_multi_user
 from src.services.study.pool import ModelPool
 from src.services.study.registry import ServiceRegistry
-from src.services.study.service import HELP
+from src.services.study.service import BUSY, HELP
 from src.services.study.store import StudyStore
 
 from tests.unit.test_access_gate import OWNER, Clock
@@ -324,5 +324,78 @@ async def test_idle_services_are_closed_and_rebuilt(tmp_path):
         ticks[0] = 1801.0
         await h.registry.close_idle()
         assert h.registry.service(111) is not first
+    finally:
+        await h.aclose()
+
+
+async def test_forget_and_study_work_when_the_ceiling_is_reached(tmp_path):
+    # Final review, Important 2: no-model commands must not be refused for money.
+    h = Harness(tmp_path, daily_usd_ceiling=0.10)
+    try:
+        h.join(111)
+        h.gate.admit(111, "question", "seed", 2)
+        h.gate.charge("seed", 0.099)
+        h.gate.settle("seed", delivered_kind=None)
+        assert (await h.send(111, "/forget"))["reply"] != access_text.CEILING
+        assert (await h.send(111, "/study"))["reply"] != access_text.CEILING
+        assert (await h.send(111, "1706.03762")) == {"reply": access_text.CEILING}
+    finally:
+        await h.aclose()
+
+
+async def test_forget_during_a_job_keeps_todays_refusal(tmp_path):
+    # Final review, Minor 6 (spec §4): /forget while a job runs gets the existing refusal, not BUSY.
+    hold = asyncio.Event()
+    h = Harness(tmp_path, hold=hold)
+    try:
+        h.join(111)
+        await h.send(111, "1706.03762")
+        reply = (await h.send(111, "/forget"))["reply"]
+        assert reply.startswith("في طلب شغّال دلوقتي") and reply != BUSY
+    finally:
+        hold.set()
+        await asyncio.sleep(0.05)
+        await h.aclose()
+
+
+async def test_a_failure_while_settling_never_locks_the_student_out(tmp_path):
+    # Final review, Important 3: _finish must always release the student's current job.
+    h = Harness(tmp_path)
+    try:
+        h.join(111)
+        real = h.gate.settle
+        failures = []
+
+        def broken(ref, *, delivered_kind):
+            failures.append(ref)
+            raise RuntimeError("database is locked")
+        h.gate.settle = broken
+        first = await h.send(111, "1706.03762")
+        for _ in range(200):
+            if failures and not h.registry.busy(111):
+                break
+            await asyncio.sleep(0.01)
+        assert failures and not h.registry.busy(111)
+        h.gate.settle = real
+        second = await h.send(111, "1706.03762v2")
+        assert "job_id" in second and second["job_id"] != first["job_id"]
+    finally:
+        await h.aclose()
+
+
+async def test_calls_the_audit_hook_never_saw_are_charged_their_worst_case(tmp_path):
+    # Final review, Important 5: /deep's worker records succeeded attempts without the registry's audit hook.
+    class Unaudited(FakeModel):
+        async def _call(self, job, purpose, messages):
+            attempt = self.store.reserve_attempt(job, purpose, "m")
+            self.store.settle_attempt(job, attempt, "succeeded")
+            return {"output": honest_verdicts(messages) if purpose == "grounding_review" else lesson()}
+
+    h = Harness(tmp_path)
+    h.registry.model_factory = lambda store, audit: Unaudited(store, audit, h.pool)
+    try:
+        h.join(111)
+        await h.done(111, (await h.send(111, "1706.03762"))["job_id"])
+        assert h.gate.owner_usage()["spent"] == pytest.approx(2 * h.gate.worst_call_usd())
     finally:
         await h.aclose()

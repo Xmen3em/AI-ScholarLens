@@ -135,3 +135,24 @@ async def test_owner_only_bot_ignores_other_users(stub_httpx, tmp_path):
     async with PrivateTelegramBot(settings(), SecretStr(KEY), OffsetStore(tmp_path / "offset.json"), study=True) as bot:
         assert await bot.handle(from_user("1706.03762", STUDENT)) == "ignored"
     assert not calls
+
+
+@pytest.mark.anyio
+async def test_a_photo_403_for_one_student_does_not_block_another(stub_httpx, tmp_path):
+    # Final review, Minor 2 (Review Focus 4): the study-map photo path must handle a blocked student too.
+    import base64
+
+    seen = []
+    image = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"synthetic").decode()
+
+    def telegram(request):
+        if request.url.path.endswith("/sendPhoto"):
+            return httpx.Response(403, json={"ok": False, "description": "Forbidden: bot was blocked by the user"})
+        return httpx.Response(200, json={"ok": True, "result": {"message_id": 9}})
+    jobs = [{"id": JOB_A, "status": "ready", "user": STUDENT}, {"id": JOB_B, "status": "ready", "user": OTHER}]
+    calls = stub_httpx(api(pending=[{"jobs": jobs, "running": []}], seen=seen, telegram=telegram,
+                           claim=lambda body: {"claimed": True, "result": {"text": "شرح", "image": image}}))
+    async with bot_for(tmp_path) as bot:
+        await bot.deliver_study()
+    assert ("undeliverable", {"user_id": STUDENT}) in seen
+    assert any(call["chat_id"] == OTHER for call in telegram_calls(calls, "sendMessage"))

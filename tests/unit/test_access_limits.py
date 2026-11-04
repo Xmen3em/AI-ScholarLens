@@ -146,3 +146,14 @@ def test_ledger_survives_a_restart(tmp_path, clock):
     first.charge("k1", 0.02)
     second = make_gate(tmp_path, clock)
     assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.04)
+
+
+def test_requests_without_model_calls_pass_a_reached_ceiling(tmp_path, clock):
+    # Final review, Important 2: /forget and /study reserve nothing, so the ceiling cannot refuse them.
+    gate = make_gate(tmp_path, clock, daily_usd_ceiling=0.10)
+    [student] = join(gate, 111)
+    gate.admit(student, "question", "k1", 2)
+    gate.charge("k1", 0.12)  # real cost can exceed a reservation; spend is now over the ceiling
+    gate.settle("k1", delivered_kind="question")
+    assert gate.admit(student, "other", "k2", 0) is None
+    assert gate.admit(student, "question", "k3", 2) == access_text.CEILING

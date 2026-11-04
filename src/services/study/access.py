@@ -179,7 +179,7 @@ class AccessGate:
                 if kind == "question" and row["questions"] >= self.settings.daily_questions:
                     return access_text.QUESTIONS_USED.format(Q=self.settings.daily_questions)
             spent, reserved = self._day_totals(db, day)
-            if spent + reserved + amount > self.settings.daily_usd_ceiling + 1e-9:
+            if amount > 0 and spent + reserved + amount > self.settings.daily_usd_ceiling + 1e-9:
                 return access_text.CEILING
             db.execute("INSERT INTO reservations(key, user, day, kind, reserved) VALUES(?, ?, ?, ?, ?)",
                        (key, user, day, kind, amount))
