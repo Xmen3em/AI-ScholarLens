@@ -9,6 +9,7 @@ from src.commands.hf_cerebras_allowance import CerebrasAllowance
 from src.commands.hf_cerebras_selectors import SelectorAllowance, approval_proposal
 from src.commands.hf_schema_execution import load_cerebras, load_execution, load_selectors
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_cerebras_remaining import setup as controller_setup
 from tests.unit.test_hf_client import envelope, settings
 from tests.unit.test_hf_schema_command import arguments
@@ -102,6 +103,7 @@ async def test_selector_pair_exact_payloads_patterns_failure_stops_and_no_app_ac
     assert "private" not in json.dumps(result)
 
 
+@requires_snapshot
 def test_selector_default_plan_has_no_private_or_funding_access(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch, "--experiment", "cerebras-selectors-v1")
     for name in ["Settings", "SelectorAllowance", "selector_proposal", "provider_available", "live_snapshot"]:
@@ -111,6 +113,7 @@ def test_selector_default_plan_has_no_private_or_funding_access(tmp_path, monkey
     assert metadata["outbound_budget"] == 0 and metadata["proposed_outbound_budget"] == 2
 
 
+@requires_snapshot
 def test_pending_selector_execution_blocks_before_credentials_and_funding(tmp_path, monkeypatch):
     approval, paths = setup(tmp_path, approved=False)
     _, output = arguments(tmp_path, monkeypatch, "--experiment", "cerebras-selectors-v1", "--execute", "--approval", str(approval))

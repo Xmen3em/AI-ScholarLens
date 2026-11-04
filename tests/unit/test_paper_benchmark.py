@@ -169,11 +169,21 @@ def test_spot_check_sheet_covers_every_field():
 
 
 def test_committed_questions_cover_every_paper():
-    from src.commands.build_benchmark import check_questions, load_contents, load_questions
+    from src.commands.build_benchmark import (
+        PRIVATE_PAPER,
+        PRIVATE_QUESTIONS,
+        base_id,
+        check_questions,
+        load_contents,
+        load_questions,
+    )
 
     papers = json.loads((ROOT / "papers.v1.json").read_text(encoding="utf-8"))
+    if not PRIVATE_QUESTIONS.exists():
+        # The unpublished paper's questions stay in an ignored file; a clean checkout checks the 29 others.
+        papers = {**papers, "papers": [row for row in papers["papers"] if base_id(row["id"]) != PRIVATE_PAPER]}
     contents = load_contents(papers)
-    check_questions(load_questions(), papers, contents if len(contents) == 30 else None)
+    check_questions(load_questions(), papers, contents if len(contents) == len(papers["papers"]) else None)
 
 
 def test_freeze_detects_any_changed_file(tmp_path):

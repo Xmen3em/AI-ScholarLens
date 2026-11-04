@@ -9,6 +9,7 @@ from src.commands.evaluate_agent import Measurements
 from src.commands.evaluate_hf_agent import collect_hosted_attempt, plan_collection, validate_selection
 from src.commands.hf_evaluation import MeasuredHF, create_hosted_app, load_protocol
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_agent_collection import substantive
 from tests.unit.test_agent_service import EVIDENCE, QUESTION, Search
 from tests.unit.test_hf_client import envelope, settings
@@ -25,6 +26,7 @@ class CountedStubSearch(Search):
     search_hybrid = search_chunks
 
 
+@requires_snapshot
 def test_offline_holdout_plan_is_fixed_and_never_requires_credentials():
     plan = plan_collection(Path("tests/test_output/week7-source-review-20261013-01"), split="holdout", model=MODEL)
     assert plan["status"] == "offline_plan" and not plan["inference_started"]
@@ -33,6 +35,7 @@ def test_offline_holdout_plan_is_fixed_and_never_requires_credentials():
     assert plan["configuration"]["model"] == MODEL
 
 
+@requires_snapshot
 def test_versioned_pilot_plan_binds_fixture_and_remaining_approval():
     from src.commands.hf_qualification import REVISION_SHA256
 

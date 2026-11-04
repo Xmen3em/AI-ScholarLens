@@ -6,6 +6,7 @@ import pytest
 import src.commands.compare_hf_routes as command
 from src.commands.hf_allowance import PilotAllowance
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_allowance import seed
 from tests.unit.test_hf_client import settings
 
@@ -21,6 +22,7 @@ def arguments(tmp_path, monkeypatch, *, execute):
     return root, output
 
 
+@requires_snapshot
 def test_offline_command_does_not_read_credentials_or_create_paid_allowance(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch, execute=False)
     monkeypatch.setattr(command, "Settings", Mock(side_effect=AssertionError("Credentials accessed")))
@@ -31,6 +33,7 @@ def test_offline_command_does_not_read_credentials_or_create_paid_allowance(tmp_
     assert not metadata["inference_started"] and metadata["outbound_budget"] == 2
 
 
+@requires_snapshot
 def test_one_remaining_slot_cannot_start_partial_paired_experiment(tmp_path, monkeypatch):
     root, output = arguments(tmp_path, monkeypatch, execute=True)
     grant, prior = seed(tmp_path)

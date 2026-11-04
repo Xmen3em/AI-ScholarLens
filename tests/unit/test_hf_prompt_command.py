@@ -6,6 +6,7 @@ import pytest
 import src.commands.compare_hf_prompts as command
 from src.commands.hf_prompt_allowance import PromptAllowance
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_client import settings
 from tests.unit.test_hf_prompt_allowance import setup
 
@@ -17,6 +18,7 @@ def arguments(tmp_path, monkeypatch, *extra):
     return snapshot, output
 
 
+@requires_snapshot
 def test_offline_default_never_reads_credentials_or_allowance(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch)
     for name in ("Settings", "PromptAllowance", "approval_proposal", "provider_available", "live_snapshot", "reproduce"):
@@ -27,6 +29,7 @@ def test_offline_default_never_reads_credentials_or_allowance(tmp_path, monkeypa
     assert not metadata["paper_collection_planned"] and not metadata["inference_started"]
 
 
+@requires_snapshot
 def test_pending_proposal_is_read_only_and_cannot_execute(tmp_path, monkeypatch):
     original, prior, approval, ledger = setup(tmp_path, approved=False)
     snapshot, output = arguments(tmp_path, monkeypatch, "--execute", "--approval", str(approval))
@@ -38,6 +41,7 @@ def test_pending_proposal_is_read_only_and_cannot_execute(tmp_path, monkeypatch)
     assert not ledger.exists() and original.path.read_bytes() == before
 
 
+@requires_snapshot
 @pytest.mark.parametrize("failure", [None, "timeout", "uncertain", "provider_json_validation", "memory"])
 def test_approved_mocked_run_obeys_caps_stop_rules_and_never_qualifies(tmp_path, monkeypatch, failure):
     original, prior, approval, ledger = setup(tmp_path)
@@ -80,6 +84,7 @@ def test_mutually_exclusive_execution_and_proposal_flags(tmp_path, monkeypatch):
         command.main()
 
 
+@requires_snapshot
 def test_missing_approval_never_reads_private_settings(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch, "--execute")
     monkeypatch.setattr(command, "Settings", Mock(side_effect=AssertionError("private settings read")))

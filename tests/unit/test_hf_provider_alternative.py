@@ -9,6 +9,7 @@ from src.commands.hf_provider_allowance import AlternativeAllowance, approval_pr
 from src.commands.hf_schema_allowance import SchemaAllowance
 from src.commands.hf_schema_execution import load_alternative, load_execution, load_experiment
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_client import envelope, settings
 from tests.unit.test_hf_schema_command import arguments
 from tests.unit.test_hf_schema_execution import setup as schema_setup
@@ -145,6 +146,7 @@ async def test_mocked_alternative_keeps_all_qualification_checks_and_failure_sto
     assert "private" not in json.dumps(result)
 
 
+@requires_snapshot
 @pytest.mark.parametrize("proposal", [True, False])
 def test_actual_alternative_offline_paths_never_access_credentials_or_funding(tmp_path, monkeypatch, proposal):
     from src.commands.hf_provider_allowance import approval_proposal
@@ -163,6 +165,7 @@ def test_actual_alternative_offline_paths_never_access_credentials_or_funding(tm
         assert json.loads((output / "proposed-approval.json").read_text()) == json.loads(approval.read_text())
 
 
+@requires_snapshot
 def test_pending_alternative_receipt_stops_before_settings_or_funding(tmp_path, monkeypatch):
     approval, paths = setup(tmp_path, approved=False)
     _, output = arguments(tmp_path, monkeypatch, "--experiment", "provider-alternative-v1", "--execute", "--approval", str(approval))
@@ -173,6 +176,7 @@ def test_pending_alternative_receipt_stops_before_settings_or_funding(tmp_path, 
     assert not paths["path"].exists()
 
 
+@requires_snapshot
 def test_approved_mocked_alternative_command_uses_exact_model_and_independent_counter(tmp_path, monkeypatch):
     from src.config import Settings as Model
 

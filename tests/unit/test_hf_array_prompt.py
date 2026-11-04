@@ -9,6 +9,7 @@ import src.commands.reproduce_hf_groq as command
 from src.commands.hf_qualification import load_revision
 from src.commands.hf_reproduction import load_array_prompt, load_experiment, load_reproduction, reproduce
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_client import envelope, settings
 
 ARM="minimal-array-prompt-256"
@@ -53,6 +54,7 @@ async def test_array_single_call_keeps_original_guards_and_content_privacy(stub_
     assert 'private-provider-text' not in json.dumps(result)
 
 
+@requires_snapshot
 def test_array_offline_plan_never_reads_credentials_or_allowance(tmp_path,monkeypatch):
     output=tmp_path/'offline'
     monkeypatch.setattr('sys.argv',['reproduce','--snapshot','tests/test_output/week7-source-review-20261013-01',

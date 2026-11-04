@@ -6,6 +6,7 @@ import pytest
 from src.commands import qualify_hf_schema as command
 from src.commands.hf_schema_allowance import SchemaAllowance
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_client import settings
 from tests.unit.test_hf_schema_execution import setup
 
@@ -17,6 +18,7 @@ def arguments(tmp_path, monkeypatch, *extra):
     return snapshot, output
 
 
+@requires_snapshot
 def test_default_schema_plan_never_reads_credentials_funding_or_services(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch)
     for name in ("Settings", "SchemaAllowance", "approval_proposal", "provider_available", "live_snapshot"):
@@ -29,6 +31,7 @@ def test_default_schema_plan_never_reads_credentials_funding_or_services(tmp_pat
     assert metadata["jobs"] == []
 
 
+@requires_snapshot
 def test_schema_proposal_is_not_a_funded_or_executable_receipt(tmp_path, monkeypatch):
     from src.commands.hf_schema_allowance import approval_proposal
 
@@ -45,6 +48,7 @@ def test_schema_proposal_is_not_a_funded_or_executable_receipt(tmp_path, monkeyp
     assert not paths["path"].exists()
 
 
+@requires_snapshot
 @pytest.mark.parametrize("missing", [True, False])
 def test_unapproved_schema_execution_stops_before_credentials_or_network(tmp_path, monkeypatch, missing):
     approval, paths = setup(tmp_path, approved=False)
@@ -57,6 +61,7 @@ def test_unapproved_schema_execution_stops_before_credentials_or_network(tmp_pat
     assert not paths["path"].exists()
 
 
+@requires_snapshot
 @pytest.mark.parametrize("failure", [None, "memory", "provider_preflight", "collection", "corpus", "source"])
 def test_mocked_schema_execution_preserves_gates_and_never_accepts_application(tmp_path, monkeypatch, failure):
     approval, paths = setup(tmp_path)

@@ -7,6 +7,7 @@ import src.commands.diagnose_hf_structure as command
 from src.commands.hf_allowance import PilotAllowance
 from src.commands.hf_error_structure import load_structure_protocol
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_allowance import seed
 from tests.unit.test_hf_client import settings
 
@@ -32,6 +33,7 @@ def test_frozen_profile_and_protocol_cannot_change_after_acceptance(tmp_path):
         load_structure_protocol(tmp_path)
 
 
+@requires_snapshot
 def test_offline_plan_never_reads_settings_or_contacts_any_service(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch, execute=False)
     for name in ("Settings", "PilotAllowance", "provider_available", "live_snapshot", "diagnose_structure"):
@@ -42,6 +44,7 @@ def test_offline_plan_never_reads_settings_or_contacts_any_service(tmp_path, mon
     assert metadata["kind"] == "error_structure_diagnostic_only"
 
 
+@requires_snapshot
 @pytest.mark.parametrize("outbound", [0, 1, None])
 def test_command_settles_actual_or_unknown_attempts_and_never_qualifies(tmp_path, monkeypatch, outbound):
     root, output = arguments(tmp_path, monkeypatch, execute=True)
@@ -72,6 +75,7 @@ def test_command_settles_actual_or_unknown_attempts_and_never_qualifies(tmp_path
     assert grant.reserve("later", 11) == (11 if outbound == 0 else 10)
 
 
+@requires_snapshot
 def test_exhausted_allowance_stops_before_inference_without_creating_a_new_budget(tmp_path, monkeypatch):
     root, output = arguments(tmp_path, monkeypatch, execute=True)
     grant, prior = seed(tmp_path)

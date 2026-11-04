@@ -6,6 +6,7 @@ import pytest
 import src.commands.reproduce_hf_groq as command
 from src.commands.hf_allowance import PilotAllowance
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_allowance import seed
 from tests.unit.test_hf_client import settings
 
@@ -20,6 +21,7 @@ def arguments(tmp_path, monkeypatch, execute=False):
     return root, output
 
 
+@requires_snapshot
 def test_offline_never_reads_credentials_allowance_or_services(tmp_path, monkeypatch):
     _, output = arguments(tmp_path, monkeypatch)
     for name in ("Settings", "PilotAllowance", "live_snapshot", "provider_available", "reproduce"):
@@ -30,6 +32,7 @@ def test_offline_never_reads_credentials_allowance_or_services(tmp_path, monkeyp
     assert metadata["qualification_accepted"] is False and not metadata["inference_started"]
 
 
+@requires_snapshot
 @pytest.mark.parametrize("outbound", [0, 1, None])
 def test_actual_or_uncertain_settlement_cannot_reset_allowance(tmp_path, monkeypatch, outbound):
     root, output = arguments(tmp_path, monkeypatch, True)
@@ -57,6 +60,7 @@ def test_actual_or_uncertain_settlement_cannot_reset_allowance(tmp_path, monkeyp
     assert grant.reserve("later", 11) == (11 if outbound == 0 else 10)
 
 
+@requires_snapshot
 @pytest.mark.parametrize("problem", ["memory", "missing_allowance", "exhausted"])
 def test_preflight_problem_prevents_inference_and_new_allowance(tmp_path, monkeypatch, problem):
     root, output = arguments(tmp_path, monkeypatch, True)

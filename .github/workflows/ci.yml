@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, types and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.18"
+          enable-cache: true
+
+      - name: Install the locked dependencies
+        run: uv sync --frozen --python 3.12
+
+      - name: Lint
+        run: uv run --frozen ruff check src tests
+
+      - name: Type-check
+        run: uv run --frozen mypy src
+
+      # No model calls: every provider is mocked. Tests that need local-only data (the GLM and
+      # GPT-OSS tokenizer files, the week-7 arXiv snapshot) skip with a stated reason.
+      # The HF pilot commands only write under tests/test_output, so pytest's temp folder lives there.
+      - name: Tests
+        run: uv run --frozen pytest tests/unit tests/api -q -p no:cacheprovider --basetemp tests/test_output/ci -rs

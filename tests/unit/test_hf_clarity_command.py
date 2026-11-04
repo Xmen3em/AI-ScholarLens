@@ -7,6 +7,7 @@ from src.commands import compare_hf_clarity as command
 from src.commands import compare_hf_prompts as shared
 from src.commands.hf_clarity_allowance import ClarityAllowance
 
+from tests.unit.hf_snapshot import requires_snapshot
 from tests.unit.test_hf_clarity_execution import setup
 from tests.unit.test_hf_client import settings
 
@@ -18,6 +19,7 @@ def arguments(tmp_path, monkeypatch, *extra):
     return snapshot, output
 
 
+@requires_snapshot
 def test_default_clarity_plan_never_reads_credentials_or_allowances(monkeypatch, tmp_path):
     _, output = arguments(tmp_path, monkeypatch)
     for name in ("Settings", "ClarityAllowance", "approval_proposal", "provider_available", "live_snapshot"):
@@ -29,6 +31,7 @@ def test_default_clarity_plan_never_reads_credentials_or_allowances(monkeypatch,
     assert metadata["qualification_accepted"] is metadata["paper_collection_planned"] is False
 
 
+@requires_snapshot
 def test_proposal_reads_closed_parent_evidence_but_never_initializes_funding(monkeypatch, tmp_path):
     approval, paths = setup(tmp_path, approved=False)
     _, output = arguments(tmp_path, monkeypatch, "--propose-approval")
@@ -46,6 +49,7 @@ def test_proposal_reads_closed_parent_evidence_but_never_initializes_funding(mon
     assert (paths["original"].read_bytes(), paths["prompt_path"].read_bytes()) == before
 
 
+@requires_snapshot
 @pytest.mark.parametrize("missing", [True, False])
 def test_pending_or_missing_approval_blocks_before_settings_and_network(monkeypatch, tmp_path, missing):
     approval, paths = setup(tmp_path, approved=False)
@@ -58,6 +62,7 @@ def test_pending_or_missing_approval_blocks_before_settings_and_network(monkeypa
     assert not paths["path"].exists()
 
 
+@requires_snapshot
 @pytest.mark.parametrize("failure", [None, "timeout", "uncertain", "provider400", "provider429", "memory", "preservation"])
 def test_approved_mocked_two_case_run_obeys_caps_stops_and_never_qualifies(monkeypatch, tmp_path, failure):
     approval, paths = setup(tmp_path)
