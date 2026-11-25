@@ -1,5 +1,9 @@
 """Finite failure categories shared across the private worker boundary."""
 
+import json
+
+from src.services.hf.client import _unique_object
+
 SAFE_FAILURES = frozenset({
     "study_generation_unavailable", "research_unavailable_or_invalid", "lesson_validation_failed",
     "review_validation_failed", "study_memory_unavailable", "study_context_limit", "study_model_busy",
@@ -29,6 +33,34 @@ SAFE_STAGES = frozenset({
     # After a successful worker, back in the parent: re-validation, then grounding review.
     "result_validation", "review",
 })
+
+
+PROVIDER_ERROR_CODES = frozenset({
+    "invalid_request_error", "json_validate_failed", "context_length_exceeded", "invalid_json_schema",
+    "unsupported_parameter", "model_not_supported", "authentication_error", "rate_limit_error", "server_error",
+})
+PROVIDER_ERROR_FIELDS = frozenset({
+    "model", "messages", "temperature", "max_tokens", "stream", "reasoning_effort", "chat_template_kwargs",
+    "response_format", "response_format.json_schema", "response_format.json_schema.schema",
+    "response_format.json_schema.strict", "tools", "tool_choice",
+})
+
+
+def provider_error_metadata(body: bytes) -> dict[str, str]:
+    """Opt-in diagnostic labels only: never return provider messages or arbitrary strings."""
+    if len(body) > 8192:
+        return {}
+    try:
+        error = json.loads(body, object_pairs_hook=_unique_object).get("error")
+    except (ValueError, TypeError, RecursionError):
+        return {}
+    if type(error) is not dict:
+        return {}
+    metadata = {key: error[key] for key in ("code", "type")
+                if type(error.get(key)) is str and error[key] in PROVIDER_ERROR_CODES}
+    if type(error.get("param")) is str and error["param"] in PROVIDER_ERROR_FIELDS:
+        metadata["param"] = error["param"]
+    return metadata
 
 
 def failure_payload(exc: Exception, *, default: str = "research_unavailable_or_invalid") -> dict[str, str]:

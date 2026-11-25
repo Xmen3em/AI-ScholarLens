@@ -447,8 +447,9 @@ def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, 
 class StudyModel:
     def __init__(self, token: SecretStr, store: StudyStore, *, client: httpx.AsyncClient | None = None,
                  memory=host_memory_mib, counter=None, audit=None, profile: ModelProfile = DEFAULT_PROFILE, pool=None,
-                 review_client: httpx.AsyncClient | None = None):
+                 review_client: httpx.AsyncClient | None = None, error_observer=None):
         self.store, self.memory, self.profile, self.pool = store, memory, profile, pool
+        self._error_observer = error_observer
         self._token = token
         self._review_client = review_client
         if counter is None:
@@ -519,6 +520,16 @@ class StudyModel:
                     async with client.stream("POST", URL, json=payload) as response:
                         if response.status_code != 200:
                             state = "failed"
+                            if self._error_observer is not None:
+                                from src.services.study.failures import provider_error_metadata
+
+                                body = bytearray()
+                                async for part in response.aiter_bytes(chunk_size=4096):
+                                    if len(body) + len(part) > 8192:
+                                        body.clear()
+                                        break
+                                    body.extend(part)
+                                self._error_observer(provider_error_metadata(bytes(body)))
                             raise TutorError(f"study_provider_http_{response.status_code}")
                         body = bytearray()
                         async for part in response.aiter_bytes(chunk_size=8192):

@@ -34,16 +34,19 @@ Verification on the final Task C tree:
 
 ## Live check and cost record
 
-One owner-approved first-lesson diagnostic ran on cached `2504.10453v2` content. Its
-writer failed after 2.016 seconds before review. There were **one attempted model call,
-zero successful calls and zero review calls**. No usage response was returned, so local
-worst-case exposure is **$0.0309**, not confirmed provider spend. The failed attempt
-cannot be diagnosed further from saved state: the initial script retained only the
-generic exception class. The ignored diagnostic script now preserves safe failure codes.
+Two separately owner-approved first-lesson diagnostics ran on cached `2504.10453v2`
+content. Their writers failed after 2.016 and 2.141 seconds, before review. The second
+recorded **HTTP 400**. Across both runs there were **two attempted model calls, zero
+successful calls and zero review calls**. No usage response was returned, so local
+worst-case exposure is **$0.0618**, not confirmed provider spend. The ignored diagnostic
+script now preserves safe failure codes and per-call timings.
 
-No retry was made. Option B's measured latency and kept-claim effects remain unknown;
-the p95 values in `docs/first-lesson-latency.md` are still historical estimates. A real
-p95 needs a separately approved multi-lesson run, not one sample.
+Offline comparison found no writer-schema difference from the last successful benchmark;
+the `/deep` compact-schema change does not affect this writer request. The saved HTTP 400
+contains no provider body, so its exact rejected field is unknown. Removing options or
+weakening the schema would be speculation, not a verified fix. Option B's measured latency
+and kept-claim effects remain unknown; the p95 values in `docs/first-lesson-latency.md`
+are still historical estimates. A real p95 needs a separately approved multi-lesson run.
 
 This session made no other model calls. No Telegram messages were sent and the bot was
 not restarted. The benchmark ledger at `data/eval/paper-benchmark/spend.json` remains
@@ -51,36 +54,51 @@ $4.095033 from earlier work; this session did not run a paid benchmark stage.
 
 ## Remaining owner inputs
 
-1. **Option B retry (optional).** Fresh approval is required for at most three GLM-5.3
-   model calls, worst case $0.0927. The diagnostic must use a new intent and new output
-   file; its existing result is a run-once guard against duplicate spending.
+1. **Option B writer compatibility.** Another identical retry is not recommended: both
+   attempts failed before review, the second with HTTP 400. A new diagnostic must have
+   an evidence-based request change or a bounded error-body inspection with a privacy-safe
+   allowlist. Fresh approval is still required for every call and dollar ceiling.
 2. **Task B labels.** The owner must fill all 40 `owner_faithful` fields in
    `evaluation/paper_benchmark/calibration.v1.json`; currently 0 are labelled. The
    session must not substitute its own labels.
 3. **Calibration.** Only after those labels: `judge_study calibrate`, at most 80 judge
    calls. At the frozen judge prices, the worst case is $2.796 ($0.03495 per call).
    Report agreement and Cohen's kappa; the judge qualifies only at ≥85% and κ ≥0.6.
-4. **Holdout judging.** If calibration passes, export with `score_study --stage holdout
-   --export-ragas`, then judge the exported answers. The implementation allows up to 864
-   calls, worst case **$30.1968** at frozen judge prices; this is the safe upper bound
-   because RAGAS may make multiple provider calls per metric. The task's 216-call figure
-   is not a reliable worst case and needs reconciliation with the frozen protocol before
-   execution. Export locally first to inspect answer count, then obtain approval for an
-   explicit call and dollar ceiling. All costs use the shared $40 ledger.
-5. **Owner rubric.** `score_study --rubric-sheet` is local, but the owner must fill
-   `rubric-scores.csv` for the six GLM holdout lessons. The session must not invent them.
+4. **Holdout judging.** The local export is complete: 47 GLM answers (17 L, 13 Q1,
+   17 Q2). Their per-answer protocol maxima total 184 calls, **$6.4308** worst case.
+   Seven failed Q1/Q2 answers are excluded from the export but remain within the
+   protocol's 216-call stage budget, **$7.5492**. The global implementation ceiling is
+   864, so the run must also enforce the selected protocol budget before execution.
+   Fresh approval is required; all costs use the shared $40 ledger.
+5. **Owner rubric.** The blind six-lesson sheet is ready at
+   `data/eval/paper-benchmark/rubric.md`; its key is `rubric-key.json`. The owner must
+   create `data/eval/paper-benchmark/rubric-scores.csv` with `code,clarity,teaching`
+   columns and 1–5 scores for R01–R06. The session must not invent them.
 6. **Report.** Only after those measurements exist: write the benchmark report and README
    results with file-traceable numbers. A report now would omit the mandated faithfulness
    and rubric evidence.
 
+## Follow-up provider-error diagnostic branch
+
+`codex/provider-error-diagnostic` builds on the verified Task C branch. It adds an opt-in
+`StudyModel(error_observer=...)` seam. Ordinary production calls still discard provider
+error bodies. An explicit observer receives only allowlisted error codes/types and
+request-field names; bodies over 8 KiB, malformed JSON, duplicate keys and arbitrary
+messages produce no metadata. The one-call writer diagnostic is prepared but has not
+run. A fresh approval for **one model call / $0.0309 worst case** is required.
+
+Focused provider/study tests: **100 passed**. Full offline suite: **1,873 passed**,
+exit code 0, 1005.92 seconds. Full-tree Ruff and mypy pass. A separate import-order-only
+fix in `test_study_telegram_multi.py` addresses the pre-existing full-tree Ruff finding.
+
 ## Owner review and deferrals
 
-- Review the three local commits before any push. Pushing requires an explicit owner
-  instruction.
+- Review the implementation commits and this follow-up diagnostic branch before any push.
+  Pushing requires an explicit owner instruction.
 - Live Telegram testing needs the owner's session and a second owner-controlled account
   for multi-user testing. No bot restart or unsolicited messages are authorized here.
 - Hosting is deferred until every remaining service feature is complete, then belongs on
   its own branch. No hosting work was performed.
 - No new product decisions were made on the owner's behalf beyond implementing the two
   approved Task A/C options. Test and diagnostic scaffolding was corrected offline; the
-  failed live writer was not retried or relabelled as a successful measurement.
+  second approved attempt also failed and was not relabelled as a successful measurement.

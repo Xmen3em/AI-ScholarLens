@@ -6,6 +6,7 @@ from pydantic import SecretStr
 from src.services.study import access_text
 from src.services.telegram_bot import OffsetStore, PrivateTelegramBot
 from src.services.telegram_policy import HELP_TEXT
+
 from tests.unit.test_study_telegram import telegram_calls
 from tests.unit.test_telegram_bot import KEY, settings
 from tests.unit.test_telegram_policy import update

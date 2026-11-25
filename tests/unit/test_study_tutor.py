@@ -185,6 +185,40 @@ async def test_two_review_calls_overlap_on_their_selected_transport(tmp_path, in
             await review_client.aclose()
 
 
+def test_provider_error_metadata_is_allowlisted_without_retaining_messages(tmp_path):
+    from src.services.study.failures import provider_error_metadata
+
+    secret = "private-paper-or-user-text"
+    body = json.dumps({"error": {"code": "invalid_request_error", "type": "invalid_request_error",
+                                "param": "response_format.json_schema", "message": secret}}).encode()
+    assert provider_error_metadata(body) == {"code": "invalid_request_error", "type": "invalid_request_error",
+                                             "param": "response_format.json_schema"}
+    assert provider_error_metadata(json.dumps({"error": {"code": secret, "type": secret, "param": secret,
+                                                       "message": secret}}).encode()) == {}
+    for malformed in (b"not json", b"x" * 8193,
+                      b'{"error":{"code":"invalid_request_error","code":"model_not_supported"}}'):
+        assert provider_error_metadata(malformed) == {}
+    assert secret not in json.dumps(provider_error_metadata(body))
+
+
+@pytest.mark.asyncio
+async def test_opt_in_error_observer_receives_only_safe_metadata(tmp_path):
+    secret = "private-paper-or-user-text"
+    body = {"error": {"code": "invalid_json_schema", "type": "invalid_request_error",
+                      "param": "response_format.json_schema.strict", "message": secret}}
+    store = StudyStore(tmp_path / "state.sqlite3", "owner")
+    job = store.create_job("test", {})
+    seen = []
+    async with httpx.AsyncClient(transport=httpx.MockTransport(lambda _: httpx.Response(400, json=body))) as client:
+        model = StudyModel(SecretStr("private-test"), store, client=client, memory=lambda: 2000, counter=lambda _: 100,
+                           error_observer=seen.append)
+        with pytest.raises(TutorError, match="study_provider_http_400"):
+            await model.complete(job["id"], "lesson", [{"role": "user", "content": secret}], schema={"type": "object"})
+    assert seen == [{"code": "invalid_json_schema", "type": "invalid_request_error",
+                     "param": "response_format.json_schema.strict"}]
+    assert secret not in json.dumps(seen)
+
+
 @pytest.mark.anyio
 async def test_claim_check_removes_a_bad_comparison_without_rewriting_it():
     blocks = [EvidenceBlock(id="p1b1", page=1, section="Method", text="The model retrieves documents."),

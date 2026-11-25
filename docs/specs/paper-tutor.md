@@ -50,6 +50,10 @@ learner attempts separately from paper answering.
 Existing `tutor.py` and `service.py` remain compatible. Proposed small
 `teaching.py`/`comprehension.py` modules use strict typed enums and injected model
 transport. Each change keeps the four-call admission and reserves review capacity.
+`StudyModel` normally discards provider error bodies. An explicitly supplied diagnostic
+`error_observer` receives only allowlisted error codes/types and request-field names,
+never provider messages, generated text or prompt content; bodies over 8 KiB yield no
+metadata. Ordinary production construction supplies no observer.
 Later comparison accepts two explicitly selected versioned papers, independent
 evidence per side and a metric-compatibility report; no global "winner" from
 incompatible datasets. Keep comparison outside ordinary one-paper context.
