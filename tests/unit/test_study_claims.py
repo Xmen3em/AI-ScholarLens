@@ -1,5 +1,6 @@
 """Claim-level lesson drafts (docs/specs/claim-check.md). No model call."""
 
+import asyncio
 import json
 
 import pytest
@@ -234,10 +235,11 @@ def test_schema_does_not_repeat_the_catalog_for_deep_research():
 
 @pytest.mark.anyio
 async def test_an_unknown_verdict_id_fails_the_schema_validation(tmp_path):
+    import httpx
+    from pydantic import SecretStr
     from src.services.study.store import StudyStore
     from src.services.study.tutor import StudyModel
-    from pydantic import SecretStr
-    import httpx
+
     draft = validate_draft(draft_of(paper(claim(SEQ, "p6b1s0"))), BLOCKS)
     store = StudyStore(tmp_path / "state.sqlite3", "owner")
     job = store.create_job("test", {})
@@ -258,3 +260,39 @@ async def test_an_analogy_without_claims_is_not_a_paid_check():
     analogy = {"heading": "تشبيه", "kind": "analogy", "text": "تشبيه محلي للتوضيح.", "evidence_ids": [], "claims": []}
     draft = validate_draft(draft_of(analogy), BLOCKS)
     assert await check_claims(Refuse(), "job", draft, blocks=BLOCKS) is draft
+
+
+@pytest.mark.anyio
+async def test_claim_checks_split_items_without_changing_ids_or_evidence():
+    from src.services.study.tutor import check_claims_in_parallel
+    sections = [paper(claim(SEQ, "p6b1s0"), heading="الفكرة"),
+                paper(claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0"), heading="النتيجة"),
+                {"heading": "تشبيه", "kind": "analogy", "text": "تشبيه للتوضيح.", "evidence_ids": [], "claims": []}]
+    draft = validate_draft(draft_of(*sections), BLOCKS)
+
+    checker = Checker({"verdicts": []})
+    async def answer(job, purpose, messages, **kwargs):
+        payload = json.loads(messages[-1]["content"])
+        checker.calls.append({"payload": payload})
+        await asyncio.sleep(0)
+        items = payload["items"]
+        return {"output": {"verdicts": [{"id": item["id"], "supported": True, "issue": "none",
+                               "support_spans": [item["quote"]] if "quote" in item else []} for item in items]}}
+    checker.complete = answer
+    result = await check_claims_in_parallel(checker, "job", draft, blocks=BLOCKS)
+    assert [len(call["payload"]["items"]) for call in checker.calls] == [2, 1]
+    assert [item["id"] for call in checker.calls for item in call["payload"]["items"]] == ["c0", "a0", "c1"]
+    assert [call["payload"]["source_context"][0]["id"] for call in checker.calls] == ["p6b1", "p6b0"]
+    assert all(len(call["payload"]["source_context"]) == 1 for call in checker.calls)
+    assert [claim.withheld for section in result.sections for claim in section.claims] == [None, None]
+
+
+@pytest.mark.anyio
+async def test_an_only_analogy_skips_the_parallel_check():
+    from src.services.study.tutor import check_claims_in_parallel
+    class Refuse:
+        async def complete(self, *args, **kwargs):
+            raise AssertionError("no paid check for an analogy only")
+    analogy = {"heading": "تشبيه", "kind": "analogy", "text": "تشبيه محلي.", "evidence_ids": [], "claims": []}
+    draft = validate_draft(draft_of(analogy), BLOCKS)
+    assert await check_claims_in_parallel(Refuse(), "job", draft, blocks=BLOCKS) is draft

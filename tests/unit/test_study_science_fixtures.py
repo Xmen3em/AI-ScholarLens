@@ -161,6 +161,10 @@ async def test_errors_the_offline_gate_admits_reach_the_check_with_their_exact_q
     checked = validate_draft(draft(case), blocks)
     checker = Checker(False, case["expected"]["issues"][0])
     result = await check_claims(checker, "science-case", checked, blocks=blocks)
+    if case["section"]["kind"] != "paper" and not result.sections[0].claims:
+        # An analogy-only draft needs no paid semantic check (remaining-work cleanup).
+        assert checker.payload is None and not result.sections[0].dropped
+        return
     item = checker.payload["items"][0]
     if case["section"]["kind"] == "paper":
         claim = result.sections[0].claims[0]

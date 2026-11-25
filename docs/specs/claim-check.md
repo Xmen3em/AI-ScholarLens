@@ -31,8 +31,10 @@ can check without trusting the model.
 
 - An unconfirmed claim is **withheld**: never shown with a page badge; only a
   count and its section heading appear in one closing note.
-- A lesson keeps **two model calls**: write, then check. `/deep` stays at two
-  research calls plus one check (three of its four).
+- A lesson keeps **up to three model calls**: write, then up to two concurrent
+  claim-check halves when there are at least two items. `/deep` stays at two research
+  calls plus the same review budget (up to four of its four). The multi-user admission
+  reservation is three calls for a lesson or follow-up, and four for `/deep`.
 - Approach A: the writer produces one-quote claims; the checker must copy
   supporting spans that the application verifies.
 
@@ -77,7 +79,13 @@ stored lessons, `/notes`, the reading map and `render_lesson` need no migration.
 
 ## 2. The check call and proof verification
 
-One call (`purpose="grounding_review"`, existing attempt accounting) receives:
+With at least two items, the check may run in two concurrent halves. Global claim and
+analogy IDs are preserved, and each half receives only the cited blocks it needs (within
+the same context budget). A returned verdict is merged back by its global ID; unknown
+IDs fail the review's schema validation. One check call still covers small inputs. An
+analogy alone needs no check call. Attempt accounting remains per provider call.
+
+Each review call (`purpose="grounding_review"`, existing attempt accounting) receives:
 
 - each surviving paper claim as `c0, c1, …` with its claim text, its own quote,
   and its full cited block for context (same 16,000-character context budget);
@@ -135,9 +143,9 @@ Withheld claim text never appears in the reply, `/notes` or the job result.
 
 | Path | Calls | Change |
 | --- | --- | --- |
-| First lesson, follow-up | write 1 + check 1 | claim format, per-claim checks, claim check |
+| First lesson, follow-up | write 1 + check 1 or 2 | claim format, per-claim checks, claim check |
 | `/quiz` (question only) | write 1 | none: no paper claims, no check call |
-| `/deep` | research 2 + check 1 | worker's final schema uses claims; worker validates shape (`validation` stage); parent screens and checks (`result_validation`, `review` stages) |
+| `/deep` | research 2 + check 1 or 2 | worker's final schema uses claims; worker validates shape (`validation` stage); parent screens and checks (`result_validation`, `review` stages) |
 
 `PROMPT_REVISION` becomes v7. `GroundingReview`/`review_lesson` and
 `REVIEW_PROMPT` are replaced by `ClaimCheck`/`check_claims` and `CLAIM_PROMPT`;
@@ -154,8 +162,9 @@ Offline, zero model calls, before any live run:
   fails only when no paper claim remains.
 - Proof verification with scripted checkers: honest spans kept; span not in the
   quote, under three words, or a claim number outside the spans is
-  `unverified_support`; duplicate/unknown/missing verdicts are `missing_verdict`;
-  an unparsable response is `review_validation_failed`.
+  `unverified_support`; duplicate or missing verdicts are `missing_verdict`; an unknown
+  ID is rejected by the transport schema, and an unparsable response is
+  `review_validation_failed`.
 - Science fixtures converted to claims: all four verified-correct sections
   survive an honest checker; each of the twelve critical cases records and is
   stopped at its expected layer (deterministic, screen, or check call with its
@@ -193,5 +202,5 @@ all of its numbers; no withheld claim text reaches the learner or storage.
 CC-2: With an honest scripted checker, the four verified-correct fixture sections
 survive; with a dishonest one, unsupported or misplaced proof is withheld.
 
-CC-3: First lessons and follow-ups use two calls and `/deep` three; existing
+CC-3: First lessons and follow-ups use up to three calls and `/deep` four; existing
 attempt accounting, stages and failure categories still hold.

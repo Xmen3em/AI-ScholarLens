@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import httpx
@@ -134,10 +135,54 @@ async def test_low_ram_blocks_before_attempt_reservation(tmp_path):
     store = StudyStore(tmp_path / "state.sqlite3", "owner")
     job = store.create_job("test", {})
     model = StudyModel(SecretStr("private-test"), store, memory=lambda: 500, counter=lambda _: 100)
+    assert model._review_client is None
     with pytest.raises(TutorError):
         await model.complete(job["id"], "lesson", [{"role": "user", "content": "test"}], schema={"type": "object"})
     assert store.attempts(job["id"]) == []
     await model.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("injected", [False, True], ids=["owned", "injected"])
+async def test_two_review_calls_overlap_on_their_selected_transport(tmp_path, injected):
+    from src.services.study.tutor import check_claims_in_parallel
+
+    store = StudyStore(tmp_path / "state.sqlite3", "owner")
+    job = store.create_job("test", {})
+    arrived = 0
+    release = asyncio.Event()
+
+    async def respond(request):
+        nonlocal arrived
+        arrived += 1
+        if arrived == 2:
+            release.set()
+        await release.wait()
+        payload = json.loads(request.content)
+        items = payload["messages"][-1]["content"]
+        parsed = json.loads(items)["items"]
+        output = {"verdicts": [{"id": item["id"], "supported": True, "issue": "none",
+                               "support_spans": [item["quote"]] if "quote" in item else []} for item in parsed]}
+        return httpx.Response(200, json={"choices": [{"index": 0, "finish_reason": "stop",
+                              "message": {"role": "assistant", "content": json.dumps(output)}}],
+                              "usage": {"prompt_tokens": 100, "completion_tokens": 20}})
+
+    from tests.unit.test_study_claims import BLOCKS, SEQ, claim, draft_of, paper
+    draft = validate_draft(draft_of(paper(claim(SEQ, "p6b1s0")), paper(claim("RAG-Token has a distinct metric.", "p6b0s0"))), BLOCKS)
+    transport = httpx.MockTransport(respond)
+    client = httpx.AsyncClient(transport=transport) if injected else None
+    review_client = None if injected else httpx.AsyncClient(transport=transport)
+    model = StudyModel(SecretStr("private-test"), store, client=client, memory=lambda: 2000, counter=lambda _: 100,
+                       review_client=review_client)
+    if not injected:
+        assert model._review_transport() is review_client
+    try:
+        result = await check_claims_in_parallel(model, job["id"], draft, blocks=BLOCKS)
+        assert arrived == 2 and [claim.withheld for section in result.sections for claim in section.claims] == [None, None]
+    finally:
+        await model.aclose()
+        if review_client is not None:
+            await review_client.aclose()
 
 
 @pytest.mark.anyio

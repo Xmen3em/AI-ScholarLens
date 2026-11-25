@@ -89,6 +89,20 @@ class Harness:
         await self.pool.aclose()
 
 
+async def test_admission_reserves_the_full_parallel_review_budget(tmp_path):
+    hold = asyncio.Event()
+    h = Harness(tmp_path, hold=hold)
+    try:
+        h.join(111)
+        result = await h.send(111, "1706.03762")
+        assert h.gate.owner_usage()["reserved"] == pytest.approx(3 * h.gate.worst_call_usd())
+        hold.set()
+        await h.done(111, result["job_id"])
+    finally:
+        hold.set()
+        await h.aclose()
+
+
 @pytest.fixture
 async def h(tmp_path):
     harness = Harness(tmp_path)

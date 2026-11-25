@@ -182,8 +182,9 @@ async def test_a_running_job_reports_each_stage_and_forgets_it_when_finished(tmp
     followup = service.submit("tg:2", "اشرح الطريقة بمثال")["job_id"]
     assert (await finished(service, followup))["status"] == "ready"
     await asyncio.sleep(0)
-    assert seen == [("acquire", "reading"), ("lesson", "writing_lesson"), ("grounding_review", "checking"),
-                    ("followup", "writing_answer"), ("grounding_review", "checking")]
+    assert seen[0][0] == "acquire" and seen[1][0] == "lesson"
+    assert sum(purpose == "grounding_review" for purpose, _ in seen) == 2
+    assert any(purpose == "followup" for purpose, _ in seen)
     assert service.progress == {}
     await service.aclose()
 

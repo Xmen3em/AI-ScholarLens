@@ -323,6 +323,16 @@ def verify_support(claim_text: str, quote: str, spans: list[str]) -> bool:
 
 async def check_claims(model, job_id: str, draft: ClaimDraft, *, blocks: list[EvidenceBlock],
                        report: dict | None = None) -> ClaimDraft:
+    return await _check_claims(model, job_id, draft, blocks=blocks, report=report, split=False)
+
+
+async def check_claims_in_parallel(model, job_id: str, draft: ClaimDraft, *, blocks: list[EvidenceBlock],
+                                   report: dict | None = None) -> ClaimDraft:
+    return await _check_claims(model, job_id, draft, blocks=blocks, report=report, split=True)
+
+
+async def _check_claims(model, job_id: str, draft: ClaimDraft, *, blocks: list[EvidenceBlock],
+                        report: dict | None, split: bool) -> ClaimDraft:
     claims = [claim for item in draft.sections if item.kind == "paper" for claim in item.claims
               if claim.withheld is None and claim.support is not None]
     analogies = [item for item in draft.sections if item.kind == "analogy" and item.text and not item.dropped]
@@ -332,21 +342,28 @@ async def check_claims(model, job_id: str, draft: ClaimDraft, *, blocks: list[Ev
     if not claims or not items:
         # Analogies alone are labelled teaching aids; do not spend a provider call on them.
         return draft
+    groups = [items[::2], items[1::2]] if split and len(items) >= 2 else [items]
     lookup = {block.id: block for block in blocks}
-    context, remaining = [], 16000
-    for identity in dict.fromkeys(claim.support.block_id for claim in claims if claim.support):
-        block = lookup.get(identity)
-        if block and len(block.text) <= remaining:
-            context.append(block.model_dump())
-            remaining -= len(block.text)
-    schema = ClaimCheck.model_json_schema()
-    schema["$defs"]["ClaimVerdict"]["properties"]["id"]["enum"] = [item["id"] for item in items]
-    result = await model.complete(job_id, "grounding_review", [
-        {"role": "system", "content": CLAIM_PROMPT},
-        {"role": "user", "content": json.dumps({"items": items, "source_context": context}, ensure_ascii=False)}],
-        schema=schema)
+
+    async def review(review_items: list[dict]) -> dict:
+        needed = [claims[int(item["id"][1:])] for item in review_items if item["id"].startswith("c")]
+        context, remaining = [], 16000
+        for identity in dict.fromkeys(claim.support.block_id for claim in needed if claim.support):
+            block = lookup.get(identity)
+            if block and len(block.text) <= remaining:
+                context.append(block.model_dump())
+                remaining -= len(block.text)
+        schema = ClaimCheck.model_json_schema()
+        schema["$defs"]["ClaimVerdict"]["properties"]["id"]["enum"] = [item["id"] for item in review_items]
+        options = {"review_group": True} if split and isinstance(model, StudyModel) else {}
+        return await model.complete(job_id, "grounding_review", [
+            {"role": "system", "content": CLAIM_PROMPT},
+            {"role": "user", "content": json.dumps({"items": review_items, "source_context": context}, ensure_ascii=False)}],
+            schema=schema, **options)
+
+    responses = await asyncio.gather(*(review(group) for group in groups))
     try:
-        check = ClaimCheck.model_validate(result["output"])
+        check = ClaimCheck.model_validate({"verdicts": [v for response in responses for v in response["output"]["verdicts"]]})
     except (ValidationError, KeyError, TypeError):
         raise TutorError("review_validation_failed") from None
     seen = [verdict.id for verdict in check.verdicts]
@@ -429,8 +446,11 @@ def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, 
 
 class StudyModel:
     def __init__(self, token: SecretStr, store: StudyStore, *, client: httpx.AsyncClient | None = None,
-                 memory=host_memory_mib, counter=None, audit=None, profile: ModelProfile = DEFAULT_PROFILE, pool=None):
+                 memory=host_memory_mib, counter=None, audit=None, profile: ModelProfile = DEFAULT_PROFILE, pool=None,
+                 review_client: httpx.AsyncClient | None = None):
         self.store, self.memory, self.profile, self.pool = store, memory, profile, pool
+        self._token = token
+        self._review_client = review_client
         if counter is None:
             counter = count_input_tokens if profile.input_estimate == "gpt_oss_tokenizer" else (
                 lambda serialized: estimate_input(profile, serialized))
@@ -441,19 +461,35 @@ class StudyModel:
             timeout=httpx.Timeout(80, connect=5), follow_redirects=False, trust_env=False,
             limits=httpx.Limits(max_connections=1, max_keepalive_connections=1))
         self._owned = shared is None
+        self._owns_review = review_client is None
         self.audit = audit
         self._lock = asyncio.Lock()
+        self._review_lock = asyncio.Semaphore(2)
+
+    def _review_transport(self) -> httpx.AsyncClient:
+        if self._review_client is not None:
+            return self._review_client
+        if self.pool is not None or not self._owned:
+            # A shared or injected client already represents the intended transport.
+            return self.client
+        # Two connections only for the split review; ordinary writers keep the one-connection client.
+        self._review_client = httpx.AsyncClient(headers={"Authorization": "Bearer " + self._token.get_secret_value()},
+            timeout=httpx.Timeout(80, connect=5), follow_redirects=False, trust_env=False,
+            limits=httpx.Limits(max_connections=2, max_keepalive_connections=2))
+        return self._review_client
 
     async def aclose(self):
         if self._owned:
             await self.client.aclose()
+        if self._review_client is not None and self._owns_review:
+            await self._review_client.aclose()
 
     async def complete(self, job_id: str, purpose: str, messages: list[dict], *, schema: dict | None = None,
-                       tools: list[dict] | None = None) -> dict:
+                       tools: list[dict] | None = None, review_group: bool = False) -> dict:
         free = self.memory()
         if not math.isfinite(free) or free < 600:
             raise TutorError("study_memory_unavailable")
-        if self._lock.locked():
+        if self._lock.locked() and not review_group:
             raise TutorError("study_model_busy")
         if bool(schema) == bool(tools):
             raise TutorError("one_output_contract_required")
@@ -470,7 +506,8 @@ class StudyModel:
         serialized = json.dumps(payload, ensure_ascii=False, allow_nan=False)
         if len(serialized.encode()) > 128_000 or self.counter(serialized) > 20000:
             raise TutorError("study_context_limit")
-        async with self._lock, (self.pool.slot(job_id) if self.pool is not None else nullcontext()):
+        async with (self._review_lock if review_group else self._lock), \
+                (self.pool.slot(job_id) if self.pool is not None else nullcontext()):
             # A queued call re-checks memory once its slot arrives; the attempt is reserved only then.
             if self.pool is not None and not (math.isfinite(free := self.memory()) and free >= 600):
                 raise TutorError("study_memory_unavailable")
@@ -478,7 +515,8 @@ class StudyModel:
             state = "unknown"
             try:
                 async with asyncio.timeout(85):
-                    async with self.client.stream("POST", URL, json=payload) as response:
+                    client = self._review_transport() if review_group else self.client
+                    async with client.stream("POST", URL, json=payload) as response:
                         if response.status_code != 200:
                             state = "failed"
                             raise TutorError(f"study_provider_http_{response.status_code}")

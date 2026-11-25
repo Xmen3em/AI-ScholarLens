@@ -16,9 +16,10 @@ from src.services.study.service import BUSY, HELP
 from src.services.study.store import StudyStore, pending_deliveries_all
 
 USER_ID = Field(default=None, ge=1, lt=2**52)
-# A lesson or answer is a writer call and a check call; /deep is two research calls and a check.
+# A lesson or answer is a writer call and a check call, which may run in two halves.
+# /deep is two research calls plus the same two-call review budget.
 CALLS = {"/deep": 4}
-DEFAULT_CALLS = 2
+DEFAULT_CALLS = 3
 
 
 class StudyMessage(BaseModel):

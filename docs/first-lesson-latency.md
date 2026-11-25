@@ -1,9 +1,10 @@
 # First-lesson latency on GLM-5.3: where the time goes
 
-Status: investigation for the owner, 3 November 2026. The analysis made no paid
-calls. The owner later approved one qualification call for option A; its result
-is at the end. None of the options is implemented: each needs the owner's
-approval, and most need a paid development rerun before production.
+Status: investigation updated 25 November 2026. The analysis made no paid calls.
+The owner later approved one qualification call for option A; its result is at
+the end. The owner selected option B for implementation, but its offline change
+has not had an approved live latency or quality measurement. The figures below
+remain estimates, not before/after results for the implementation.
 
 Sources: `data/eval/paper-benchmark/holdout-control/jobs.jsonl` (69 timed jobs on
 18 papers) and `dev-rerun-2-control/jobs.jsonl` (48 jobs on 12 papers). They hold

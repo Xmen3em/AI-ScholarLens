@@ -23,7 +23,7 @@ from src.services.study.tutor import (
     Lesson,
     TutorError,
     accept_draft,
-    check_claims,
+    check_claims_in_parallel,
     draft_report,
     lesson_schema,
     page_label,
@@ -380,7 +380,7 @@ class StudyService:
             draft = screen_claims(validate_draft(result["output"], selected), question=question)
             stage = "review"
             self.progress[state["job_id"]] = "checking"
-            draft = await check_claims(self.model, state["job_id"], draft, blocks=document.blocks, report=review)
+            draft = await check_claims_in_parallel(self.model, state["job_id"], draft, blocks=document.blocks, report=review)
             review.update(draft_report(draft))
             lesson, withheld = accept_draft(draft)
         except Exception as exc:
