@@ -36,17 +36,17 @@ Verification on the final Task C tree:
 
 Two separately owner-approved first-lesson diagnostics ran on cached `2504.10453v2`
 content. Their writers failed after 2.016 and 2.141 seconds, before review. The second
-recorded **HTTP 400**. Across both runs there were **two attempted model calls, zero
-successful calls and zero review calls**. No usage response was returned, so local
-worst-case exposure is **$0.0618**, not confirmed provider spend. The ignored diagnostic
-script now preserves safe failure codes and per-call timings.
+recorded **HTTP 400**. A third approved one-call diagnostic returned HTTP 400 with
+`code=model_not_supported`, `type=invalid_request_error`, `param=model` for
+`zai-org/GLM-5.3:deepinfra`. Across the three runs there were **three attempted model
+calls, zero successful calls and zero review calls**. No usage response was returned,
+so local worst-case exposure is **$0.0927**, not confirmed provider spend.
 
-Offline comparison found no writer-schema difference from the last successful benchmark;
-the `/deep` compact-schema change does not affect this writer request. The saved HTTP 400
-contains no provider body, so its exact rejected field is unknown. Removing options or
-weakening the schema would be speculation, not a verified fix. Option B's measured latency
-and kept-claim effects remain unknown; the p95 values in `docs/first-lesson-latency.md`
-are still historical estimates. A real p95 needs a separately approved multi-lesson run.
+The public Hugging Face model API returned an empty `inferenceProviderMapping` on
+25 November 2026; its model page did not establish a usable DeepInfra route. This is a
+route support/availability failure, not evidence against the writer schema or parallel
+review. No model/provider was switched. Option B's latency and kept-claim effects remain
+unmeasured; its p95 figures remain historical estimates.
 
 This session made no other model calls. No Telegram messages were sent and the bot was
 not restarted. The benchmark ledger at `data/eval/paper-benchmark/spend.json` remains
@@ -54,10 +54,9 @@ $4.095033 from earlier work; this session did not run a paid benchmark stage.
 
 ## Remaining owner inputs
 
-1. **Option B writer compatibility.** Another identical retry is not recommended: both
-   attempts failed before review, the second with HTTP 400. A new diagnostic must have
-   an evidence-based request change or a bounded error-body inspection with a privacy-safe
-   allowlist. Fresh approval is still required for every call and dollar ceiling.
+1. **Model route decision.** Stop repeating the rejected GLM-5.3/DeepInfra route.
+   Restoring that route or choosing an alternative changes the benchmarked configuration
+   and needs an owner decision, new qualification and fresh cost approval.
 2. **Task B labels.** The owner must fill all 40 `owner_faithful` fields in
    `evaluation/paper_benchmark/calibration.v1.json`; currently 0 are labelled. The
    session must not substitute its own labels.
@@ -84,8 +83,9 @@ $4.095033 from earlier work; this session did not run a paid benchmark stage.
 `StudyModel(error_observer=...)` seam. Ordinary production calls still discard provider
 error bodies. An explicit observer receives only allowlisted error codes/types and
 request-field names; bodies over 8 KiB, malformed JSON, duplicate keys and arbitrary
-messages produce no metadata. The one-call writer diagnostic is prepared but has not
-run. A fresh approval for **one model call / $0.0309 worst case** is required.
+messages produce no metadata. The approved one-call diagnostic completed and identified
+`model_not_supported` on `param=model`; see `docs/first-lesson-latency.md`. No further
+provider call is pending.
 
 Focused provider/study tests: **100 passed**. Full offline suite: **1,873 passed**,
 exit code 0, 1005.92 seconds. Full-tree Ruff and mypy pass. A separate import-order-only

@@ -124,32 +124,42 @@ This is one sample, not a measurement. The record is in the ignored folder
 `data/eval/latency-check/` of the main checkout: `thinking-off-call.json`, its store,
 and the script that made the call.
 
-## Option B live diagnostic (owner-approved, 25 November 2026)
+## Option B live diagnostics (owner-approved, 25 November 2026)
 
-The first approved attempt used the production writer path at commit `1eb66df` on cached
-`2504.10453v2` content. The writer failed after 2.016 seconds, before either review
-call began. The store records one failed provider attempt and no successful response
-usage. Its worst-case accounting is $0.0309; this is not confirmed provider spend.
-The original script saved only the generic exception type, so the HTTP status cannot
-be recovered without another provider call. The diagnostic script now preserves the safe
-error code.
+Two approved lesson attempts on cached `2504.10453v2` content failed at the writer,
+after 2.016 and 2.141 seconds; the second returned HTTP 400 before either review call.
+Their worst-case accounting is $0.0618 across two failed calls, not confirmed provider
+spend. Neither measured option-B latency or kept-claim quality. The historical baseline
+had 12 kept claims; zero claims in these failed runs is not a quality comparison.
 
-This sample gives **no option-B latency or kept-claim measurement**. The historical
-baseline had 12 kept claims, but zero claims in this failed run is not a quality
-comparison. No retry was made. A new run requires fresh approval (at most three model
-calls, $0.0927 worst case) and will use a new attempt record. The local ignored record
-is `data/eval/latency-check/parallel-call.json`.
+A third, separately approved **one-call** diagnostic captured only allowlisted provider
+error metadata. It returned HTTP 400 after 1.953 seconds with:
+
+```text
+code=model_not_supported type=invalid_request_error param=model
+```
+
+The failing route is `zai-org/GLM-5.3:deepinfra`. The public Hugging Face model API
+returned an empty `inferenceProviderMapping` on 25 November 2026; the model page did not
+verify a currently usable DeepInfra route. This identifies route availability/support,
+not a writer-schema or parallel-review failure. No provider or model was switched.
+Across these three diagnostics, local worst-case exposure is **$0.0927**, with no
+successful usage responses. Further calls require fresh approval. Ignored local records
+are `data/eval/latency-check/parallel-call.json`, `parallel-call-2.json`, and
+`writer-error-labels.json`.
 
 ## Recommendation
 
-The owner selected B and its implementation is committed locally. The next decision is
-a separately approved rerun of the bounded diagnostic after its writer failure, not a
-new broad benchmark. A real p95 needs multiple approved timed lessons; one successful
-sample cannot establish it. The option-A development rerun stays optional: 48 jobs on
-12 dev papers, up to 96 calls plus judging, only if the owner still wants to evaluate
-thinking-off despite its observed kept-claim loss. Each such check should save verdict
-spans so failed proofs can be traced. The progress messages and shorter poll (finding
-6) already lower the student's wait without changing model behavior.
+Stop repeating the current route. Its measured `model_not_supported` response prevents
+both the writer and the parallel review from running. Restoring a usable provider route
+or selecting another model/provider is an owner decision: either changes the benchmarked
+configuration and needs its own qualification and cost approval. Only after that should
+the bounded option-B diagnostic run; a real p95 needs multiple approved timed lessons.
+The option-A development rerun stays optional: 48 jobs on 12 dev papers, up to 96 calls
+plus judging, only if the owner still wants to evaluate thinking-off despite its observed
+kept-claim loss. Each such check should save verdict spans so failed proofs can be traced.
+The progress messages and shorter poll (finding 6) already lower the student's wait
+without changing model behavior.
 
 The historical analysis scripts read only the two `jobs.jsonl` files and make no network
 calls. They and the diagnostic scripts are not committed; copies are in the same
