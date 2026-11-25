@@ -1,9 +1,9 @@
 # First-lesson latency on GLM-5.3: where the time goes
 
 Status: investigation updated 25 November 2026. The historical analysis made no
-model calls. The owner later approved one option-A qualification call and one option-B
-diagnostic; both results are recorded below. The historical option-A qualification made
-one model call. Option B's writer failed before review, so its latency and kept-claim
+model calls. The owner later approved one option-A qualification call and three option-B
+diagnostic calls; results are recorded below. The historical option-A qualification made
+one model call. Option B's writers failed before review, so its latency and kept-claim
 effects remain unmeasured. The figures below remain estimates, not before/after results
 for the implementation.
 
