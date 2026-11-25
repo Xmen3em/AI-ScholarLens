@@ -1,10 +1,11 @@
 # First-lesson latency on GLM-5.3: where the time goes
 
-Status: investigation updated 25 November 2026. The analysis made no paid calls.
-The owner later approved one qualification call for option A; its result is at
-the end. The owner selected option B for implementation, but its offline change
-has not had an approved live latency or quality measurement. The figures below
-remain estimates, not before/after results for the implementation.
+Status: investigation updated 25 November 2026. The historical analysis made no
+model calls. The owner later approved one option-A qualification call and one option-B
+diagnostic; both results are recorded below. The historical option-A qualification made
+one model call. Option B's writer failed before review, so its latency and kept-claim
+effects remain unmeasured. The figures below remain estimates, not before/after results
+for the implementation.
 
 Sources: `data/eval/paper-benchmark/holdout-control/jobs.jsonl` (69 timed jobs on
 18 papers) and `dev-rerun-2-control/jobs.jsonl` (48 jobs on 12 papers). They hold
@@ -123,16 +124,33 @@ This is one sample, not a measurement. The record is in the ignored folder
 `data/eval/latency-check/` of the main checkout: `thinking-off-call.json`, its store,
 and the script that made the call.
 
+## Option B live diagnostic (owner-approved, 25 November 2026)
+
+The first approved attempt used the production writer path at commit `1eb66df` on cached
+`2504.10453v2` content. The writer failed after 2.016 seconds, before either review
+call began. The store records one failed provider attempt and no successful response
+usage. Its worst-case accounting is $0.0309; this is not confirmed provider spend.
+The original script saved only the generic exception type, so the HTTP status cannot
+be recovered without another provider call. The diagnostic script now preserves the safe
+error code.
+
+This sample gives **no option-B latency or kept-claim measurement**. The historical
+baseline had 12 kept claims, but zero claims in this failed run is not a quality
+comparison. No retry was made. A new run requires fresh approval (at most three model
+calls, $0.0927 worst case) and will use a new attempt record. The local ignored record
+is `data/eval/latency-check/parallel-call.json`.
+
 ## Recommendation
 
-A dev rerun of option A is the next decision. It runs 48 jobs on the 12 dev papers,
-up to 96 calls, plus judging. It would show whether the lost claims (finding above) are a
-pattern and what thinking-off does to the unfaithful rate. If it goes ahead, the
-verdict spans of each check should be saved, so that a failed proof can be traced.
-If the rerun keeps too few claims, B (two parallel checks with reasoning on) is the
-saving that leaves model behaviour alone, at the price of code and spec work. The
-progress messages and the shorter poll (finding 6) already lower the wait the
-student feels, with no change to the model calls.
+The owner selected B and its implementation is committed locally. The next decision is
+a separately approved rerun of the bounded diagnostic after its writer failure, not a
+new broad benchmark. A real p95 needs multiple approved timed lessons; one successful
+sample cannot establish it. The option-A development rerun stays optional: 48 jobs on
+12 dev papers, up to 96 calls plus judging, only if the owner still wants to evaluate
+thinking-off despite its observed kept-claim loss. Each such check should save verdict
+spans so failed proofs can be traced. The progress messages and shorter poll (finding
+6) already lower the student's wait without changing model behavior.
 
-The analysis scripts are not committed. They read only the two `jobs.jsonl` files
-and make no network calls; copies are in the same `data/eval/latency-check/` folder.
+The historical analysis scripts read only the two `jobs.jsonl` files and make no network
+calls. They and the diagnostic scripts are not committed; copies are in the same
+`data/eval/latency-check/` folder.
