@@ -19,7 +19,6 @@ Work it in a new session, then bring the result back here for review.
   restart the bot.
 - **Commit locally; never push.** The owner reviews first.
 - Work on a new branch cut from `codex/visual-learning`, one commit per finished piece.
-  Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Test-first: each change starts with a test you watched fail. Keep owner-only
   behaviour (`STUDY_MULTI_USER=false`) unchanged.
 - Must pass before handing back:
