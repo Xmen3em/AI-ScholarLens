@@ -266,14 +266,19 @@ class StudyService:
         except Exception as exc:
             code = exc.code if isinstance(exc, (ContentError, StudyInputError)) else "study_generation_unavailable"
             opening = None
-            if isinstance(exc, TutorError) and str(exc) == "lesson_validation_failed":
-                # A content-level failure must not strand the parsed paper (owner, 25 Nov 2026).
-                # Only the validated paper metadata opens; no withheld text is saved or shown.
-                opening = await self._resolve({"job_id": job_id, "text": text})
-                opening = await self._extract({**opening, "job_id": job_id, "text": text})
-                document = opening["content"]
-                self.store.save_paper(document.paper.arxiv_id, document.model_dump())
-                self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
+            if (isinstance(exc, TutorError) and str(exc) == "lesson_validation_failed"
+                    and getattr(exc, "open_paper_on_failure", False)):
+                # Reuse the document already extracted before teaching. A /choose selection
+                # has already been consumed, so resolving again would strand this job.
+                document = getattr(exc, "paper_content", None)
+                if document is not None:
+                    try:
+                        # Only validated metadata opens; no withheld text is saved or shown.
+                        self.store.save_paper(document.paper.arxiv_id, document.model_dump())
+                        self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
+                        opening = document
+                    except Exception:  # noqa: BLE001 - the original lesson failure must still finish
+                        opening = None
             failure = failure_payload(exc, default=code)
             code = failure["error"]
             messages = {
@@ -389,6 +394,9 @@ class StudyService:
                 staged(exc, stage)
             if review:
                 exc.review = review  # type: ignore[attr-defined]
+            if isinstance(exc, TutorError):
+                exc.paper_content = document
+                exc.open_paper_on_failure = not state.get("followup") and not question.startswith("/deep ")
             raise
         if self.observer is not None:
             self.observer(state["job_id"], lesson, evidence_catalog(selected))

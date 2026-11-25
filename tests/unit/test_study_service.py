@@ -122,6 +122,112 @@ async def test_failed_validation_opens_the_paper_without_leaking_an_unverified_l
     await service.aclose()
 
 
+@pytest.mark.asyncio
+async def test_a_failed_lesson_after_choose_still_finishes_and_opens_the_paper(tmp_path):
+    class BadModel(Model):
+        async def complete(self, *args, **kwargs):
+            bad = lesson()
+            bad["sections"][0]["claims"][0]["evidence_id"] = "invented"
+            return {"output": bad}
+
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), BadModel())
+    await finished(service, service.submit("tg:1", "/paper Attention Is All You Need")["job_id"])
+    job = await finished(service, service.submit("tg:2", "/choose 2")["job_id"])
+    assert job["status"] == "failed"
+    assert job["result"]["failure_code"] == "lesson_validation_failed"
+    assert "بس فتحتها" in job["result"]["text"]
+    assert service.store.context()["paper_id"] == "1706.03762v2"
+    await service.aclose()
+
+
+@pytest.mark.asyncio
+async def test_a_failed_lesson_after_bare_number_still_finishes_and_opens_the_paper(tmp_path):
+    class BadModel(Model):
+        async def complete(self, *args, **kwargs):
+            bad = lesson()
+            bad["sections"][0]["claims"][0]["evidence_id"] = "invented"
+            return {"output": bad}
+
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), BadModel())
+    await finished(service, service.submit("tg:1", "/paper Attention Is All You Need")["job_id"])
+    job = await finished(service, service.submit("tg:2", "1")["job_id"])
+    assert job["status"] == "failed" and job["result"]["failure_code"] == "lesson_validation_failed"
+    assert "بس فتحتها" in job["result"]["text"]
+    assert service.store.context()["paper_id"] == "1706.03762v1"
+    await service.aclose()
+
+
+@pytest.mark.asyncio
+async def test_an_opening_error_does_not_replace_the_lesson_failure_or_leave_the_job_running(tmp_path):
+    from src.services.study.content import ContentError
+
+    class ReopeningService(StudyService):
+        async def _resolve(self, state):
+            if getattr(self, "reopened", False):
+                raise ContentError("pdf_unavailable")
+            self.reopened = True
+            return await super()._resolve(state)
+
+    class BadModel(Model):
+
+        async def complete(self, *args, **kwargs):
+            bad = lesson()
+            bad["sections"][0]["claims"][0]["evidence_id"] = "invented"
+            return {"output": bad}
+
+    service = ReopeningService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), BadModel())
+    job = await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
+    assert job["status"] == "failed"
+    assert job["result"]["failure_code"] == "lesson_validation_failed"
+    assert "بس فتحتها" in job["result"]["text"]
+    await service.aclose()
+
+
+@pytest.mark.asyncio
+async def test_a_failed_followup_keeps_its_dialogue_and_does_not_reopen_the_paper(tmp_path):
+    class SometimesBad(Model):
+        async def complete(self, job, purpose, messages, **kwargs):
+            if self.bad and purpose == "followup":
+                bad = lesson()
+                bad["sections"][0]["claims"][0]["evidence_id"] = "invented"
+                return {"output": bad}
+            return await super().complete(job, purpose, messages, **kwargs)
+
+    model = SometimesBad()
+    model.bad = False
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), model)
+    await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
+    await finished(service, service.submit("tg:2", "اشرح النتيجة")["job_id"])
+    turns = service.store.context()["turns"]
+    assert len(turns) == 1
+    model.bad = True
+    job = await finished(service, service.submit("tg:3", "اشرح الطريقة")["job_id"])
+    assert job["status"] == "failed" and job["result"]["failure_code"] == "lesson_validation_failed"
+    assert "بس فتحتها" not in job["result"]["text"] and "جرّب سؤال أضيق" in job["result"]["text"]
+    assert service.store.context()["turns"] == turns
+    await service.aclose()
+
+
+@pytest.mark.asyncio
+async def test_a_deep_failure_does_not_reopen_the_paper(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from src.services.study.tutor import TutorError
+
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), Model(),
+                           research_python=Path("research"))
+    await finished(service, service.submit("tg:1", "1706.03762")["job_id"])
+    turns = service.store.context()["turns"]
+    async def unavailable(job_id):
+        raise TutorError("research_worker_unavailable")
+    monkeypatch.setattr(service, "_deep", unavailable)
+    job = await finished(service, service.submit("tg:2", "/deep اشرح الطريقة")["job_id"])
+    assert job["status"] == "failed" and job["result"]["failure_code"] == "research_worker_unavailable"
+    assert service.store.context()["turns"] == turns
+    assert "بس فتحتها" not in job["result"]["text"]
+    await service.aclose()
+
+
 @pytest.mark.parametrize("code", ["study_provider_http_503", "study_memory_unavailable"])
 async def test_provider_failure_does_not_activate_the_paper(tmp_path, code):
     from src.services.study.tutor import TutorError
