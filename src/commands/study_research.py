@@ -50,7 +50,7 @@ async def run_job(job_id: str) -> dict:
         system += ("Answer only the question, in at most three focused sections; do not repeat the introductory lesson. "
                    "For a paper section, each claim's evidence_id must be ONE snippet ID from the tools' evidence entries "
                    "(e.g. p1b0s0), not a block ID, whose text states that claim. ")
-        system += "Return your final answer as JSON matching this schema: " + json.dumps(lesson_schema(tools.document.blocks, followup=True))
+        system += "Return your final answer as JSON matching this schema: " + json.dumps(lesson_schema(tools.document.blocks, followup=True, compact=True))
         agent = create_study_research(model, tools, system)
         context = store.context()
         payload = {"question": job["payload"]["text"][6:], "depth": store.preferences()["depth"],

@@ -1,5 +1,6 @@
 """Explicit initial profiles, not a claim of live schema qualification."""
 
+# Legacy assistant/dev API profiles; the paper tutor uses study.models.DEFAULT_PROFILE.
 REGISTERED_HF_MODELS = frozenset({
     "openai/gpt-oss-120b:groq",
     "openai/gpt-oss-120b:fireworks-ai",

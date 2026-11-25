@@ -8,6 +8,8 @@ from typing import Literal
 
 InputEstimate = Literal["gpt_oss_tokenizer", "glm_tokenizer", "utf8_bytes_div_3"]
 ESTIMATES = ("gpt_oss_tokenizer", "glm_tokenizer", "utf8_bytes_div_3")
+# Pre-call estimation refuses above 20,000, but accepted provider usage may report 21,000.
+WORST_INPUT_TOKENS = 21_000
 
 
 @dataclass(frozen=True)

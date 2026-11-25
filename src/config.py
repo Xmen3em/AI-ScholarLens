@@ -71,6 +71,7 @@ class Settings(DefaultSettings):
     hf_inference_enabled: bool = False
     hf_token: SecretStr | None = None
     hf_models: Annotated[list[str], NoDecode] = Field(default=["openai/gpt-oss-120b:groq"], min_length=1, max_length=2)
+    # Legacy assistant/dev API defaults; the paper tutor uses study.models.DEFAULT_PROFILE (GLM-5.3).
     hf_default_model: str = "openai/gpt-oss-120b:groq"
     hf_timeout_seconds: float = Field(default=30, ge=1, le=30)
 

@@ -135,3 +135,15 @@ def test_the_gate_survives_a_restart(db_path, clock):
     first.redeem(111, code)
     second = AccessGate(db_path, AccessSettings(_env_file=None), OWNER, now=clock)
     assert second.role(111) == "student" and second.role(OWNER) == "owner"
+
+
+def test_invite_codes_ignore_inner_whitespace(gate):
+    [code] = gate.create_invites(1)
+    assert gate.redeem(111, code[:3] + " \t\n" + code[3:].lower())
+
+
+def test_startup_demotes_a_stale_owner_role(db_path, clock):
+    first = AccessGate(db_path, AccessSettings(_env_file=None), OWNER, now=clock)
+    AccessGate(db_path, AccessSettings(_env_file=None), OWNER + 1, now=clock)
+    assert first.role(OWNER) == "student"
+    assert first.role(OWNER + 1) == "owner"

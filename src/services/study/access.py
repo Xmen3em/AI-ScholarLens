@@ -1,7 +1,7 @@
 """Invite-only beta access: members, invites, notes, daily limits and the dollar ledger (docs/specs/multi-user.md §2–3).
 
 The tables live beside the study store in the same SQLite file. Invite codes are stored only
-as SHA-256; a code is trimmed and upper-cased before it is checked.
+as SHA-256; all whitespace is removed and the code is upper-cased before it is checked.
 """
 
 import hashlib
@@ -18,19 +18,18 @@ from zoneinfo import ZoneInfo
 
 from src.services.study import access_text
 from src.services.study.access_settings import AccessSettings
-from src.services.study.models import DEFAULT_PROFILE, call_cost_usd
+from src.services.study.models import DEFAULT_PROFILE, WORST_INPUT_TOKENS, call_cost_usd
 
 CAIRO = ZoneInfo("Africa/Cairo")
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 CODE_LENGTH = 10
 INVITE_SECONDS = 7 * 86400
-WORST_INPUT_TOKENS = 20000
 Role = Literal["owner", "student"]
 Kind = Literal["paper", "question", "other"]
 
 
 def _hash(code: str) -> str:
-    return hashlib.sha256(code.strip().upper().encode()).hexdigest()
+    return hashlib.sha256("".join(code.split()).upper().encode()).hexdigest()
 
 
 class AccessGate:
@@ -59,6 +58,8 @@ class AccessGate:
             """)
             db.execute("INSERT INTO members(user, role, joined, last_active) VALUES(?, 'owner', ?, ?) "
                        "ON CONFLICT(user) DO UPDATE SET role='owner', revoked=0", (owner_id, self.now(), self.now()))
+            # A different configured owner must not inherit the old owner's commands on restart.
+            db.execute("UPDATE members SET role='student' WHERE role='owner' AND user!=?", (owner_id,))
 
     @contextmanager
     def _db(self):
@@ -149,12 +150,17 @@ class AccessGate:
         return call_cost_usd(DEFAULT_PROFILE, None, estimate=WORST_INPUT_TOKENS)
 
     def allow_message(self, user: int) -> bool:
+        now = self.now()
+        # Expire every sender, not just the current one: strangers cannot grow this dict forever.
+        for sender in [sender for sender, window in self._messages.items()
+                       if not window or window[-1] <= now - 60]:
+            del self._messages[sender]
         window = self._messages.setdefault(user, deque())
-        while window and window[0] <= self.now() - 60:
+        while window and window[0] <= now - 60:
             window.popleft()
         if len(window) >= self.settings.messages_per_minute:
             return False
-        window.append(self.now())
+        window.append(now)
         return True
 
     def _day_row(self, db, user: int, day: str) -> sqlite3.Row:

@@ -34,6 +34,7 @@ class LearningResponse(BaseModel):
     kind: Literal["general_explanation", "clarification", "out_of_scope"]
     query: str = Field(min_length=1, max_length=500)
     answer: str = Field(min_length=1, max_length=2400)
+    # Legacy assistant/dev API; paper lessons use study.models.DEFAULT_PROFILE.
     model: Literal["openai/gpt-oss-120b:cerebras"]
     model_calls: Literal[1] = 1
 

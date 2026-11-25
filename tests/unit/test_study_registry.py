@@ -56,6 +56,8 @@ class Harness:
                                         research_python=None, token=SecretStr("x" * 40),
                                         model_factory=lambda store, audit: FakeModel(store, audit, self.pool, hold, fail_unknown))
         self.app = FastAPI()
+        self.registry.on_owner_service = lambda service: setattr(self.app.state, "study", service)
+        self.app.state.study = self.registry.service(OWNER)
         install_multi_user(self.app, self.gate, self.registry, self.path, OWNER)
         add_study_routes(self.app)
         self.client = httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url="http://local")
@@ -166,6 +168,15 @@ async def test_revoked_member_gets_the_revoked_note(h):
     assert await h.send(111, "hello") == {"reply": access_text.REVOKED}
 
 
+async def test_revoked_user_cannot_claim_a_delivery(h):
+    h.join(111)
+    job = await h.done(111, (await h.send(111, "1706.03762"))["job_id"])
+    await h.send(OWNER, "/revoke 111")
+    response = await h.client.post("/api/v1/study/claim", json={"job_id": job["id"], "user_id": 111})
+    assert response.status_code == 404
+    assert (await h.client.post("/api/v1/study/pending")).json()["jobs"] == []
+
+
 async def test_owner_commands_need_the_owner_role(h):
     h.join(111)
     assert (await h.send(111, "/invite 2"))["reply"] == HELP
@@ -210,6 +221,24 @@ async def test_too_many_messages_are_slowed_down(h):
     for _ in range(6):
         await h.send(111, "/usage")
     assert await h.send(111, "/usage") == {"reply": access_text.TOO_FAST}
+
+
+async def test_an_over_rate_non_member_stays_silent(h):
+    for _ in range(7):
+        await h.send(999, "1706.03762")
+    assert await h.send(999, "1706.03762") == {"reply": None}
+
+
+async def test_privacy_reports_the_configured_retention(h):
+    h.gate.settings = h.gate.settings.model_copy(update={"retention_days": 45})
+    h.join(111)
+    assert "45 يوم" in (await h.send(111, "/privacy"))["reply"]
+
+
+async def test_members_show_the_joined_date(h):
+    h.join(111)
+    members = (await h.send(OWNER, "/members"))["reply"]
+    assert "انضم 2026-11-04" in members
 
 
 async def test_ceiling_refuses_before_any_job(tmp_path):
@@ -265,18 +294,61 @@ async def test_queued_jobs_report_their_place(tmp_path):
         await h.aclose()
 
 
+async def test_revoke_cancels_a_running_job_and_erases_its_payload(tmp_path):
+    hold = asyncio.Event()
+    h = Harness(tmp_path, hold=hold)
+    try:
+        h.join(111)
+        submitted = await h.send(111, "1706.03762")
+        assert (await h.send(OWNER, "/revoke 111"))["reply"]
+        job = await h.done(111, submitted["job_id"])
+        assert job["status"] == "failed" and job["payload"] == {} and job["result"] is None
+        assert not any(row["user"] == 111 for row in (await h.client.post("/api/v1/study/pending")).json()["jobs"])
+        assert h.gate.owner_usage()["reserved"] == 0
+    finally:
+        hold.set()
+        await h.aclose()
+
+
+async def test_progress_keeps_every_job_beyond_the_delivery_page(h):
+    h.join(111, 222)
+    service_a, service_b = h.registry.service(111), h.registry.service(222)
+    ids = [f"{i:032x}" for i in range(16)]
+    service_a.progress.update({job: "reading" for job in ids[:8]})
+    service_b.progress.update({job: "reading" for job in ids[8:]})
+    assert len((await h.client.post("/api/v1/study/pending")).json()["running"]) == 16
+
+
+async def test_owner_app_service_is_replaced_after_idle_close(h):
+    closed = h.app.state.study
+    h.registry._used[OWNER] = -2000
+    await h.registry.close_idle()
+    assert h.app.state.study is not closed
+
+
 async def test_undeliverable_marks_the_student_inactive(h):
     h.join(111)
     response = await h.client.post("/api/v1/study/undeliverable", json={"user_id": 111})
     assert response.status_code == 200 and h.gate.is_inactive(111)
 
 
+async def test_pending_skips_blocked_students_until_they_write(h):
+    h.join(111)
+    await h.done(111, (await h.send(111, "1706.03762"))["job_id"])
+    await h.client.post("/api/v1/study/undeliverable", json={"user_id": 111})
+    assert (await h.client.post("/api/v1/study/pending")).json()["jobs"] == []
+    await h.send(111, "/usage")
+    assert (await h.client.post("/api/v1/study/pending")).json()["jobs"] != []
+
+
 async def test_sweep_forgets_inactive_students_never_the_owner(h):
     h.join(111)
+    StudyStore(h.path, "111").activate(paper().arxiv_id, {"title": "t"})
     StudyStore(h.path, "111").activate(paper().arxiv_id, {"title": "t"})
     StudyStore(h.path, str(OWNER)).activate(paper().arxiv_id, {"title": "t"})
     h.clock.advance(31 * 86400)
     assert h.registry.sweep(30) == 1
+    assert h.registry.sweep(30) == 0  # already forgotten students are not swept again
     assert StudyStore(h.path, "111").context() is None and StudyStore(h.path, str(OWNER)).context() is not None
 
 

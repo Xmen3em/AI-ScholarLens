@@ -127,12 +127,15 @@ COMPARISON_REQUEST = re.compile(r"أحسن|أفضل|أعلى|الأعلى|قار
                                 re.IGNORECASE)
 
 
-def lesson_schema(blocks: list[EvidenceBlock], *, followup: bool = False) -> dict:
+def lesson_schema(blocks: list[EvidenceBlock], *, followup: bool = False, compact: bool = False) -> dict:
     schema = LessonDraft.model_json_schema()
     if followup:
         schema["properties"]["sections"]["maxItems"] = 3
     identities = [e["id"] for e in evidence_catalog(blocks)]
-    schema["$defs"]["DraftSection"]["properties"]["evidence_ids"]["items"]["enum"] = identities
+    # Paper sections use claims; non-paper evidence IDs are validated by validate_draft.
+    # /deep embeds this schema in the model prompt, so do not repeat the same enum there.
+    if not compact:
+        schema["$defs"]["DraftSection"]["properties"]["evidence_ids"]["items"]["enum"] = identities
     # "" keeps a claim without a valid source representable, so it is withheld rather than invented.
     schema["$defs"]["DraftClaim"]["properties"]["evidence_id"]["enum"] = identities + [""]
     return schema
@@ -326,7 +329,8 @@ async def check_claims(model, job_id: str, draft: ClaimDraft, *, blocks: list[Ev
     items: list[dict] = [{"id": f"c{i}", "claim": claim.text, "quote": claim.support.quote}
                          for i, claim in enumerate(claims) if claim.support]
     items += [{"id": f"a{i}", "analogy": item.text} for i, item in enumerate(analogies)]
-    if not items:
+    if not claims or not items:
+        # Analogies alone are labelled teaching aids; do not spend a provider call on them.
         return draft
     lookup = {block.id: block for block in blocks}
     context, remaining = [], 16000
@@ -415,9 +419,10 @@ def render_lesson(lesson: Lesson, blocks: list[EvidenceBlock], source_url: str, 
     if withheld:
         # Withheld claims are never shown; only how many, and where.
         count = sum(withheld.values())
-        amount = "جملة واحدة" if count == 1 else f"{count} جمل"
+        amount = "جملة واحدة" if count == 1 else ("جملتين ماقدرتش أتأكد منهم" if count == 2 else f"{count} جمل")
         names = "، ".join(f"«{heading}»" for heading in withheld)
-        sections.append(f"⚠️ شلت {amount} ماقدرتش أتأكد منها من نص الورقة (في {names}). اسألني عنها بسؤال أضيق.")
+        tail = " من نص الورقة" if count == 2 else " ماقدرتش أتأكد منها من نص الورقة"
+        sections.append(f"⚠️ شلت {amount}{tail} (في {names}). اسألني عنها بسؤال أضيق.")
     sections.append("🔗 المصدر والنسخة: " + source_url)
     return "\n".join(rtl_line(line) for line in "\n\n".join(sections).split("\n"))
 
@@ -508,8 +513,15 @@ class StudyModel:
                         raise ValueError("invalid_output")
                     if schema:
                         from jsonschema import validate
-
-                        validate(parsed, schema)
+                        from jsonschema.exceptions import ValidationError as SchemaValidationError
+                        try:
+                            validate(parsed, schema)
+                        except SchemaValidationError:
+                            # A valid response outside the requested contract is a
+                            # review failure, not a provider transport failure.
+                            raise TutorError("review_validation_failed" if purpose == "grounding_review"
+                                             else "study_response_invalid_or_unavailable",
+                                             diagnostic="ValidationError") from None
                     result = {"output": parsed, "message": message, "usage": usage}
                 if self.audit is not None:
                     self.audit({"purpose": purpose, "result": {"output": result.get("output"), "usage": result["usage"]}})

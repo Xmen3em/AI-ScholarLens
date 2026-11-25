@@ -5,7 +5,7 @@ import pytest
 from pydantic import SecretStr
 from src.services.study import access_text
 from src.services.telegram_bot import OffsetStore, PrivateTelegramBot
-
+from src.services.telegram_policy import HELP_TEXT
 from tests.unit.test_study_telegram import telegram_calls
 from tests.unit.test_telegram_bot import KEY, settings
 from tests.unit.test_telegram_policy import update
@@ -137,6 +137,34 @@ async def test_owner_only_bot_ignores_other_users(stub_httpx, tmp_path):
     assert not calls
 
 
+@pytest.mark.anyio
+async def test_an_inactive_student_is_skipped_without_claiming_the_delivery(stub_httpx, tmp_path):
+    seen = []
+    jobs = [{"id": JOB_A, "status": "ready", "user": STUDENT}, {"id": JOB_B, "status": "ready", "user": OTHER}]
+
+    def claim(body):
+        if body["user_id"] == STUDENT:
+            pytest.fail("an inactive student's delivery was claimed")
+        return {"claimed": True, "result": {"text": "شرح"}}
+    calls = stub_httpx(api(pending=[{"jobs": jobs, "running": []}], seen=seen, claim=claim))
+    async with bot_for(tmp_path) as bot:
+        bot.inactive.add(STUDENT)
+        await bot.deliver_study()
+    assert ("claim", {"job_id": JOB_A, "user_id": STUDENT}) not in seen
+    assert ("claim", {"job_id": JOB_B, "user_id": OTHER}) in seen
+    assert not any(call["chat_id"] == STUDENT for call in telegram_calls(calls, "sendMessage"))
+
+
+@pytest.mark.anyio
+async def test_owner_text_over_512_characters_uses_the_legacy_path(stub_httpx, tmp_path):
+    from tests.unit.test_telegram_policy import OWNER
+
+    seen = []
+    calls = stub_httpx(api(seen=seen))
+    async with bot_for(tmp_path) as bot:
+        await bot.handle(from_user("what " + "x" * 508, OWNER))
+    assert seen == []
+    assert [call["text"] for call in telegram_calls(calls, "sendMessage")] == [HELP_TEXT]
 @pytest.mark.anyio
 async def test_a_photo_403_for_one_student_does_not_block_another(stub_httpx, tmp_path):
     # Final review, Minor 2 (Review Focus 4): the study-map photo path must handle a blocked student too.

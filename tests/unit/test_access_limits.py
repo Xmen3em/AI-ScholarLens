@@ -32,8 +32,8 @@ def student(gate):
 
 
 def test_worst_call_is_the_profiles_worst_case(gate):
-    # GLM-5.3: 20,000 input tokens at $0.90/M plus 3,000 output tokens at $4.00/M.
-    assert gate.worst_call_usd() == pytest.approx(0.030)
+    # GLM-5.3: accepted usage up to 21,000 input tokens at $0.90/M plus 3,000 output tokens at $4.00/M.
+    assert gate.worst_call_usd() == pytest.approx(0.0309)
 
 
 def test_only_delivered_answers_count(gate, student):
@@ -86,7 +86,7 @@ def test_charge_replaces_the_reservation(gate, student):
     gate.bind("k1", "job1")
     gate.charge("job1", 0.01)
     usage = gate.owner_usage()
-    assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == pytest.approx(0.05)
+    assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == pytest.approx(2 * 0.0309 - 0.01)
     gate.settle("job1", delivered_kind="question")
     usage = gate.owner_usage()
     assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == 0
@@ -139,13 +139,27 @@ def test_rate_window(gate, student, clock):
     assert gate.allow_message(student)
 
 
+def test_the_rate_window_forgets_idle_senders(gate, student, clock):
+    for user in range(5000):
+        assert gate.allow_message(user)
+    clock.advance(61)
+    assert gate.allow_message(student)
+    assert set(gate._messages) == {student}
+
+
+def test_worst_case_covers_the_usage_limit_study_model_accepts(gate):
+    # The provider may report 21,000 input tokens; the pre-call estimate has headroom,
+    # but the missing-usage worst case must cover the whole accepted response.
+    assert gate.worst_call_usd() == pytest.approx((21000 * 0.90 + 3000 * 4.00) / 1e6)
+
+
 def test_ledger_survives_a_restart(tmp_path, clock):
     first = make_gate(tmp_path, clock)
     [student] = join(first, 111)
     first.admit(student, "paper", "k1", 2)
     first.charge("k1", 0.02)
     second = make_gate(tmp_path, clock)
-    assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.04)
+    assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.0418)
 
 
 def test_requests_without_model_calls_pass_a_reached_ceiling(tmp_path, clock):

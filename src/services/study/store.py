@@ -114,6 +114,11 @@ class StudyStore:
             db.execute("UPDATE jobs SET status='interrupted',result=? WHERE owner=? AND status='running'",
                        (_json({"text": RECOVERED_TEXT}), self.owner))
 
+    def running(self) -> list[dict]:
+        with self._db() as db:
+            return [self._job(row) for row in db.execute("SELECT * FROM jobs WHERE owner=? AND status='running'",
+                                                        (self.owner,))]
+
     def reserve_attempt(self, job_id: str, purpose: str, model: str) -> int:
         with self._db() as db:
             job = db.execute("SELECT * FROM jobs WHERE owner=? AND id=?", (self.owner, job_id)).fetchone()
@@ -228,6 +233,12 @@ class StudyStore:
             db.execute("DELETE FROM state WHERE owner=? AND key!='attempt_ceiling'", (self.owner,))
             db.execute("DELETE FROM papers WHERE owner=?", (self.owner,))
             db.execute("UPDATE jobs SET payload='{}', result=NULL,delivery=1 WHERE owner=? AND status!='running'", (self.owner,))
+
+    def fail_and_scrub(self, job_id: str) -> bool:
+        """Revoke an in-flight job: it cannot finish or deliver its payload afterwards."""
+        with self._db() as db:
+            return db.execute("UPDATE jobs SET status='failed',payload='{}',result=NULL,delivery=1 "
+                              "WHERE owner=? AND id=? AND status='running'", (self.owner, job_id)).rowcount == 1
 
     def fingerprint(self) -> str:
         return hashlib.sha256(self.owner.encode()).hexdigest()[:12]

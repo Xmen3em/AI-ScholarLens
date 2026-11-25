@@ -24,6 +24,7 @@ from src.services.pc_configuration import preview_settings
 from src.services.search import SearchService
 from src.services.study.access_settings import AccessSettings
 
+# Legacy assistant/dev API model; the selected-paper tutor uses study.models.DEFAULT_PROFILE.
 MODEL = "openai/gpt-oss-120b:cerebras"
 ADMISSION_MIB = 1024
 LIVE_MIB = 600
@@ -111,7 +112,8 @@ def create_development_app(settings: Settings, *, study_owner: int | None = None
         pool = ModelPool(settings.hf_token, access.parallel_jobs)
         owned.push_async_callback(pool.aclose)
         registry = ServiceRegistry(path, pool, gate, ArxivIntake(public), PaperContentService(root / "sources", public),
-                                   owner_id=study_owner, research_python=research_python, token=settings.hf_token)
+                                   owner_id=study_owner, research_python=research_python, token=settings.hf_token,
+                                   on_owner_service=lambda service: setattr(app.state, "study", service))
         owned.push_async_callback(registry.aclose)
         recover_all_interrupted(path)
         settle_interrupted(gate, path)

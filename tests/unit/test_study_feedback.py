@@ -605,7 +605,7 @@ async def test_degenerate_and_unrequested_superiority_sections_are_withheld_not_
     assert (job["result"]["review"]["claims"], job["result"]["review"]["kept"]) == (3, 1)
     text = job["result"]["text"]
     assert CLEAN in text and "ـ" * 6 not in text and "متفوق" not in text
-    assert "⚠️ شلت 2 جمل ماقدرتش أتأكد منها من نص الورقة (في «الطريقة»)." in text
+    assert "⚠️ شلت جملتين ماقدرتش أتأكد منهم من نص الورقة (في «الطريقة»)." in text
     await service.aclose()
 
 
@@ -629,6 +629,15 @@ def test_one_withheld_claim_reads_as_a_single_sentence():
                          text="The model retrieves documents. It then generates an answer.")],
                          "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text", withheld={"الفكرة": 1})
     assert "⚠️ شلت جملة واحدة ماقدرتش أتأكد منها من نص الورقة (في «الفكرة»)." in text
+
+
+def test_two_withheld_claims_read_as_two_sentences():
+    from src.services.study.tutor import render_lesson
+
+    text = render_lesson(example_lesson(), [EvidenceBlock(id="p1b0", page=1, section="Method",
+                         text="The model retrieves documents. It then generates an answer.")],
+                         "https://arxiv.org/abs/2005.11401v4", title="RAG", coverage="full_text", withheld={"الفكرة": 2})
+    assert "⚠️ شلت جملتين ماقدرتش أتأكد منهم" in text
 
 
 def test_lessons_stored_before_v7_still_render():

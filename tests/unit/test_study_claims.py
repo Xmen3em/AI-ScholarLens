@@ -223,3 +223,38 @@ def test_check_prompt_asks_for_the_shortest_proof():
     from src.services.study.tutor import CLAIM_PROMPT
 
     assert "SHORTEST" in CLAIM_PROMPT
+
+
+def test_schema_does_not_repeat_the_catalog_for_deep_research():
+    import json
+    schema = lesson_schema(BLOCKS, followup=True, compact=True)
+    assert "enum" not in schema["$defs"]["DraftSection"]["properties"]["evidence_ids"]["items"]
+    assert len(json.dumps(schema)) < len(json.dumps(lesson_schema(BLOCKS, followup=True)))
+
+
+@pytest.mark.anyio
+async def test_an_unknown_verdict_id_fails_the_schema_validation(tmp_path):
+    from src.services.study.store import StudyStore
+    from src.services.study.tutor import StudyModel
+    from pydantic import SecretStr
+    import httpx
+    draft = validate_draft(draft_of(paper(claim(SEQ, "p6b1s0"))), BLOCKS)
+    store = StudyStore(tmp_path / "state.sqlite3", "owner")
+    job = store.create_job("test", {})
+    body = {"choices": [{"index": 0, "finish_reason": "stop", "message": {
+        "role": "assistant", "content": json.dumps({"verdicts": [verdict("c9")]})}}],
+        "usage": {"prompt_tokens": 100, "completion_tokens": 20}}
+    async with httpx.AsyncClient(transport=httpx.MockTransport(lambda _: httpx.Response(200, json=body))) as client:
+        model = StudyModel(SecretStr("private-test"), store, client=client, memory=lambda: 2000, counter=lambda _: 100)
+        with pytest.raises(TutorError, match="review_validation_failed"):
+            await check_claims(model, job["id"], draft, blocks=BLOCKS)
+
+
+@pytest.mark.anyio
+async def test_an_analogy_without_claims_is_not_a_paid_check():
+    class Refuse:
+        async def complete(self, *args, **kwargs):
+            raise AssertionError("only an analogy needs no paid check")
+    analogy = {"heading": "تشبيه", "kind": "analogy", "text": "تشبيه محلي للتوضيح.", "evidence_ids": [], "claims": []}
+    draft = validate_draft(draft_of(analogy), BLOCKS)
+    assert await check_claims(Refuse(), "job", draft, blocks=BLOCKS) is draft

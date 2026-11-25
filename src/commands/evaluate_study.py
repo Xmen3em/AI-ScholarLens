@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -14,11 +15,10 @@ from typing import Literal
 import httpx
 from src.commands.build_benchmark import DATA, PRIVATE_QUESTIONS, ROOT, load_questions, verify_frozen
 from src.resources import free_memory_mib as host_memory_mib
-from src.services.study.models import ModelProfile, call_cost_usd, load_profiles
+from src.services.study.models import WORST_INPUT_TOKENS, ModelProfile, call_cost_usd, load_profiles
 from src.services.study.store import StoreConflict, StudyStore
 
 STAGE_CEILINGS = {"qualify": 4, "dev": 96, "dev-rerun": 96, "dev-rerun-2": 96, "holdout": 144}
-WORST_INPUT_TOKENS = 20_000
 CALLS_PER_JOB = 2
 MIN_MEMORY_MIB = 1024
 OWNER = "paper-benchmark"
@@ -82,7 +82,10 @@ class SpendLedger:
 
     def charge(self, usd: float) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps({"spent_usd": self.spent() + usd}), encoding="utf-8")
+        # Keep the last settled total intact if the process dies during a write.
+        temporary = self.path.with_suffix(".tmp")
+        temporary.write_text(json.dumps({"spent_usd": self.spent() + usd}), encoding="utf-8")
+        os.replace(temporary, self.path)
 
     def allows(self, next_max_usd: float) -> bool:
         return self.spent() + next_max_usd <= self.ceiling_usd
@@ -116,6 +119,7 @@ async def run_stage(stage: str, profile: ModelProfile, jobs: list[BenchJob], *, 
     output = folder / "jobs.jsonl"
     done = {(row["paper"], row["job"]) for row in _rows(output)}
     store = StudyStore(folder / "state.sqlite3", OWNER)
+    interrupted = {row["id"] for row in store.running()}
     store.recover_interrupted()
     usages: list[dict] = []
     seen: dict = {}
@@ -149,8 +153,10 @@ async def run_stage(stage: str, profile: ModelProfile, jobs: list[BenchJob], *, 
                 submitted = {"reply": str(exc)}
             if service.tasks:
                 await asyncio.gather(*service.tasks, return_exceptions=True)
-            seconds = round(clock() - started, 3)
             stored = store.get_job(submitted["job_id"]) if submitted.get("job_id") else None
+            # A resumed interrupted job has no run to time; waiting on unrelated work
+            # must not turn its zero-second recovery into a fresh paid-call record.
+            seconds = 0.0 if stored is not None and stored["id"] in interrupted else round(clock() - started, 3)
             if stored is None:
                 row = _row(job, "failed", failure_code="not_submitted", seconds=seconds)
             else:

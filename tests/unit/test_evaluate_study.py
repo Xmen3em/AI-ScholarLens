@@ -119,11 +119,36 @@ async def test_resume_skips_finished_and_marks_interrupted_unknown(tmp_path):
 
     rows = await run(tmp_path, counting)
     assert rows[0]["status"] == "unknown" and rows[0]["calls"][0]["state"] == "unknown"
+    assert rows[0]["seconds"] == 0.0
     assert rows[0]["calls"][0]["cost_usd"] == pytest.approx(worst_call_usd(QWEN))
     assert [row["status"] for row in rows[1:]] == ["blocked"] * 3
     assert sent == []
     again = await run(tmp_path, counting)
     assert again == rows and sent == []
+
+
+def test_spend_ledger_replacement_is_atomic(tmp_path, monkeypatch):
+    ledger = SpendLedger(tmp_path / "spend.json")
+    ledger.charge(0.01)
+    replacements = []
+    original = evaluate_study.os.replace
+    monkeypatch.setattr(evaluate_study.os, "replace", lambda source, target: replacements.append((source, target)) or original(source, target))
+    ledger.charge(0.02)
+    assert ledger.spent() == pytest.approx(0.03)
+    assert replacements and not ledger.path.with_suffix(".tmp").exists()
+
+
+@pytest.mark.asyncio
+async def test_an_unrelated_busy_job_does_not_resettle_the_interrupted_job(tmp_path):
+    store_path = tmp_path / "dev-qwen-27b" / "state.sqlite3"
+    store_path.parent.mkdir(parents=True)
+    store = StudyStore(store_path, "paper-benchmark")
+    interrupted = store.create_job("bench:dev:other:L", {"text": "other"}, max_calls=4)
+    store.reserve_attempt(interrupted["id"], "lesson", QWEN.route)
+    rows = await run(tmp_path, honest)
+    assert rows[0]["status"] == "ready" and rows[0]["seconds"] > 0
+    assert store.get_job(interrupted["id"])["status"] == "interrupted"
+    assert len(rows[0]["calls"]) == 2
 
 
 @pytest.mark.asyncio

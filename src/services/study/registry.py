@@ -28,15 +28,18 @@ class ServiceRegistry:
     def __init__(self, path: Path, pool: ModelPool, gate: AccessGate, intake, content, *, owner_id: int,
                  research_python: Path | None, token: SecretStr, idle_seconds: float = 1800,
                  now: Callable[[], float] = time.monotonic,
-                 model_factory: Callable[[StudyStore, Callable[[dict], None]], Any] | None = None):
+                 model_factory: Callable[[StudyStore, Callable[[dict], None]], Any] | None = None,
+                 on_owner_service: Callable[[StudyService], None] | None = None):
         self.path, self.pool, self.gate, self.intake, self.content = path, pool, gate, intake, content
         self.owner_id, self.research_python, self.token = owner_id, research_python, token
         self.idle_seconds, self.now = idle_seconds, now
+        self.on_owner_service = on_owner_service
         self.model_factory = model_factory or self._study_model
         self._services: dict[int, StudyService] = {}
         self._models: dict[int, Any] = {}
         self._used: dict[int, float] = {}
         self._current: dict[int, str] = {}
+        self._forgotten: set[int] = set()
         self._audited: dict[str, int] = {}
 
     def _study_model(self, store: StudyStore, audit: Callable[[dict], None]):
@@ -55,6 +58,8 @@ class ServiceRegistry:
             research = self.research_python if user == self.owner_id else None
             self._models[user] = model
             self._services[user] = StudyService(store, self.intake, self.content, model, research_python=research)
+            if user == self.owner_id and self.on_owner_service is not None:
+                self.on_owner_service(self._services[user])
         return self._services[user]
 
     def _charge(self, user: int, record: dict) -> None:
@@ -111,6 +116,12 @@ class ServiceRegistry:
         service = self._services.pop(user, None)
         model = self._models.pop(user, None)
         self._used.pop(user, None)
+        self._forgotten.add(user)
+        job = self._current.get(user)
+        if job is not None:
+            # Mark the durable job before cancelling: an exception during close must not leave it deliverable.
+            StudyStore(self.path, str(user)).fail_and_scrub(job)
+            self._current.pop(user, None)
         if service is not None:
             await service.aclose()
         if model is not None:
@@ -119,22 +130,32 @@ class ServiceRegistry:
 
     async def close_idle(self) -> None:
         cutoff = self.now() - self.idle_seconds
-        for user in [user for user, used in self._used.items() if used < cutoff and not self.busy(user)]:
+        closing = [user for user, used in self._used.items() if used < cutoff and not self.busy(user)]
+        for user in closing:
             service, model = self._services.pop(user, None), self._models.pop(user, None)
             self._used.pop(user, None)
             if service is not None:
                 await service.aclose()
             if model is not None:
                 await model.aclose()
+        if self.owner_id in closing:
+            # app.state.study/status still points at the owner; never leave it closed.
+            self.service(self.owner_id)
 
     def sweep(self, retention_days: int) -> int:
         """Forget every student inactive past the retention window; the owner is never swept."""
         cutoff = self.gate.now() - retention_days * 86400
         swept = 0
         for member in self.gate.members():
-            if member["role"] == "student" and member["last_active"] < cutoff and not self.busy(member["user"]):
-                StudyStore(self.path, str(member["user"])).forget()
-                swept += 1
+            user = member["user"]
+            if member["role"] != "student" or user in self._forgotten or self.busy(user):
+                continue
+            if member["last_active"] >= cutoff:
+                self._forgotten.discard(user)
+                continue
+            StudyStore(self.path, str(user)).forget()
+            self._forgotten.add(user)
+            swept += 1
         return swept
 
     async def aclose(self) -> None:

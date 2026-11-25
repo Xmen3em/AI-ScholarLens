@@ -41,6 +41,7 @@ class Undeliverable(BaseModel):
 
 def install_multi_user(app: FastAPI, gate: AccessGate, registry: ServiceRegistry, path: Path, owner_id: int) -> None:
     app.state.gate, app.state.registry, app.state.study_path, app.state.owner_id = gate, registry, path, owner_id
+    app.state.study = registry.service(owner_id)
 
 
 def _multi(app: FastAPI) -> bool:
@@ -63,7 +64,9 @@ def _owner_command(app: FastAPI, command: str, argument: str) -> str | None:
                 continue
             today = gate.day_usage(member["user"])
             active = datetime.fromtimestamp(member["last_active"], CAIRO).strftime("%Y-%m-%d %H:%M")
-            lines.append(access_text.MEMBER_LINE.format(user=member["user"], role=member["role"], last_active=active, **today))
+            joined = datetime.fromtimestamp(member["joined"], CAIRO).strftime("%Y-%m-%d")
+            lines.append(access_text.MEMBER_LINE.format(user=member["user"], role=member["role"],
+                                                        joined=joined, last_active=active, **today))
         return "\n".join(lines)
     if command == "/usage":
         usage = gate.owner_usage()
@@ -88,7 +91,7 @@ async def _multi_message(app: FastAPI, request: StudyMessage) -> dict:
     user, text = request.user_id, request.text.strip()
     assert user is not None
     if not gate.allow_message(user):
-        return {"reply": access_text.TOO_FAST}
+        return {"reply": access_text.TOO_FAST if gate.role(user) is not None else None}
     command, _, argument = text.partition(" ")
     command = command.lower()
     role = gate.role(user)
@@ -103,7 +106,7 @@ async def _multi_message(app: FastAPI, request: StudyMessage) -> dict:
     if command == "/start" and argument.strip():
         return {"reply": access_text.WELCOME}
     if command == "/privacy":
-        return {"reply": access_text.PRIVACY}
+        return {"reply": access_text.privacy_text(gate.settings.retention_days)}
     if command in {"/help", "/start"}:
         lines = access_text.STUDENT_HELP_LINES + (access_text.OWNER_HELP_LINES if role == "owner" else ())
         return {"reply": HELP + "\n" + "\n".join(lines)}
@@ -158,9 +161,11 @@ def add_study_routes(app: FastAPI) -> None:
     @app.post("/api/v1/study/pending")
     async def pending():
         if _multi(app):
-            jobs = pending_deliveries_all(app.state.study_path)
+            jobs = [row for row in pending_deliveries_all(app.state.study_path)
+                    if app.state.gate.role(int(row["owner"])) is not None
+                    and not app.state.gate.is_inactive(int(row["owner"]))]
             return {"jobs": [{"id": row["id"], "status": row["status"], "user": int(row["owner"])} for row in jobs],
-                    "running": app.state.registry.running()[:15]}
+                    "running": app.state.registry.running()}
         study = app.state.study
         return {"jobs": [{"id": row["id"], "status": row["status"]} for row in study.store.pending_deliveries()],
                 "running": [{"id": job_id, "stage": stage} for job_id, stage in list(study.progress.items())[:5]]}
@@ -170,6 +175,8 @@ def add_study_routes(app: FastAPI) -> None:
         if _multi(app):
             if request.user_id is None:
                 raise HTTPException(status_code=422, detail="user_id is required")
+            if app.state.gate.role(request.user_id) is None:
+                raise HTTPException(status_code=404, detail="Study job not found")
             store = StudyStore(app.state.study_path, str(request.user_id))
         else:
             if request.user_id is not None:
