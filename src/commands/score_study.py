@@ -163,9 +163,20 @@ def rubric_sheet(rows_by_model: dict[str, list[dict]], papers: dict, seed: int =
 def rubric_means(scores_path: Path, key: dict) -> dict[str, float]:
     totals: dict[str, list[float]] = {}
     with scores_path.open(encoding="utf-8", newline="") as handle:
-        for entry in csv.DictReader(handle):
-            model = key[entry["code"]]["model"]
-            totals.setdefault(model, []).append((float(entry["clarity"]) + float(entry["teaching"])) / 2)
+        reader = csv.DictReader(handle)
+        if reader.fieldnames != ["code", "clarity", "teaching"]:
+            raise ValueError("rubric_scores: expected columns code,clarity,teaching")
+        entries = list(reader)
+    codes = [entry["code"].strip() for entry in entries]
+    if len(codes) != len(set(codes)) or set(codes) != set(key):
+        raise ValueError("rubric_scores: every sheet code exactly once")
+    for entry in entries:
+        code = entry["code"].strip()
+        ratings = [entry[field].strip() if type(entry[field]) is str else "" for field in ("clarity", "teaching")]
+        if any(rating not in {"1", "2", "3", "4", "5"} for rating in ratings):
+            raise ValueError("rubric_scores: ratings must be integers from 1 to 5")
+        model = key[code]["model"]
+        totals.setdefault(model, []).append((int(ratings[0]) + int(ratings[1])) / 2)
     return {model: statistics.mean(values) for model, values in totals.items()}
 
 

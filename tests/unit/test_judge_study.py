@@ -33,6 +33,20 @@ def test_agreement_and_kappa_by_hand():
     assert agreement([True] * 4, [True] * 4)["kappa"] == 1.0
 
 
+@pytest.mark.parametrize("owner_faithful", [None, 1, "true"])
+def test_non_boolean_calibration_labels_are_rejected(owner_faithful):
+    from src.commands.judge_study import validate_calibration_labels
+
+    rows = json.loads(open("evaluation/paper_benchmark/calibration.v1.json", encoding="utf-8").read())["rows"]
+    labelled = [{**row, "owner_faithful": True} for row in rows]
+    validate_calibration_labels(labelled)
+    labelled[0]["owner_faithful"] = owner_faithful
+    with pytest.raises(ValueError, match="calibration_labels"):
+        validate_calibration_labels(labelled)
+    with pytest.raises(ValueError, match="calibration_labels"):
+        validate_calibration_labels(labelled[:-1])
+
+
 def test_calibration_starts_from_the_science_cases():
     rows = calibration_rows()
     assert len(rows) == 16
@@ -43,6 +57,26 @@ def test_importing_the_judge_does_not_import_ragas():
     code = "import sys, src.commands.judge_study; print('ragas' in sys.modules)"
     output = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
     assert json.loads(output.strip().lower()) is False
+
+
+@pytest.mark.asyncio
+async def test_single_model_holdout_enforces_the_216_call_ceiling(tmp_path):
+    from src.commands.evaluate_study import SpendLedger
+    from src.commands.judge_study import JudgeMeter
+
+    state = tmp_path / "judge-calls.json"
+    state.write_text(json.dumps({"calls": 216}), encoding="utf-8")
+    meter = JudgeMeter(judge_profile(), SpendLedger(tmp_path / "spend.json"), ceiling=216, state=state)
+    with pytest.raises(RuntimeError, match="judge_call_ceiling"):
+        await meter.on_request(httpx.Request("POST", "https://example.test/v1/chat/completions"))
+
+
+def test_holdout_judging_accepts_only_the_glm_control():
+    from src.commands.judge_study import check_holdout_export
+
+    check_holdout_export([{"model": "control"}])
+    with pytest.raises(ValueError, match="holdout_control_only"):
+        check_holdout_export([{"model": "control"}, {"model": "baseline"}])
 
 
 def judge_profile():
@@ -65,13 +99,13 @@ async def test_judge_calls_are_charged_to_the_shared_ledger(tmp_path):
 
     ledger = SpendLedger(tmp_path / "spend.json")
     meter = JudgeMeter(judge_profile(), ledger, ceiling=10, state=tmp_path / "judge-calls.json")
-    bodies = [usage_body({"prompt_tokens": 1000, "completion_tokens": 100}), usage_body(None)]
+    bodies = [usage_body({"prompt_tokens": 1000, "completion_tokens": 100, "cost": 0.005}), usage_body(None)]
     transport = httpx.MockTransport(lambda request: httpx.Response(200, json=bodies.pop(0)))
     async with httpx.AsyncClient(transport=transport, event_hooks=meter.hooks()) as client:
         await client.post("https://example.test/v1/chat/completions", json={})
         await client.post("https://example.test/v1/chat/completions", json={})
-    # Real usage when the provider reports it, the worst case when it does not.
-    assert ledger.spent() == pytest.approx((1000 * 1.30 + 100 * 2.60) / 1e6 + worst_judge_usd(judge_profile()))
+    # Preserve the provider's reported cost; without any usage, charge the worst case.
+    assert ledger.spent() == pytest.approx(0.005 + worst_judge_usd(judge_profile()))
     assert json.loads((tmp_path / "judge-calls.json").read_text(encoding="utf-8"))["calls"] == 2
 
 

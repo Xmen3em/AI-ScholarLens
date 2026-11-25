@@ -16,7 +16,8 @@ from src.services.study.models import ModelProfile, call_cost_usd
 SCIENCE_CASES = Path("evaluation/paper_learning/science-cases.v1.json")
 CALIBRATION = ROOT / "calibration.v1.json"
 GATE_AGREEMENT, GATE_KAPPA = 0.85, 0.6
-CEILINGS = {"calibrate": 80, "judge": 864}
+# §6's owner decision reduced the holdout to GLM-5.3 alone: 18 papers × 4 jobs × 3 calls.
+CEILINGS = {"calibrate": 80, "judge": 216}
 Metric = Callable[[dict], Awaitable[float]]
 
 
@@ -44,6 +45,12 @@ def agreement(owner: list[bool], judge: list[bool]) -> dict:
 
 def calibrated(result: dict) -> bool:
     return result["agreement"] >= GATE_AGREEMENT and result["kappa"] >= GATE_KAPPA
+
+
+def validate_calibration_labels(rows: list[dict]) -> None:
+    """The owner, not Python truthiness, must supply exactly 40 Boolean verdicts."""
+    if len(rows) != 40 or any(type(row.get("owner_faithful")) is not bool for row in rows):
+        raise ValueError("calibration_labels")
 
 
 WORST_JUDGE_INPUT = 21_000
@@ -76,6 +83,7 @@ class JudgeMeter:
         await response.aread()
         try:
             usage = response.json().get("usage")
+            # Keep cost and cost_details for the shared provider-aware accounting rule.
             usage = usage if type(usage) is dict and {"prompt_tokens", "completion_tokens"} <= set(usage) else None
         except ValueError:
             usage = None
@@ -115,6 +123,12 @@ def check_calibration(rows: list[dict]) -> None:
             raise ValueError("private_paper")
         if not row.get("paper"):
             raise ValueError("paper_required")
+
+
+def check_holdout_export(rows: list[dict]) -> None:
+    """The owner approved judging only the one model that reached holdout."""
+    if not rows or any(row.get("model") != "control" for row in rows):
+        raise ValueError("holdout_control_only")
 
 
 def dev_calibration_rows(rows: list[dict], *, count: int = 24, seed: int = 20261103) -> list[dict]:
@@ -226,8 +240,10 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring
     if args.command == "calibrate":
         rows = json.loads(CALIBRATION.read_text(encoding="utf-8"))["rows"]
         check_calibration(rows)
-        if len(rows) != 40 or any(row["owner_faithful"] is None for row in rows):
-            raise SystemExit("calibration needs 40 rows, all labelled by the owner")
+        try:
+            validate_calibration_labels(rows)
+        except ValueError as error:
+            raise SystemExit("calibration needs 40 rows, all labelled true/false by the owner") from error
         verdicts = asyncio.run(score_rows([{"question": "", "answer": row["claim_ar"], "contexts": [row["quote_en"]],
                                             "reference": None} for row in rows], metrics))
         result = agreement([row["owner_faithful"] for row in rows], [item["faithfulness"] >= 0.5 for item in verdicts])
@@ -236,6 +252,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring
         print(json.dumps(result))
         return 0
     rows = [json.loads(line) for line in (DATA / "ragas-input.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    check_holdout_export(rows)
     asyncio.run(judge_into(rows, metrics, DATA / "judged.jsonl"))
     print("judged", len(rows), "answers;", meter.calls(), "judge calls so far; spent $%.2f" % meter.ledger.spent())
     return 0

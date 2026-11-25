@@ -1,5 +1,5 @@
 import pytest
-from src.commands.score_study import decide, model_metrics, nearest_rank, ragas_rows, rubric_sheet
+from src.commands.score_study import decide, model_metrics, nearest_rank, ragas_rows, rubric_means, rubric_sheet
 
 
 def row(paper, job, status, *, failure=None, diagnostic=None, seconds=10.0, calls=2, cost=0.01, review=None,
@@ -116,16 +116,29 @@ def test_ragas_export_keeps_only_kept_paper_claims():
     assert exported[1]["reference"] == "Fact one. Fact two." and exported[1]["model"] == "qwen"
 
 
-def test_rubric_sheet_hides_models_and_keys_every_code():
+@pytest.mark.parametrize("models,expected", [(("baseline", "qwen-27b", "qwen-397b", "control"), 24), (("control",), 6)])
+def test_rubric_sheet_hides_models_and_keys_every_available_lesson(models, expected):
     papers = {"papers": [{"id": f"p{index}", "field": field, "split": "holdout"}
                          for index, field in enumerate(("ml_nlp", "medicine", "physics", "biology", "economics", "systems"))]}
     rows_by_model = {model: [row(f"p{index}", "L", "ready", lesson=LESSON) for index in range(6)]
-                     for model in ("baseline", "qwen-27b", "qwen-397b", "control")}
+                     for model in models}
     sheet, key = rubric_sheet(rows_by_model, papers)
-    assert len(key) == 24 and sheet.count("## R") == 24
+    assert len(key) == expected and sheet.count("## R") == expected
     for model in rows_by_model:
         assert model not in sheet
     assert {entry["model"] for entry in key.values()} == set(rows_by_model)
+
+
+def test_rubric_scores_are_complete_exact_and_one_to_five(tmp_path):
+    key = {f"R{index:02}": {"model": "control", "paper": f"p{index}"} for index in range(1, 3)}
+    scores = tmp_path / "rubric-scores.csv"
+    scores.write_text("code,clarity,teaching\nR01,4,5\nR02,3,2\n", encoding="utf-8")
+    assert rubric_means(scores, key) == {"control": 3.5}
+    for text in ("code,clarity,teaching\nR01,4,5\n", "code,clarity,teaching\nR01,4,5\nR02,3,0\n",
+                 "code,clarity,teaching\nR01,4,5\nR01,3,2\n", "code,clarity,teaching\nR01,4,5\nR03,3,2\n"):
+        scores.write_text(text, encoding="utf-8")
+        with pytest.raises(ValueError, match="rubric_scores"):
+            rubric_means(scores, key)
 
 
 def test_non_finite_judge_scores_are_dropped_not_averaged(tmp_path):
