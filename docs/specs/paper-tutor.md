@@ -62,6 +62,21 @@ Use hand-reviewed misconception/feedback fixtures and stubbed transport first;
 later hosted evaluation has its own scope. Use common lint/type checks and the
 shared scientific/learning rubric; do not create tests that just repeat prompts.
 
+## Failed first lessons (owner decision, 25 November 2026)
+
+If PDF extraction produced content but the first lesson ends in
+`lesson_validation_failed`, save the validated paper metadata and activate it with no saved
+lesson. Reply exactly:
+
+> ماقدرتش أتأكد من شرح كامل من الورقة دي، بس فتحتها. اسألني عن جزء محدد زي الطريقة أو النتائج أو جدول.
+
+The job remains `failed`, so it costs no paper quota in the multi-user beta. No withheld
+claim or lesson text is shown or stored. `/notes` says no lesson is saved rather than
+falling back to the paper summary or raising a missing-lesson error. A follow-up may then
+answer from the extracted paper evidence. Provider/transport failures (including
+`study_provider_http_*` and `study_memory_unavailable`) never activate the paper.
+Benchmark rows remain gated on a `ready` first lesson, not merely an active paper.
+
 ## Acceptance and open choices
 
 PT-1: A first lesson is useful and short, its supported claims inspectable, and

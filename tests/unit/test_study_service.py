@@ -99,19 +99,42 @@ async def test_title_candidates_never_auto_activate_a_paper(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_failed_validation_cannot_activate_or_leak_an_unverified_lesson(tmp_path):
+async def test_failed_validation_opens_the_paper_without_leaking_an_unverified_lesson(tmp_path):
     class BadModel(Model):
         async def complete(self, *args, **kwargs):
             bad = lesson()
-            bad["sections"][0]["evidence_ids"] = ["Fabricated source quotation"]
+            bad["sections"][0]["claims"][0]["evidence_id"] = "invented"
             return {"output": bad}
 
     service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), BadModel())
     result = service.submit("tg:1", "/paper 1706.03762")
     job = await finished(service, result["job_id"])
     assert job["status"] == "failed"
+    assert job["result"]["failure_code"] == "lesson_validation_failed"
     assert "Fabricated" not in job["result"]["text"]
-    assert service.store.context() is None
+    assert "بس فتحتها" in job["result"]["text"]
+    assert service.store.context()["paper_id"] == "1706.03762v1"
+    assert service.store.paper("1706.03762v1")["lesson"] is None
+    assert "لسه مفيش شرح محفوظ" in service.submit("tg:2", "/notes")["reply"]
+    service.model = Model()
+    followup = await finished(service, service.submit("tg:3", "اشرح الطريقة")["job_id"])
+    assert followup["status"] == "ready" and service.store.context()["turns"]
+    await service.aclose()
+
+
+@pytest.mark.parametrize("code", ["study_provider_http_503", "study_memory_unavailable"])
+async def test_provider_failure_does_not_activate_the_paper(tmp_path, code):
+    from src.services.study.tutor import TutorError
+
+    class Unavailable(Model):
+        async def complete(self, *args, **kwargs):
+            raise TutorError(code)
+
+    service = StudyService(StudyStore(tmp_path / "state.sqlite3", "owner"), Intake(), Content(), Unavailable())
+    result = service.submit("tg:1", "/paper 1706.03762")
+    job = await finished(service, result["job_id"])
+    assert job["status"] == "failed" and job["result"]["failure_code"] == code
+    assert service.store.context() is None and service.store.paper("1706.03762v1") is None
     await service.aclose()
 
 

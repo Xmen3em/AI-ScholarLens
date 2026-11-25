@@ -96,6 +96,25 @@ async def h(tmp_path):
     await harness.aclose()
 
 
+async def test_content_failure_opens_the_paper_without_charging_a_paper_quota(h):
+    class WithholdAll(FakeModel):
+        async def _call(self, job, purpose, messages):
+            return {"output": {"title": "شرح", "sections": [{"heading": "الفكرة", "kind": "paper",
+                    "text": "", "evidence_ids": [], "claims": [{"text": "ادعاء بلا مصدر.", "evidence_id": ""}]}]}}
+
+    h.registry.model_factory = lambda store, audit: WithholdAll(store, audit, h.pool)
+    h.join(111)
+    result = await h.send(111, "1706.03762")
+    job = await h.done(111, result["job_id"])
+    assert job["status"] == "failed" and "بس فتحتها" in job["result"]["text"]
+    assert StudyStore(h.path, "111").context()["paper_id"] == "1706.03762v1"
+    assert h.gate.usage(111)["papers_left"] == 3
+    h.registry.service(111).model = FakeModel(StudyStore(h.path, "111"), lambda record: None, h.pool)
+    followup = await h.done(111, (await h.send(111, "اشرح الطريقة"))["job_id"])
+    assert followup["status"] == "ready"
+
+
+
 async def test_students_get_separate_papers_and_dialogue(h):
     h.join(111, 222)
     first = await h.send(111, "1706.03762")

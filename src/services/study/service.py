@@ -42,6 +42,8 @@ HELP = ("أهلًا! ابعت رابط arXiv أو رقم الورقة، أو /pa
 BUSY = "في طلب شغّال حاليًا. استنى النتيجة؛ مش هبدأ طلب تاني بالتوازي أو أكرر الاستدعاء تلقائيًا."
 # The worker stops its own agent loop at 95 s; this parent ceiling also covers process start/teardown.
 DEEP_WORKER_TIMEOUT_SECONDS = 105
+CONTENT_FAILURE_OPEN = "ماقدرتش أتأكد من شرح كامل من الورقة دي، بس فتحتها. اسألني عن جزء محدد زي الطريقة أو النتائج أو جدول."
+NO_SAVED_LESSON = "الورقة مفتوحة، بس لسه مفيش شرح محفوظ ليها. اسألني عن جزء محدد منها الأول."
 
 
 class StudyState(TypedDict, total=False):
@@ -170,6 +172,8 @@ class StudyService:
             if not context:
                 return {"reply": "لسه مفيش ورقة مختارة. ابعت /paper وبعدها اسم الورقة أو رابطها."}
             paper = self.store.paper(context["paper_id"])
+            if command == "/notes" and paper and not paper["lesson"]:
+                return {"reply": NO_SAVED_LESSON}
             if command == "/notes" and paper and paper["lesson"]:
                 return {"reply": self.notes(PaperContent.model_validate(paper["content"]), Lesson.model_validate(paper["lesson"]))}
             return {"reply": "الورقة الحالية: " + context["metadata"]["title"] + "\nhttps://arxiv.org/abs/" + context["paper_id"] +
@@ -261,6 +265,15 @@ class StudyService:
             raise
         except Exception as exc:
             code = exc.code if isinstance(exc, (ContentError, StudyInputError)) else "study_generation_unavailable"
+            opening = None
+            if isinstance(exc, TutorError) and str(exc) == "lesson_validation_failed":
+                # A content-level failure must not strand the parsed paper (owner, 25 Nov 2026).
+                # Only the validated paper metadata opens; no withheld text is saved or shown.
+                opening = await self._resolve({"job_id": job_id, "text": text})
+                opening = await self._extract({**opening, "job_id": job_id, "text": text})
+                document = opening["content"]
+                self.store.save_paper(document.paper.arxiv_id, document.model_dump())
+                self.store.activate(document.paper.arxiv_id, {"title": document.paper.title})
             failure = failure_payload(exc, default=code)
             code = failure["error"]
             messages = {
@@ -278,7 +291,10 @@ class StudyService:
                 "research_worker_unavailable": "ماقدرتش أشغّل بيئة /deep الاختيارية على الجهاز. الشرح العادي لسه متاح.",
                 "research_final_json_invalid": "وضع /deep رجّع إجابة نهائية مش بالشكل المطلوب، فمش هعرضها. مفيش إعادة تلقائية.",
             }
-            reply = messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية.")
+            if opening is not None:
+                reply = CONTENT_FAILURE_OPEN
+            else:
+                reply = messages.get(code, "ماقدرتش أكمل الطلب أو أتحقق من الشرح. ابعت طلب جديد لو تحب تحاول تاني؛ مفيش إعادة تلقائية.")
             result = {"failure_code": code, "diagnostic": failure.get("diagnostic", code)}
             review = getattr(exc, "review", None)
             if type(review) is dict:
