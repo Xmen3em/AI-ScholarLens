@@ -301,8 +301,10 @@ def test_changed_manifest_is_refused(tmp_path, monkeypatch):
         evaluate_study.main(["--stage", "dev", "--model", "baseline", "--execute"])
 
 
-def test_default_profile_is_the_baseline():
-    assert DEFAULT_PROFILE.name == "control"
+def test_default_profile_is_the_qualified_fireworks_profile():
+    from src.services.study.models import GLM_FIREWORKS_PROFILE
+
+    assert DEFAULT_PROFILE == GLM_FIREWORKS_PROFILE
 
 
 @pytest.mark.asyncio

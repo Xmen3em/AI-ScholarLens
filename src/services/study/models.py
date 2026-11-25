@@ -29,6 +29,9 @@ GPT_OSS_PROFILE = ModelProfile("baseline", "openai/gpt-oss-120b:cerebras", "gpt_
 # full format compliance and a 68 s p95 on 12 papers, against 67% for gpt-oss-120b.
 DEFAULT_PROFILE = ModelProfile("control", "zai-org/GLM-5.3:deepinfra", "glm_tokenizer",
                                {"reasoning_effort": "low"}, 0.90, 4.00, "2026-11-03")
+# Same model and tokenizer on the replacement provider; router prices checked 25 Nov 2026.
+GLM_FIREWORKS_PROFILE = ModelProfile("glm-fireworks", "zai-org/GLM-5.3:fireworks-ai", "glm_tokenizer",
+                                     {"reasoning_effort": "low"}, 0.70, 2.20, "2026-11-25")
 
 
 def estimate_input(profile: ModelProfile, serialized: str) -> int:

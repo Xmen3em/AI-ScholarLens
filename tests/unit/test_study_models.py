@@ -5,7 +5,15 @@ import httpx
 import pytest
 from pydantic import SecretStr
 from src.services.hf.tokenizer import VOCABULARY_PATH, count_input_tokens
-from src.services.study.models import DEFAULT_PROFILE, GPT_OSS_PROFILE, ModelProfile, call_cost_usd, estimate_input, load_profiles
+from src.services.study.models import (
+    DEFAULT_PROFILE,
+    GLM_FIREWORKS_PROFILE,
+    GPT_OSS_PROFILE,
+    ModelProfile,
+    call_cost_usd,
+    estimate_input,
+    load_profiles,
+)
 from src.services.study.store import StudyStore
 from src.services.study.tutor import MODEL, StudyModel, TutorError
 
@@ -42,11 +50,15 @@ async def test_gpt_oss_profile_request_is_byte_identical(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_production_sends_the_benchmarked_glm_request(tmp_path):
-    # The owner chose GLM-5.3 after the paper benchmark's development runs (3 Nov 2026).
-    assert MODEL == DEFAULT_PROFILE.route == "zai-org/GLM-5.3:deepinfra"
+async def test_production_sends_the_qualified_glm_fireworks_request(tmp_path):
+    # DeepInfra dropped the benchmarked route; production moved after Fireworks qualification.
+    assert DEFAULT_PROFILE == GLM_FIREWORKS_PROFILE
+    assert MODEL == DEFAULT_PROFILE.route == "zai-org/GLM-5.3:fireworks-ai"
+    assert DEFAULT_PROFILE.name == "glm-fireworks" and DEFAULT_PROFILE.input_estimate == "glm_tokenizer"
+    assert (DEFAULT_PROFILE.price_in_usd_per_m, DEFAULT_PROFILE.price_out_usd_per_m) == (0.70, 2.20)
+    assert DEFAULT_PROFILE.priced_on == "2026-11-25"
     body = json.loads(await sent_request(tmp_path))
-    assert body["model"] == "zai-org/GLM-5.3:deepinfra" and body["reasoning_effort"] == "low"
+    assert body["model"] == "zai-org/GLM-5.3:fireworks-ai" and body["reasoning_effort"] == "low"
     assert body["response_format"]["json_schema"]["strict"] is True
 
 
