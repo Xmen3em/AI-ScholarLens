@@ -1,4 +1,4 @@
-"""Frozen hosted-model profiles; the default is the production model, as the paper benchmark measured it."""
+"""Hosted-model profiles; the default is production, distinct from the frozen benchmark control."""
 
 import json
 import math
@@ -25,13 +25,10 @@ class ModelProfile:
 
 GPT_OSS_PROFILE = ModelProfile("baseline", "openai/gpt-oss-120b:cerebras", "gpt_oss_tokenizer",
                                {"reasoning_effort": "low"}, 0.35, 0.75, "2026-11-03")
-# The owner chose GLM-5.3 after the paper benchmark's development runs (3 Nov 2026): 94% delivered,
-# full format compliance and a 68 s p95 on 12 papers, against 67% for gpt-oss-120b.
-DEFAULT_PROFILE = ModelProfile("control", "zai-org/GLM-5.3:deepinfra", "glm_tokenizer",
-                               {"reasoning_effort": "low"}, 0.90, 4.00, "2026-11-03")
-# Same model and tokenizer on the replacement provider; router prices checked 25 Nov 2026.
+# The benchmark control stayed DeepInfra; production changed only after Fireworks qualification passed.
 GLM_FIREWORKS_PROFILE = ModelProfile("glm-fireworks", "zai-org/GLM-5.3:fireworks-ai", "glm_tokenizer",
                                      {"reasoning_effort": "low"}, 0.70, 2.20, "2026-11-25")
+DEFAULT_PROFILE = GLM_FIREWORKS_PROFILE
 
 
 def estimate_input(profile: ModelProfile, serialized: str) -> int:

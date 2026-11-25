@@ -148,6 +148,37 @@ successful usage responses. Further calls require fresh approval. Ignored local 
 are `data/eval/latency-check/parallel-call.json`, `parallel-call-2.json`, and
 `writer-error-labels.json`.
 
+## Fireworks route qualification (owner-approved, 25 November 2026)
+
+Production now uses `zai-org/GLM-5.3:fireworks-ai`, retaining
+`reasoning_effort: low` and the GLM tokenizer estimate. The free router listing
+showed Fireworks live with structured output at $0.70/M input and $2.20/M output
+on 25 November 2026. The owner separately approved one qualification run of at
+most four calls, with a $0.0852 token-derived worst case.
+
+One first lesson on the frozen dev paper `2410.13258v4` passed in **three calls**
+(one writer and two parallel grounding reviews), with **3/3 parseable outputs**,
+**17 kept of 25 claims** and **35.64 seconds** of measured job latency. Seven
+claims were withheld for `unverified_support` and one for `unsupported_number`;
+no provider error was returned. The shared ledger charged **$0.0261381** from
+the reported tokens at the router prices. The provider's own response cost
+fields totalled **$0.05812944**, so the ledger is an estimate, not confirmed
+provider spend. Its metadata implied approximately $1.40–$2.10/M input and
+$4.40/M output, inconsistent with the router listing. This discrepancy needs
+billing verification before treating the lower ledger figure as actual spend.
+
+The full record is in the ignored folder `data/eval/glm-fireworks-qualification/`
+(`qualification-report.json`, `qualification.json`, the job JSONL and its own
+store). The command is `python -m src.commands.qualify_glm_fireworks` for the
+plan, with `--execute` only after fresh owner approval. It shares the benchmark's
+$40 ledger but never writes the frozen benchmark files or its run store.
+
+**Latency interpretation:** this is a single successful lesson, not a comparison
+with the old provider's p95 or proof that the 90-second gate now passes. The
+historical DeepInfra measurements and recommendation below remain the evidence
+for that route. A representative latency or quality claim needs further approved
+runs; none were made for this provider change.
+
 ## Recommendation
 
 Stop repeating the current route. Its measured `model_not_supported` response prevents

@@ -32,8 +32,8 @@ def student(gate):
 
 
 def test_worst_call_is_the_profiles_worst_case(gate):
-    # GLM-5.3: accepted usage up to 21,000 input tokens at $0.90/M plus 3,000 output tokens at $4.00/M.
-    assert gate.worst_call_usd() == pytest.approx(0.0309)
+    # Fireworks GLM-5.3: 21,000 input tokens at $0.70/M plus 3,000 output tokens at $2.20/M.
+    assert gate.worst_call_usd() == pytest.approx(0.0213)
 
 
 def test_only_delivered_answers_count(gate, student):
@@ -68,14 +68,15 @@ def test_other_requests_need_no_count(tmp_path, clock):
 
 def test_owner_is_exempt_from_counts_not_the_ceiling(tmp_path, clock):
     gate = make_gate(tmp_path, clock, daily_papers=1, daily_usd_ceiling=0.10)
-    assert gate.admit(OWNER, "paper", "k1", 2) is None
+    assert gate.admit(OWNER, "paper", "k1", 3) is None
     gate.settle("k1", delivered_kind="paper")
-    assert gate.admit(OWNER, "paper", "k2", 2) is None  # over the count, still under the ceiling
-    assert gate.admit(OWNER, "paper", "k3", 2) == access_text.CEILING  # 0.06 + 0.06 > 0.10
+    assert gate.admit(OWNER, "paper", "k2", 3) is None  # over the count, still under the ceiling
+    assert gate.admit(OWNER, "paper", "k3", 3) == access_text.CEILING  # 0.0639 + 0.0639 > 0.10
 
 
 def test_parallel_reservations_never_exceed_the_ceiling(tmp_path, clock):
-    gate = make_gate(tmp_path, clock, daily_usd_ceiling=0.15)
+    # At Fireworks' $0.0213 worst case, two 2-call reservations fit and a third cannot.
+    gate = make_gate(tmp_path, clock, daily_usd_ceiling=0.10)
     students = join(gate, 111, 222, 333)
     refusals = [gate.admit(user, "question", f"k{user}", 2) for user in students]
     assert refusals.count(None) == 2 and refusals[2] == access_text.CEILING
@@ -86,7 +87,7 @@ def test_charge_replaces_the_reservation(gate, student):
     gate.bind("k1", "job1")
     gate.charge("job1", 0.01)
     usage = gate.owner_usage()
-    assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == pytest.approx(2 * 0.0309 - 0.01)
+    assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == pytest.approx(2 * 0.0213 - 0.01)
     gate.settle("job1", delivered_kind="question")
     usage = gate.owner_usage()
     assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == 0
@@ -150,7 +151,7 @@ def test_the_rate_window_forgets_idle_senders(gate, student, clock):
 def test_worst_case_covers_the_usage_limit_study_model_accepts(gate):
     # The provider may report 21,000 input tokens; the pre-call estimate has headroom,
     # but the missing-usage worst case must cover the whole accepted response.
-    assert gate.worst_call_usd() == pytest.approx((21000 * 0.90 + 3000 * 4.00) / 1e6)
+    assert gate.worst_call_usd() == pytest.approx((21000 * 0.70 + 3000 * 2.20) / 1e6)
 
 
 def test_ledger_survives_a_restart(tmp_path, clock):
@@ -159,7 +160,7 @@ def test_ledger_survives_a_restart(tmp_path, clock):
     first.admit(student, "paper", "k1", 2)
     first.charge("k1", 0.02)
     second = make_gate(tmp_path, clock)
-    assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.0418)
+    assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.0226)
 
 
 def test_requests_without_model_calls_pass_a_reached_ceiling(tmp_path, clock):

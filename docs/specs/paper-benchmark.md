@@ -225,6 +225,20 @@ longer, three of them two-call first lessons (median 60 s). The owner kept GLM-5
 The report states the latency miss; reducing first-lesson latency, and showing the
 student progress while a lesson is written, are follow-ups outside this benchmark.
 
+**Production provider change, 25 November 2026.** The benchmark measurements
+above are DeepInfra results; the frozen `control` profile remains unchanged and
+does not represent a Fireworks benchmark run. After DeepInfra stopped serving
+GLM-5.3 (`model_not_supported`), the owner approved qualification of
+`zai-org/GLM-5.3:fireworks-ai`. It passed one first lesson on dev paper
+`2410.13258v4` in three calls with 100% schema compliance, 17 kept claims and
+35.64 seconds of job latency. `glm-fireworks` became `DEFAULT_PROFILE`, retaining
+`reasoning_effort: low` and the GLM tokenizer estimate. The router listed
+$0.70/M input and $2.20/M output on that date. Token-derived cost was $0.0261381;
+the response's own cost fields totalled $0.05812944, so the shared ledger is a
+token-derived estimate rather than confirmed provider spend. This is one
+qualification lesson, not a new benchmark or p95 measurement; no provider error
+was returned.
+
 Switching the production model is a separate, owner-approved change. If one
 model writes best and another checks best, a writer/checker split is proposed
 as a follow-up, not decided here.

@@ -113,7 +113,7 @@ A day is the calendar day in `Africa/Cairo` (the `tzdata` package, already in
   ends. Exception: the owner's general-knowledge fallback before a paper is open
   runs on the older assistant path and is not counted; students never reach it.
 - **Reservations.** At admission a job reserves `max_calls × worst call` (at most
-  $0.0309 per call, hence up to $0.0927 for a three-call lesson on GLM-5.3) against today's ceiling,
+  $0.0213 per call, hence up to $0.0639 for a three-call lesson on Fireworks GLM-5.3) against today's ceiling,
   `STUDY_DAILY_USD_CEILING` (default `2.00`). As each call settles its real cost
   replaces part of the reservation; when the job ends the remainder is released.
   Admission requires `spent + reserved + this reservation ≤ ceiling`, so parallel

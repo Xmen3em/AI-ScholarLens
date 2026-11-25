@@ -206,15 +206,19 @@ def test_freeze_detects_any_changed_file(tmp_path):
 
 
 def test_models_file_loads_and_matches_spec_routes():
-    from src.services.study.models import DEFAULT_PROFILE, GPT_OSS_PROFILE, load_profiles
+    from src.services.study.models import (DEFAULT_PROFILE, GLM_FIREWORKS_PROFILE, GPT_OSS_PROFILE, ModelProfile,
+                                           load_profiles)
 
     profiles = load_profiles(ROOT / "models.v1.json")
     assert {name: profile.route for name, profile in profiles.items()} == {
         "baseline": "openai/gpt-oss-120b:cerebras", "qwen-27b": "Qwen/Qwen3.8-27B:deepinfra",
         "qwen-397b": "Qwen/Qwen3.5-397B-A17B:deepinfra", "control": "zai-org/GLM-5.3:deepinfra",
         "judge": "deepseek-ai/DeepSeek-V4-Pro:deepinfra"}
-    # Production runs exactly the profile the benchmark measured.
-    assert profiles["control"] == DEFAULT_PROFILE and profiles["baseline"] == GPT_OSS_PROFILE
+    # The frozen control still records the DeepInfra measurement after production's provider move.
+    assert profiles["control"] == ModelProfile("control", "zai-org/GLM-5.3:deepinfra", "glm_tokenizer",
+                                               {"reasoning_effort": "low"}, 0.90, 4.00, "2026-11-03")
+    assert profiles["control"] != DEFAULT_PROFILE and DEFAULT_PROFILE == GLM_FIREWORKS_PROFILE
+    assert profiles["baseline"] == GPT_OSS_PROFILE
     assert profiles["control"].input_estimate == "glm_tokenizer"
     assert all(profile.input_estimate == "utf8_bytes_div_3" for name, profile in profiles.items()
                if name not in {"baseline", "control"})

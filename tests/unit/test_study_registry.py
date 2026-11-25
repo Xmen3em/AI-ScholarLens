@@ -17,7 +17,7 @@ from tests.unit.test_access_gate import OWNER, Clock
 from tests.unit.test_study_service import Content, Intake, honest_verdicts, paper
 from tests.unit.test_study_tutor import lesson
 
-USAGE = {"prompt_tokens": 1000, "completion_tokens": 200}  # $0.0017 on GLM-5.3
+USAGE = {"prompt_tokens": 1000, "completion_tokens": 200}  # $0.00114 on Fireworks GLM-5.3
 
 
 class FakeModel:
@@ -145,7 +145,7 @@ async def test_a_delivered_lesson_counts_one_paper_and_its_real_cost(h):
     assert job["status"] == "ready"
     assert h.gate.usage(111)["papers_left"] == 2
     usage = h.gate.owner_usage()
-    assert usage["spent"] == pytest.approx(2 * 0.0017) and usage["reserved"] == 0
+    assert usage["spent"] == pytest.approx(2 * 0.00114) and usage["reserved"] == 0
 
 
 async def test_a_busy_submit_releases_its_reservation(tmp_path):

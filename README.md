@@ -4,7 +4,7 @@
 
 [بالمصري](README.ar.md) · [Paper-study guide](docs/paper-study-guide.md) · [Visual baseline guide](codebase-overview.html) · [How we built it](docs/build-story.md) · [MIT license](LICENSE)
 
-ScholarLens is an experimental paper-learning assistant with a private Telegram interface. Bring an AI paper from arXiv, receive an initial lesson in Egyptian Arabic, and explore that paper through follow-up questions, examples and comprehension checks. It uses **LangGraph** and **Hugging Face Inference Providers**. The selected-paper tutor uses **GLM-5.3** (`zai-org/GLM-5.3:deepinfra`); the legacy assistant/dev API retains `openai/gpt-oss-120b:cerebras` for its separate generation path.
+ScholarLens is an experimental paper-learning assistant with a private Telegram interface. Bring an AI paper from arXiv, receive an initial lesson in Egyptian Arabic, and explore that paper through follow-up questions, examples and comprehension checks. It uses **LangGraph** and **Hugging Face Inference Providers**. The selected-paper tutor uses **GLM-5.3** (`zai-org/GLM-5.3:fireworks-ai`); the legacy assistant/dev API retains `openai/gpt-oss-120b:cerebras` for its separate generation path.
 
 The selected-paper workflow is implemented on `codex/paper-intake` and has passed bounded live development checks for a lesson, Arabic follow-up and restricted **Deep Agents** tool use. It retains general concept explanations and cited answers over the existing OpenSearch collection. See the [implementation report](docs/paper-study-implementation.md) for measured results and limitations.
 
