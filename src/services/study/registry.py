@@ -48,6 +48,7 @@ class ServiceRegistry:
         return StudyModel(self.token, store, pool=self.pool, audit=audit)
 
     def service(self, user: int) -> StudyService:
+        self._forgotten.discard(user)
         self._used[user] = self.now()
         if user not in self._services:
             store = StudyStore(self.path, str(user))
@@ -148,14 +149,17 @@ class ServiceRegistry:
         swept = 0
         for member in self.gate.members():
             user = member["user"]
-            if member["role"] != "student" or user in self._forgotten or self.busy(user):
+            if member["role"] != "student" or self.busy(user):
                 continue
             if member["last_active"] >= cutoff:
                 self._forgotten.discard(user)
                 continue
+            if user in self._forgotten:
+                continue
             StudyStore(self.path, str(user)).forget()
             self._forgotten.add(user)
             swept += 1
+        emit_event("study_retention_sweep", swept=swept)
         return swept
 
     async def aclose(self) -> None:

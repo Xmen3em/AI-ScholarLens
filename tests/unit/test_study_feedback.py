@@ -96,7 +96,9 @@ async def test_checker_receives_table_context_and_can_reject_a_misleading_analog
 
     def inspect(payload, schema):
         assert payload["source_context"][0]["text"] == text
-        assert schema["$defs"]["ClaimVerdict"]["properties"]["id"]["enum"] == ["c0", "a0"]
+        assert [item["id"] for item in payload["items"]] == ["c0", "a0"]
+        assert "enum" not in schema["$defs"]["ClaimVerdict"]["properties"]["id"]
+
 
     checker = Scripted([{"id": "c0", "supported": True, "support_spans": honest_spans(text), "issue": "none"},
                         {"id": "a0", "supported": False, "support_spans": [], "issue": "analogy_mismatch"}], inspect)

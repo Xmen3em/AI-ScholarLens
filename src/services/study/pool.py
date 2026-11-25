@@ -15,6 +15,8 @@ from pydantic import SecretStr
 
 # The running job's deadline (set by StudyService._run); waiting for a slot extends it by the wait.
 JOB_DEADLINE: ContextVar[asyncio.Timeout | None] = ContextVar("study_job_deadline", default=None)
+# Job ID -> sub-semaphore inside its one global slot; inherited by its review children.
+JOB_SLOTS: ContextVar[dict[str, asyncio.Semaphore]] = ContextVar("study_job_slots", default={})
 
 
 class ModelPool:
@@ -46,6 +48,13 @@ class ModelPool:
 
     @asynccontextmanager
     async def slot(self, job: str) -> AsyncIterator[None]:
+        job_slots = JOB_SLOTS.get()
+        if job_slots is not None and job in job_slots:
+            # Nested reviewer halves share the outer slot. Sibling coroutines
+            # inherit this context; a different task/job never sees the entry.
+            async with job_slots[job]:
+                yield
+            return
         if self._running < self.slots and not self._waiting:
             self._running += 1
         else:
@@ -79,9 +88,12 @@ class ModelPool:
                 if deadline is not None and remaining is not None:
                     deadline.reschedule(loop.time() + remaining)
         self._started.add(job)
+        previous = JOB_SLOTS.get() or {}
+        token = JOB_SLOTS.set({**previous, job: asyncio.Semaphore(2)})
         try:
             yield
         finally:
+            JOB_SLOTS.reset(token)
             self._running -= 1
             self._grant()
 

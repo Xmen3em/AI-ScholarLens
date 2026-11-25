@@ -148,6 +148,43 @@ async def test_unparsable_response_fails_the_review():
 
 
 @pytest.mark.anyio
+async def test_deep_review_uses_one_attempt_when_three_of_four_are_used(tmp_path):
+    import httpx
+    from pydantic import SecretStr
+    from src.services.study.pool import ModelPool
+    from src.services.study.store import StudyStore
+    from src.services.study.tutor import StudyModel, check_claims_in_parallel
+
+    store = StudyStore(tmp_path / "state.sqlite3", "owner")
+    job = store.create_job("deep", {}, max_calls=4)
+    for purpose in ("research", "research", "final_answer"):
+        attempt = store.reserve_attempt(job["id"], purpose, "m")
+        store.settle_attempt(job["id"], attempt, "succeeded")
+    sections = [paper(claim(SEQ, "p6b1s0")),
+                paper(claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0"))]
+    draft = validate_draft(draft_of(*sections), BLOCKS)
+    pool = ModelPool(SecretStr("x" * 40), 1)
+
+    async def answer(request):
+        payload = json.loads(request.content)
+        items = json.loads(payload["messages"][-1]["content"])["items"]
+        return httpx.Response(200, json={"choices": [{"index": 0, "finish_reason": "stop", "message": {
+            "role": "assistant", "content": json.dumps({"verdicts": [
+                {"id": item["id"], "supported": True, "issue": "none", "support_spans": [item["quote"]]}
+                for item in items]})}}], "usage": {"prompt_tokens": 100, "completion_tokens": 20}})
+
+    model = StudyModel(SecretStr("private-test"), store, pool=pool, memory=lambda: 2000, counter=lambda _: 100)
+    model.client = httpx.AsyncClient(transport=httpx.MockTransport(answer))
+    await check_claims_in_parallel(model, job["id"], draft, blocks=BLOCKS)
+    assert [(attempt["sequence"], attempt["purpose"], attempt["state"])
+            for attempt in store.attempts(job["id"])[3:]] == [(4, "grounding_review", "succeeded")]
+    assert model.supports_parallel_review is True
+    assert model.writer_lock_held() is False
+    await model.client.aclose()
+    await pool.aclose()
+
+
+@pytest.mark.anyio
 async def test_no_items_means_no_call():
     class Refuse:
         async def complete(self, *args, **kwargs):
@@ -234,7 +271,7 @@ def test_schema_does_not_repeat_the_catalog_for_deep_research():
 
 
 @pytest.mark.anyio
-async def test_an_unknown_verdict_id_fails_the_schema_validation(tmp_path):
+async def test_an_unknown_verdict_id_withholds_only_its_missing_claim(tmp_path):
     import httpx
     from pydantic import SecretStr
     from src.services.study.store import StudyStore
@@ -248,8 +285,10 @@ async def test_an_unknown_verdict_id_fails_the_schema_validation(tmp_path):
         "usage": {"prompt_tokens": 100, "completion_tokens": 20}}
     async with httpx.AsyncClient(transport=httpx.MockTransport(lambda _: httpx.Response(200, json=body))) as client:
         model = StudyModel(SecretStr("private-test"), store, client=client, memory=lambda: 2000, counter=lambda _: 100)
-        with pytest.raises(TutorError, match="review_validation_failed"):
-            await check_claims(model, job["id"], draft, blocks=BLOCKS)
+        result = await check_claims(model, job["id"], draft, blocks=BLOCKS)
+        assert [c.withheld for c in result.sections[0].claims] == ["missing_verdict"]
+        with pytest.raises(TutorError, match="lesson_validation_failed"):
+            accept_draft(result)
 
 
 @pytest.mark.anyio
@@ -287,6 +326,30 @@ async def test_claim_checks_split_items_without_changing_ids_or_evidence():
     assert [claim.withheld for section in result.sections for claim in section.claims] == [None, None]
 
 
+@pytest.mark.anyio
+async def test_a_failing_review_half_cancels_its_sibling():
+    from src.services.study.tutor import check_claims_in_parallel
+    entered, cancelled, release = 0, False, asyncio.Event()
+    sections = [paper(claim(SEQ, "p6b1s0")),
+                paper(claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0"))]
+    draft = validate_draft(draft_of(*sections), BLOCKS)
+
+    class FailHalf:
+        async def complete(self, *args, **kwargs):
+            nonlocal entered, cancelled
+            entered += 1
+            if entered == 2:
+                raise TutorError("review_failed")
+            try:
+                await release.wait()
+            except asyncio.CancelledError:
+                cancelled = True
+                release.set()
+                raise
+            return {"output": {"verdicts": []}}
+
+    with pytest.raises(TutorError, match="review_failed"):
+        await asyncio.wait_for(check_claims_in_parallel(FailHalf(), "job", draft, blocks=BLOCKS), timeout=2)
 @pytest.mark.anyio
 async def test_an_only_analogy_skips_the_parallel_check():
     from src.services.study.tutor import check_claims_in_parallel

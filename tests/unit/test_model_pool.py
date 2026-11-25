@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import httpx
 import pytest
@@ -92,6 +93,47 @@ def test_slots_are_bounded():
         ModelPool(TOKEN, 5)
 
 
+async def test_two_review_halves_share_one_pool_slot_and_two_jobs_still_serialize(tmp_path):
+    from src.services.study.tutor import check_claims_in_parallel, validate_draft
+
+    from tests.unit.test_study_claims import BLOCKS, SEQ, claim, draft_of, paper
+
+    pool = ModelPool(TOKEN, 1)
+    release, both_halves, requests = asyncio.Event(), asyncio.Event(), []
+
+    async def respond(request):
+        payload = json.loads(request.content)
+        requests.append(payload)
+        if len(requests) == 2:
+            both_halves.set()
+        await release.wait()
+        items = json.loads(payload["messages"][-1]["content"])["items"]
+        output = {"verdicts": [{"id": item["id"], "supported": True, "issue": "none",
+                                "support_spans": [item["quote"]]} for item in items]}
+        return httpx.Response(200, json={"choices": [{"index": 0, "finish_reason": "stop", "message": {
+            "role": "assistant", "content": json.dumps(output)}}],
+            "usage": {"prompt_tokens": 100, "completion_tokens": 20}})
+
+    draft = validate_draft(draft_of(paper(claim(SEQ, "p6b1s0")),
+                                    paper(claim("نموذج RAG-Token سجّل 66.1 في الجدول ده.", "p6b0s0"))), BLOCKS)
+    jobs, models = [], []
+    for owner in ("1", "2"):
+        store = StudyStore(tmp_path / f"{owner}.sqlite3", owner)
+        jobs.append(store.create_job(owner, {}, max_calls=3))
+        models.append(StudyModel(TOKEN, store, pool=pool, client=httpx.AsyncClient(transport=httpx.MockTransport(respond)),
+                                 memory=lambda: 2000, counter=lambda _: 100))
+    first = asyncio.create_task(check_claims_in_parallel(models[0], jobs[0]["id"], draft, blocks=BLOCKS))
+    await both_halves.wait()
+    second = asyncio.create_task(check_claims_in_parallel(models[1], jobs[1]["id"], draft, blocks=BLOCKS))
+    await asyncio.sleep(0.05)
+    assert pool.position(jobs[1]["id"]) == 1 and len(requests) == 2
+    release.set()
+    await asyncio.gather(first, second)
+    assert len(requests) == 4
+    await asyncio.gather(*(model.client.aclose() for model in models))
+    await pool.aclose()
+
+
 async def test_a_model_with_a_pool_shares_its_client(tmp_path):
     pool = ModelPool(TOKEN, 3)
     a, b = (StudyModel(TOKEN, StudyStore(tmp_path / "s.sqlite3", owner), pool=pool) for owner in ("1", "2"))
@@ -149,6 +191,31 @@ async def test_a_started_jobs_next_call_goes_ahead_of_new_jobs():
     release.set()
     await asyncio.gather(holder, newcomer, continuation)
     assert order == ["a", "x", "a", "b"]
+    await pool.aclose()
+
+
+async def test_another_jobs_wait_does_not_pause_the_running_jobs_deadline():
+    from src.services.study.pool import JOB_DEADLINE
+    pool = ModelPool(TOKEN, 1)
+
+    async def job():
+        async with asyncio.timeout(0.05) as deadline:
+            JOB_DEADLINE.set(deadline)
+            async with pool.slot("mine"):
+                await asyncio.sleep(0.08)
+
+    async def other():
+        async with asyncio.timeout(0.05) as deadline:
+            JOB_DEADLINE.set(deadline)
+            async with pool.slot("other"):
+                pass
+
+    first = asyncio.create_task(job())
+    await asyncio.sleep(0)
+    waiting = asyncio.create_task(other())
+    with pytest.raises(TimeoutError):
+        await first
+    await waiting
     await pool.aclose()
 
 

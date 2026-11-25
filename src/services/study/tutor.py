@@ -15,7 +15,7 @@ from src.operations import emit_event
 from src.resources import free_memory_mib as host_memory_mib
 from src.services.hf.client import _unique_object
 from src.services.hf.tokenizer import count_input_tokens
-from src.services.study.content import EvidenceBlock
+from src.services.study.content import EvidenceBlock, PaperContent
 from src.services.study.evidence import evidence_catalog
 from src.services.study.models import DEFAULT_PROFILE, ModelProfile, estimate_input
 from src.services.study.store import StudyStore
@@ -60,6 +60,8 @@ SectionKind = Literal["paper", "background", "analogy", "question", "uncertainty
 class TutorError(RuntimeError):
     def __init__(self, code: str, *, diagnostic: str | None = None):
         self.diagnostic = diagnostic
+        self.paper_content: PaperContent | None = None
+        self.open_paper_on_failure = False
         super().__init__(code)
 
 
@@ -342,6 +344,8 @@ async def _check_claims(model, job_id: str, draft: ClaimDraft, *, blocks: list[E
     if not claims or not items:
         # Analogies alone are labelled teaching aids; do not spend a provider call on them.
         return draft
+    remaining = getattr(model, "remaining_attempts", lambda job: 2)(job_id)
+    split = split and remaining >= 2
     groups = [items[::2], items[1::2]] if split and len(items) >= 2 else [items]
     lookup = {block.id: block for block in blocks}
 
@@ -354,14 +358,22 @@ async def _check_claims(model, job_id: str, draft: ClaimDraft, *, blocks: list[E
                 context.append(block.model_dump())
                 remaining -= len(block.text)
         schema = ClaimCheck.model_json_schema()
-        schema["$defs"]["ClaimVerdict"]["properties"]["id"]["enum"] = [item["id"] for item in review_items]
-        options = {"review_group": True} if split and isinstance(model, StudyModel) else {}
+        # A stray ID is inert: it cannot confirm a real claim; merge leaves that claim missing.
+        options = {"review_group": True} if split and getattr(model, "supports_parallel_review", False) else {}
         return await model.complete(job_id, "grounding_review", [
             {"role": "system", "content": CLAIM_PROMPT},
             {"role": "user", "content": json.dumps({"items": review_items, "source_context": context}, ensure_ascii=False)}],
             schema=schema, **options)
 
-    responses = await asyncio.gather(*(review(group) for group in groups))
+    shared_slot = model.pool.slot(job_id) if split and getattr(model, "pool", None) is not None else nullcontext()
+    async with shared_slot:
+        try:
+            async with asyncio.TaskGroup() as group:
+                pending = [group.create_task(review(group_items)) for group_items in groups]
+        except* TutorError as failures:
+            # Both halves have finished or been cancelled; preserve the service's failure contract.
+            raise failures.exceptions[0] from None
+        responses = [task.result() for task in pending]
     try:
         check = ClaimCheck.model_validate({"verdicts": [v for response in responses for v in response["output"]["verdicts"]]})
     except (ValidationError, KeyError, TypeError):
@@ -466,6 +478,7 @@ class StudyModel:
         self.audit = audit
         self._lock = asyncio.Lock()
         self._review_lock = asyncio.Semaphore(2)
+        self._review_lock = asyncio.Semaphore(2)
 
     def _review_transport(self) -> httpx.AsyncClient:
         if self._review_client is not None:
@@ -485,12 +498,20 @@ class StudyModel:
         if self._review_client is not None and self._owns_review:
             await self._review_client.aclose()
 
+    def remaining_attempts(self, job_id: str) -> int:
+        return self.store.remaining_attempts(job_id) or 0
+
+    supports_parallel_review = True
+
+    def writer_lock_held(self) -> bool:
+        return self._lock.locked()
+
     async def complete(self, job_id: str, purpose: str, messages: list[dict], *, schema: dict | None = None,
                        tools: list[dict] | None = None, review_group: bool = False) -> dict:
         free = self.memory()
         if not math.isfinite(free) or free < 600:
             raise TutorError("study_memory_unavailable")
-        if self._lock.locked() and not review_group:
+        if self.writer_lock_held() and not review_group:
             raise TutorError("study_model_busy")
         if bool(schema) == bool(tools):
             raise TutorError("one_output_contract_required")
@@ -529,7 +550,7 @@ class StudyModel:
                                         body.clear()
                                         break
                                     body.extend(part)
-                                self._error_observer(provider_error_metadata(bytes(body)))
+                                self._error_observer({"sequence": attempt, **provider_error_metadata(bytes(body))})
                             raise TutorError(f"study_provider_http_{response.status_code}")
                         body = bytearray()
                         async for part in response.aiter_bytes(chunk_size=8192):
@@ -573,7 +594,8 @@ class StudyModel:
                                              diagnostic="ValidationError") from None
                     result = {"output": parsed, "message": message, "usage": usage}
                 if self.audit is not None:
-                    self.audit({"purpose": purpose, "result": {"output": result.get("output"), "usage": result["usage"]}})
+                    self.audit({"purpose": purpose, "sequence": attempt,
+                                "result": {"output": result.get("output"), "usage": result["usage"]}})
                 state = "succeeded"
                 emit_event("study_generation", purpose=purpose, outcome=state, model=self.profile.route,
                            input_tokens=usage["prompt_tokens"], output_tokens=usage["completion_tokens"])

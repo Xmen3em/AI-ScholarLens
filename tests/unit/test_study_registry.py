@@ -17,7 +17,7 @@ from tests.unit.test_access_gate import OWNER, Clock
 from tests.unit.test_study_service import Content, Intake, honest_verdicts, paper
 from tests.unit.test_study_tutor import lesson
 
-USAGE = {"prompt_tokens": 1000, "completion_tokens": 200}  # $0.00114 on Fireworks GLM-5.3
+USAGE = {"prompt_tokens": 1000, "completion_tokens": 200}  # $0.00342 at the conservative Fireworks rates
 
 
 class FakeModel:
@@ -145,7 +145,7 @@ async def test_a_delivered_lesson_counts_one_paper_and_its_real_cost(h):
     assert job["status"] == "ready"
     assert h.gate.usage(111)["papers_left"] == 2
     usage = h.gate.owner_usage()
-    assert usage["spent"] == pytest.approx(2 * 0.00114) and usage["reserved"] == 0
+    assert usage["spent"] == pytest.approx(2 * 0.00342) and usage["reserved"] == 0
 
 
 async def test_a_busy_submit_releases_its_reservation(tmp_path):
@@ -383,6 +383,25 @@ async def test_sweep_forgets_inactive_students_never_the_owner(h):
     assert h.registry.sweep(30) == 1
     assert h.registry.sweep(30) == 0  # already forgotten students are not swept again
     assert StudyStore(h.path, "111").context() is None and StudyStore(h.path, str(OWNER)).context() is not None
+
+
+async def test_sweep_again_after_a_student_returns_and_becomes_inactive(h):
+    h.join(111)
+    h.clock.advance(31 * 86400)
+    assert h.registry.sweep(30) == 1
+    h.registry.service(111)
+    h.gate.touch(111)
+    h.clock.advance(31 * 86400)
+    assert h.registry.sweep(30) == 1
+    assert h.gate.revoke(111)
+    await h.registry.forget(111)
+    [code] = h.gate.create_invites(1)
+    assert h.gate.redeem(111, code)
+    h.registry.service(111)
+    h.gate.touch(111)
+    assert h.registry.sweep(30) == 0
+    h.clock.advance(31 * 86400)
+    assert h.registry.sweep(30) == 1
 
 
 async def test_single_user_mode_rejects_user_id(tmp_path):

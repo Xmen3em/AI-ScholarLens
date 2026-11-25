@@ -32,8 +32,10 @@ can check without trusting the model.
 - An unconfirmed claim is **withheld**: never shown with a page badge; only a
   count and its section heading appear in one closing note.
 - A lesson keeps **up to three model calls**: write, then up to two concurrent
-  claim-check halves when there are at least two items. `/deep` stays at two research
-  calls plus the same review budget (up to four of its four). The multi-user admission
+  claim-check halves when there are at least two items **and two attempts remain**.
+  With only one remaining attempt the check is a single call, so three used attempts
+  still leave room for the fourth. `/deep` stays within its four-call budget; its usual
+  two research calls can be followed by two halves. The multi-user admission
   reservation is three calls for a lesson or follow-up, and four for `/deep`.
 - Approach A: the writer produces one-quote claims; the checker must copy
   supporting spans that the application verifies.
@@ -79,11 +81,15 @@ stored lessons, `/notes`, the reading map and `render_lesson` need no migration.
 
 ## 2. The check call and proof verification
 
-With at least two items, the check may run in two concurrent halves. Global claim and
-analogy IDs are preserved, and each half receives only the cited blocks it needs (within
-the same context budget). A returned verdict is merged back by its global ID; unknown
-IDs fail the review's schema validation. One check call still covers small inputs. An
-analogy alone needs no check call. Attempt accounting remains per provider call.
+With at least two items and at least two remaining attempts, the check may run in two
+concurrent halves. With only one remaining attempt it is a single call, so a `/deep` job
+that has used three attempts can still check within its four-call budget. Global claim
+and analogy IDs are preserved, and each half receives only the cited blocks it needs
+(within the same context budget). A returned verdict is merged back by its global ID; an
+unknown or stray ID is ignored and its corresponding claim is withheld as
+`missing_verdict`, rather than failing the whole lesson. An analogy alone needs no check
+call, including in follow-ups: these teaching aids stay unchecked rather than spending a
+provider call. Attempt accounting remains per provider call.
 
 Each review call (`purpose="grounding_review"`, existing attempt accounting) receives:
 
@@ -94,7 +100,7 @@ Each review call (`purpose="grounding_review"`, existing attempt accounting) rec
 Strict output schema, one verdict per item:
 
 ```text
-ClaimVerdict { id: enum(item IDs), supported: bool, support_spans: [1..3 str ≤200],
+ClaimVerdict { id: str, supported: bool, support_spans: [1..3 str ≤200],
                issue: none | missing_support | contradiction | overgeneralized_comparison
                       | metric_setting_mismatch | unlabeled_background | analogy_mismatch }
 ClaimCheck   { verdicts: [ClaimVerdict] }
@@ -117,8 +123,10 @@ row, which are far apart in the same quote.
 
 Otherwise the claim is withheld with a reason: `unsupported` (verdict false, with
 its issue label), `unverified_support` (verdict true but proof fails), or
-`missing_verdict` (no, duplicate or unknown ID). Analogies are kept on
-`supported=true` and withheld on false, with no span check. If the response does
+`missing_verdict` (no, duplicate or unknown ID). When a claim and an analogy
+are checked together, analogies are kept on
+`supported=true` and withheld on false, with no span check; analogy-only follow-ups
+stay unchecked. If the response does
 not parse against the schema, nothing can be confirmed and the job fails with
 `review_validation_failed`, as today.
 
@@ -162,8 +170,8 @@ Offline, zero model calls, before any live run:
   fails only when no paper claim remains.
 - Proof verification with scripted checkers: honest spans kept; span not in the
   quote, under three words, or a claim number outside the spans is
-  `unverified_support`; duplicate or missing verdicts are `missing_verdict`; an unknown
-  ID is rejected by the transport schema, and an unparsable response is
+  `unverified_support`; duplicate or missing verdicts are `missing_verdict`; a stray
+  verdict ID is ignored and its claim is `missing_verdict`; an unparsable response is
   `review_validation_failed`.
 - Science fixtures converted to claims: all four verified-correct sections
   survive an honest checker; each of the twelve critical cases records and is

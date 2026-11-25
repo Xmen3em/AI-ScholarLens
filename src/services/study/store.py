@@ -140,6 +140,15 @@ class StudyStore:
             db.execute("UPDATE attempts SET state=? WHERE job=? AND sequence=? AND state='reserved' AND job IN "
                        "(SELECT id FROM jobs WHERE owner=?)", (state, job_id, sequence, self.owner))
 
+    def remaining_attempts(self, job_id: str) -> int | None:
+        """Attempts still available to a running job, read atomically with its budget."""
+        with self._db() as db:
+            job = db.execute("SELECT status,max_calls FROM jobs WHERE owner=? AND id=?", (self.owner, job_id)).fetchone()
+            if job is None or job["status"] != "running":
+                return None
+            used = db.execute("SELECT COUNT(*) FROM attempts WHERE job=?", (job_id,)).fetchone()[0]
+            return max(0, job["max_calls"] - used)
+
     def attempts(self, job_id: str) -> list[dict]:
         with self._db() as db:
             return [dict(row) for row in db.execute("SELECT a.* FROM attempts a JOIN jobs j ON j.id=a.job "
