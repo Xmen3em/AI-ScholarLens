@@ -16,6 +16,20 @@ The first visual-learning slice is implemented on `codex/visual-learning`: an of
 
 The [complete researcher-app specification](docs/specs/researcher-app.md), [implementation plan](tasks/plan.md#whole-app-implementation--21-october-2026) and [task checklist](tasks/todo.md#whole-app-implementation--task-index) cover reliability, evidence, teaching, memory, visuals/RTL, OCR, research, notes and private hosting. These are proposed extensions with explicit acceptance gates; see the [Egyptian review guide](docs/researcher-implementation-plan.ar.md).
 
+## Paper benchmark results
+
+On the frozen 18-paper holdout, **GLM-5.3 on DeepInfra delivered 47/54 (87.0%)** first
+lessons and Q1/Q2 answers, with 98.53% writer format compliance. It missed the latency
+gate: p95 **94.485 s**, above 90 s. The owner-delegated AI rubric averaged **3.58/5**
+across six blind lessons; it is not an independent human rating. Judge calibration passed
+at exactly **85% agreement (κ 0.67)**, but its one
+holdout scoring invocation stopped on HTTP 429 with **zero answers scored**. Seven
+undelivered answers and all limitations are listed in the [benchmark report](evaluation/paper_benchmark/REPORT.md).
+
+GLM was selected on development results, not through a four-model holdout comparison;
+both Qwen profiles failed qualification. These measurements predate the current Fireworks
+production route. Fresh approval is required before any further judging calls.
+
 ## What works today
 
 | Capability | Current behavior |

@@ -93,6 +93,19 @@ fix in `test_study_telegram_multi.py` addresses the pre-existing full-tree Ruff 
 
 ## Owner review and deferrals
 
+- **26 November update:** under the owner's explicit delegation to act as them, the
+  assistant supplied all 40 calibration labels and six lesson rubric ratings. They are
+  owner-delegated AI judgments, not independent human labels or ratings. Calibration
+  passed exactly at **85% agreement, κ 0.6712**. One approved
+  holdout judging invocation stopped on provider HTTP 429 with **0/47 answers scored**;
+  its meter recorded four attempts due to RAGAS/Instructor retries outside the OpenAI
+  client. Both retry layers are now disabled offline and the selected 184-call ceiling
+  is enforced. The shared ledger is **$4.32308616**, a $0.10782590 estimated increase
+  from this invocation. No retry or additional judging invocation ran. The incomplete
+  results, seven L/Q1/Q2 exclusions and outstanding owner Q3 reading are documented in
+  `evaluation/paper_benchmark/REPORT.md`; the README carries the short result summary.
+  Any further judging requires a fresh owner-approved call/cost ceiling.
+
 - Review the implementation commits and this follow-up diagnostic branch before any push.
   Pushing requires an explicit owner instruction.
 - Live Telegram testing needs the owner's session and a second owner-controlled account

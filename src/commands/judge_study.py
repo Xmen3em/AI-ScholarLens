@@ -15,9 +15,11 @@ from src.services.study.models import ModelProfile, call_cost_usd
 
 SCIENCE_CASES = Path("evaluation/paper_learning/science-cases.v1.json")
 CALIBRATION = ROOT / "calibration.v1.json"
+CALIBRATION_TASK = "Evaluate the factual faithfulness of the following claim against the supplied source quote."
 GATE_AGREEMENT, GATE_KAPPA = 0.85, 0.6
-# §6's owner decision reduced the holdout to GLM-5.3 alone: 18 papers × 4 jobs × 3 calls.
-CEILINGS = {"calibrate": 80, "judge": 216}
+# §6's owner decision reduced the holdout to GLM-5.3 alone. The owner separately approved
+# the 47 delivered answers' per-answer protocol maxima: 17 × 2 + 30 × 5 = 184 calls.
+CEILINGS = {"calibrate": 80, "judge": 184}
 Metric = Callable[[dict], Awaitable[float]]
 
 
@@ -51,6 +53,12 @@ def validate_calibration_labels(rows: list[dict]) -> None:
     """The owner, not Python truthiness, must supply exactly 40 Boolean verdicts."""
     if len(rows) != 40 or any(type(row.get("owner_faithful")) is not bool for row in rows):
         raise ValueError("calibration_labels")
+
+
+def calibration_metric_rows(rows: list[dict]) -> list[dict]:
+    """RAGAS requires a nonempty question even for a standalone claim-verification task."""
+    return [{"question": CALIBRATION_TASK, "answer": row["claim_ar"], "contexts": [row["quote_en"]],
+             "reference": None} for row in rows]
 
 
 WORST_JUDGE_INPUT = 21_000
@@ -185,7 +193,10 @@ def build_metrics(profile, token: str, meter: JudgeMeter) -> dict[str, Metric]: 
     from ragas.llms import llm_factory
     from ragas.metrics.collections import ContextRecall, FactualCorrectness, Faithfulness
 
-    llm = llm_factory(profile.route, client=judge_client(token, meter), temperature=0, max_tokens=JUDGE_MAX_TOKENS)
+    # Instructor retries separately from the OpenAI client; disable both so one metric failure
+    # cannot silently become four paid attempts against the approved no-retry protocol.
+    llm = llm_factory(profile.route, client=judge_client(token, meter), temperature=0,
+                      max_tokens=JUDGE_MAX_TOKENS, max_retries=0)
     faithfulness, factual, recall = Faithfulness(llm=llm), FactualCorrectness(llm=llm, mode="recall"), ContextRecall(llm=llm)
 
     async def faithful(row: dict) -> float:
@@ -244,8 +255,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - CLI wiring
             validate_calibration_labels(rows)
         except ValueError as error:
             raise SystemExit("calibration needs 40 rows, all labelled true/false by the owner") from error
-        verdicts = asyncio.run(score_rows([{"question": "", "answer": row["claim_ar"], "contexts": [row["quote_en"]],
-                                            "reference": None} for row in rows], metrics))
+        verdicts = asyncio.run(score_rows(calibration_metric_rows(rows), metrics))
         result = agreement([row["owner_faithful"] for row in rows], [item["faithfulness"] >= 0.5 for item in verdicts])
         result["calibrated"] = calibrated(result)
         write_json(DATA / "calibration-result.json", result)

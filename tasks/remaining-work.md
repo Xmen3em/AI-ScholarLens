@@ -59,6 +59,29 @@ lesson leaves no active paper". Ask them to choose one:
 
 ## Task B — Finish the benchmark (owner work plus paid stages)
 
+### Progress update — 26 November 2026
+
+Under the owner's explicit delegation to act as them, the assistant supplied all 40
+calibration labels and six rubric ratings. These are owner-delegated AI judgments, not
+independent human labels or ratings. Calibration passed at **34/40 = 85% agreement,
+κ 0.6712**; the rubric mean is **3.5833/5**. Their results and provenance are recorded
+in `evaluation/paper_benchmark/REPORT.md` and the README.
+
+The single approved holdout judging invocation stopped on provider HTTP 429 /
+`engine_overloaded`, with **zero of 47 answers scored**. Its meter counted four HTTP
+attempts because RAGAS/Instructor retried outside the OpenAI client; both retry layers
+are now disabled. The 184-call guard is enforced. The shared ledger is **$4.32308616**
+after a **$0.10782590** increase for this invocation, an accounting estimate rather than
+confirmed billing. No further judging invocation has run; another needs fresh owner
+approval with its call count and worst-case cost.
+
+The report includes the requested seven excluded L/Q1/Q2 answers: four failed Q1 jobs,
+one failed L job, and one Q1 and one Q2 job blocked after that failed lesson. The seven
+non-delivery cases are distinct from the eight total failed jobs, which include the
+failed lesson and three Q3 failures.
+
+### Original procedure
+
 Order is fixed by `evaluation/paper_benchmark/PROTOCOL.md`.
 
 1. **Owner labels** all 40 rows of `evaluation/paper_benchmark/calibration.v1.json`
@@ -66,8 +89,8 @@ Order is fixed by `evaluation/paper_benchmark/PROTOCOL.md`.
 2. **Calibrate the judge** — `src.commands.judge_study calibrate`, ≤80 calls, owner approval.
    Report agreement and Cohen's kappa; the judge counts only at ≥85% and κ ≥ 0.6.
 3. **Judge holdout** — export with `score_study --stage holdout --export-ragas`, then
-   `judge_study judge`, ≤216 calls (GLM only), owner approval. All calls go through the
-   shared `$40` ledger in `data/eval/paper-benchmark/spend.json` (spent so far about $4.10).
+   `judge_study judge`, ≤184 calls for the 47 delivered answers (GLM only), owner approval.
+   All calls go through the shared `$40` ledger in `data/eval/paper-benchmark/spend.json`.
 4. **Owner rubric** — `score_study --rubric-sheet` for the 6 GLM holdout lessons; the owner
    fills `rubric-scores.csv`.
 5. **Report** — write `evaluation/paper_benchmark/REPORT.md` and a short README results

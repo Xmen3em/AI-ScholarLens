@@ -12,6 +12,15 @@ ROWS = [
 ]
 
 
+def test_calibration_supplies_a_task_prompt_without_empty_ragas_input():
+    from src.commands.judge_study import CALIBRATION_TASK, calibration_metric_rows
+
+    rows = calibration_metric_rows([{"claim_ar": "ادعاء عربي", "quote_en": "Supporting quote"}])
+    assert rows == [{"question": CALIBRATION_TASK, "answer": "ادعاء عربي",
+                     "contexts": ["Supporting quote"], "reference": None}]
+    assert rows[0]["question"].strip(), "RAGAS rejects an empty user_input before the first request"
+
+
 @pytest.mark.asyncio
 async def test_lessons_get_faithfulness_and_answers_get_all_three():
     async def metric(value):
@@ -60,13 +69,14 @@ def test_importing_the_judge_does_not_import_ragas():
 
 
 @pytest.mark.asyncio
-async def test_single_model_holdout_enforces_the_216_call_ceiling(tmp_path):
+async def test_single_model_holdout_enforces_the_approved_184_call_ceiling(tmp_path):
     from src.commands.evaluate_study import SpendLedger
-    from src.commands.judge_study import JudgeMeter
+    from src.commands.judge_study import CEILINGS, JudgeMeter
 
+    assert CEILINGS["judge"] == 184
     state = tmp_path / "judge-calls.json"
-    state.write_text(json.dumps({"calls": 216}), encoding="utf-8")
-    meter = JudgeMeter(judge_profile(), SpendLedger(tmp_path / "spend.json"), ceiling=216, state=state)
+    state.write_text(json.dumps({"calls": CEILINGS["judge"]}), encoding="utf-8")
+    meter = JudgeMeter(judge_profile(), SpendLedger(tmp_path / "spend.json"), ceiling=CEILINGS["judge"], state=state)
     with pytest.raises(RuntimeError, match="judge_call_ceiling"):
         await meter.on_request(httpx.Request("POST", "https://example.test/v1/chat/completions"))
 
