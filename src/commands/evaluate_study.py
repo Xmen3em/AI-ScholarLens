@@ -19,7 +19,7 @@ from src.services.study.models import WORST_INPUT_TOKENS, ModelProfile, call_cos
 from src.services.study.store import StoreConflict, StudyStore
 
 STAGE_CEILINGS = {"qualify": 4, "dev": 96, "dev-rerun": 96, "dev-rerun-2": 96, "holdout": 144}
-CALLS_PER_JOB = 2
+CALLS_PER_JOB = 3
 MIN_MEMORY_MIB = 1024
 OWNER = "paper-benchmark"
 # Rejections of a request field, which qualification retries once without options.
@@ -121,11 +121,13 @@ async def run_stage(stage: str, profile: ModelProfile, jobs: list[BenchJob], *, 
     store = StudyStore(folder / "state.sqlite3", OWNER)
     interrupted = {row["id"] for row in store.running()}
     store.recover_interrupted()
-    usages: list[dict] = []
+    usages: dict[int, dict] = {}
     seen: dict = {}
 
     def audit(record: dict) -> None:
-        usages.append(record["result"]["usage"])
+        # The store's attempt sequence is the only stable join with parallel calls.
+        sequence = int(record["sequence"]) if "sequence" in record else len(usages) + 1
+        usages[sequence] = record["result"]["usage"]
 
     def observer(job_id: str, lesson, catalog: list[dict]) -> None:
         seen.update(job_id=job_id, lesson=lesson.model_dump(mode="json"), contexts=[item["quote"] for item in catalog])
@@ -162,12 +164,13 @@ async def run_stage(stage: str, profile: ModelProfile, jobs: list[BenchJob], *, 
             else:
                 result = stored["result"] or {}
                 status = {"ready": "ready", "failed": "failed"}.get(stored["status"], "unknown")
-                calls, pending = [], list(usages)
+                calls = []
                 for attempt in store.attempts(stored["id"]):
-                    usage = pending.pop(0) if attempt["state"] == "succeeded" and pending else None
+                    usage = usages.get(attempt["sequence"]) if attempt["state"] == "succeeded" else None
                     cost = call_cost_usd(profile, usage, estimate=WORST_INPUT_TOKENS)
                     ledger.charge(cost)
-                    calls.append({"purpose": attempt["purpose"], "state": attempt["state"], "usage": usage, "cost_usd": cost})
+                    calls.append({"purpose": attempt["purpose"], "state": attempt["state"], "usage": usage, "cost_usd": cost,
+                                  "sequence": attempt["sequence"]})
                 row = _row(job, status, failure_code=result.get("failure_code"), diagnostic=result.get("diagnostic"),
                            stage=result.get("stage"), review=result.get("review"), seconds=seconds, calls=calls,
                            lesson=seen.get("lesson") if seen.get("job_id") == stored["id"] else None,

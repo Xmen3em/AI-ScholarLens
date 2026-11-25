@@ -12,7 +12,7 @@ from tests.unit.test_evaluate_study import PAPER, factory_for, honest
 
 
 @asynccontextmanager
-async def observed_factory(store, profile, audit, observer, *, errors):
+async def observed_factory(store, profile, audit, observer, *, errors, memory):
     async with factory_for(honest)(store, profile, audit, observer) as service:
         yield service
 
@@ -29,7 +29,7 @@ def test_dry_run_uses_the_fixed_paper_shared_ledger_and_no_model_client(monkeypa
     assert plan["profile"] == GLM_FIREWORKS_PROFILE.name
     assert plan["route"] == "zai-org/GLM-5.3:fireworks-ai"
     assert plan["call_ceiling"] == 4
-    assert plan["worst_case_usd"] == pytest.approx(0.0852)
+    assert plan["worst_case_usd"] == pytest.approx(0.2556)
     assert plan["ledger"] == str(command.LEDGER)
     assert plan["output_root"] == str(command.OUTPUT_ROOT)
     assert plan["execute"] is False
@@ -45,14 +45,16 @@ async def test_execute_reuses_qualification_with_an_isolated_store_and_shared_le
         json.dumps({"papers": [{"id": command.PAPER, "split": "dev", "sha256": "a" * 64}]}), encoding="utf-8")
     monkeypatch.setattr(command, "verify_frozen", lambda root, private: "frozen")
     monkeypatch.setattr(command, "LEDGER", tmp_path / "shared-spend.json")
-    assert await command.execute(service_factory=observed_factory) == 0
+    monkeypatch.setattr(command, "host_memory_mib", lambda: (_ for _ in ()).throw(AssertionError("host memory used")))
+    assert await command.execute(service_factory=observed_factory, memory=lambda: 2000) == 0
+
     qualification = json.loads((tmp_path / "run" / "qualification.json").read_text(encoding="utf-8"))
     assert qualification["glm-fireworks"]["passed"] is True
     report = json.loads(capsys.readouterr().out)
     assert report["job"]["paper"] == PAPER
     assert report["job"]["status"] == "ready" and report["job"]["kept_claims"] == 1
     assert report["job"]["format"] == {"parseable_calls": 2, "total_calls": 2}
-    assert report["job"]["cost_usd"] == pytest.approx(2 * (1000 * 0.70 + 200 * 2.20) / 1e6)
+    assert report["job"]["cost_usd"] == pytest.approx(2 * (1000 * 2.10 + 200 * 6.60) / 1e6)
     store = StudyStore(tmp_path / "run" / "qualify-glm-fireworks" / "state.sqlite3", "paper-benchmark")
     assert store.total_attempts() == 2
     assert SpendLedger(tmp_path / "shared-spend.json").spent() == pytest.approx(report["job"]["cost_usd"])
@@ -76,7 +78,23 @@ def test_report_counts_format_kept_claims_latency_and_cost(tmp_path):
 def test_provider_errors_are_allowlisted_and_paired_with_their_call():
     assert command._error_rows(
         rows=[{"failure_code": "study_provider_http_400", "calls": [{"purpose": "lesson", "state": "failed"}]}],
-        errors=[{"code": "unsupported_parameter", "type": "invalid_request_error", "param": "reasoning_effort"}],
-    ) == [{"call": 1, "http_status": 400, "code": "unsupported_parameter",
+        errors=[{"sequence": 1, "code": "unsupported_parameter", "type": "invalid_request_error",
+                 "param": "reasoning_effort"}],
+    ) == [{"call": 1, "http_status": 400, "sequence": 1, "code": "unsupported_parameter",
            "type": "invalid_request_error", "param": "reasoning_effort"}]
     assert command._error_rows(rows=[{"failure_code": "lesson_validation_failed", "calls": []}], errors=[]) == []
+
+
+def test_parallel_errors_pair_by_attempt_sequence_not_completion_order():
+    first = {"failure_code": "study_provider_http_400", "calls": [{"purpose": "lesson", "state": "failed", "sequence": 1}]}
+    retry = {"sequence_base": 1, "failure_code": "study_provider_http_429", "calls": [
+        {"purpose": "lesson", "state": "succeeded", "sequence": 1},
+        {"purpose": "grounding_review", "state": "failed", "sequence": 2},
+        {"purpose": "grounding_review", "state": "failed", "sequence": 3},
+    ]}
+    errors = [{"sequence": 3, "code": "second_half"}, {"sequence": 4, "code": "first_half"}]
+    assert command._error_rows(rows=[first, retry], errors=errors) == [
+        {"call": 1, "http_status": 400},
+        {"call": 3, "http_status": 429, "sequence": 3, "code": "second_half"},
+        {"call": 4, "http_status": 429, "sequence": 4, "code": "first_half"},
+    ]

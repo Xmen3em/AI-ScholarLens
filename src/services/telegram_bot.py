@@ -205,7 +205,7 @@ class PrivateTelegramBot:
         self._refused_chats: set[int] = set()
         self._last_send = 0.0
         self._last_edit: dict[int, float] = {}
-        self.inactive: set[int] = set()
+        # Multi-user inactivity is the server's durable gate flag, filtered by /pending.
 
     async def __aenter__(self):
         # Telegram embeds its token in request URLs. HTTP client DEBUG/INFO logs
@@ -371,7 +371,6 @@ class PrivateTelegramBot:
         if not sender.text or len(sender.text) > 512:
             # The owner's general-question fallback is the same in both modes.
             return None if sender.user_id == self.owner_id else "ignored"
-        self.inactive.discard(sender.user_id)
         try:
             result = await self._post(self._api, self.settings.api_base_url.rstrip("/") + "/study/messages",
                                       {"intent": f"telegram:{update_id}", "text": sender.text, "user_id": sender.user_id})
@@ -462,8 +461,6 @@ class PrivateTelegramBot:
                     or type(job.get("user")) is not int or job["user"] <= 0:
                 raise BotError("invalid_study_job")
             user = job["user"]
-            if user in self.inactive:
-                continue
             claimed = await self._post(self._api, origin + "/study/claim", {"job_id": job["id"], "user_id": user})
             if claimed.get("claimed") is not True:
                 continue
@@ -482,7 +479,6 @@ class PrivateTelegramBot:
                 if exc.status != 403:
                     raise
                 # The student blocked the bot: drop this delivery and keep delivering to everyone else.
-                self.inactive.add(user)
                 await self._post(self._api, origin + "/study/undeliverable", {"user_id": user})
 
     async def _show_member_progress(self, running) -> None:

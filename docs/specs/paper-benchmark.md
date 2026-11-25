@@ -234,8 +234,11 @@ GLM-5.3 (`model_not_supported`), the owner approved qualification of
 35.64 seconds of job latency. `glm-fireworks` became `DEFAULT_PROFILE`, retaining
 `reasoning_effort: low` and the GLM tokenizer estimate. The router listed
 $0.70/M input and $2.20/M output on that date. Token-derived cost was $0.0261381;
-the response's own cost fields totalled $0.05812944, so the shared ledger is a
-token-derived estimate rather than confirmed provider spend. This is one
+the response's own cost fields totalled $0.05812944. The profile now provisionally
+uses the highest observed rates ($2.10/M input and $6.60/M output), and cost
+accounting takes the greater valid provider-reported or token-derived cost. A
+one-off correction replaced the run's ledger charge with $0.05812944; the shared
+ledger is still an estimate, not confirmed billing. This is one
 qualification lesson, not a new benchmark or p95 measurement; no provider error
 was returned.
 

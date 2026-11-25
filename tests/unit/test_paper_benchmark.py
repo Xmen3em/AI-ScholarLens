@@ -206,8 +206,7 @@ def test_freeze_detects_any_changed_file(tmp_path):
 
 
 def test_models_file_loads_and_matches_spec_routes():
-    from src.services.study.models import (DEFAULT_PROFILE, GLM_FIREWORKS_PROFILE, GPT_OSS_PROFILE, ModelProfile,
-                                           load_profiles)
+    from src.services.study.models import DEFAULT_PROFILE, GLM_FIREWORKS_PROFILE, GPT_OSS_PROFILE, ModelProfile, load_profiles
 
     profiles = load_profiles(ROOT / "models.v1.json")
     assert {name: profile.route for name, profile in profiles.items()} == {

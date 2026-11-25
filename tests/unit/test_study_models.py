@@ -55,7 +55,7 @@ async def test_production_sends_the_qualified_glm_fireworks_request(tmp_path):
     assert DEFAULT_PROFILE == GLM_FIREWORKS_PROFILE
     assert MODEL == DEFAULT_PROFILE.route == "zai-org/GLM-5.3:fireworks-ai"
     assert DEFAULT_PROFILE.name == "glm-fireworks" and DEFAULT_PROFILE.input_estimate == "glm_tokenizer"
-    assert (DEFAULT_PROFILE.price_in_usd_per_m, DEFAULT_PROFILE.price_out_usd_per_m) == (0.70, 2.20)
+    assert (DEFAULT_PROFILE.price_in_usd_per_m, DEFAULT_PROFILE.price_out_usd_per_m) == (2.10, 6.60)
     assert DEFAULT_PROFILE.priced_on == "2026-11-25"
     body = json.loads(await sent_request(tmp_path))
     assert body["model"] == "zai-org/GLM-5.3:fireworks-ai" and body["reasoning_effort"] == "low"
@@ -102,6 +102,25 @@ def test_cost_without_usage_charges_the_maximum():
     assert call_cost_usd(QWEN, None, estimate=10_000) == pytest.approx(10_000 * 0.20 / 1e6 + 3000 * 2.50 / 1e6)
     assert call_cost_usd(QWEN, {"prompt_tokens": 1000, "completion_tokens": 100}, estimate=10_000) == pytest.approx(
         1000 * 0.20 / 1e6 + 100 * 2.50 / 1e6)
+
+
+@pytest.mark.parametrize("reported", [0.02, 0.002, float("nan"), float("inf"), -0.1, "0.02", True])
+@pytest.mark.parametrize("field", ["cost", "upstream_inference_cost"])
+def test_reported_cost_never_lowers_the_token_estimate_and_must_be_finite(reported, field):
+    usage = {"prompt_tokens": 1000, "completion_tokens": 100}
+    if field == "upstream_inference_cost":
+        usage["cost_details"] = {field: reported}
+    else:
+        usage[field] = reported
+    token_cost = (1000 * 0.20 + 100 * 2.50) / 1e6
+    expected = max(token_cost, reported) if type(reported) in (int, float) and reported >= 0 and reported < float("inf") else token_cost
+    assert call_cost_usd(QWEN, usage, estimate=10_000) == pytest.approx(expected)
+
+
+def test_provider_cost_takes_precedence_over_its_upstream_detail():
+    usage = {"prompt_tokens": 1000, "completion_tokens": 100, "cost": 0.03,
+             "cost_details": {"upstream_inference_cost": 0.02}}
+    assert call_cost_usd(QWEN, usage, estimate=10_000) == pytest.approx(0.03)
 
 
 def test_profiles_load_from_a_frozen_file(tmp_path):

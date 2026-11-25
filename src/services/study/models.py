@@ -27,7 +27,7 @@ GPT_OSS_PROFILE = ModelProfile("baseline", "openai/gpt-oss-120b:cerebras", "gpt_
                                {"reasoning_effort": "low"}, 0.35, 0.75, "2026-11-03")
 # The benchmark control stayed DeepInfra; production changed only after Fireworks qualification passed.
 GLM_FIREWORKS_PROFILE = ModelProfile("glm-fireworks", "zai-org/GLM-5.3:fireworks-ai", "glm_tokenizer",
-                                     {"reasoning_effort": "low"}, 0.70, 2.20, "2026-11-25")
+                                     {"reasoning_effort": "low"}, 2.10, 6.60, "2026-11-25")
 DEFAULT_PROFILE = GLM_FIREWORKS_PROFILE
 
 
@@ -52,7 +52,13 @@ def call_cost_usd(profile: ModelProfile, usage: dict | None, *, estimate: int, m
         tokens_in, tokens_out = estimate, max_tokens
     else:
         tokens_in, tokens_out = usage["prompt_tokens"], usage["completion_tokens"]
-    return (tokens_in * profile.price_in_usd_per_m + tokens_out * profile.price_out_usd_per_m) / 1e6
+    token_cost = (tokens_in * profile.price_in_usd_per_m + tokens_out * profile.price_out_usd_per_m) / 1e6
+    reported = None if usage is None else usage.get("cost")
+    if reported is None and usage is not None and type(usage.get("cost_details")) is dict:
+        reported = usage["cost_details"].get("upstream_inference_cost")
+    if type(reported) in (int, float) and reported is not None and math.isfinite(reported) and reported >= 0:
+        return max(token_cost, reported)
+    return token_cost
 
 
 def load_profiles(path: Path) -> dict[str, ModelProfile]:

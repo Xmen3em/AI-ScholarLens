@@ -214,7 +214,7 @@ async def test_opt_in_error_observer_receives_only_safe_metadata(tmp_path):
                            error_observer=seen.append)
         with pytest.raises(TutorError, match="study_provider_http_400"):
             await model.complete(job["id"], "lesson", [{"role": "user", "content": secret}], schema={"type": "object"})
-    assert seen == [{"code": "invalid_json_schema", "type": "invalid_request_error",
+    assert seen == [{"sequence": 1, "code": "invalid_json_schema", "type": "invalid_request_error",
                      "param": "response_format.json_schema.strict"}]
     assert secret not in json.dumps(seen)
 

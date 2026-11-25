@@ -8,6 +8,7 @@ from pathlib import Path
 
 from src.commands.build_benchmark import DATA, PRIVATE_QUESTIONS, ROOT, verify_frozen
 from src.commands.evaluate_study import PROVIDER_PREFIX, BenchJob, SpendLedger, qualify, worst_call_usd
+from src.resources import free_memory_mib as host_memory_mib
 from src.services.study.models import GLM_FIREWORKS_PROFILE
 
 PAPER = "2410.13258v4"
@@ -50,18 +51,17 @@ def plan() -> dict:
 
 
 def _error_rows(*, rows: list[dict], errors: list[dict]) -> list[dict]:
-    pending = list(errors)
+    pending = {error["sequence"]: error for error in errors if type(error.get("sequence")) is int}
     numbered = []
-    call_number = 0
     for row in rows:
-        for call in row["calls"]:
-            call_number += 1
+        for index, call in enumerate(row["calls"], 1):
+            sequence = row.get("sequence_base", 0) + call.get("sequence", index)
             failure = row.get("failure_code") or ""
             if not failure.startswith(PROVIDER_PREFIX) or call["state"] != "failed":
                 continue
             status = failure.removeprefix(PROVIDER_PREFIX)
-            error = pending.pop(0) if pending else {}
-            numbered.append({"call": call_number, "http_status": int(status) if status.isdigit() else None, **error})
+            error = pending.pop(sequence, {})
+            numbered.append({"call": sequence, "http_status": int(status) if status.isdigit() else None, **error})
     return numbered
 
 
@@ -94,12 +94,13 @@ def _qualification_rows(root: Path) -> list[dict]:
     for stage in ("qualify", "qualify-plain", "qualify-thinking-off"):
         path = root / f"{stage}-{PROFILE.name}" / "jobs.jsonl"
         if path.exists():
-            rows.extend(json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+            rows.extend({**json.loads(line), "sequence_base": sum(len(previous["calls"]) for previous in rows)}
+                        for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
     return rows
 
 
 @asynccontextmanager
-async def services(store, profile, audit, observer, *, errors: list[dict]):
+async def services(store, profile, audit, observer, *, errors: list[dict], memory=None):
     import httpx
     from src.commands.evaluate_study import ManifestIntake
     from src.commands.study_research import ResearchSettings
@@ -108,7 +109,8 @@ async def services(store, profile, audit, observer, *, errors: list[dict]):
     from src.services.study.tutor import StudyModel
 
     settings = ResearchSettings()
-    model = StudyModel(settings.hf_token, store, audit=audit, profile=profile, error_observer=errors.append)
+    model = StudyModel(settings.hf_token, store, audit=audit, profile=profile, error_observer=errors.append,
+                       memory=memory or host_memory_mib)
     async with httpx.AsyncClient(trust_env=False, follow_redirects=False, timeout=30,
                                  headers={"User-Agent": "ScholarLens-benchmark/0.1"}) as public:
         service = StudyService(store, ManifestIntake(DATA / "content"), PaperContentService(DATA / "sources", public),
@@ -120,7 +122,7 @@ async def services(store, profile, audit, observer, *, errors: list[dict]):
             await model.aclose()
 
 
-async def execute(service_factory=services) -> int:
+async def execute(service_factory=services, *, memory=host_memory_mib) -> int:
     # This command never reads the benchmark questions and never writes its frozen files or stores.
     verify_frozen(ROOT, PRIVATE_QUESTIONS)
     papers = json.loads((ROOT / "papers.v1.json").read_text(encoding="utf-8"))["papers"]
@@ -134,12 +136,12 @@ async def execute(service_factory=services) -> int:
 
     @asynccontextmanager
     async def observed_services(store, profile, audit, observer):
-        async with service_factory(store, profile, audit, observer, errors=errors) as service:
+        async with service_factory(store, profile, audit, observer, errors=errors, memory=memory) as service:
             yield service
 
     result = await qualify(PROFILE, BenchJob(PAPER, "L", PAPER), root=OUTPUT_ROOT,
                            service_factory=observed_services, ledger=ledger,
-                           expected_sha={PAPER: entry["sha256"]})
+                           expected_sha={PAPER: entry["sha256"]}, memory=memory)
     report = {
         "qualification": result,
         "profile": PROFILE.name,

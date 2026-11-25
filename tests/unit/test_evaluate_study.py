@@ -156,21 +156,24 @@ async def test_call_without_usage_is_charged_its_maximum(tmp_path):
     rows = await run(tmp_path, lambda request: honest(request, usage=None))
     assert rows[0]["status"] == "failed" and rows[0]["diagnostic"] == "invalid_usage"
     assert rows[0]["calls"] == [{"purpose": "lesson", "state": "unknown", "usage": None,
-                                 "cost_usd": pytest.approx(worst_call_usd(QWEN))}]
+                                 "cost_usd": pytest.approx(worst_call_usd(QWEN)), "sequence": 1}]
     assert SpendLedger(tmp_path / "spend.json").spent() == pytest.approx(worst_call_usd(QWEN))
 
 
 @pytest.mark.asyncio
 async def test_price_ceiling_stops_before_the_call_that_could_exceed_it(tmp_path):
-    ledger = SpendLedger(tmp_path / "spend.json", ceiling_usd=2 * worst_call_usd(QWEN) + 0.0001)
+    ledger = SpendLedger(tmp_path / "spend.json", ceiling_usd=3 * worst_call_usd(QWEN) + 0.0001)
     rows = await run(tmp_path, honest, ledger=ledger)
-    # The first job's worst case fits; after it is charged, two more worst-case calls no longer do.
+    # A first job fits the writer plus two review halves; a second reservation does not.
     assert rows[0]["status"] == "ready"
     assert [row["status"] for row in rows[1:]] == ["stopped"] * 3
     assert ledger.spent() <= ledger.ceiling_usd
 
 
-@pytest.mark.asyncio
+def test_benchmark_reserves_the_parallel_check_budget():
+    assert evaluate_study.CALLS_PER_JOB == 3
+
+
 async def test_call_ceiling_stops_before_a_job_that_could_exceed_it(tmp_path):
     rows = await run(tmp_path, honest, ceiling=3)
     assert [row["status"] for row in rows] == ["ready", "stopped", "stopped", "stopped"]

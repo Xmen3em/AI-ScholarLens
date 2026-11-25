@@ -154,7 +154,8 @@ Production now uses `zai-org/GLM-5.3:fireworks-ai`, retaining
 `reasoning_effort: low` and the GLM tokenizer estimate. The free router listing
 showed Fireworks live with structured output at $0.70/M input and $2.20/M output
 on 25 November 2026. The owner separately approved one qualification run of at
-most four calls, with a $0.0852 token-derived worst case.
+most four calls, with a **then-current** $0.0852 token-derived worst case at that
+listing. The corrected profile below is deliberately more conservative.
 
 One first lesson on the frozen dev paper `2410.13258v4` passed in **three calls**
 (one writer and two parallel grounding reviews), with **3/3 parseable outputs**,
@@ -162,10 +163,21 @@ One first lesson on the frozen dev paper `2410.13258v4` passed in **three calls*
 claims were withheld for `unverified_support` and one for `unsupported_number`;
 no provider error was returned. The shared ledger charged **$0.0261381** from
 the reported tokens at the router prices. The provider's own response cost
-fields totalled **$0.05812944**, so the ledger is an estimate, not confirmed
+fields totalled **$0.05812944**, so the ledger was an estimate, not confirmed
 provider spend. Its metadata implied approximately $1.40–$2.10/M input and
 $4.40/M output, inconsistent with the router listing. This discrepancy needs
-billing verification before treating the lower ledger figure as actual spend.
+billing verification before treating either figure as confirmed spend.
+
+**Cost correction (owner-directed, 25 November 2026).** The `glm-fireworks`
+profile now provisionally uses the highest observed rates: **$2.10/M input and
+$6.60/M output**, so its worst case is **$0.0639 per call** and **$0.2556** for
+four calls, until billing is confirmed. `call_cost_usd` charges the maximum of
+that token-derived estimate and a valid provider `usage.cost`, falling back to
+`cost_details.upstream_inference_cost` when `usage.cost` is absent. For the three
+qualification calls the reported costs are larger, so a one-off ledger adjustment
+replaced $0.02613810 with $0.05812944: the shared total moved from $4.12117110
+to **$4.08917976** (a **−$0.03199134** correction). This is an accounting
+correction to a recorded run, not a new model call or a claim of confirmed billing.
 
 The full record is in the ignored folder `data/eval/glm-fireworks-qualification/`
 (`qualification-report.json`, `qualification.json`, the job JSONL and its own

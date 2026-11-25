@@ -64,7 +64,10 @@ Telegram ──► bot (routes by chat; private chats only)
   lock in `StudyModel` with a shared semaphore of `STUDY_PARALLEL_JOBS` slots
   granted in arrival order, at most one held per student. Each student's
   `StudyModel` keeps its own store (attempt accounting) and shares the pool's
-  HTTP client. The live memory gate (600 MiB) still runs before every call.
+  HTTP client. The live memory gate (600 MiB) still runs before every call. Each
+  nested review call shares its job's outer slot through a per-job sub-semaphore
+  (two permits for the two review halves); a failed half cancels its sibling
+  through a task group.
 - **API** (`src/services/study/api.py`): `StudyMessage` gains `user_id`
   (a positive integer, as Telegram gives it). Pending deliveries and delivery
   claims are listed across all students, each carrying its `user_id`.
@@ -105,19 +108,27 @@ A day is the calendar day in `Africa/Cairo` (the `tzdata` package, already in
 - **Admission.** A first lesson is admitted only if the student has a paper
   left; a follow-up only if a question is left. Because a student holds at most
   one job, in-flight work never exceeds what is left.
-- **Dollars.** Each call costs `call_cost_usd(DEFAULT_PROFILE, usage)`: reported
-  usage at the profile's prices, or the worst case (input estimate plus 3,000
-  output tokens) when a response carries no usage. Every caller, the owner
-  included, counts toward the ceiling. A succeeded call the ledger never saw (the
-  owner's `/deep` worker runs its own model) is charged its worst case when the job
-  ends. Exception: the owner's general-knowledge fallback before a paper is open
-  runs on the older assistant path and is not counted; students never reach it.
-- **Reservations.** At admission a job reserves `max_calls × worst call` (at most
-  $0.0213 per call, hence up to $0.0639 for a three-call lesson on Fireworks GLM-5.3) against today's ceiling,
-  `STUDY_DAILY_USD_CEILING` (default `2.00`). As each call settles its real cost
-  replaces part of the reservation; when the job ends the remainder is released.
-  Admission requires `spent + reserved + this reservation ≤ ceiling`, so parallel
-  jobs cannot overshoot it.
+- **Dollars.** Each call costs `call_cost_usd(DEFAULT_PROFILE, usage)`: the greater
+  of token-derived usage at the profile's prices and a finite, non-negative
+  provider `usage.cost` (or its `cost_details.upstream_inference_cost` fallback),
+  or the worst case (input estimate plus 3,000 output tokens) when a response
+  carries no usage. Every caller, the owner included, counts toward the ceiling.
+  A succeeded call the ledger never saw (the owner's `/deep` worker runs its own
+  model) is charged its worst case when the job ends. Exception: the owner's
+  general-knowledge fallback before a paper is open runs on the older assistant
+  path and is not counted; students never reach it.
+- **Reservations.** Lessons and answers reserve **three calls** (the writer plus
+  two check halves); `/deep` reserves four. The Fireworks GLM-5.3 profile
+  provisionally uses the highest observed qualification rates, **$2.10/M input
+  and $6.60/M output**, until billing is confirmed. At admission a job reserves
+  `max_calls × worst call` (**$0.0639** per call, hence **$0.1917** for a three-call
+  lesson and **$0.2556** for `/deep`) against `STUDY_DAILY_USD_CEILING` (default
+  `2.00`). With a full three-call reservation, at most ten concurrent reservations
+  fit under that default ceiling; the three-job concurrency cap is lower. As each
+  call settles its real cost replaces part of the reservation; when the job ends
+  the remainder is released. Admission requires
+  `spent + reserved + this reservation ≤ ceiling`, so parallel jobs cannot
+  overshoot it. The default ceiling was not changed when prices were corrected.
 - **Rate.** More than `STUDY_MESSAGES_PER_MINUTE` (default 6) messages from one
   user in 60 seconds are answered with the slow-down note and nothing else.
 - `/usage`: a student sees their own remaining papers and questions; the owner

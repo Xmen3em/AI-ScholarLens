@@ -147,9 +147,11 @@ async def test_an_inactive_student_is_skipped_without_claiming_the_delivery(stub
         if body["user_id"] == STUDENT:
             pytest.fail("an inactive student's delivery was claimed")
         return {"claimed": True, "result": {"text": "شرح"}}
+    # The server's pending list has already omitted the durably inactive student.
+    jobs.pop(0)
     calls = stub_httpx(api(pending=[{"jobs": jobs, "running": []}], seen=seen, claim=claim))
     async with bot_for(tmp_path) as bot:
-        bot.inactive.add(STUDENT)
+        assert not hasattr(bot, "inactive")
         await bot.deliver_study()
     assert ("claim", {"job_id": JOB_A, "user_id": STUDENT}) not in seen
     assert ("claim", {"job_id": JOB_B, "user_id": OTHER}) in seen

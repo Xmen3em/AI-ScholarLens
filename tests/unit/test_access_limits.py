@@ -32,8 +32,8 @@ def student(gate):
 
 
 def test_worst_call_is_the_profiles_worst_case(gate):
-    # Fireworks GLM-5.3: 21,000 input tokens at $0.70/M plus 3,000 output tokens at $2.20/M.
-    assert gate.worst_call_usd() == pytest.approx(0.0213)
+    # Conservative observed Fireworks rates: 21,000 input at $2.10/M plus 3,000 output at $6.60/M.
+    assert gate.worst_call_usd() == pytest.approx(0.0639)
 
 
 def test_only_delivered_answers_count(gate, student):
@@ -67,19 +67,19 @@ def test_other_requests_need_no_count(tmp_path, clock):
 
 
 def test_owner_is_exempt_from_counts_not_the_ceiling(tmp_path, clock):
-    gate = make_gate(tmp_path, clock, daily_papers=1, daily_usd_ceiling=0.10)
+    gate = make_gate(tmp_path, clock, daily_papers=1, daily_usd_ceiling=0.30)
     assert gate.admit(OWNER, "paper", "k1", 3) is None
     gate.settle("k1", delivered_kind="paper")
     assert gate.admit(OWNER, "paper", "k2", 3) is None  # over the count, still under the ceiling
-    assert gate.admit(OWNER, "paper", "k3", 3) == access_text.CEILING  # 0.0639 + 0.0639 > 0.10
+    assert gate.admit(OWNER, "paper", "k3", 3) == access_text.CEILING  # 0.1917 + 0.1917 > 0.30
 
 
 def test_parallel_reservations_never_exceed_the_ceiling(tmp_path, clock):
-    # At Fireworks' $0.0213 worst case, two 2-call reservations fit and a third cannot.
-    gate = make_gate(tmp_path, clock, daily_usd_ceiling=0.10)
-    students = join(gate, 111, 222, 333)
-    refusals = [gate.admit(user, "question", f"k{user}", 2) for user in students]
-    assert refusals.count(None) == 2 and refusals[2] == access_text.CEILING
+    # Three calls per answer: at $0.0639 each, one reservation fits and another cannot.
+    gate = make_gate(tmp_path, clock, daily_usd_ceiling=0.20)
+    students = join(gate, 111, 222)
+    refusals = [gate.admit(user, "question", f"k{user}", 3) for user in students]
+    assert refusals == [None, access_text.CEILING]
 
 
 def test_charge_replaces_the_reservation(gate, student):
@@ -87,7 +87,7 @@ def test_charge_replaces_the_reservation(gate, student):
     gate.bind("k1", "job1")
     gate.charge("job1", 0.01)
     usage = gate.owner_usage()
-    assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == pytest.approx(2 * 0.0213 - 0.01)
+    assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == pytest.approx(2 * 0.0639 - 0.01)
     gate.settle("job1", delivered_kind="question")
     usage = gate.owner_usage()
     assert usage["spent"] == pytest.approx(0.01) and usage["reserved"] == 0
@@ -96,8 +96,8 @@ def test_charge_replaces_the_reservation(gate, student):
 
 def test_a_charge_beyond_the_reservation_is_still_recorded(gate, student):
     gate.admit(student, "question", "k1", 1)
-    gate.charge("k1", 0.05)
-    assert gate.owner_usage()["spent"] == pytest.approx(0.05) and gate.owner_usage()["reserved"] == 0
+    gate.charge("k1", 0.10)
+    assert gate.owner_usage()["spent"] == pytest.approx(0.10) and gate.owner_usage()["reserved"] == 0
 
 
 def test_a_job_admitted_before_midnight_counts_that_day(gate, student, clock):
@@ -151,7 +151,7 @@ def test_the_rate_window_forgets_idle_senders(gate, student, clock):
 def test_worst_case_covers_the_usage_limit_study_model_accepts(gate):
     # The provider may report 21,000 input tokens; the pre-call estimate has headroom,
     # but the missing-usage worst case must cover the whole accepted response.
-    assert gate.worst_call_usd() == pytest.approx((21000 * 0.70 + 3000 * 2.20) / 1e6)
+    assert gate.worst_call_usd() == pytest.approx((21000 * 2.10 + 3000 * 6.60) / 1e6)
 
 
 def test_ledger_survives_a_restart(tmp_path, clock):
@@ -160,7 +160,7 @@ def test_ledger_survives_a_restart(tmp_path, clock):
     first.admit(student, "paper", "k1", 2)
     first.charge("k1", 0.02)
     second = make_gate(tmp_path, clock)
-    assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.0226)
+    assert second.owner_usage()["spent"] == pytest.approx(0.02) and second.owner_usage()["reserved"] == pytest.approx(0.1078)
 
 
 def test_requests_without_model_calls_pass_a_reached_ceiling(tmp_path, clock):

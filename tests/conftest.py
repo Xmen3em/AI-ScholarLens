@@ -17,6 +17,12 @@ def pytest_configure(config):
     (Path(__file__).parent / "test_output").mkdir(exist_ok=True)
 
 
+@pytest.fixture(autouse=True)
+def isolate_model_credentials(monkeypatch):
+    """Unit/API tests never read a shell credential, even when HF_TOKEN is set."""
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+
+
 @pytest.fixture
 def settings() -> Settings:
     """Return deterministic settings without reading the developer's .env."""
