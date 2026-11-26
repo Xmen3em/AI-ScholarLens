@@ -19,8 +19,9 @@ server with Ctrl+C when finished. Opening `index.html` directly does not require
 the server. `styles.css`, `script.js` and `favicon.svg` must stay beside it.
 
 The page includes an illustrative chat, not a captured bot response. Its example
-quote is explicitly placeholder text, not an excerpt from a paper. Screenshots in
-the main README are placeholders until real redacted Telegram captures are added.
+quote is explicitly placeholder text, not an excerpt from a paper. The main README
+includes owner-supplied Telegram lesson captures, which remain separate from this
+illustrative chat.
 
 Optional local verification uses the repository's existing `websocket`
 dependency and an installed Chrome/Edge browser. It starts an isolated headless

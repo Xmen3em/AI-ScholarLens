@@ -31,13 +31,11 @@ Reading an AI paper means tracking definitions, methods, experiments and caveats
 
 ## Demo
 
-Real Telegram screenshots will be added here. The repository deliberately contains no fabricated screenshots or GIFs.
+Owner-supplied Telegram captures showing Egyptian-Arabic lessons and source page references for two public arXiv papers. They demonstrate the interface, not the scientific correctness of the explanations.
 
-| Paper lesson and page references | Follow-up and original quotations |
+| *Attention Is All You Need*: paper selection and lesson | *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks*: versioned paper lesson |
 | --- | --- |
-| ![Placeholder: add a real Telegram lesson screenshot](docs/assets/telegram-lesson-placeholder.svg) | ![Placeholder: add a real Telegram notes screenshot](docs/assets/telegram-notes-placeholder.svg) |
-
-To replace them, add real, redacted Telegram captures under `docs/assets/` and update these image paths. Do not include private messages, account identifiers, invite codes, credentials, or the private benchmark paper's text/questions.
+| ![Telegram lesson for Attention Is All You Need, with Egyptian-Arabic explanations and source page references](docs/assets/telegram-lesson-attention.png) | ![Telegram lesson for Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks, with Egyptian-Arabic explanations and source page references](docs/assets/telegram-lesson-rag.png) |
 
 ## Quick start
 
@@ -207,7 +205,7 @@ src/
 site/                       # Dependency-free explainer site for Cloudflare Pages
 docs/
 ├── specs/                  # Current design decisions, status and trade-offs
-├── assets/                 # Screenshot placeholders; replace with real captures
+├── assets/                 # Owner-supplied Telegram lesson captures
 └── prototype-notes.md      # Preserved previous README and historical notes
 evaluation/paper_benchmark/ # Frozen public benchmark artifacts and report
 research/                   # Isolated optional /deep dependencies and tests
@@ -250,7 +248,6 @@ Or use **Cloudflare dashboard → Workers & Pages → Create → Pages → Conne
 - Improve verified table/equation semantics and independently evaluate bilingual supporting-region retrieval.
 - Qualify OCR on scientific scans and inspect visual provenance before enabling it.
 - Complete the invite-only beta's live acceptance and decide richer study views/progress design.
-- Add real redacted Telegram screenshots to this README.
 
 ## Contributing
 
