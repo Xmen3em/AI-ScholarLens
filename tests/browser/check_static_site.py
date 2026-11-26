@@ -57,7 +57,7 @@ def check_static(root: Path, output: Path):
         if ref.startswith("#"):
             assert ref[1:] in parser.ids, f"missing fragment: {ref}"
         elif ref.startswith("https://github.com/Xmen3em/AI-ScholarLens"):
-            path = ref.removeprefix("https://github.com/Xmen3em/AI-ScholarLens").removeprefix("/blob/claude/paper-benchmark-results/")
+            path = ref.removeprefix("https://github.com/Xmen3em/AI-ScholarLens").removeprefix("/blob/master/")
             if path:
                 assert (root / path).is_file(), f"missing GitHub source target: {path}"
         elif "://" not in ref:
