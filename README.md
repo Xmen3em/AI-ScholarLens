@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-22634e.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-235d82.svg)](pyproject.toml)
 
-[Explore the system](https://scholarlens.pages.dev) · [Quick start](#quick-start) · [Benchmark](#benchmark-results) · [Paper-study guide](docs/paper-study-guide.md) · [بالمصري](README.ar.md)
+[Explore the system](https://scholarlens-2zg.pages.dev) · [Quick start](#quick-start) · [Benchmark](#benchmark-results) · [Paper-study guide](docs/paper-study-guide.md) · [بالمصري](README.ar.md)
 
 </div>
 
@@ -229,7 +229,7 @@ All regular unit/API providers are mocked. Tests needing unavailable local token
 
 ## Website and free static deployment
 
-The [ScholarLens site](https://scholarlens.pages.dev) explains the product flow, claim checking, multi-user controls, model routing and benchmark without requiring JavaScript. Its source is [`site/`](site/): plain HTML, CSS, small optional JavaScript enhancements, and inline SVG. No build step, tracking, framework or runtime dependency.
+The [ScholarLens site](https://scholarlens-2zg.pages.dev) explains the product flow, claim checking, multi-user controls, model routing and benchmark without requiring JavaScript. Its source is [`site/`](site/): plain HTML, CSS, small optional JavaScript enhancements, and inline SVG. No build step, tracking, framework or runtime dependency.
 
 Open [`site/index.html`](site/index.html) directly in a browser. To deploy the static source to Cloudflare Pages yourself:
 
@@ -238,7 +238,7 @@ npx wrangler@3 login
 npx wrangler@3 pages deploy site --project-name scholarlens
 ```
 
-Or use **Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git**, select `Xmen3em/AI-ScholarLens`, leave the build command empty, and set the build output directory to `site`. The default `scholarlens.pages.dev` address is available only after you create/deploy that project; [site/README.md](site/README.md) documents local review and content sources.
+Or use **Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git**, select `Xmen3em/AI-ScholarLens`, leave the build command empty, and set the build output directory to `site`. The default `scholarlens-2zg.pages.dev` address is available only after you create/deploy that project; [site/README.md](site/README.md) documents local review and content sources.
 
 ## Roadmap
 

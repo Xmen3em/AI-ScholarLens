@@ -58,7 +58,7 @@ Or use **Cloudflare dashboard → Workers & Pages → Create → Pages → Conne
 1. Select `Xmen3em/AI-ScholarLens`.
 2. Leave the build command empty.
 3. Set the build output directory to `site`.
-4. Deploy. The expected address is `https://scholarlens.pages.dev` when that project
+4. Deploy. The expected address is `https://scholarlens-2zg.pages.dev` when that project
    name is available and created in your account. Verify the actual URL in Cloudflare.
 
 The project name was chosen for this handoff, not verified against an existing
