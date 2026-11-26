@@ -1,186 +1,261 @@
-# AI-ScholarLens
+<div align="center">
 
-**Read AI papers. Trace the evidence. Build understanding.**
+# ScholarLens
 
-[بالمصري](README.ar.md) · [Paper-study guide](docs/paper-study-guide.md) · [Visual baseline guide](codebase-overview.html) · [How we built it](docs/build-story.md) · [MIT license](LICENSE)
+**An Egyptian-Arabic Telegram tutor for arXiv AI papers, with paper claims linked to inspectable source excerpts and page references.**
 
-ScholarLens is an experimental paper-learning assistant with a private Telegram interface. Bring an AI paper from arXiv, receive an initial lesson in Egyptian Arabic, and explore that paper through follow-up questions, examples and comprehension checks. It uses **LangGraph** and **Hugging Face Inference Providers**. The selected-paper tutor uses **GLM-5.3** (`zai-org/GLM-5.3:fireworks-ai`); the legacy assistant/dev API retains `openai/gpt-oss-120b:cerebras` for its separate generation path.
+[![CI](https://github.com/Xmen3em/AI-ScholarLens/actions/workflows/ci.yml/badge.svg)](https://github.com/Xmen3em/AI-ScholarLens/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22634e.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-235d82.svg)](pyproject.toml)
 
-The selected-paper workflow is implemented on `codex/paper-intake` and has passed bounded live development checks for a lesson, Arabic follow-up and restricted **Deep Agents** tool use. It retains general concept explanations and cited answers over the existing OpenSearch collection. See the [implementation report](docs/paper-study-implementation.md) for measured results and limitations.
+[Explore the system](https://scholarlens.pages.dev) · [Quick start](#quick-start) · [Benchmark](#benchmark-results) · [Paper-study guide](docs/paper-study-guide.md) · [بالمصري](README.ar.md)
 
-> **Development prototype.** Scientific explanations and Egyptian wording still need human review and an independent learning-quality evaluation. The earlier indexed-paper quality gates have not passed; see the [holdout result](docs/hf-cerebras-paced-holdout-result.md). This is a private PC prototype, not a public hosted service.
+</div>
 
-Owner testing on21October2026 found an unresolved `/deep` failure. Its offline SDK checks pass, but the route remains experimental. Read the [researcher-product review](docs/researcher-product-review.ar.md) for priorities and the [pending bounded diagnosis](docs/deep-repair-execution-20261021.md).
+> [!IMPORTANT]
+> ScholarLens is an open-source development prototype for private or invited use, not a hosted public service. Scientific explanations still need human review. The measured holdout failed its p95 latency gate, and holdout faithfulness was never measured. [Read the results and limitations](#benchmark-results).
 
-The first visual-learning slice is implemented on `codex/visual-learning`: an offline Egyptian Arabic RAG method explainer with training/inference diagrams, step/component/source controls and SVG/PNG exports. See the [demo command, verification and limits](docs/visual-learning-implementation.ar.md). It uses a reviewed single-paper fixture; arbitrary-paper generation and Telegram integration remain planned in the [visual teaching contract](docs/specs/learning-visuals.md).
+## Why ScholarLens?
 
-The [complete researcher-app specification](docs/specs/researcher-app.md), [implementation plan](tasks/plan.md#whole-app-implementation--21-october-2026) and [task checklist](tasks/todo.md#whole-app-implementation--task-index) cover reliability, evidence, teaching, memory, visuals/RTL, OCR, research, notes and private hosting. These are proposed extensions with explicit acceptance gates; see the [Egyptian review guide](docs/researcher-implementation-plan.ar.md).
+Reading an AI paper means tracking definitions, methods, experiments and caveats across pages. ScholarLens turns one selected arXiv version into an Egyptian-Arabic lesson you can question, while retaining the original English excerpts for inspection. It separates paper-grounded statements from background knowledge and teaching analogies, and withholds claims that fail its checks rather than presenting them as verified paper findings.
 
-## Paper benchmark results
+## Features
 
-On the frozen 18-paper holdout, **GLM-5.3 on DeepInfra delivered 47/54 (87.0%)** first
-lessons and Q1/Q2 answers, with 98.53% writer format compliance. It missed the latency
-gate: p95 **94.485 s**, above 90 s. The owner-delegated AI rubric averaged **3.58/5**
-across six blind lessons; it is not an independent human rating. Judge calibration passed
-at exactly **85% agreement (κ 0.67)**, but its one
-holdout scoring invocation stopped on HTTP 429 with **zero answers scored**. Seven
-undelivered answers and all limitations are listed in the [benchmark report](evaluation/paper_benchmark/REPORT.md).
+- **Claim-level grounding with page badges.** The writer cites server-issued evidence IDs; the application copies exact excerpts, checks numeric literals, and asks a checker for supporting spans. Unconfirmed paper claims are withheld. Telegram displays the pages for surviving claims. Exact spans do not prove correct scientific interpretation.
+- **Follow-up dialogue.** Ask about the selected paper, request a simpler explanation or example, choose beginner/researcher depth, or start a conversational comprehension question. Up to four recent turns are carried as dialogue, never as source evidence.
+- **Study notes and reading maps.** `/notes` returns the saved first lesson and its original quotations. A generated reading map orders reviewed lesson sections and references source blocks; it does not infer scientific diagrams or causal relationships.
+- **`/deep` research mode.** An optional, owner-only Deep Agents worker reads the current paper with bounded tools and a shared call budget. It requires a separate research environment and still has an unresolved live failure; offline tests do not qualify it as repaired.
+- **Invite-only multi-user beta.** `STUDY_MULTI_USER=true` enables one-time invitations, per-student Cairo-day limits, a shared dollar ceiling, rate limits, fair model-call slots, and retention controls. `/deep` remains owner-only. This mode is implemented and tested offline; its live Telegram acceptance is pending.
+- **Pinned GLM tokenizer admission.** An explicitly downloaded, SHA-256-verified GLM-5.3 tokenizer counts the serialized request before admission. Requests over 20,000 estimated input tokens are refused; a conservative UTF-8-bytes estimate is used if the tokenizer is unavailable.
+- **30-paper benchmark.** Twelve development and eighteen holdout papers across six fields exercise lessons and three follow-ups. The published holdout result is incomplete: delivery and latency were measured, but its single judging attempt stopped on HTTP 429 with **0/47 answers scored**.
 
-GLM was selected on development results, not through a four-model holdout comparison;
-both Qwen profiles failed qualification. These measurements predate the current Fireworks
-production route. Fresh approval is required before any further judging calls.
+## Demo
 
-## What works today
+Real Telegram screenshots will be added here. The repository deliberately contains no fabricated screenshots or GIFs.
 
-| Capability | Current behavior |
+| Paper lesson and page references | Follow-up and original quotations |
 | --- | --- |
-| Bring a paper | arXiv URL/ID with explicit version; title matches require selection |
-| Egyptian Arabic lessons | Initial teaching, paper-scoped follow-ups and labeled examples |
-| Evidence | Server-owned exact excerpts, ID/numeric validation and a bounded grounding review |
-| Study interaction | Telegram keyboard, conversational comprehension questions, depth selection and study maps |
-| Offline visual lesson | Reviewed RAG training/inference viewer; local controls, source inspection and exports |
-| Memory | Four recent turns per paper, expiry, explicit preferences and `/forget` |
-| Optional research | Isolated Deep Agents with source read tools; optional read-only local MCP |
-| General AI/ML questions | Simple explanations, explicitly labeled as model knowledge |
-| Paper questions | Retrieval, bounded LangGraph decisions, exact quotations and source citations |
-| Private Telegram | Paired owner by default; an opt-in invite-only beta with daily limits and a dollar ceiling |
-| Hosted generation | HF routes requests to Cerebras; no local generation weights needed for this mode |
-| Low-memory development | One API/bot process; BM25 search avoids local query embeddings |
-| Existing platform | arXiv ingestion, Docling parsing, PostgreSQL, keyword/hybrid search, JSON/SSE answers and Gradio |
-| Operational controls | API authentication, quotas, bounded calls, deadlines and durable Telegram offsets |
+| ![Placeholder: add a real Telegram lesson screenshot](docs/assets/telegram-lesson-placeholder.svg) | ![Placeholder: add a real Telegram notes screenshot](docs/assets/telegram-notes-placeholder.svg) |
 
-OCR is an implemented but disabled candidate adapter; live image qualification, reliable figure/equation interpretation, scored learning progress, an authenticated study workspace and application-level Notion export remain future work. Scheduled discovery belongs to the existing platform and is outside the learning flow.
+To replace them, add real, redacted Telegram captures under `docs/assets/` and update these image paths. Do not include private messages, account identifiers, invite codes, credentials, or the private benchmark paper's text/questions.
 
-## Try the current prototype
+## Quick start
 
-Start with one paper:
+### Windows
 
-```text
-/paper https://arxiv.org/abs/2005.11401v4
-اشرح الفرق بين retriever و generator بمثال بسيط
-اختبر فهمي
-/notes
-```
+Prerequisites: Python **3.12**, [uv](https://docs.astral.sh/uv/), a Telegram bot token from BotFather, and a Hugging Face token permitted to use the configured inference provider. Costs depend on your provider and usage.
 
-For title search use `/paper Attention Is All You Need`, then `/choose 1`. Use `/study` for the current version, `/level researcher` for more depth, and `/forget` to clear study context. The [study guide](docs/paper-study-guide.md) explains optional `/deep`, coverage, retention and failure behavior.
-
-Examples for the older collection/concept modes:
-
-- `What is RAG?` — general explanation, labeled as model knowledge.
-- `Which dataset is used in When Does a Classifier Help an LLM?` — cited paper evidence.
-- `What tool-use failures does SpeechGym identify?` — cited paper evidence.
-
-When a paper is active, ordinary messages refer to that paper. The Telegram integration is private: contributors need their own bot and configuration.
-
-## Run locally
-
-### Prerequisites
-
-- Python **3.12** and [uv](https://docs.astral.sh/uv/). Docker Desktop/Compose is needed for the broader platform services, not native arXiv study itself.
-- A local OpenSearch instance with indexed passages for the older collection-answer mode. New arXiv study uses its own source cache and SQLite.
-- For private Telegram testing: your own bot token, verified owner account, HF inference token, and API key in private local configuration.
-
-Create the Windows environment expected by `Telegram.ps1`:
+The study workflow itself uses public arXiv PDFs and local SQLite, not OpenSearch or local generation weights. The launcher validates the older collection-answer path's local configuration too: it expects loopback OpenSearch `http://localhost:9200`, Ollama `http://localhost:11434`, and PostgreSQL on localhost port 5432. Those services are needed for the older collection-answer mode, not for native arXiv study. See [legacy runtime notes](docs/prototype-notes.md#run-locally).
 
 ```powershell
 git clone https://github.com/Xmen3em/AI-ScholarLens.git
-cd AI-ScholarLens
+Set-Location AI-ScholarLens
 $env:UV_PROJECT_ENVIRONMENT = ".venv-win"
 uv sync --frozen --inexact
 Copy-Item .env.example .env
 ```
 
-Review `.env` locally. Follow the [bot pairing guide](docs/telegram-langgraph.md#local-setup) and the [development runtime guide](docs/telegram-development.md). A fresh clone does not include credentials, paired state, model/tokenizer caches, or the development corpus. The [platform reference](docs/archive/platform-readme-20261016.md) and [testing guide](TESTING.md) describe ingestion and indexing prerequisites.
+Create a random `API_KEY` of at least 32 characters. Put it, `HF_TOKEN`, and `TELEGRAM_BOT_TOKEN` in `.env`; leave `TELEGRAM_ENABLED=false` during pairing. Never commit `.env`. The selected-paper tutor's route is fixed to `zai-org/GLM-5.3:fireworks-ai`; changing the older `HF_MODELS` setting does not select a different tutor model.
 
-Check the configured development runtime without network calls or state writes:
+```powershell
+.venv-win/Scripts/python.exe -m src.commands.prepare_hf_tokenizer --download
+.venv-win/Scripts/python.exe -m src.commands.prepare_glm_tokenizer --download
+```
+
+These commands download public tokenizer data, verify its hash, and store it under ignored `data/pc-app/tokenizer/`: the GLM-5.3 tokenizer at a pinned Hugging Face revision and the legacy assistant's `o200k_base` vocabulary. The launcher verifies both, even if you only use native arXiv study. They do not download model weights or make inference calls. Run either command without `--download` to check an already prepared file.
+
+Check the local runtime first; this performs no network or state writes:
 
 ```powershell
 .venv-win/Scripts/python.exe -m src.commands.run_dev_bot --check
 ```
 
-For a configured, paired installation with indexed passages:
+For a new bot, pair the owner explicitly. Replace `YOUR_BOT_USERNAME` with your bot's username, without `@`:
 
 ```powershell
-.\Telegram.ps1           # start private manual testing
-.\Telegram.ps1 -Restart  # load source edits
-.\Telegram.ps1 -Stop     # stop API and bot gracefully
+.venv-win/Scripts/python.exe -m src.commands.setup_telegram --prepare --username YOUR_BOT_USERNAME
+# Open the printed private pairing link and press Start, then:
+.venv-win/Scripts/python.exe -m src.commands.setup_telegram --verify
 ```
 
-This mode serves the agent API at `127.0.0.1:8002`, uses remote HF generation, and reports `accepted:false`. It requires 1,024 MiB free host RAM at startup and retains a 600 MiB live floor. It does not initialize SQL or load a local embedding model. These are free-RAM admission checks, not a total system RAM recommendation; Docker and the other services also consume memory.
+`--prepare` performs read-only Telegram identity/webhook calls and creates a private one-hour pairing link. `--verify` reads pending updates once and saves the proven owner ID. Neither starts the bot or sends a Telegram message. Do not pair while the bot is enabled. [Pairing details and recovery](docs/telegram-langgraph.md#local-setup).
 
-### Invite-only beta
+Start the private runtime only when you are ready to use the configured remote models:
 
-The study bot answers only its owner until you set `STUDY_MULTI_USER=true` in `.env` and restart. Then:
+```powershell
+.\Telegram.ps1
+# After source edits:
+.\Telegram.ps1 -Restart
+# Stop the bot and API:
+.\Telegram.ps1 -Stop
+```
 
-- `/invite` (or `/invite 5`) gives one-time codes valid for 7 days; a student sends `/start CODE`.
-- Each student gets `STUDY_DAILY_PAPERS` new papers and `STUDY_DAILY_QUESTIONS` questions per Cairo day (`/usage` shows what is left); only delivered answers count.
-- `STUDY_DAILY_USD_CEILING` caps study spend for the day, counted from the provider's reported usage (calls without usage, including the owner's `/deep` worker, at their worst case); each job reserves its worst case before it starts, so parallel jobs stay under it. The owner's general-knowledge answers before a paper is open use the older assistant path and are not counted.
-- Up to `STUDY_PARALLEL_JOBS` model calls run at once; others wait in line and see their place.
-- `/members`, `/usage` and `/revoke ID` are owner-only; `/deep` stays owner-only in the beta.
-- `/privacy` tells students what is kept: content is deleted after `STUDY_RETENTION_DAYS` days without use, or at once with `/forget`.
+The launcher serves the local API at `127.0.0.1:8002`, polls Telegram, and allows user-triggered remote model calls. Startup requires at least 1,024 MiB free host RAM; each model call retains a 600 MiB free-RAM floor. These are free-memory checks, not total-machine RAM recommendations.
 
-The design and its limits are in [docs/specs/multi-user.md](docs/specs/multi-user.md).
+Try:
 
-For the broader Docker platform, start with `docker compose up --build -d` and follow [TESTING.md](TESTING.md). That is a separate mode with PostgreSQL, Airflow, and Ollama dependencies; it does not activate this private bot.
+```text
+/paper https://arxiv.org/abs/2005.11401v4
+اشرح الفرق بين retriever و generator بمثال بسيط
+/notes
+```
+
+For title search, use `/paper Attention Is All You Need`, then `/choose 1`. Other commands are in the [paper-study guide](docs/paper-study-guide.md).
+
+### Linux
+
+The Python modules run with Python 3.12, but `Telegram.ps1` is a PowerShell launcher and the optional research interpreter lookup is Windows-specific. `run_dev_bot` is the source-verified module that starts the same local API and bot; the commands below have not been run as a complete Linux quick start. Run them only when you intend to prepare remote-provider access and permit user-triggered model calls:
+
+```bash
+uv sync --frozen --python 3.12
+cp .env.example .env
+# Set API_KEY, HF_TOKEN, TELEGRAM_BOT_TOKEN and TELEGRAM_OWNER_ID in .env.
+uv run --frozen python -m src.commands.prepare_hf_tokenizer --download
+uv run --frozen python -m src.commands.prepare_glm_tokenizer --download
+uv run --frozen python -m src.commands.run_dev_bot --check
+uv run --frozen python -m src.commands.run_dev_bot --execute
+```
+
+CI runs the tests on Ubuntu. The complete interactive bot experience has not been qualified on Linux; reading-map generation requires suitable Arabic shaping/font support and may omit the map when unavailable.
+
+## Configuration
+
+Copy [`.env.example`](.env.example) to `.env`. These are the main private-runtime settings; the template also documents the broader platform's optional services.
+
+| Variable | Default in template | Purpose |
+| --- | --- | --- |
+| `API_KEY` | blank; required by the development runtime | API authentication key, sent by the local bot as `X-API-Key`; minimum 32 characters |
+| `API_REQUESTS_PER_MINUTE` | `60` | API request quota |
+| `API_GENERATIONS_PER_MINUTE` | `6` | API generation quota; study message requests consume this quota even without a model call |
+| `HF_TOKEN` | blank; required for generation | Server-side Hugging Face token; never expose it in a browser |
+| `HF_MODELS` | `openai/gpt-oss-120b:groq` | Legacy assistant profiles; the development runtime overrides this to its registered Cerebras profile |
+| `HF_DEFAULT_MODEL` | `openai/gpt-oss-120b:groq` | Legacy default, not the selected-paper tutor's GLM/Fireworks route |
+| `HF_TIMEOUT_SECONDS` | `30` | Legacy hosted-client timeout; the study transport has its own bounds |
+| `TELEGRAM_ENABLED` | `false` | Keep disabled for owner pairing; the development launcher enables the bot explicitly |
+| `TELEGRAM_BOT_TOKEN` | blank | Your private BotFather token |
+| `TELEGRAM_OWNER_ID` | blank until pairing | Numeric Telegram account ID of the owner; `setup_telegram --verify` can establish it |
+| `TELEGRAM_API_BASE_URL` | `http://127.0.0.1:8000/api/v1` | Bot's API base; the development launcher overrides it to port 8002 |
+| `TELEGRAM_OFFSET_PATH` | `./data/telegram/offset.json` | Durable Telegram offset under ignored local data |
+| `STUDY_MULTI_USER` | `false` | `true` enables the invite-only beta; otherwise only the owner is accepted |
+| `STUDY_DAILY_PAPERS` | `3` | Delivered first-lesson allowance per student per Cairo day; owner exempt from counts |
+| `STUDY_DAILY_QUESTIONS` | `30` | Delivered follow-up allowance per student per Cairo day; owner exempt from counts |
+| `STUDY_DAILY_USD_CEILING` | `2.00` | Shared daily accounting ceiling, including owner study calls |
+| `STUDY_PARALLEL_JOBS` | `3` | Shared model-call slots, validated to 1–4; review halves share their job's slot |
+| `STUDY_MESSAGES_PER_MINUTE` | `6` | Per-user message-rate window |
+| `STUDY_RETENTION_DAYS` | `30` | Delete inactive student study content after this period; accounting remains |
+| `OPENSEARCH_HOST` | `http://localhost:9200` | Older indexed-collection retrieval, not native arXiv study |
+| `POSTGRES_DATABASE_URL` | local PostgreSQL URL in template | Older platform configuration, not study-session storage |
+
+**Dollar ceiling:** before a job starts, the beta reserves its worst case: three calls for a lesson/follow-up and four for `/deep`. Settled usage replaces reservations. Missing usage and uncertain calls are conservatively charged at the worst case. This is application accounting at configured profile prices and provider-reported costs, not a provider billing guarantee or an invoice.
+
+**Invites:** `/invite` or `/invite N` is owner-only (1–10 codes). A student redeems `/start CODE`. `/usage`, `/privacy`, `/members`, `/revoke USER_ID` and `/forget` are described in the [multi-user specification](docs/specs/multi-user.md).
 
 ## How it works
 
 ```mermaid
 flowchart TD
-    T[Private Telegram chat] --> B[Owner and message validation]
-    B --> A[Local development API]
-    A --> I[Selected arXiv paper / title selection]
-    I --> P[Isolated PDF text / page evidence]
-    P --> L[Egyptian lesson / follow-up / review]
-    L --> H[HF router / Cerebras]
-    L --> M[(Owner study state / SQLite)]
-    L --> V[Text actions / study map]
-    V --> B
-    A --> R[Concept or paper routing]
-    R -->|general concept| K[Model knowledge explanation]
-    R -->|paper question| G[Bounded LangGraph workflow]
-    G --> S[(OpenSearch passages / BM25)]
-    S --> E[Evidence validation and exact citations]
-    R --> H
-    G --> H
-    K --> B
-    E --> B
+    T[Telegram] --> B[Private bot]
+    B --> A[Study API]
+    A --> G{Access gate}
+    G -->|owner / invited member| R[Per-user service registry]
+    G -->|refused| X[No model call]
+    R --> S[StudyService]
+    S --> Resolve[Resolve versioned arXiv paper]
+    Resolve --> Extract[Extract bounded PDF text and page blocks]
+    Extract --> Teach[Write Egyptian-Arabic lesson / follow-up]
+    Teach --> Check[Screen claims and check supporting spans]
+    Check --> Deliver[Keep supported claims; withhold unconfirmed text]
+    Teach --> Pool[Bounded model pool]
+    Check --> Pool
+    Pool --> HF[Hugging Face inference router]
+    HF --> GLM[GLM-5.3 on Fireworks]
 ```
 
-The study graph resolves, extracts and teaches one selected version. Source validation and review precede delivery; follow-ups use that paper's bounded context. The older collection graph validates scope, retrieves passages, grades evidence, optionally rewrites once, then answers or abstains. Concept explanations are labeled as model knowledge.
+The API passes a member to their own `StudyService`; its LangGraph nodes are `resolve → extract → teach`. Validation, claim checks, persistence and rendering happen inside the teaching path. `/deep` uses a separate bounded worker before the same parent validation/checking path. The older concept/collection assistant is a separate route and is not evidence for this study flow.
 
-| Start here | Responsibility |
-| --- | --- |
-| [study/](src/services/study/) | Paper intake, extraction, learning state, tutor, tools and visuals |
-| [development_assistant.py](src/services/development_assistant.py) | Concept explanations and routing to the paper graph |
-| [agent.py](src/services/agent.py) | LangGraph paper workflow |
-| [development_pc_api.py](src/services/development_pc_api.py) | Isolated hosted-generation runtime and admission limits |
-| [telegram_bot.py](src/services/telegram_bot.py) | Private chat, command handling and reply formatting |
-| [hf/](src/services/hf/) | HF transport, validation and token admission |
-| [search.py](src/services/search.py) | Retrieval orchestration |
-| [metadata_fetcher.py](src/services/metadata_fetcher.py) | Existing batch ingestion |
-| [pdf_parser/](src/services/pdf_parser/) | Existing Docling parser |
-| [evaluation/](evaluation/) | Versioned questions, reports and quality limitations |
+**Key bounds:** 20 MiB and 45 pages per PDF; up to 300 extracted evidence blocks; up to four model attempts per study intent; 128,000 serialized request bytes and 20,000 estimated input tokens; at most 3,000 output tokens per call. Native PDF extraction is implemented. The OCR adapter is opt-in and not enabled in the bot; scanned or unsupported pages are not treated as fully read.
 
-## Checks and contributions
+## Benchmark results
+
+The [full report](evaluation/paper_benchmark/REPORT.md) measures the frozen **GLM-5.3 / DeepInfra** configuration. It is not a result for the current Fireworks route. Production moved from DeepInfra to Fireworks on 25 November 2026 after DeepInfra stopped serving GLM-5.3. One Fireworks development qualification lesson is not a new benchmark.
+
+| Frozen holdout metric | Result | Interpretation |
+| --- | ---: | --- |
+| Delivered first lessons + Q1/Q2 | 47/54 (87.0%) | Seven planned answers undelivered |
+| Writer format compliance | 67/68 calls (98.53%) | Pass: gate ≥95% |
+| Median job latency | 25.766 s | Descriptive |
+| Nearest-rank p95 job latency | **94.485 s** | **Fail: gate ≤90 s** |
+| Holdout generation accounting | $1.36776250 | Estimated from recorded usage/worst cases, not an invoice |
+| Judge agreement / Cohen's κ | 34/40 = 85% / 0.6712 | Calibration gates pass; labels were owner-delegated AI judgments |
+| Holdout faithfulness / factual correctness | **Unmeasured** | Judging stopped on HTTP 429; **0/47 scored** |
+| Owner-delegated six-lesson rubric | 3.5833/5 | Small AI-delegated rating, not an independent human evaluation |
+
+**Caveats.** Labels and ratings were supplied by the assistant under explicit owner delegation, not independently by humans. Calibration compared a judge with those AI-delegated labels; it was **not calibration against human labels** and does not supply missing holdout scores. This is a small assistant-authored benchmark without statistical-significance or four-model holdout comparison claims. GLM was selected from development results. Thirteen Q3 answers require human reading. See the [protocol](evaluation/paper_benchmark/PROTOCOL.md) and [report](evaluation/paper_benchmark/REPORT.md) for denominators, failures, withheld reasons and reproducibility limits.
+
+## Project structure
+
+```text
+src/
+├── commands/               # Explicit local setup, runtime and evaluation commands
+├── services/
+│   ├── study/              # Intake, PDF content, LangGraph tutor, evidence, access and storage
+│   ├── hf/                 # HF transport and legacy model/tokenizer support
+│   ├── development_pc_api.py
+│   └── telegram_bot.py
+├── config.py
+└── routers/                # Broader platform API
+site/                       # Dependency-free explainer site for Cloudflare Pages
+docs/
+├── specs/                  # Current design decisions, status and trade-offs
+├── assets/                 # Screenshot placeholders; replace with real captures
+└── prototype-notes.md      # Preserved previous README and historical notes
+evaluation/paper_benchmark/ # Frozen public benchmark artifacts and report
+research/                   # Isolated optional /deep dependencies and tests
+tests/unit/                 # Mocked unit tests
+tests/api/                  # API tests
+Telegram.ps1                # Windows private-runtime launcher
+.github/workflows/ci.yml    # Ruff, mypy and unit/API tests on Ubuntu
+```
+
+## Testing
+
+All regular unit/API providers are mocked. Tests needing unavailable local tokenizer files or snapshots skip with a reason.
 
 ```powershell
-.venv-win/Scripts/python.exe -m pytest tests/unit/test_development_assistant.py tests/unit/test_development_bot.py -q
+.venv-win/Scripts/python.exe -m pytest tests/unit tests/api -q -p no:cacheprovider --basetemp tests/test_output/main
 .venv-win/Scripts/python.exe -m ruff check src tests
+.venv-win/Scripts/python.exe -m mypy src
 ```
 
-[TESTING.md](TESTING.md) covers the full suite and service-dependent checks. Live model calls and paid evaluations are separate from deterministic tests. Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing evidence handling or adding a tool. Small fixes, Arabic terminology review, extraction fixtures, and reproducible quality reports are welcome.
+[CI](.github/workflows/ci.yml) runs the equivalent checks with uv on Python 3.12/Ubuntu. [TESTING.md](TESTING.md) covers the broader platform and service-dependent checks. Paid inference, paper downloads, live Telegram operations and benchmark judging are not part of the ordinary suite; run them only through an explicitly reviewed scope.
 
-## Next extensions
+## Website and free static deployment
 
-1. Qualify hosted OCR on scientific scans and difficult tables.
-2. Evaluate Egyptian scientific teaching and missing-evidence behavior independently.
-3. Explain source figures and equations with inspected visual provenance.
-4. Add a richer web study view and explicit learning-progress design.
-5. Add reviewed external research and optional private Notion export.
+The [ScholarLens site](https://scholarlens.pages.dev) explains the product flow, claim checking, multi-user controls, model routing and benchmark without requiring JavaScript. Its source is [`site/`](site/): plain HTML, CSS, small optional JavaScript enhancements, and inline SVG. No build step, tracking, framework or runtime dependency.
 
-Read the [implementation report](docs/paper-study-implementation.md), [current engineering research](docs/research/paper-learning-20261017/DECISIONS.md), and [deferred review questions](docs/paper-study-review.ar.md). The visual HTML guide describes the earlier platform baseline; the study guide covers this iteration.
+Open [`site/index.html`](site/index.html) directly in a browser. To deploy the static source to Cloudflare Pages yourself:
+
+```bash
+npx wrangler@3 login
+npx wrangler@3 pages deploy site --project-name scholarlens
+```
+
+Or use **Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git**, select `Xmen3em/AI-ScholarLens`, leave the build command empty, and set the build output directory to `site`. The default `scholarlens.pages.dev` address is available only after you create/deploy that project; [site/README.md](site/README.md) documents local review and content sources.
+
+## Roadmap
+
+- Complete an explicitly approved, retry-guarded holdout judging run and human review of teaching quality.
+- Reduce first-lesson latency and re-measure the current Fireworks route; do not transfer the frozen DeepInfra numbers to it.
+- Reproduce and qualify `/deep` on the exact live research question; keep offline-only claims separate.
+- Improve verified table/equation semantics and independently evaluate bilingual supporting-region retrieval.
+- Qualify OCR on scientific scans and inspect visual provenance before enabling it.
+- Complete the invite-only beta's live acceptance and decide richer study views/progress design.
+- Add real redacted Telegram screenshots to this README.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Useful contributions include redacted missed-evidence cases, Egyptian scientific-language review, extraction fixtures, and reproducible offline tests. Preserve source identity, explicit uncertainty and per-user boundaries. Never commit private conversations, credentials, local `data/`, or private benchmark content.
 
 ## License and acknowledgements
 
-Project code is available under the [MIT license](LICENSE). Papers, datasets, models, dependencies, and third-party assets retain their own licenses and terms. ScholarLens builds on FastAPI, LangGraph, OpenSearch, PostgreSQL, Docling, Ollama, Airflow and Hugging Face. The implementation grew from a Zero-to-RAG learning project; the [build story](docs/build-story.md) explains the work and its limits.
+Project code is available under the [MIT license](LICENSE). Papers, datasets, models, dependencies and third-party assets retain their own licenses and terms. ScholarLens builds on FastAPI, LangGraph, OpenSearch, PostgreSQL, Docling, Ollama, Airflow, Deep Agents, Pillow and Hugging Face. The implementation grew from a Zero-to-RAG learning project; the [build story](docs/build-story.md) explains its development and limitations.

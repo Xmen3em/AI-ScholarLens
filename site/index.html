@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="ScholarLens: an Egyptian-Arabic Telegram tutor for arXiv AI papers. Explore its study flow, evidence checks, bounded model routing and measured benchmark limits.">
+  <meta name="theme-color" content="#173b3b">
+  <title>ScholarLens</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+      <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-3.9c0-1-.1-1.5-.5-2 2.8-.3 5.5-1.4 5.5-6A4.6 4.6 0 0 0 18.8 6.7 4.3 4.3 0 0 0 18.7 3.5S17.6 3.2 15 4.8a13.4 13.4 0 0 0-7 0C5.4 3.2 4.3 3.5 4.3 3.5a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 3 10.1c0 4.6 2.7 5.7 5.5 6-.4.5-.5 1.1-.5 2.1V22M8 19c-3 .9-3-1.5-4.2-2"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6v15M12 6C9 3 4 3 2 4v15c2-1 7-1 10 2 3-3 8-3 10-2V4c-2-1-7-1-10 2Z"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.9 9.9 0 0 1-4-.9L3 21l1.9-4.9A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 10h8M8 14h5"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 22 8-4V6l-8-4-8 4v12l8 4Z"/><path d="m8 12 3 3 5-6"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="ScholarLens home"><span class="brand-mark" aria-hidden="true">SL</span><span>ScholarLens</span></a>
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav"><svg class="icon"><use href="#i-menu"/></svg><span>Menu</span></button>
+      <nav id="site-nav" aria-label="Main navigation">
+        <a href="#flow">Study flow</a><a href="#architecture">Architecture</a><a href="#decisions">Decisions</a><a href="#benchmark">Benchmark</a>
+      </nav>
+      <a class="header-repo" href="https://github.com/Xmen3em/AI-ScholarLens"><svg class="icon"><use href="#i-github"/></svg><span>Source</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">OPEN-SOURCE PAPER STUDY · EGYPTIAN ARABIC</p>
+        <h1 id="hero-title">Study the paper.<br><em>Inspect the claim.</em></h1>
+        <p class="hero-lead">An experimental Telegram tutor that teaches arXiv AI papers in Egyptian Arabic, connects paper claims to exact source excerpts, and keeps the original page within reach.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/Xmen3em/AI-ScholarLens">Explore the repository <svg class="icon"><use href="#i-arrow"/></svg></a>
+          <a class="text-link" href="#claim-check">Follow a claim <span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="scope-note"><span class="status-dot" aria-hidden="true"></span> Private development prototype · Not a public hosted tutor</p>
+      </div>
+      <div class="paper-illustration" aria-label="Illustration of an annotated research paper, not an application screenshot" role="img">
+        <div class="paper-tab">PAPER / v4</div>
+        <div class="paper-sheet back-sheet" aria-hidden="true"></div>
+        <div class="paper-sheet front-sheet">
+          <div class="paper-topline"><span>arXiv:2005.11401v4</span><span>01</span></div>
+          <h2>Retrieval-Augmented<br>Generation</h2>
+          <p class="paper-byline">A closer reading, one claim at a time.</p>
+          <div class="paper-rule"></div>
+          <div class="paper-columns" aria-hidden="true"><span></span><span></span></div>
+          <div class="paper-highlight" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="paper-columns short" aria-hidden="true"><span></span><span></span></div>
+          <div class="source-stamp"><svg class="icon"><use href="#i-book"/></svg> SOURCE EXCERPT · PAGE 3</div>
+          <div class="arabic-note" lang="ar" dir="rtl">افهم الفكرة…<br>وارجع للدليل.</div>
+          <div class="paper-footer"><span>LESSON → FOLLOW-UP → NOTES</span><span>SL / 01</span></div>
+        </div>
+        <div class="annotation-pin" aria-hidden="true">↩</div>
+      </div>
+    </section>
+
+    <div class="boundary-band">
+      <div class="wrap boundary-grid">
+        <div><span class="mini-label">THE INPUT</span><strong>One versioned arXiv paper</strong></div>
+        <svg class="icon band-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+        <div><span class="mini-label">THE METHOD</span><strong>Bounded writing + claim checks</strong></div>
+        <svg class="icon band-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+        <div><span class="mini-label">THE OUTPUT</span><strong>A lesson you can trace</strong></div>
+      </div>
+    </div>
+
+    <section id="about" class="section wrap split-section">
+      <div><p class="eyebrow">WHO IT’S FOR</p><h2>A reading companion,<br>not an answer oracle.</h2></div>
+      <div class="prose">
+        <p>ScholarLens is for students, engineers and researchers who want to discuss an AI paper in Egyptian Arabic while keeping English technical terms and original quotations accessible.</p>
+        <p>It does not replace reading the paper. A generated explanation can miss context or misread a table. The claim-checking system establishes where a retained claim came from and checks its copied support; it cannot prove that the model interpreted the science correctly.</p>
+        <p>The repository is available to run with your own bot, configuration and provider access. Core paper study uses public arXiv PDFs, SQLite and hosted generation. No local LLM weights are needed for that path.</p>
+        <a class="inline-link" href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/paper-study-guide.md">Read the paper-study guide <svg class="icon"><use href="#i-external"/></svg></a>
+      </div>
+    </section>
+
+    <section id="flow" class="section surface-section">
+      <div class="wrap">
+        <div class="section-heading"><div><p class="eyebrow">THE STUDY FLOW</p><h2>From a paper link<br>to a conversation.</h2></div><p>Four steps. The source stays attached to the session.</p></div>
+        <ol class="step-grid">
+          <li><span class="step-number">01</span><svg class="step-icon icon"><use href="#i-book"/></svg><h3>Open a paper</h3><p>Send an arXiv ID, URL, or search by English title. Title results require an explicit choice.</p><code>/paper https://arxiv.org/abs/2005.11401v4</code></li>
+          <li><span class="step-number">02</span><svg class="step-icon icon"><use href="#i-shield"/></svg><h3>Receive a lesson</h3><p>Read an Egyptian-Arabic introduction with source pages, background labels and a comprehension question.</p><code>شرح تمهيدي + المصدر</code></li>
+          <li><span class="step-number">03</span><svg class="step-icon icon"><use href="#i-chat"/></svg><h3>Ask a follow-up</h3><p>Question the method, request a simpler explanation, or try a quiz. Recent dialogue is not treated as evidence.</p><code>اشرح الطريقة بمثال بسيط</code></li>
+          <li><span class="step-number">04</span><svg class="step-icon icon"><use href="#i-book"/></svg><h3>Keep study notes</h3><p>Retrieve the saved first lesson and its exact quotations. A reading map orders the reviewed sections.</p><code>/notes</code></li>
+        </ol>
+
+        <div class="conversation-layout">
+          <div class="conversation-copy"><p class="mini-label">ILLUSTRATIVE DIALOGUE</p><h3>What the exchange can feel like.</h3><p>This is a composed example of the interface, <strong>not a captured bot response</strong>. The wording is illustrative and the excerpt is a placeholder; do not treat it as a scientific claim about a particular paper.</p><p>Actual paper-claim lessons may withhold content or fail when no paper claim can be confirmed; missing evidence and failures are reported rather than masked by a confidence badge.</p></div>
+          <div class="chat-frame" aria-label="Illustrative Telegram conversation">
+            <div class="chat-header"><span class="chat-avatar">SL</span><div><strong>ScholarLens</strong><span>Illustrative private study chat</span></div><span class="chat-label">EXAMPLE</span></div>
+            <div class="chat-messages">
+              <div class="message user-message"><code>/paper https://arxiv.org/abs/2005.11401v4</code></div>
+              <div class="message bot-message" lang="ar" dir="rtl"><strong>📖 شرح تمهيدي</strong><p>الفكرة الأساسية: النموذج بيجمع بين معرفته وبين مقاطع مسترجعة من مصدر خارجي.</p><p class="chat-source">↩︎ المصدر: ص ٣ · مثال توضيحي</p></div>
+              <div class="message user-message" lang="ar" dir="rtl">يعني إيه retrieval هنا؟</div>
+              <div class="message bot-message" lang="ar" dir="rtl"><p>يعني نختار مقاطع مرتبطة بسؤالك قبل ما نكتب الإجابة. تخيّلها زي إنك تفتح الصفحات المطلوبة بدل ما تعتمد على ذاكرتك بس.</p><span class="example-label">مثال توضيحي — ليس ردًّا مسجلًا</span></div>
+              <div class="message user-message"><code>/notes</code></div>
+              <div class="message bot-message quote-message"><span class="mini-label">ORIGINAL EXCERPT</span><p>“…the exact quotation from the selected paper appears here…”</p><span class="example-label">Placeholder text, not a paper quotation.</span></div>
+            </div>
+            <div class="chat-footer"><span>Private chat · Paper-scoped follow-up</span><span>SL</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section wrap">
+      <div class="section-heading"><div><p class="eyebrow">SYSTEM DESIGN</p><h2>Boundaries are part<br>of the product.</h2></div><p>The diagrams describe the implementation, not a proposed future architecture. Inline SVG keeps them dependency-free.</p></div>
+
+      <article class="diagram-block" aria-labelledby="pipeline-heading">
+        <div class="diagram-description"><span class="diagram-index">01 / REQUEST PIPELINE</span><h3 id="pipeline-heading">One selected version.<br>One bounded study graph.</h3><p>The bot and study API are local. The access gate checks membership before a user’s service is resolved. The graph resolves the paper, extracts page-linked text, then teaches.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/src/services/study/service.py">StudyService implementation <svg class="icon"><use href="#i-external"/></svg></a></div>
+        <div class="diagram-scroll" tabindex="0" role="region" aria-label="Request pipeline diagram; scroll horizontally on small screens">
+          <svg class="diagram" viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pipeline-title pipeline-desc">
+            <title id="pipeline-title">ScholarLens request pipeline</title><desc id="pipeline-desc">Telegram passes through the bot, study API, access gate and per-user registry to StudyService. The graph resolves, extracts and teaches; the model pool calls the Hugging Face router, which routes to GLM-5.3 on Fireworks.</desc>
+            <defs><marker id="arrow-a" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 8 3 0 6Z" fill="#4c7770"/></marker></defs>
+            <g class="flow-box"><rect x="15" y="40" width="140" height="66" rx="5"/><text x="85" y="69" text-anchor="middle">Telegram</text><text x="85" y="91" text-anchor="middle" class="small-text">private chat</text></g>
+            <g class="flow-box"><rect x="195" y="40" width="140" height="66" rx="5"/><text x="265" y="69" text-anchor="middle">Bot</text><text x="265" y="91" text-anchor="middle" class="small-text">long polling</text></g>
+            <g class="flow-box"><rect x="375" y="40" width="140" height="66" rx="5"/><text x="445" y="69" text-anchor="middle">Study API</text><text x="445" y="91" text-anchor="middle" class="small-text">127.0.0.1:8002</text></g>
+            <g class="flow-box emphasis"><rect x="555" y="40" width="140" height="66" rx="5"/><text x="625" y="69" text-anchor="middle">Access gate</text><text x="625" y="91" text-anchor="middle" class="small-text">member + quota</text></g>
+            <g class="flow-box"><rect x="735" y="40" width="165" height="66" rx="5"/><text x="817" y="69" text-anchor="middle">Registry</text><text x="817" y="91" text-anchor="middle" class="small-text">service per user</text></g>
+            <g class="flow-arrow"><path d="M155 73h40M335 73h40M515 73h40M695 73h40" marker-end="url(#arrow-a)"/></g>
+            <path class="flow-arrow" d="M817 106v48H460v18" marker-end="url(#arrow-a)"/>
+            <g class="flow-box service-box"><rect x="15" y="172" width="890" height="70" rx="5"/><text x="460" y="204" text-anchor="middle">StudyService · LangGraph</text><text x="460" y="226" text-anchor="middle" class="small-text">versioned source identity · bounded state · durable jobs</text></g>
+            <g class="flow-box"><rect x="15" y="293" width="190" height="60" rx="5"/><text x="110" y="319" text-anchor="middle">Resolve</text><text x="110" y="340" text-anchor="middle" class="small-text">arXiv ID / title</text></g>
+            <g class="flow-box"><rect x="250" y="293" width="190" height="60" rx="5"/><text x="345" y="319" text-anchor="middle">Extract</text><text x="345" y="340" text-anchor="middle" class="small-text">PDF → page blocks</text></g>
+            <g class="flow-box"><rect x="485" y="293" width="190" height="60" rx="5"/><text x="580" y="319" text-anchor="middle">Teach</text><text x="580" y="340" text-anchor="middle" class="small-text">write + claim check</text></g>
+            <g class="flow-box"><rect x="720" y="293" width="185" height="60" rx="5"/><text x="812" y="319" text-anchor="middle">Deliver</text><text x="812" y="340" text-anchor="middle" class="small-text">notes + reading map</text></g>
+            <path class="flow-arrow" d="M110 242v25h0m0 0v26M205 323h45M440 323h45M675 323h45" marker-end="url(#arrow-a)"/>
+            <text x="20" y="148" class="diagram-note">REFUSED USERS STOP AT THE GATE · NO MODEL CALL</text>
+          </svg>
+        </div>
+      </article>
+
+      <article id="claim-check" class="diagram-block" aria-labelledby="claims-heading">
+        <div class="diagram-description"><span class="diagram-index">02 / CLAIM CHECK</span><h3 id="claims-heading">A copied span is proof<br>of location, not meaning.</h3><p>The writer produces claims with evidence IDs. Deterministic screens check IDs, numbers, repetition and unrequested superiority claims. A separate checker returns supporting spans; the application verifies their exact location.</p><p>Only retained paper claims reach the student, notes and job result; separately labelled background, analogies and questions follow their own checks. A closing note gives the withheld count and headings, not their text.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/claim-check.md">Claim-check decisions <svg class="icon"><use href="#i-external"/></svg></a></div>
+        <div class="diagram-scroll" tabindex="0" role="region" aria-label="Claim checking diagram; scroll horizontally on small screens">
+          <svg class="diagram" viewBox="0 0 920 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="claims-title claims-desc">
+            <title id="claims-title">Per-claim grounding and withholding</title><desc id="claims-desc">A claim writer produces claims. Deterministic screens split the checking work into one or two calls. A supported verdict requires copied spans inside the claim's own quote, at least three words, and every claim number. Unverified claims are withheld.</desc>
+            <defs><marker id="arrow-b" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 8 3 0 6Z" fill="#4c7770"/></marker></defs>
+            <g class="flow-box"><rect x="15" y="25" width="180" height="75" rx="5"/><text x="105" y="56" text-anchor="middle">Writer</text><text x="105" y="80" text-anchor="middle" class="small-text">claim + evidence ID</text></g>
+            <g class="flow-box"><rect x="275" y="25" width="180" height="75" rx="5"/><text x="365" y="52" text-anchor="middle">Deterministic</text><text x="365" y="74" text-anchor="middle" class="small-text">IDs · numbers · screens</text></g>
+            <g class="flow-box"><rect x="535" y="25" width="180" height="75" rx="5"/><text x="625" y="56" text-anchor="middle">Split check</text><text x="625" y="80" text-anchor="middle" class="small-text">one or two calls</text></g>
+            <g class="flow-box"><rect x="745" y="25" width="160" height="75" rx="5"/><text x="825" y="56" text-anchor="middle">Verdicts</text><text x="825" y="80" text-anchor="middle" class="small-text">claim + analogy</text></g>
+            <path class="flow-arrow" d="M195 63h80M455 63h80M715 63h30" marker-end="url(#arrow-b)"/>
+            <path class="flow-arrow" d="M625 100v35H460v23" marker-end="url(#arrow-b)"/>
+            <g class="proof-panel"><rect x="15" y="158" width="890" height="158" rx="5"/><text x="40" y="188" class="panel-kicker">APPLICATION VERIFIES A “SUPPORTED” VERDICT</text>
+              <g class="proof-item"><circle cx="63" cy="231" r="18"/><text x="63" y="237" text-anchor="middle" class="proof-number">1</text><text x="98" y="228">Exact spans in the normalized quote</text><text x="98" y="250" class="small-text">1–3 spans; each ≤200 characters</text></g>
+              <g class="proof-item"><circle cx="355" cy="231" r="18"/><text x="355" y="237" text-anchor="middle" class="proof-number">2</text><text x="390" y="228">Distinct supporting words</text><text x="390" y="250" class="small-text">at least three, unless the quote is shorter</text></g>
+              <g class="proof-item"><circle cx="675" cy="231" r="18"/><text x="675" y="237" text-anchor="middle" class="proof-number">3</text><text x="710" y="228">Every claim number</text><text x="710" y="250" class="small-text">must occur inside the spans</text></g>
+              <text x="40" y="291" class="diagram-note">FAILED PROOF → unverified_support · MISSING VERDICT → missing_verdict</text>
+            </g>
+            <g class="flow-box keep-box"><rect x="140" y="369" width="250" height="65" rx="5"/><text x="265" y="397" text-anchor="middle">Keep + show page</text><text x="265" y="420" text-anchor="middle" class="small-text">original excerpt attached</text></g>
+            <g class="flow-box withhold-box"><rect x="535" y="369" width="250" height="65" rx="5"/><text x="660" y="397" text-anchor="middle">Withhold</text><text x="660" y="420" text-anchor="middle" class="small-text">count + heading only</text></g>
+            <path class="flow-arrow" d="M370 316v27h-105v26M550 316v27h110v26" marker-end="url(#arrow-b)"/>
+          </svg>
+        </div>
+        <div class="limit-note"><strong>What this does not guarantee</strong><p>Semantic correctness, complete paper coverage, table interpretation, or equation verification. A paper-claim answer fails closed when no paper claim can be confirmed.</p></div>
+      </article>
+
+      <article class="diagram-block" aria-labelledby="multiuser-heading">
+        <div class="diagram-description"><span class="diagram-index">03 / MULTI-USER BETA</span><h3 id="multiuser-heading">Fair access before<br>generation.</h3><p>The beta is opt-in and owner-controlled. One-time invites create student memberships. Each student has isolated study state, daily allowances, and at most one active job.</p><p>Implemented and covered by offline tests; live Telegram acceptance remains pending.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/multi-user.md">Multi-user specification <svg class="icon"><use href="#i-external"/></svg></a></div>
+        <div class="diagram-scroll" tabindex="0" role="region" aria-label="Multi-user architecture diagram; scroll horizontally on small screens">
+          <svg class="diagram" viewBox="0 0 920 445" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="multi-title multi-desc">
+            <title id="multi-title">Invite-only beta access, reservations and retention</title><desc id="multi-desc">Invited users pass the access gate. Jobs reserve three model calls, or four for deep research. Per-user services share a bounded first-in-first-out model pool. Student content is deleted after inactivity or forget; accounting remains.</desc>
+            <defs><marker id="arrow-c" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 8 3 0 6Z" fill="#4c7770"/></marker></defs>
+            <g class="flow-box"><rect x="15" y="25" width="190" height="65" rx="5"/><text x="110" y="53" text-anchor="middle">Invite / membership</text><text x="110" y="76" text-anchor="middle" class="small-text">owner · invited student</text></g>
+            <g class="flow-box emphasis"><rect x="260" y="25" width="220" height="65" rx="5"/><text x="370" y="53" text-anchor="middle">AccessGate</text><text x="370" y="76" text-anchor="middle" class="small-text">rate · daily count · dollar ceiling</text></g>
+            <g class="flow-box"><rect x="535" y="25" width="190" height="65" rx="5"/><text x="630" y="53" text-anchor="middle">Reservation</text><text x="630" y="76" text-anchor="middle" class="small-text">3 calls · /deep: 4</text></g>
+            <g class="flow-box"><rect x="770" y="25" width="135" height="65" rx="5"/><text x="837" y="53" text-anchor="middle">Admit</text><text x="837" y="76" text-anchor="middle" class="small-text">or refuse</text></g>
+            <path class="flow-arrow" d="M205 57h55M480 57h55M725 57h45" marker-end="url(#arrow-c)"/>
+            <g class="flow-box service-box"><rect x="15" y="147" width="890" height="98" rx="5"/><text x="460" y="177" class="panel-kicker" text-anchor="middle">SERVICE REGISTRY</text>
+              <text x="165" y="211" text-anchor="middle">Student A</text><text x="460" y="211" text-anchor="middle">Student B</text><text x="755" y="211" text-anchor="middle">Owner</text>
+              <text x="460" y="235" text-anchor="middle" class="small-text">isolated StudyStore + StudyService · lazy creation · idle cleanup</text>
+            </g>
+            <path class="flow-arrow" d="M837 90v28H460v29" marker-end="url(#arrow-c)"/>
+            <g class="flow-box"><rect x="180" y="298" width="250" height="75" rx="5"/><text x="305" y="328" text-anchor="middle">FIFO model-call pool</text><text x="305" y="352" text-anchor="middle" class="small-text">default 3 slots · max 4</text></g>
+            <g class="flow-box"><rect x="505" y="298" width="250" height="75" rx="5"/><text x="630" y="328" text-anchor="middle">Settle usage + limits</text><text x="630" y="352" text-anchor="middle" class="small-text">only delivered answers use quota</text></g>
+            <path class="flow-arrow" d="M460 245v27H305v26M460 272h170v26M430 335h75" marker-end="url(#arrow-c)"/>
+            <text x="460" y="414" text-anchor="middle" class="diagram-note">30 DAYS INACTIVE OR /forget → STUDENT CONTENT DELETED · ACCOUNTING RETAINED</text>
+          </svg>
+        </div>
+        <p class="fine-print">A later claim check for a started job queues ahead of jobs that have not started; review halves share their job’s slot. These are model-call slots, not unrestricted user-session concurrency. The dollar ceiling is local accounting, not a provider invoice or billing guarantee.</p>
+      </article>
+
+      <article class="diagram-block" aria-labelledby="routing-heading">
+        <div class="diagram-description"><span class="diagram-index">04 / ROUTING + ADMISSION</span><h3 id="routing-heading">Count first.<br>Bound each call.</h3><p>The tutor serializes a strict request, checks its byte size and estimated tokens, and checks available memory. An admitted request has bounded time, output and attempts; uncertain work is not automatically replayed.</p><p>The pinned tokenizer is prepared explicitly, not fetched during generation.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/src/services/study/tutor.py">Study transport <svg class="icon"><use href="#i-external"/></svg></a></div>
+        <div class="diagram-scroll" tabindex="0" role="region" aria-label="Model routing and token admission diagram; scroll horizontally on small screens">
+          <svg class="diagram" viewBox="0 0 920 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="routing-title routing-desc">
+            <title id="routing-title">Model routing and token admission</title><desc id="routing-desc">A pinned GLM tokenizer counts the serialized request. Memory and token limits are checked before the bounded model pool calls the Hugging Face router. The current tutor route is GLM-5.3 on Fireworks. The older collection assistant uses a separate Cerebras route.</desc>
+            <defs><marker id="arrow-d" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 8 3 0 6Z" fill="#4c7770"/></marker></defs>
+            <g class="flow-box"><rect x="15" y="30" width="205" height="92" rx="5"/><text x="117" y="59" text-anchor="middle">Pinned tokenizer</text><text x="117" y="83" text-anchor="middle" class="small-text">GLM-5.3 · SHA-256</text><text x="117" y="104" text-anchor="middle" class="small-text">tokenizers 0.22.1</text></g>
+            <g class="flow-box"><rect x="280" y="30" width="205" height="92" rx="5"/><text x="382" y="59" text-anchor="middle">Pre-call admission</text><text x="382" y="83" text-anchor="middle" class="small-text">≤20,000 estimated tokens</text><text x="382" y="104" text-anchor="middle" class="small-text">≤128,000 request bytes</text></g>
+            <g class="flow-box"><rect x="545" y="30" width="205" height="92" rx="5"/><text x="647" y="59" text-anchor="middle">Model pool</text><text x="647" y="83" text-anchor="middle" class="small-text">600 MiB free-RAM floor</text><text x="647" y="104" text-anchor="middle" class="small-text">85 s transport ceiling</text></g>
+            <path class="flow-arrow" d="M220 76h60M485 76h60" marker-end="url(#arrow-d)"/>
+            <g class="flow-box emphasis"><rect x="255" y="202" width="240" height="80" rx="5"/><text x="375" y="235" text-anchor="middle">Hugging Face router</text><text x="375" y="260" text-anchor="middle" class="small-text">/v1/chat/completions</text></g>
+            <path class="flow-arrow" d="M647 122v45H375v35" marker-end="url(#arrow-d)"/>
+            <g class="flow-box keep-box"><rect x="590" y="202" width="310" height="80" rx="5"/><text x="745" y="235" text-anchor="middle">zai-org/GLM-5.3</text><text x="745" y="260" text-anchor="middle" class="small-text">fireworks-ai · current tutor route</text></g>
+            <path class="flow-arrow" d="M495 242h95" marker-end="url(#arrow-d)"/>
+            <g class="legacy-route"><rect x="15" y="202" width="190" height="80" rx="5"/><text x="110" y="232" text-anchor="middle">Legacy assistant</text><text x="110" y="255" text-anchor="middle" class="small-text">gpt-oss-120b / Cerebras</text><text x="110" y="274" text-anchor="middle" class="small-text">separate route</text></g>
+            <path class="flow-arrow" d="M205 242h50" marker-end="url(#arrow-d)"/>
+            <g class="flow-box"><rect x="15" y="355" width="885" height="72" rx="5"/><text x="457" y="385" text-anchor="middle">Bounded output · usage validated · attempt ledger settled</text><text x="457" y="410" text-anchor="middle" class="small-text">3,000 output tokens max · no automatic retry of an admitted request</text></g>
+            <path class="flow-arrow" d="M745 282v37H457v36" marker-end="url(#arrow-d)"/>
+            <text x="20" y="165" class="diagram-note">MISSING / UNVERIFIED TOKENIZER → CONSERVATIVE UTF-8 BYTES / 3 ESTIMATE</text>
+          </svg>
+        </div>
+        <p class="fine-print">The pre-call estimate is conservative: it counts the serialized request rather than only the message text. Accepted provider usage may reach 21,000 input tokens for cost accounting. `/deep` runs an optional owner-only research worker in a separate environment; its live failure is not declared repaired.</p>
+      </article>
+    </section>
+
+    <section id="decisions" class="section surface-section">
+      <div class="wrap">
+        <div class="section-heading"><div><p class="eyebrow">DESIGN DECISIONS</p><h2>Choose what to verify.<br>Say what remains uncertain.</h2></div><p>Each decision is linked to its implementation contract and measured limitations.</p></div>
+        <div class="decision-list">
+          <article><div class="decision-topic">Source identity</div><div><h3>Pin the paper version and source hash.</h3><p>A stored paper carries its arXiv version, PDF SHA-256, parser revision and page-block IDs. Unversioned input resolves to an explicit version; title matches require selection.</p><p class="tradeoff"><strong>Trade-off:</strong> only allowlisted arXiv inputs are accepted. You cannot paste an arbitrary PDF URL.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/paper-intake.md">paper-intake ↗</a></div></article>
+          <article><div class="decision-topic">Evidence</div><div><h3>Attach original quotations on the server.</h3><p>The model chooses evidence IDs; the application supplies the excerpts. Per-claim copied spans, number checks and screens replace a single whole-lesson verdict.</p><p class="tradeoff"><strong>Trade-off:</strong> more work per lesson, and the checker can still misunderstand the evidence. Exact support is not semantic proof.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/paper-evidence.md">paper-evidence ↗</a> · <a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/claim-check.md">claim-check ↗</a></div></article>
+          <article><div class="decision-topic">Learning</div><div><h3>Keep dialogue separate from the paper.</h3><p>Four recent turns support continuity; they never become source evidence. `/notes` retains the first lesson and exact quotes. A reading map arranges lesson sections instead of inventing causal diagrams.</p><p class="tradeoff"><strong>Trade-off:</strong> no mastery score, automatic progress claim, or full scientific-figure generation.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/paper-tutor.md">paper-tutor ↗</a> · <a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/learning-session.md">learning-session ↗</a></div></article>
+          <article><div class="decision-topic">Research tools</div><div><h3>Isolate `/deep` and reserve its review budget.</h3><p>The optional Deep Agents worker has read-only paper tools and no host shell, general filesystem, external web search or delegated subagents. It shares the admitted job’s four-call budget.</p><p class="tradeoff"><strong>Trade-off:</strong> a separate Python environment is required, students cannot use `/deep`, and an observed live failure remains unresolved.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/study-research.md">study-research ↗</a></div></article>
+          <article><div class="decision-topic">Multi-user</div><div><h3>Reserve the worst case before starting work.</h3><p>Invitations, per-student state, daily counts and a shared dollar ledger sit in front of a bounded model pool. Failed jobs do not consume student paper/question quotas.</p><p class="tradeoff"><strong>Trade-off:</strong> admission is conservative and accounting is not a provider billing guarantee. The owner’s general-knowledge fallback before opening a paper is outside this ceiling.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/multi-user.md">multi-user ↗</a></div></article>
+          <article><div class="decision-topic">Evaluation</div><div><h3>Freeze the paper set and publish missing evidence.</h3><p>Thirty papers span six fields: twelve development and eighteen holdout. The report distinguishes measured outcomes from unmeasured metrics and owner-delegated AI judgments from human labels.</p><p class="tradeoff"><strong>Trade-off:</strong> the current holdout is GLM-only and incomplete. No four-model ranking, statistical-significance claim, or measured holdout faithfulness.</p><a href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/docs/specs/paper-benchmark.md">paper-benchmark ↗</a></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="benchmark" class="section wrap">
+      <div class="section-heading"><div><p class="eyebrow">THE BENCHMARK, INCLUDING THE GAPS</p><h2>Measured does not<br>mean proven.</h2></div><p>Frozen GLM-5.3 / DeepInfra holdout results. The current tutor uses Fireworks; these numbers are not a Fireworks benchmark.</p></div>
+      <div class="metric-grid">
+        <article class="metric"><span class="mini-label">DELIVERY</span><strong>47<span>/54</span></strong><p>87.0% of first lessons and Q1/Q2 answers delivered across 18 holdout papers.</p></article>
+        <article class="metric"><span class="mini-label">WRITER FORMAT</span><strong>98.53<span>%</span></strong><p>67/68 calls complied with the writer schema. Gate: at least 95%.</p></article>
+        <article class="metric metric-fail"><span class="mini-label">P95 JOB LATENCY · GATE MISSED</span><strong>94.485<span>s</span></strong><p>Nearest-rank p95. The predeclared gate was at most 90 s. Median: 25.766 s.</p></article>
+      </div>
+      <div class="benchmark-details">
+        <div class="benchmark-callout"><svg class="icon"><use href="#i-shield"/></svg><h3>Holdout faithfulness is unmeasured.</h3><p>The single approved judging invocation stopped on its first scoring operation with provider HTTP 429. <strong>Zero of 47 answers were scored.</strong> This does not mean zero faithfulness; it means no result.</p><p>Calibration reached exactly 34/40 = 85% agreement, with Cohen’s κ = 0.6712. The 40 labels were supplied by the assistant under explicit owner delegation, not independently by humans. Calibration therefore does not establish agreement with human labels or provide holdout quality scores.</p></div>
+        <div class="benchmark-table-wrap"><table><caption>Recorded holdout summary</caption><tbody><tr><th scope="row">Withheld claim outcomes</th><td>201</td></tr><tr><th scope="row">Owner-delegated six-lesson rubric</th><td>3.5833 / 5</td></tr><tr><th scope="row">Holdout generation accounting</th><td>$1.36776250</td></tr><tr><th scope="row">Q3 answers requiring human reading</th><td>13</td></tr><tr><th scope="row">Four-model holdout comparison</th><td>Not run</td></tr><tr><th scope="row">Holdout faithfulness</th><td>Unmeasured</td></tr></tbody></table></div>
+      </div>
+      <div class="benchmark-caveats"><p>Production moved from DeepInfra to Fireworks on 25 November 2026 after DeepInfra stopped serving GLM-5.3. One Fireworks development qualification lesson is not a new p95 estimate or quality result.</p><p>This is a small, assistant-authored benchmark. GLM was selected on development evidence. The reported rating is AI-delegated, not an independent human evaluation. No statistical significance is claimed. Accounting estimates are not provider invoices.</p><a class="inline-link" href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/evaluation/paper_benchmark/REPORT.md">Read the full report, denominators and failure list <svg class="icon"><use href="#i-external"/></svg></a></div>
+    </section>
+
+    <section id="stack" class="section surface-section">
+      <div class="wrap">
+        <div class="section-heading"><div><p class="eyebrow">TECH STACK</p><h2>Small interfaces.<br>Explicit dependencies.</h2></div><p>The broader repository includes an older collection-answer platform. This list separates it from native arXiv study.</p></div>
+        <div class="stack-table-wrap"><table class="stack-table"><thead><tr><th scope="col">Layer</th><th scope="col">Implementation</th><th scope="col">Role</th></tr></thead><tbody>
+          <tr><td>Language / API</td><td>Python 3.12 · FastAPI · Uvicorn</td><td>Local study endpoints and application services</td></tr>
+          <tr><td>Chat</td><td>Telegram long polling</td><td>Private bot, per-chat commands and delivery; no inbound webhook required</td></tr>
+          <tr><td>Study graph</td><td>LangGraph 1.2.15</td><td>Resolve → extract → teach with bounded state</td></tr>
+          <tr><td>Generation</td><td>Hugging Face Inference Providers</td><td>GLM-5.3 via Fireworks for paper study; separate Cerebras legacy route</td></tr>
+          <tr><td>Paper intake</td><td>arXiv API + PDFium</td><td>Versioned metadata, bounded PDF acquisition and isolated page-text extraction</td></tr>
+          <tr><td>Validation</td><td>Pydantic · JSON Schema</td><td>Strict request, response, lesson and claim-check contracts</td></tr>
+          <tr><td>Study persistence</td><td>SQLite</td><td>Per-user state, jobs, attempts, access controls and accounting</td></tr>
+          <tr><td>Reading maps</td><td>Pillow / libraqm · Windows GDI fallback</td><td>Deterministic section-order maps when Arabic shaping and fonts are available</td></tr>
+          <tr><td>Optional research</td><td>Deep Agents · local stdio MCP</td><td>Separate, pinned environment and bounded read-only paper tools</td></tr>
+          <tr><td>Older platform</td><td>OpenSearch · PostgreSQL · Docling · Airflow · Ollama</td><td>Broader ingestion/indexing and indexed-collection answers, not required for native paper study</td></tr>
+          <tr><td>Quality checks</td><td>pytest · Ruff · mypy · GitHub Actions</td><td>Mocked unit/API tests and static checks on Ubuntu</td></tr>
+        </tbody></table></div>
+        <p class="fine-print">This static site is plain HTML, CSS, inline SVG and optional JavaScript. No framework, build step, external fonts, tracking, cookies or browser storage. All core content and diagrams work with JavaScript disabled.</p>
+      </div>
+    </section>
+
+    <section class="section wrap final-cta" aria-labelledby="cta-heading">
+      <div><p class="eyebrow">READ THE CODE. CHECK THE EVIDENCE.</p><h2 id="cta-heading">Build your next paper discussion on something you can inspect.</h2><p>Run the private prototype, review its limitations, or contribute an extraction fixture and a reproducible test.</p></div>
+      <div class="cta-actions"><a class="button primary" href="https://github.com/Xmen3em/AI-ScholarLens"><svg class="icon"><use href="#i-github"/></svg> Open ScholarLens on GitHub <svg class="icon"><use href="#i-external"/></svg></a><a class="inline-link" href="https://github.com/Xmen3em/AI-ScholarLens/blob/claude/paper-benchmark-results/README.md">Setup, configuration and contributing →</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="wrap"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">SL</span><span>ScholarLens</span></a><p>Open-source development prototype · MIT license · No hosted public tutor</p><a href="https://github.com/Xmen3em/AI-ScholarLens">github.com/Xmen3em/AI-ScholarLens</a></div></footer>
+  <noscript><style>.menu-button{display:none}#site-nav{display:flex!important}</style></noscript>
+</body>
+</html>
